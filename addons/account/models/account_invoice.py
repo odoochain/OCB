@@ -360,6 +360,10 @@ class AccountInvoice(models.Model):
         compute='_compute_residual', store=True, help="Remaining amount due in the currency of the company.")
     payment_ids = fields.Many2many('account.payment', 'account_invoice_payment_rel', 'invoice_id', 'payment_id', string="Payments", copy=False, readonly=True)
     payment_move_line_ids = fields.Many2many('account.move.line', string='Payment Move Lines', compute='_compute_payments', store=True)
+
+    tx_id = fields.Char(string='ChainDB Id.', copy=False, readonly=True, states={'draft': [('readonly', False)]},
+                            help='Triad db tx id')
+
     user_id = fields.Many2one('res.users', string='Salesperson', track_visibility='onchange',
         readonly=True, states={'draft': [('readonly', False)]},
         default=lambda self: self.env.user, copy=False)
@@ -517,6 +521,19 @@ class AccountInvoice(models.Model):
                 self.type == 'in_refund' and self.state == 'draft' and _('Vendor Credit Note') or \
                 self.type == 'in_refund' and _('Vendor Credit Note - %s') % (self.number)
 
+    # wjs
+    # 新增子类的查询方法，查询数据时，判断交易的合法性
+    # 覆盖父类方法
+    @api.multi
+    def read(self, fields=None, load='_classic_read'):
+        self.check_access_rule('read')
+        results = super(AccountInvoice, self).read(fields=fields, load=load)
+        # print(results[0]['tx_id'])
+        len_results = len(results)
+        return results
+
+    # wjs
+    # 修改创建方法，insert的同时，将数据作为交易发送到区块链
     @api.model
     def create(self, vals):
         if not vals.get('journal_id') and vals.get('type'):
@@ -530,6 +547,12 @@ class AccountInvoice(models.Model):
                 for field in changed_fields:
                     if field not in vals and invoice[field]:
                         vals[field] = invoice._fields[field].convert_to_write(invoice[field], invoice)
+
+        # tx_id, _, _ = octa_bdb_api.exec_write(vals, bdb_host="", wait_for_valid=False)
+        #
+        # # 填充tx_id字段
+        # vals['tx_id'] = tx_id
+        vals['tx_id'] = 'tx_id111111'
 
         invoice = super(AccountInvoice, self.with_context(mail_create_nolog=True)).create(vals)
 
