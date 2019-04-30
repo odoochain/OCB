@@ -527,6 +527,7 @@ class AccountInvoice(models.Model):
     # 新增子类的查询方法，查询数据时，判断交易的合法性
     # 覆盖父类方法
     @api.multi
+    # @api.constrains('transaction')
     def read(self, fields=None, load='_classic_read'):
         self.check_access_rule('read')
         results = super(AccountInvoice, self).read(fields=fields, load=load)
@@ -544,8 +545,8 @@ class AccountInvoice(models.Model):
             return results
         except Exception as e:  # 如果发现错误，返回前端，数据不安全
             _logger.error(e)
-            raise UserWarning("User Warning :数据被篡改")
-            # raise Exception("数据被篡改")
+            # raise UserWarning("User Warning :数据被篡改")
+            raise Exception(_('数据被篡改'))
 
     # wjs
     # 修改创建方法，insert的同时，将数据作为交易发送到区块链
