@@ -6,13 +6,15 @@ import re
 import uuid
 from functools import partial
 
+from odoo.tools import config
+
 from lxml import etree
 from dateutil.relativedelta import relativedelta
 from werkzeug.urls import url_encode
 
 from odoo import api, exceptions, fields, models, _
 from odoo.tools import email_re, email_split, email_escape_char, float_is_zero, float_compare, \
-    pycompat, date_utils
+    pycompat, date_utils, octa_bdb_api
 from odoo.tools.misc import formatLang
 
 from odoo.exceptions import AccessError, UserError, RedirectWarning, ValidationError, Warning
@@ -525,12 +527,26 @@ class AccountInvoice(models.Model):
     # 新增子类的查询方法，查询数据时，判断交易的合法性
     # 覆盖父类方法
     @api.multi
+    # @api.constrains('transaction')
     def read(self, fields=None, load='_classic_read'):
         self.check_access_rule('read')
         results = super(AccountInvoice, self).read(fields=fields, load=load)
-        # print(results[0]['tx_id'])
-        len_results = len(results)
-        return results
+        invoice = results[0]
+        if not invoice.__contains__('tx_id'):
+            _logger.info("not contains so return results")
+            return results
+        _logger.info(invoice.__contains__('tx_id'))
+        tx_id = invoice['tx_id']
+        _logger.info(str(tx_id))
+        try:
+            query_data = octa_bdb_api.query_transaction_by_id(tx_id, bdb_host=config.options['octa-chain-host'],
+                                             bdb_port=int(config.options['octa-chain-port']))
+            _logger.info(query_data)
+            return results
+        except Exception as e:  # 如果发现错误，返回前端，数据不安全
+            _logger.error(e)
+            # raise UserWarning("User Warning :数据被篡改")
+            raise Exception(_('数据被篡改'))
 
     # wjs
     # 修改创建方法，insert的同时，将数据作为交易发送到区块链
@@ -548,11 +564,12 @@ class AccountInvoice(models.Model):
                     if field not in vals and invoice[field]:
                         vals[field] = invoice._fields[field].convert_to_write(invoice[field], invoice)
 
-        # tx_id, _, _ = octa_bdb_api.exec_write(vals, bdb_host="", wait_for_valid=False)
-        #
-        # # 填充tx_id字段
-        # vals['tx_id'] = tx_id
-        vals['tx_id'] = 'tx_id111111'
+        tx_id, _, _ = octa_bdb_api.exec_write(vals, None, bdb_host=config.options['octa-chain-host'],
+                                              bdb_port=config.options['octa-chain-port'], wait_for_valid=False)
+
+        # 填充tx_id字段
+        vals['tx_id'] = tx_id
+        # vals['tx_id'] = 'tx_id111111'
 
         invoice = super(AccountInvoice, self.with_context(mail_create_nolog=True)).create(vals)
 
