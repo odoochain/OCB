@@ -2788,7 +2788,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                         _logger.info("tx id --------------------------------===============")
                         tx_id = self._fields.get(name)
                         if len(str(tx_id)) != 64:
-                            vals[name] = "ffFalse"
+                            vals[name] = "False"
                         else:
                             try:
                                 query_data = octa_bdb_api.query_transaction_by_id(tx_id, bdb_host=config.options['octa-chain-host'],
