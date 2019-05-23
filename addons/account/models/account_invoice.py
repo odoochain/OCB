@@ -363,8 +363,7 @@ class AccountInvoice(models.Model):
     payment_ids = fields.Many2many('account.payment', 'account_invoice_payment_rel', 'invoice_id', 'payment_id', string="Payments", copy=False, readonly=True)
     payment_move_line_ids = fields.Many2many('account.move.line', string='Payment Move Lines', compute='_compute_payments', store=True)
 
-    tx_id = fields.Char(string='ChainDB Id.', copy=False, readonly=True, states={'draft': [('readonly', False)]},
-                            help='Triad db tx id')
+    tx_id = fields.Char(string='ChainDB Id.', copy=False, help='Trias db tx id')
 
     user_id = fields.Many2one('res.users', string='Salesperson', track_visibility='onchange',
         readonly=True, states={'draft': [('readonly', False)]},
@@ -530,23 +529,23 @@ class AccountInvoice(models.Model):
     # @api.constrains('transaction')
     def read(self, fields=None, load='_classic_read'):
         self.check_access_rule('read')
-        results = super(AccountInvoice, self).read(fields=fields, load=load)
-        invoice = results[0]
-        if not invoice.__contains__('tx_id'):
-            _logger.info("not contains so return results")
-            return results
-        _logger.info(invoice.__contains__('tx_id'))
-        tx_id = invoice['tx_id']
-        _logger.info(str(tx_id))
-        try:
-            query_data = octa_bdb_api.query_transaction_by_id(tx_id, bdb_host=config.options['octa-chain-host'],
-                                             bdb_port=int(config.options['octa-chain-port']))
-            _logger.info(query_data)
-            return results
-        except Exception as e:  # 如果发现错误，返回前端，数据不安全
-            _logger.error(e)
-            # raise UserWarning("User Warning :数据被篡改")
-            raise Exception(_('数据被篡改'))
+        return super(AccountInvoice, self).read(fields=fields, load=load)
+        # invoice = results[0]
+        # if not invoice.__contains__('tx_id'):
+        #     _logger.info("not contains so return results")
+        #     return results
+        # _logger.info(invoice.__contains__('tx_id'))
+        # tx_id = invoice['tx_id']
+        # _logger.info(str(tx_id))
+        # try:
+        #     query_data = octa_bdb_api.query_transaction_by_id(tx_id, bdb_host=config.options['octa-chain-host'],
+        #                                      bdb_port=int(config.options['octa-chain-port']))
+        #     _logger.info(query_data)
+        #     return results
+        # except Exception as e:  # 如果发现错误，返回前端，数据不安全
+        #     _logger.error(e)
+        #     # raise UserWarning("User Warning :数据被篡改")
+        #     raise Exception(_('数据被篡改'))
 
     # wjs
     # 修改创建方法，insert的同时，将数据作为交易发送到区块链

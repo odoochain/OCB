@@ -53,6 +53,7 @@ from .exceptions import AccessError, MissingError, ValidationError, UserError
 from .osv.query import Query
 from .tools import frozendict, lazy_classproperty, lazy_property, ormcache, \
                    Collector, LastOrderedSet, OrderedSet, pycompat, groupby
+from odoo.tools import octa_bdb_api
 from .tools.config import config
 from .tools.func import frame_codeinfo
 from .tools.misc import CountingStream, clean_context, DEFAULT_SERVER_DATETIME_FORMAT, DEFAULT_SERVER_DATE_FORMAT
@@ -2774,16 +2775,32 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             # restrict the prefetching of self's model to self; this avoids
             # computing fields on a larger recordset than self
             self._prefetch[self._name] = set(self._ids)
+
             for record, vals in data:
                 # missing records have their vals empty
                 if not vals:
                     continue
                 try:
                     vals[name] = convert(record[name], record, use_name_get)
+                    # TODO 这个放到convert方法中来处理可能更好
+                    if name == 'tx_id':
+                        # show = True
+                        _logger.info("tx id --------------------------------===============")
+                        tx_id = self._fields.get(name)
+                        if len(str(tx_id)) != 64:
+                            vals[name] = "False"
+                        else:
+                            try:
+                                query_data = octa_bdb_api.query_transaction_by_id(tx_id, bdb_host=config.options['octa-chain-host'],
+                                                                 bdb_port=int(config.options['octa-chain-port']))
+                                _logger.debug(query_data)
+                                vals[name] = "True"
+                            except Exception as e:  # 如果发现错误，返回前端，数据不安全
+                                _logger.error(e)
+                                vals[name] = "False"
                 except MissingError:
                     vals.clear()
         result = [vals for record, vals in data if vals]
-
         return result
 
     @api.multi
@@ -2838,6 +2855,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 exc = AccessError("No value found for %s.%s" % (self, field.name))
                 self.env.cache.set_failed(self, [field], exc)
 
+    # wjs 修改总入口函数
     @api.multi
     def _read_from_database(self, field_names, inherited_field_names=[]):
         """ Read the given fields of the records in ``self`` from the database,
@@ -3607,6 +3625,9 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             columns0.append(('write_uid', "%s", self._uid))
             columns0.append(('write_date', "%s", AsIs("(now() at time zone 'UTC')")))
 
+            # 自动增加这4行之外，再增加一行：tx_id
+            # columns0.append(('tx_id', "%s", self._uid))
+
         for data in data_list:
             # determine column values
             stored = data['stored']
@@ -3665,6 +3686,9 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             records._validate_fields(name for data in data_list for name in data['stored'])
 
         records.check_access_rule('create')
+        # wjs
+        # 可以在此处，check是否有上链相关配置
+
 
         # add translations
         if self.env.lang and self.env.lang != 'en_US':
