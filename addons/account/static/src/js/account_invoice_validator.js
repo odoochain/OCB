@@ -1,0 +1,25 @@
+/**
+ * Created by zmt
+ */
+odoo.define('account.invoice_validator', function (require) {
+    "use strict";
+
+    var fieldRegistry = require('web.field_registry');
+    var basicFields = require('web.basic_fields');
+
+    var validator = basicFields.FieldText.extend({
+        /**
+         * @constructor
+         * @override
+         */
+        init: function(parent, name, record, options) {
+            this._super(parent, name, record, options);
+            var tx_id = record.data.tx_id
+            if(tx_id === 'False'){
+                this.do_warn('Tx id is False');
+            }
+        }
+    })
+
+    fieldRegistry.add('validator', validator);
+})
