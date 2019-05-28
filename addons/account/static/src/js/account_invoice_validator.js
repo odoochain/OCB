@@ -16,7 +16,7 @@ odoo.define('account.invoice_validator', function (require) {
             this._super(parent, name, record, options);
             var tx_id = record.data.tx_id
             if(tx_id === 'False'){
-                this.do_warn('Tx id is False');
+                this.do_warn('区块链验证错误！');
             }
         }
     })
