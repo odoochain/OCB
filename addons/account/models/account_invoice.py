@@ -14,7 +14,8 @@ from werkzeug.urls import url_encode
 
 from odoo import api, exceptions, fields, models, _
 from odoo.tools import email_re, email_split, email_escape_char, float_is_zero, float_compare, \
-    pycompat, date_utils, octa_bdb_api
+    pycompat, date_utils
+from odoo.tools.trias_rpc_client import TRY
 from odoo.tools.misc import formatLang
 
 from odoo.exceptions import AccessError, UserError, RedirectWarning, ValidationError, Warning
@@ -539,10 +540,11 @@ class AccountInvoice(models.Model):
         _logger.info(str(tx_id))
         if len(str(tx_id)) != 64:
             invoice['tx_id'] = 'false'
-
+        tri_client = TRY(url=config.options['trias-node-url'])
         try:
-            query_data = octa_bdb_api.query_transaction_by_id(tx_id, bdb_host=config.options['octa-chain-host'],
-                                             bdb_port=int(config.options['octa-chain-port']))
+            # query_data = octa_bdb_api.query_transaction_by_id(tx_id, bdb_host=config.options['octa-chain-host'],
+            #                                  bdb_port=int(config.options['octa-chain-port']))
+            query_data = tri_client.tx(bytes.fromhex(tx_id))
             _logger.info(query_data)
 
             return results
@@ -568,12 +570,11 @@ class AccountInvoice(models.Model):
                 for field in changed_fields:
                     if field not in vals and invoice[field]:
                         vals[field] = invoice._fields[field].convert_to_write(invoice[field], invoice)
-
-        tx_id, _, _ = octa_bdb_api.exec_write(vals, None, bdb_host=config.options['octa-chain-host'],
-                                              bdb_port=config.options['octa-chain-port'], wait_for_valid=False)
-
+        tri_client = TRY(url=config.options['trias-node-url'])
+        result = tri_client.broadcast_tx_commit(vals)
+        _logger.info(result)
         # 填充tx_id字段
-        vals['tx_id'] = tx_id
+        vals['tx_id'] = result['result']['hash']
         # vals['tx_id'] = 'tx_id111111'
 
         invoice = super(AccountInvoice, self.with_context(mail_create_nolog=True)).create(vals)

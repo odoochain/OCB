@@ -225,6 +225,20 @@ class configmanager(object):
                          help="specify a custom database template to create a new database")
         parser.add_option_group(group)
 
+        # chaindb group
+        group = optparse.OptionGroup(parser, "Octa Chain DB related options")
+        group.add_option("--octa-chain-host", dest="octa-chain-host", my_default='',
+                         help="The octa chaindb host.")
+        group.add_option("--octa-chain-port", dest="octa-chain-port", my_default='10070',
+                         help="The octa chaindb port.")
+        parser.add_option_group(group)
+
+        # trias chain group
+        group = optparse.OptionGroup(parser, "Trias DB related options")
+        group.add_option("--trias-node-url", dest="trias-node-url", my_default='',
+                         help="The trias db node url.")
+        parser.add_option_group(group)
+
         group = optparse.OptionGroup(parser, "Internationalisation options. ",
             "Use these options to translate Odoo to another language. "
             "See i18n section of the user manual. Option '-d' is mandatory. "
