@@ -38,14 +38,14 @@ class TRY(object):
             result = requests.get(endpoint, params=payload)
             return result.json()
         except Exception as e:
-            print('Error parsing response: {}'.format(e))
+            print('trias_rpc_client ,call ,Error parsing response: {}'.format(e))
             return {'error': e}
 
     def broadcast_tx_commit(self, tx):
         return self.call('tri_bc_tx_commit', {'tx': tx})
 
     def block(self, height):
-        return self.call('tri_block_info', {'height':height})
+        return self.call('tri_block_info', {'height': height})
 
     def tx(self, hash):
         return self.call('tri_block_tx', {'hash': hash})
@@ -63,14 +63,14 @@ class TRY(object):
         return self.call('tri_bc_txs_async', {'tx': txs})
 
 
-if __name__=="__main__":
-
+if __name__ == "__main__":
     tm = TRY(url='http://192.168.1.206:46657')
-
-    jsonStr = '{\"name\":\"zhangsan\",\"age\":4}'
-    # just for test
+    jsonData = {'name':'zhangsan','age':'4'}
     import json
-    re = tm.broadcast_tx_commit(jsonStr)
+    import base64
+    re = tm.broadcast_tx_commit(json.dumps(jsonData))
     print(re['result']['hash'])
+    tx = tm.tx(hash=bytes.fromhex(re['result']['hash']))['result']['tx']
 
-    print(tm.tx(hash=bytes.fromhex(re['result']['hash'])))
+    txBytes = base64.decodebytes(bytes(tx, 'utf-8'))
+    print(str(txBytes)[14:])
