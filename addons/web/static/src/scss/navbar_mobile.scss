@@ -18,6 +18,13 @@
         }
     }
 
+    > .o_logo_trias {
+        @include media-breakpoint-down(sm) {
+            float: none;
+            margin: 0;
+        }
+    }
+
     @include media-breakpoint-down(sm) {
         transition: height 200ms linear 0s;
 

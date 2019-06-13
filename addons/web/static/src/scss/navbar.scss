@@ -22,7 +22,7 @@ body.o_is_superuser .o_menu_systray {
     position: relative;
     height: $o-navbar-height;
     border-bottom: 1px solid $o-navbar-inverse-link-hover-bg;
-    background-color: $o-brand-odoo;
+    background-color: rgba(0,2,26,1);
     color: white;
 
     > a, > button {
@@ -61,6 +61,16 @@ body.o_is_superuser .o_menu_systray {
         font-weight: 500;
         line-height: $o-navbar-height;
         cursor: pointer;
+    }
+
+    > .o_logo_trias {
+        float: left;
+        margin-right: 35px;
+        user-select: none;
+        line-height: $o-navbar-height;
+        >img {
+            width: 82px;
+        }
     }
 
     > .o_menu_toggle {

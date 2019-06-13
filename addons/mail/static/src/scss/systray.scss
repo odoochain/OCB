@@ -3,11 +3,12 @@
     > a {
         opacity: 1;
         > i {
-            font-size: larger;
+            font-size: 21px;
+            color: rgba(255,255,255,1);
+            line-height: 21px;
         }
     }
     &.o_no_notification > a {
-        opacity: 0.5;
         > i {
             transform: translateY(0px);
         }
@@ -23,10 +24,11 @@
         margin-top: -0.8rem;
         margin-right: 0;
         margin-left: -0.6rem;
-        background: #00A09D;
+        background: #5db85c;
         color: white;
         vertical-align: super;
         font-size: 0.7em;
+        border-radius: 10rem;
     }
     .o_mail_systray_dropdown {
         direction: ltr;
