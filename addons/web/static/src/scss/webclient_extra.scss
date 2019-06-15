@@ -59,19 +59,19 @@ select {
     border-color: #429441;
 }
 
-.btn-secondary:not(.dropdown-toggle):not(.fa) {
+.btn-secondary:not(.dropdown-toggle):not(.fa):not(.btn-sm) {
     // Bootstrap variables do not control the color for btn-secondary border
     border-color: #5db85c;
     color: #5db85c;
 }
 
-.btn-secondary:not(.dropdown-toggle):not(.fa):hover {
+.btn-secondary:not(.dropdown-toggle):not(.fa):not(.btn-sm):hover {
     color: #5db85c;
     background:#f7fff7;
     border:1px solid #5db85c;
 }
 
-.btn-secondary:not(.dropdown-toggle):not(.fa):focus {
+.btn-secondary:not(.dropdown-toggle):not(.fa):not(.btn-sm):focus {
     color: #5db85c;
     background:#edffed;
     border:1px solid #5db85c;
