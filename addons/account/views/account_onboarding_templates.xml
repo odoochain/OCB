@@ -70,8 +70,7 @@
     <!-- ONBOARDING PANELS -->
     <template id="account_invoice_onboarding_panel" name="account.invoice.onboarding.panel">
         <t t-call="base.onboarding_container">
-            <t t-set="classes" t-value="'o_onboarding_blue'"/>
-            <t t-set="bg_image" t-value="'/account/static/src/img/account_invoice_onboarding_bg.jpg'"/>
+            <t t-set="classes" t-value="'o_onboarding_white'"/>
             <t t-set="close_method" t-value="'action_close_account_invoice_onboarding'"/>
             <t t-set="close_model" t-value="'res.company'"/>
             <t t-set="text_completed">Congratulations! You are all set.</t>

@@ -25,8 +25,7 @@
             </div>
         </div>
         <div class="o_onboarding_container collapse show">
-            <div t-att-class="'o_onboarding ' + ('o_onboarding_completed ' if steps_completed else ' ') + classes"
-                 t-att-style="'background-image:url(' + bg_image + ')'">
+            <div t-att-class="'o_onboarding ' + ('o_onboarding_completed ' if steps_completed else ' ') + classes">
                 <div class="o_onboarding_wrap">
                     <a href="#" data-toggle="modal" data-target=".o_onboarding_modal"
                        class="float-right o_onboarding_btn_close">
