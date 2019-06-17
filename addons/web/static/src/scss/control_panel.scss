@@ -10,6 +10,13 @@
     background-position: center;
     background-repeat: no-repeat;
 
+    .btn-primary:not(:disabled):not(.disabled):active,
+    .btn-primary:not(:disabled):not(.disabled).active,
+    .show > .btn-primary.dropdown-toggle {
+        background-color: darken(#5DB85C, 10%);
+        border-color: darken(#5DB85C, 10%);
+    }
+
     > .breadcrumb {
         width: 50%;
         background: transparent;
