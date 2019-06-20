@@ -4,6 +4,7 @@
     cursor: pointer;
     background-color: $o-view-background-color;
     margin-bottom: 0px;
+    padding-top: 76px;
 
     // Don't understand why but without those, the list view appears broken
     // in both form views and standalone list views.
@@ -18,11 +19,38 @@
         }
     }
 
+    tr > th, tr > td {
+        border: none;
+        .custom-control-label::before {
+            width: 1.67rem;
+            height: 1.67rem;
+            top: auto;
+        }
+        &:first-child{
+            padding-left: 18px;
+        }
+        &:last-child {
+            padding-right: 18px;
+        }
+        .custom-control-label::after {
+            width: 1.67rem;
+            height: 1.67rem;
+            top: 0;
+        }
+    }
+
+
     thead {
         color: $o-main-text-color;
         border-bottom: 1px solid #cacaca;
+        font-size:13px;
+        font-family:Roboto-Medium;
+        font-weight:500;
+        color:#142a3f;
         > tr > th {
-            border-left: 1px solid #dfdfdf;
+            padding-top: 16px;
+            padding-bottom: 16px;
+            border: none;
             @include media-breakpoint-down(sm) {
                 white-space: nowrap;
             }
@@ -39,6 +67,10 @@
         font-weight: $o-list-footer-font-weight;
         border-top: 2px solid #cacaca;
         border-bottom: 1px solid #cacaca;
+        > tr > td {
+            padding-top: 16px;
+            padding-bottom: 16px;
+        }
     }
 
     .o_column_sortable {
@@ -46,7 +78,8 @@
         user-select: none;  // Prevent unwanted selection while sorting
 
         &::after {
-            font-family: FontAwesome;
+            font-family: "Font Awesome 5 Free";  /* updated font-family */
+            font-weight: 900; /* solid style/weight */
             content: "\f0d7";
             opacity: 0;
         }
@@ -78,6 +111,12 @@
 
     .o_list_record_selector, .o_list_record_remove, .o_handle_cell {
         width: 1px;  // to prevent the column to expand
+    }
+
+    .o_list_record_selector .custom-checkbox .custom-control-input {
+        left: 0;
+        width: 20px;
+        height: 20px;
     }
 
     .o_list_record_remove button {
@@ -124,7 +163,13 @@
 
     tbody {
         tr:focus-within {
-            background-color: $o-form-lightsecondary;
+            background-color:#f6f7f9;
+            border-radius:4px;;
+        }
+        > tr > td {
+            padding-top: 10px;
+            padding-bottom: 10px;
+            color: #586A7B;
         }
     }
 

@@ -10,7 +10,9 @@
     border: 1px solid $o-form-lightsecondary;
     border-radius: $border-radius;
     padding: 2px 4px;
-    color: #1f1f1f;
+    color: #586A7B;
+    background-color: #F6F7F9;
+    border-color: transparent;
 
     .o_input {
         border: none!important;
@@ -45,7 +47,38 @@ select {
     }
 }
 
-.btn-secondary {
+.btn-primary {
+    background-color: #5db85c;
+    border-color: #5db85c;
+}
+.btn-primary:hover {
+    background-color: #67CD66;
+    border-color: #67CD66;
+}
+
+.btn-primary:focus {
+    background-color: #429441;
+    border-color: #429441;
+}
+
+.btn-secondary:not(.dropdown-toggle):not(.fa):not(.btn-sm) {
     // Bootstrap variables do not control the color for btn-secondary border
-    border-color: $border-color;
+    border-color: #5db85c;
+    color: #5db85c;
+}
+
+.btn-secondary:not(.dropdown-toggle):not(.fa):not(.btn-sm):hover {
+    color: #5db85c;
+    background:#f7fff7;
+    border:1px solid #5db85c;
+}
+
+.btn-secondary:not(.dropdown-toggle):not(.fa):not(.btn-sm):focus {
+    color: #5db85c;
+    background:#edffed;
+    border:1px solid #5db85c;
+}
+
+.btn.btn-secondary.fa {
+    font-weight: 900;
 }

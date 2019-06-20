@@ -55,7 +55,8 @@
         .o_pivot_header_cell_closed {
             @include o-pivot-header-cell;
             &::before {
-                font-family: FontAwesome;
+                font-family: "Font Awesome 5 Free";  /* updated font-family */
+                font-weight: 900; /* solid style/weight */
                 content: "";
                 margin-right: 8px;
             }
@@ -64,7 +65,8 @@
         .o_pivot_header_cell_opened {
             @include o-pivot-header-cell;
             &::before {
-                font-family: FontAwesome;
+                font-family: "Font Awesome 5 Free";  /* updated font-family */
+                font-weight: 900; /* solid style/weight */
                 content: "";
                 margin-right: 8px;
             }

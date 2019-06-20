@@ -51,12 +51,18 @@
     .custom-control-input:not(:checked):not(:indeterminate) {
         ~ .custom-control-label:before {
             background: none;
-            outline: 1px solid $o-main-text-color;
+            box-shadow: 0px 1px 3px 0px inset rgba(0,0,0,0.24);
+            border-radius: 4px;
+            border: 1px solid #cbd0d3;
         }
         &:disabled ~ .custom-control-label:before {
             background: $o-brand-lightsecondary;
             opacity: 0.25;
         }
+    }
+    .custom-control-input:checked ~ .custom-control-label::before {
+        background-color: #5DB85C;
+        color: #FFFFFF;
     }
     @media print {
         -webkit-print-color-adjust: exact !important;

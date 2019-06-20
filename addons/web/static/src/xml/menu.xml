@@ -4,7 +4,10 @@
 <header t-name="Menu">
     <nav class="o_main_navbar">
         <ul class="o_menu_apps"/>
-        <a class="o_menu_brand" role="button"/>
+        <!-- <a class="o_menu_brand" role="button"/> -->
+        <div class="o_logo_trias">
+            <img src="/web/static/src/img/logo-trias.png" alt=""/>
+        </div>
         <ul class="o_menu_sections" role="menu"/>
         <ul class="o_menu_systray" role="menu"/>
     </nav>
@@ -16,7 +19,7 @@
 <t t-name="AppsMenu">
     <li class="dropdown">
         <a class="full" data-toggle="dropdown" href="#">
-            <i class="fa fa-th-large"/>
+            <i class="fas fa-bars"/>
         </a>
         <div class="dropdown-menu" role="menu">
             <t t-foreach="widget.getApps()" t-as="app">

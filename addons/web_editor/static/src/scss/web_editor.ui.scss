@@ -504,7 +504,8 @@ html[lang] > body.editor_enable [data-oe-translation-state] {
                                 &::before {
                                     content: "\f148";
                                     @include o-position-absolute($top: 5px, $left: 4px);
-                                    font-family: FontAwesome;
+                                    font-family: "Font Awesome 5 Free";  /* updated font-family */
+                                    font-weight: 900; /* solid style/weight */
                                     transform: scaleX(-1);
                                 }
                                 ~ .dropdown-submenu .dropdown-item,
@@ -576,7 +577,8 @@ html[lang] > body.editor_enable [data-oe-translation-state] {
                     border: solid 1px darken($o-we-handles-accent-color, 10%);
                     line-height: $o-we-handles-btn-size - 2;
                     font-size: 14px;
-                    font-family: FontAwesome;
+                    font-family: "Font Awesome 5 Free";  /* updated font-family */
+                    font-weight: 900; /* solid style/weight */
                     background-color: darken($o-we-handles-accent-color, 20%);
                     color: white;
                 }
@@ -848,11 +850,13 @@ html[lang] > body.editor_enable [data-oe-translation-state] {
             }
         }
         .o_foreground_toggle > button:before {
-            font-family: FontAwesome;
+            font-family: "Font Awesome 5 Free";  /* updated font-family */
+            font-weight: 900; /* solid style/weight */
             content: '\f1fc';
         }
         .o_background_toggle > button:before {
-            font-family: FontAwesome;
+            font-family: "Font Awesome 5 Free";  /* updated font-family */
+            font-weight: 900; /* solid style/weight */
             content: '\f0c3';
         }
         .dropdown-menu {
