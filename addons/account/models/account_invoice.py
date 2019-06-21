@@ -586,7 +586,8 @@ class AccountInvoice(models.Model):
 
             return invoice
         else:
-            raise ValidationError(result)
+            _logger.error('Create Error, the trias result is %s ', result)
+            raise ValidationError("Create Error!")
 
     @api.constrains('partner_id', 'partner_bank_id')
     def validate_partner_bank_id(self):
