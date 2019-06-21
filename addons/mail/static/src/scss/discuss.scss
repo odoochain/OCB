@@ -12,7 +12,7 @@
         height: 100%;
         float: left;
         overflow: auto;
-        padding: $o-horizontal-padding 0;
+        padding: $o-horizontal-padding 34px $o-horizontal-padding 56px;
 
         @include media-breakpoint-up(xl) {
             width: $o-mail-chat-sidebar-width + 50px;
@@ -20,7 +20,7 @@
 
         .o_mail_sidebar_title {
             display: flex;
-            padding: 6px $o-horizontal-padding 0 $o-horizontal-padding;
+            padding: 6px 0 0;
             align-items: center;
             justify-content: space-between;
             h4 {
@@ -38,11 +38,14 @@
             display: flex;
             align-items: center;
             width: 100%;
-            padding: 2px $o-horizontal-padding 2px ($o-horizontal-padding + 12px); // compensate icon
+            padding: 2px $o-horizontal-padding; // compensate icon
 
             .o_thread_name {
                 flex: 1 1 auto;
                 @include o-text-overflow;
+                i{
+                    color: #91999E;
+                }
             }
             .o_mail_sidebar_needaction, .o_mail_partner_unpin, .o_mail_channel_settings {
                 flex: 0 0 auto;
@@ -58,7 +61,7 @@
             }
 
             &.o_mail_discuss_title_main {
-                padding: $input-btn-padding-y $o-horizontal-padding;
+                padding: $input-btn-padding-y 0;
                 margin-bottom: 2px;
             }
         }
@@ -69,7 +72,7 @@
 
         .o_mail_add_thread {
             width: 100%;
-            padding: 5px ($o-horizontal-padding + 23px); // compensate icon
+            padding: 5px ($o-horizontal-padding + 8px); // compensate icon
             position: relative;
 
             > input {
@@ -77,7 +80,7 @@
                 padding: 2px 5px;
             }
             > span {
-                @include o-position-absolute(7px, $left: 27px);
+                @include o-position-absolute(7px, $left: 16px);
             }
         }
     }
@@ -119,23 +122,35 @@
 
 .o_mail_discuss {
     .o_mail_discuss_sidebar {
-        background-color: gray('900');
-        color: gray('300');
+        background-color: #FEFEFE;
+        color: #142A3F;
+        border-right: 1px solid #E5E8EA;
 
         .o_mail_discuss_item {
             cursor: pointer;
 
             &:hover {
-                background-color: darken(gray('900'),2%);
+                background-color: #F6F7F9;
+                border-radius: 4px;
+                padding-right: 6px;
+                &.o_mail_discuss_title_main {
+                    padding-left: 0;
+                    padding-right: 0;
+                }
 
                 .o_mail_partner_unpin, .o_mail_channel_settings {
                     opacity: $o-mail-sidebar-icon-opacity;
                 }
+
+                .fa {
+                    color: #91999E;
+                    @include o-hover-opacity($o-mail-sidebar-icon-opacity, 1);
+                }
             }
 
             &.o_active {
-                background-color: gray('900');
-                box-shadow: inset 3px 0 0 $o-brand-primary;
+                // box-shadow: inset 3px 0 0 $o-brand-primary;
+                color:#5DB85C;
             }
 
             .o_mail_hash {
@@ -159,14 +174,15 @@
                 font-size: $font-size-base;
 
                 &.o_mail_mailbox_title_starred > .badge {
-                    background-color: gray('600');
-                    border-color: gray('600');
+                    background: #f6f7f9;
+                    border: 1px solid #cbd0d3;
+                    color: #142A3F;
                 }
             }
         }
 
         > hr {
-            border-color: gray('700');
+            border-color: #E5E8EA;
         }
 
         .o_mail_add_thread {
@@ -184,15 +200,16 @@
                 margin: 0;
                 font-size: $font-size-sm;
                 text-transform: uppercase;
-                color: gray('600');
+                color: #CBD0D3;
                 &.o_mail_open_channels:hover {
-                    color: white;
+                    color: #142A3F;
                 }
             }
             .o_add {
+                color: #91999E;
                 cursor: pointer;
                 @include o-hover-opacity($o-mail-sidebar-icon-opacity, 1);
-                @include o-hover-text-color(gray('600'), white);
+                // @include o-hover-text-color(gray('600'), white);
             }
         }
     }

@@ -3,15 +3,15 @@
 
      <div t-name="mail.Composer" t-attf-class="o_thread_composer #{widget.extended ? 'o_thread_composer_extended' : (widget.notInline ? '' : 'o_chat_inline_composer')} #{widget.isMini ? 'o_chat_mini_composer' : ''}">
          <div class="o_composer_container">
-             <img t-if="widget.avatarURL" height="36" width="36" class="o_thread_message_sidebar o_chatter_avatar rounded-circle" t-att-src="widget.avatarURL" alt="Avatar"/>
+             <img t-if="widget.avatarURL" height="48" width="48" class="o_thread_message_sidebar o_chatter_avatar rounded-circle" t-att-src="widget.avatarURL" alt="Avatar"/>
              <div t-if="widget.extended" class="o_composer_subject">
                  <input tabindex="1" type="text" placeholder="Subject" class="o_input"/>
              </div>
              <div t-attf-class="o_composer #{widget.extended ? 'o_extended_composer' : ''}">
-                <div class="o_composer_input">
+                <div class="o_composer_input clearfix ">
                     <textarea class="o_input o_composer_text_field" tabindex="2" placeholder="Write something..."/>
                     <div class="o_chatter_composer_tools">
-                        <button tabindex="4" class="btn btn-secondary fa fa-smile-o o_composer_button_emoji" type="button" data-toggle="popover" title="Emojis" aria-label="Emojis"/>
+                        <button tabindex="4" class="btn btn-secondary far fa-smile o_composer_button_emoji" type="button" data-toggle="popover" title="Emojis" aria-label="Emojis"/>
                         <button tabindex="5" class="btn btn-secondary fa fa-paperclip o_composer_button_add_attachment" type="button" aria-label="Add attachment" title="Add attachment"/>
                         <button t-if="widget.options.isMobile" tabindex="3" class="btn btn-secondary fa fa-paper-plane-o o_composer_button_send" type="button" title="Send" aria-label="Send"/>
                     </div>
