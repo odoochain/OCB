@@ -64,10 +64,26 @@
         background-color: #5DB85C;
         color: #FFFFFF;
     }
+    
     @media print {
         -webkit-print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
+}
+
+.custom-control.custom-radio {
+    .custom-control-label::before {
+        background: #ffffff;
+        box-shadow: 0px 1px 3px 0px inset rgba(0,0,0,0.24);
+        border-radius: 10px;
+        border: 1px solid #cbd0d3;
+    }
+    
+    .custom-control-input:checked ~ .custom-control-label::after {
+        background-size: 84% 84%;
+        background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3E%3Ccircle r='3' fill='%235DB85C'/%3E%3C/svg%3E");
+    }
+
 }
 
 .o_catch_attention {
