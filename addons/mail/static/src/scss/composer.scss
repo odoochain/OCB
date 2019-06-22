@@ -61,13 +61,7 @@
         .btn.fa, .btn.far {
             @include o-hover-opacity($default-opacity: 0.8, $hover-opacity: 1);
             border: none;
-            font-size: 22px;
             color: #91999e;
-            padding: 8px 13px;
-            border-left: 1px solid #CBD0D3;
-            border-radius: 0 4px 4px 0;
-            line-height: 30px;
-            height: 100%;
             box-shadow: none;
         }
         .o_composer_button_full_composer {
@@ -207,6 +201,16 @@
 
             .o_composer_send {
                 float: right;
+            }
+            
+            .btn.fa, .btn.far {
+                border: none;
+                font-size: 22px;
+                padding: 8px 13px;
+                border-left: 1px solid #CBD0D3;
+                border-radius: 0 4px 4px 0;
+                line-height: 30px;
+                height: 100%;
             }
         }
     }

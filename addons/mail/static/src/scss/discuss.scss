@@ -105,6 +105,10 @@
             -webkit-overflow-scrolling: touch; // smooth scrolling in iOS app (Safari)
         }
 
+        .o_mail_thread .o_thread_date_separator, .o_mail_activity .o_thread_date_separator {
+            padding:0 $o-horizontal-padding 0 48px;
+        }
+
         .o_mail_snackbar {
             @include o-position-absolute(15px, 15px);
             padding-top: 10px;
