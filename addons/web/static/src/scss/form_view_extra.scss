@@ -27,6 +27,20 @@
                 padding: 0 16px;
             }
         }
+
+        .nav-tabs {
+            .nav-link {
+                color: #91999E;
+                &:hover, &:focus {
+                    border-color: transparent;
+                }
+            }
+            .nav-link.active, .nav-item.show .nav-link {
+                border-color: transparent;
+                border-bottom: 3px solid #5DB85C;
+                color: #586A7B;
+            }
+        }
     }
 
     // Button box
@@ -126,8 +140,9 @@
             max-height: 90px;
             max-width: 90px;
             margin-bottom: 10px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-            border: none;
+            box-shadow: 0px 2px 5px 0px rgba(0,32,63,0.1);
+            border: 3px solid rgba(255,255,255,1);
+            border-radius: 50%;
         }
         + .oe_title {
             padding-left: 95px;

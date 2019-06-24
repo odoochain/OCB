@@ -39,22 +39,24 @@
     }
 
     .o_thread_date_separator {
-        margin-top: 15px;
-        margin-bottom: 30px;
+        margin-top: 36px;
+        margin-bottom: 16px;
         @include media-breakpoint-down(sm) {
             margin-top: 0px;
             margin-bottom: 15px;
         }
-        border-bottom: 1px solid gray('400');
-        text-align: center;
 
         .o_thread_date {
             position: relative;
-            top: 10px;
-            margin: 0 auto;
-            padding: 0 10px;
-            font-weight: bold;
-            background: white;
+            padding: 0 0 6px;
+            font-size:13px;
+            font-family:Roboto-Bold;
+            font-weight:bold;
+            color:#cbd0d3;
+            line-height:20px;
+            display: inline-block;
+            width: 100%;
+            border-bottom: 1px solid #E5E8EA;
         }
     }
 
@@ -74,7 +76,7 @@
 
     .o_thread_message {
         display: flex;
-        padding: 4px $o-horizontal-padding;
+        padding: 4px $o-horizontal-padding 4px 48px;
         margin-bottom: 0px;
 
         &.o_mail_not_discussion {
@@ -83,7 +85,7 @@
         }
 
         .o_thread_message_sidebar {
-            flex: 0 0 $o-mail-thread-avatar-size;
+            flex: 0 0 36px;
             margin-right: 10px;
             margin-top: 2px;
             text-align: center;
@@ -95,7 +97,9 @@
             }
 
             .o_thread_message_avatar {
-                max-width: $o-mail-thread-avatar-size;
+                max-width: 36px;
+                box-shadow: 0px 2px 5px 0px rgba(0, 32, 63, 0.1);
+                border: 2px solid white;
             }
             .o_thread_message_side_date {
                 margin-left: -5px;
@@ -163,6 +167,11 @@
                 margin: 0 0 9px; // Required by the old design to override a general rule on p's
                 &:last-child {
                     margin-bottom: 0;
+                    background: rgba(255,255,255,1);
+                    box-shadow: 0px 2px 5px 0px rgba(0,32,63,0.1);
+                    border-radius: 6px;
+                    padding: 4px 8px;
+                    display: inline-block;
                 }
             }
             a {
@@ -209,6 +218,18 @@
             .o_thread_tooltip_container {
                 display: inline;
                 position: relative;
+            }
+        }
+
+        &.o_mail_user_message .o_thread_message_core p:last-child {
+            background-color: #5DB85C;
+            color: #fff;
+            a {
+                color: white;
+                text-decoration: underline;
+            }
+            a:hover{
+                color: #DAFFD9;
             }
         }
     }

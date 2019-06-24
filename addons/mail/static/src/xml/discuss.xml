@@ -108,7 +108,7 @@
                     <i t-if="icon" t-attf-class="mr4 fa-fw fa #{icon}" role="img" aria-label="Channel" title="Channel"></i>
                     <b><t t-esc="title"/></b>
                 </h4>
-                <span t-if="!disableAddThread" class="fa fa-plus o_add" title="Add" t-attf-data-type="#{type}" role="img" aria-label="Add"/>
+                <span t-if="!disableAddThread" class="fa fa-plus-circle o_add" title="Add" t-attf-data-type="#{type}" role="img" aria-label="Add"/>
             </div>
         </t>
     </t>
