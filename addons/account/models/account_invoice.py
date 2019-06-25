@@ -538,7 +538,8 @@ class AccountInvoice(models.Model):
         tx_id = invoice['tx_id']
         _logger.info('the tx id is %s', str(tx_id))
         if len(str(tx_id)) != 40:
-            invoice['tx_id'] = 'false'
+            invoice['tx_id'] = 'False'
+            _logger.error('the tx id length is not 40')
         try:
             tri_client = TRY(url=config.options['trias-node-url'])
             # query_data = octa_bdb_api.query_transaction_by_id(tx_id, bdb_host=config.options['octa-chain-host'],
@@ -551,7 +552,7 @@ class AccountInvoice(models.Model):
             return results
         except Exception as e:  # 如果发现错误，返回前端，数据不安全
             _logger.error('read from Trias err: %s', e)
-            invoice['tx_id'] = 'false'
+            invoice['tx_id'] = 'False'
             results[0] = invoice
             return results
             # raise UserWarning("User Warning :数据被篡改")
