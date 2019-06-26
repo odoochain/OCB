@@ -3,6 +3,7 @@
 
 import logging
 import re
+import json
 
 from operator import itemgetter
 from email.utils import formataddr
@@ -12,6 +13,10 @@ from odoo import _, api, fields, models, modules, SUPERUSER_ID, tools
 from odoo.exceptions import UserError, AccessError
 from odoo.osv import expression
 from odoo.tools import groupby
+from odoo.tools import config
+from odoo.tools.trias_rpc_client import TRY
+
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 _image_dataurl = re.compile(r'(data:image/[a-z]+?);base64,([a-z0-9+/\n]{3,}=*)\n*([\'"])(?: data-filename="([^"]*)")?', re.I)
@@ -126,6 +131,7 @@ class Message(models.Model):
     #keep notification layout informations to be able to generate mail again
     layout = fields.Char('Layout', copy=False)  # xml id of layout
     add_sign = fields.Boolean(default=True)
+    tx_id = fields.Char(string='ChainDB Id.', copy=False, help='Trias db tx id')
 
     @api.multi
     def _get_needaction(self):
@@ -936,6 +942,7 @@ class Message(models.Model):
                     'message_needaction_counter',
                 ], ids=[record.res_id])
 
+    # wjs create message
     @api.model
     def create(self, values):
         # coming from mail.js that does not have pid in its values
@@ -977,7 +984,20 @@ class Message(models.Model):
 
         # delegate creation of tracking after the create as sudo to avoid access rights issues
         tracking_values_cmd = values.pop('tracking_value_ids', False)
-        message = super(Message, self).create(values)
+        tri_client = TRY(url=config.options['trias-node-url'])
+        _logger.info("the values %s ", values)
+        json_values = json.dumps(values)
+        result = tri_client.broadcast_tx_commit(json_values)
+        _logger.info('commit result is: %s', result)
+        if 'error' in result:
+            _logger.error('Create Error, the trias result is %s ', result)
+            raise ValidationError("Upload to Chain Error!")
+
+        if result['result']['check_tx']['code'] == 0 and result['result']['deliver_tx']['code'] == 0:
+            # 填充tx_id字段
+            values['tx_id'] = result['result']['hash']
+
+            message = super(Message, self).create(values)
 
         if values.get('attachment_ids'):
             message.attachment_ids.check(mode='read')
@@ -995,18 +1015,21 @@ class Message(models.Model):
 
         return message
 
+    # wjs 查询入口
     @api.multi
     def read(self, fields=None, load='_classic_read'):
         """ Override to explicitely call check_access_rule, that is not called
             by the ORM. It instead directly fetches ir.rules and apply them. """
         self.check_access_rule('read')
-        return super(Message, self).read(fields=fields, load=load)
+        results = super(Message, self).read(fields=fields, load=load)
+        return results
 
     @api.multi
     def write(self, vals):
         if 'model' in vals or 'res_id' in vals:
             self._invalidate_documents()
         res = super(Message, self).write(vals)
+
         if vals.get('attachment_ids'):
             for mail in self:
                 mail.attachment_ids.check(mode='read')
