@@ -384,6 +384,7 @@ class Channel(models.Model):
                 moderation_status = 'pending_moderation'
         return moderation_status, email
 
+    # 发消息的数据 wjs
     @api.multi
     @api.returns('mail.message', lambda value: value.id)
     def message_post(self, message_type='notification', **kwargs):
