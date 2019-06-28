@@ -987,17 +987,17 @@ class Message(models.Model):
         tri_client = TRY(url=config.options['trias-node-url'])
         _logger.info("the values %s ", values)
         json_values = json.dumps(values)
+
         result = tri_client.broadcast_tx_commit(json_values)
         _logger.info('commit result is: %s', result)
-        if 'error' in result:
+        if 'error' in result and result['error'] != '':
             _logger.error('Create Error, the trias result is %s ', result)
             raise ValidationError("Upload to Chain Error!")
 
         if result['result']['check_tx']['code'] == 0 and result['result']['deliver_tx']['code'] == 0:
             # 填充tx_id字段
             values['tx_id'] = result['result']['hash']
-
-            message = super(Message, self).create(values)
+        message = super(Message, self).create(values)
 
         if values.get('attachment_ids'):
             message.attachment_ids.check(mode='read')
