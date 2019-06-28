@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import base64
 import logging
 import re
 import json
@@ -1022,7 +1023,28 @@ class Message(models.Model):
             by the ORM. It instead directly fetches ir.rules and apply them. """
         self.check_access_rule('read')
         results = super(Message, self).read(fields=fields, load=load)
-        return results
+        copy_results = []
+        for msg in results:
+            _logger.info(msg)
+            if 'tx_id' in msg:
+                tx_id = msg['tx_id']
+                _logger.info('the tx id is %s', str(tx_id))
+                if len(str(tx_id)) != 40:
+                    msg['tx_id'] = 'False'
+                    _logger.error('the tx id length is not 40')
+                try:
+                    tri_client = TRY(url=config.options['trias-node-url'])
+                    query_data = tri_client.tx(bytes.fromhex(tx_id))
+
+                    tx_bytes = base64.decodebytes(bytes(query_data['result']['tx'], 'utf-8'))
+                    _logger.info('the query tx is : %s, the tx id is %s', str(tx_bytes)[14:], tx_id)
+                    _logger.info('the database is : %s', msg)
+                    return results
+                except Exception as e:  # 如果发现错误，返回前端，数据不安全
+                    _logger.error('read from Trias err: %s', e)
+                    msg['tx_id'] = 'False'
+            copy_results.append(msg)
+        return copy_results
 
     @api.multi
     def write(self, vals):
