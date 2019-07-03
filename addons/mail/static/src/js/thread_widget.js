@@ -177,7 +177,7 @@ var ThreadWidget = Widget.extend({
                 displayAuthorMessages[message.getID()] = !options.squashCloseMessages;
             }
             prevMessage = message;
-            if(message.getAuthorName() === session.name) {
+            if(message.getAuthorName && message.getAuthorName() === session.name) {
                 isFromSessionUser[message.getID()] = true
             } else {
                 isFromSessionUser[message.getID()] = false
