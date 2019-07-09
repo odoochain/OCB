@@ -403,14 +403,16 @@ table.table_desc tr td {
             outline: none;
             &:before {
                 content:'\f056';
-                font-family: 'FontAwesome';
+                font-family: "Font Awesome 5 Free";  /* updated font-family */
+                font-weight: 900; /* solid style/weight */
                 display: inline-block;
                 margin: 0 .5em 0 .75em;
                 color: $gray-600;
             }
             &.collapsed:before {
                 content:'\f055';
-                font-family: 'FontAwesome';
+                font-family: "Font Awesome 5 Free";  /* updated font-family */
+                font-weight: 900; /* solid style/weight */
             }
             &:hover,
             &:focus {
@@ -452,7 +454,8 @@ table.table_desc tr td {
         background-image: none;
         color: $body-color;
         &:before {
-            font-family: "FontAwesome";
+            font-family: "Font Awesome 5 Free";  /* updated font-family */
+            font-weight: 900; /* solid style/weight */
             display: inline-block;
             background-color: #fff;
         }
