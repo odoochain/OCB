@@ -415,19 +415,38 @@ body .modal {
 }
 #list_website_pages {
     th {
-        background-color: $o-brand-odoo;
-        color: white;
+        background-color: #f6f7f9;
+        color: #142A3F;
+        border: none;
     }
-    td, th {
-        padding: 0.45rem;
+    th:first-child{
+        border-radius: 4px 0 0 4px;
+    }
+    th:last-child{
+        border-radius: 0 4px 4px 0;
+    }
+    th {
+        padding: 16px 18px;
+    }
+    td{
+        padding: 10px 18px;
+        border:none;
+        border-bottom: 1px solid #E5E8EA;
     }
     td {
         > a.fa {
             margin-left: 5px;
-            color: $o-brand-odoo;
+            text-decoration: none;
+            color:#586A7B;
+            &:hover {
+                color: $o-brand-odoo;
+            }
         }
-        .text-muted {
-            opacity: 0.5;
+        .text-green {
+            color:  $o-brand-odoo;
+        }
+        .text-orange {
+            color: #F57123;
         }
     }
     .fa-check, .fa-eye-slash {
