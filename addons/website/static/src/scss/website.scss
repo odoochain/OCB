@@ -925,27 +925,30 @@ table.table_desc tr td {
 
 // Rating
 .s_rating {
+    /* upgrade FA to v5*/
     $star: "\f005";
-    $star-o: "\f006";
+    // $star-o: "\f006";
     $circle: "\f111";
-    $circle-o: "\f10c";
+    // $circle-o: "\f10c";
     $heart: "\f004";
-    $heart-o: "\f08a";
-    @mixin s_rating_generate_icons($off, $on) {
+    // $heart-o: "\f08a";
+    @mixin s_rating_generate_icons($content) {
         .fa:before {
-            content: $off;
+            content: $content;
+            font-weight: 400;
         }
         @for $counter from 5 to 0 {
             &.s_rating_#{$counter} {
                 .fa:nth-of-type(-n+#{$counter}):before {
-                    content: $on;
+                    content: $content;
+                    font-weight: 900;
                 }
             }
         }
     }
-    > .s_rating_stars   { @include s_rating_generate_icons($star-o, $star);     }
-    > .s_rating_squares { @include s_rating_generate_icons($circle-o, $circle); }
-    > .s_rating_hearts  { @include s_rating_generate_icons($heart-o, $heart);   }
+    > .s_rating_stars   { @include s_rating_generate_icons($star); }
+    > .s_rating_squares { @include s_rating_generate_icons($circle); }
+    > .s_rating_hearts  { @include s_rating_generate_icons($heart); }
     > .s_rating_bar {
         .fa {
             display: none;
