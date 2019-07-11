@@ -39,11 +39,6 @@
                     tr:first-child {
                         background: #f6f7f9;
                     }
-
-                    tr:nth-child(even):not(:hover) {
-                        background: #f5f6f7;
-                    }
-
                     th {
                         text-transform: uppercase;
                         color:#142a3f;;
@@ -54,6 +49,10 @@
                         &:last-child{
                             border-radius: 0 4px 4px 0;
                         }
+                    }
+                    td{
+                        border: none;
+                        border-bottom: 1px solid #E5E8EA;
                     }
                     td, th {
                         text-align: right;
