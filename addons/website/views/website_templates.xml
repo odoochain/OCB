@@ -1204,22 +1204,22 @@ Sitemap: <t t-esc="url_root"/>sitemap.xml
             <a t-if='final_page' t-att-href="page.url"><t t-esc="page.url"/></a>
         </td>
         <td class="text-center">
-            <i t-if="page.menu_ids" class="fa fa-check" title="In main menu"/>
-            <i t-else="" class="fa fa-times text-muted" title="Not in main menu"/>
+            <i t-if="page.menu_ids" class="fas fa-check-circle text-green" title="In main menu"/>
+            <i t-else="" class="fas fa-times-circle text-orange" title="Not in main menu"/>
         </td>
         <td class="text-center">
             <t t-set='date_formatted'><t t-options='{"widget": "date"}' t-esc="page.date_publish"/></t>
-            <i t-if="page.is_visible" class="fa fa-check" title="Visible"/>
+            <i t-if="page.is_visible" class="fas fa-check-circle text-green" title="Visible"/>
             <i t-elif="page.website_published" class="fa fa-eye-slash" t-attf-title="This page will be visible on {{ date_formatted }}"/>
-            <i t-else="" class="fa fa-times text-muted" title="Not visible"/>
+            <i t-else="" class="fas fa-times-circle text-orange" title="Not visible"/>
         </td>
         <td class="text-center">
-            <i t-if="page.website_indexed" class="fa fa-check" title="Indexed"/>
-            <i t-else="" class="fa fa-times text-muted" title="Not indexed"/>
+            <i t-if="page.website_indexed" class="fas fa-check-circle text-green" title="Indexed"/>
+            <i t-else="" class="fas fa-times-circle text-orange" title="Not indexed"/>
         </td>
         <td class="text-center">
-            <i t-if="page.is_seo_optimized" class="fa fa-check" title="SEO optimized"/>
-            <i t-else="" class="fa fa-times text-muted" title="Not SEO optimized"/>
+            <i t-if="page.is_seo_optimized" class="fas fa-check-circle text-green" title="SEO optimized"/>
+            <i t-else="" class="fas fa-times-circle text-orange" title="Not SEO optimized"/>
         </td>
         <td class="text-right" style="white-space:nowrap;">
             <a class="mr4 fa fa-cog js_page_properties" href="#" t-att-data-id="page.id" title="Manage this page"/>

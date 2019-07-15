@@ -20,9 +20,11 @@
         justify-content: center;
     }
     .o_link_enable {
-        @include media-breakpoint-up(lg) {
-            border-right: 1px solid #ccc;
-        }
+        // @include media-breakpoint-up(lg) {
+        //     border-right: 1px solid #ccc;
+        // }
+        background:rgba(246,247,249,1);
+        border-radius:4px;
         height: initial;
         padding: 5px;
         text-align: center;
@@ -41,16 +43,18 @@
         }
     }
     .o_link_disable {
-        @include media-breakpoint-up(lg) {
-            border-right: 1px solid #ccc;
-        }
+        // @include media-breakpoint-up(lg) {
+        //     border-right: 1px solid #ccc;
+        // }
+        background:rgba(246,247,249,1);
+        border-radius:4px;
         height: initial;
         padding: 5px;
         text-align: center;
         overflow: hidden;
         text-overflow: ellipsis;
         margin: 10px 0px;
-        color: darken($o-brand-lightsecondary, 40%);
+        color: #142A3F;
         .o_highlight {
             font-size: 20px;
             font-weight: bold;

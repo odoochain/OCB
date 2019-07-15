@@ -37,21 +37,30 @@
                 table {
 
                     tr:first-child {
-                        background: white;
+                        background: #f6f7f9;
                     }
-
-                    tr:nth-child(even):not(:hover) {
-                        background: #f5f6f7;
-                    }
-
                     th {
                         text-transform: uppercase;
-                        color: $o-main-text-color;
+                        color:#142a3f;;
                         border-top-width: 0px;
+                        &:first-child{
+                            border-radius: 4px 0 0 4px;
+                        }
+                        &:last-child{
+                            border-radius: 0 4px 4px 0;
+                        }
+                    }
+                    td{
+                        border: none;
+                        border-bottom: 1px solid #E5E8EA;
                     }
                     td, th {
                         text-align: right;
                         border-left: none;
+                        font-size:13px;
+                        font-family:Roboto-Medium;
+                        font-weight:500;
+                        line-height:20px;
 
                         &:first-child {
                             text-align: left;

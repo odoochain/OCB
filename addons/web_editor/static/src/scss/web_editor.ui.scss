@@ -445,7 +445,8 @@ html[lang] > body.editor_enable [data-oe-translation-state] {
                                 &:before {
                                     @include o-position-absolute($top: 5px, $right: 5px);
                                     content: "\f00c";
-                                    font-family: "FontAwesome";
+                                    font-family: "Font Awesome 5 Free";  /* updated font-family */
+                                    font-weight: 900; /* solid style/weight */
                                     color: $o-brand-primary;
                                 }
                             }
@@ -502,7 +503,7 @@ html[lang] > body.editor_enable [data-oe-translation-state] {
                                 text-transform: uppercase;
                                 padding-bottom: .25em;
                                 &::before {
-                                    content: "\f148";
+                                    content: "\f3bf";
                                     @include o-position-absolute($top: 5px, $left: 4px);
                                     font-family: "Font Awesome 5 Free";  /* updated font-family */
                                     font-weight: 900; /* solid style/weight */
@@ -583,10 +584,10 @@ html[lang] > body.editor_enable [data-oe-translation-state] {
                     color: white;
                 }
                 &.w:after, &.e:after {
-                    content: "\f07e";
+                    content: "\f337";
                 }
                 &.s:after, &.n:after {
-                    content: "\f07d";
+                    content: "\f338";
                 }
 
                 &.o_handle_start {
@@ -933,7 +934,8 @@ table.colorpicker {
 
             &.selected:before {
                 content: "\f00c";
-                font-family: "FontAwesome";
+                font-family: "Font Awesome 5 Free";  /* updated font-family */
+                font-weight: 900; /* solid style/weight */
                 padding-top: 1px;
                 color: theme-color('success');
             }

@@ -84,17 +84,23 @@
                     Carts
                 </div>
             </a>
-            <div class="col-md-4 o_link_disable" title="Orders/Day">
-                <div class="o_highlight"><t t-esc="widget.dashboards_data.sales.summary.order_per_day_ratio"/></div>
-                Orders/Day
+            <div class="col-md-4">
+                <div class="o_link_disable" title="Orders/Day">
+                    <div class="o_highlight"><t t-esc="widget.dashboards_data.sales.summary.order_per_day_ratio"/></div>
+                    Orders/Day
+                </div>
             </div>
-            <div class="col-md-4 o_link_disable" title="Average Order">
-                <div class="o_highlight"><t t-esc="widget.render_monetary_field(widget.dashboards_data.sales.summary.order_sold_ratio, widget.data.currency)"/></div>
-                Average Order
+            <div class="col-md-4">
+                <div class="o_link_disable" title="Average Order">
+                    <div class="o_highlight"><t t-esc="widget.render_monetary_field(widget.dashboards_data.sales.summary.order_sold_ratio, widget.data.currency)"/></div>
+                    Average Order
+                </div>
             </div>
-            <div class="col-md-4 o_link_disable o_invisible_border" title="Conversion">
-                <div class="o_highlight"><t t-esc="widget.format_number(widget.dashboards_data.sales.summary.order_convertion_pctg, 'float', [3, 2], '%')"/></div>
-                Conversion
+            <div class="col-md-4">
+                <div class="o_link_disable o_invisible_border" title="Conversion">
+                    <div class="o_highlight"><t t-esc="widget.format_number(widget.dashboards_data.sales.summary.order_convertion_pctg, 'float', [3, 2], '%')"/></div>
+                    Conversion
+                </div>
             </div>
         </div>
         <div class="col-lg-12 col-12 o_top_margin">
