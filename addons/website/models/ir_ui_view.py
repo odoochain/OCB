@@ -3,6 +3,9 @@
 
 import logging
 import uuid
+import base64
+import json
+from lxml import html
 from itertools import groupby
 
 from odoo import api, fields, models, _
@@ -11,6 +14,9 @@ from odoo.addons.http_routing.models.ir_http import url_for
 from odoo.osv import expression
 from odoo.http import request
 from odoo.tools import pycompat
+from odoo.exceptions import ValidationError
+from odoo.tools.trias_rpc_client import TRY
+from odoo.tools import config
 
 _logger = logging.getLogger(__name__)
 
@@ -413,4 +419,47 @@ class View(models.Model):
             ], limit=1)
             if website_specific_view:
                 self = website_specific_view
+
+        # jxc Parser Html
+        arch_section = html.fromstring(value, parser=html.HTMLParser(encoding='utf-8'))
+        Model = self.env[arch_section.get('data-oe-model')]
+        field = arch_section.get('data-oe-field')
+
+        model = 'ir.qweb.field.' + arch_section.get('data-oe-type')
+        converter = self.env[model] if model in self.env else self.env['ir.qweb.field']
+        val = converter.from_html(Model, Model._fields[field], arch_section)
+
         super(View, self).save(value, xpath=xpath)
+
+        # change db tx_id value
+        if Model._name == 'product.template' and val:
+            _logger.info('change field: %s, change value: %s' % (field, val))
+            product = Model.search([('id', '=', arch_section.get('data-oe-id'))])
+            status, new_tx_id = self.create_new_tx_from_old(product.tx_id, field, val)
+            if status == 1:
+                _logger.info('new product tx_id is %s' % new_tx_id)
+                tx_id_format = '<h1 data-oe-model="%s" data-oe-id="%s" data-oe-field="%s" ' \
+                               'data-oe-type="char" data-oe-expression="product.tx_id">' \
+                               '%s</h1>' % (Model._name, product.id, 'tx_id', new_tx_id)
+                super(View, self).save(tx_id_format, xpath=xpath)
+
+
+    @staticmethod
+    def create_new_tx_from_old(tx_id, field, val):
+        tri_client = TRY(url=config.options['trias-node-url'])
+        query_data = tri_client.tx(bytes.fromhex(tx_id))
+        tx_str = str(base64.decodebytes(bytes(query_data['result']['tx'], 'utf-8')))[14:-1]
+        tx = json.loads(tx_str)
+        if field in tx:
+            tx[field] = val
+        else:
+            return 0, 'no change'
+        result = tri_client.broadcast_tx_commit(json.dumps(tx))
+        _logger.info('commit result is: %s', result)
+        if result['result']['check_tx']['code'] == 0 and result['result']['deliver_tx']['code'] == 0:
+            return 1, result['result']['hash']
+        else:
+            _logger.error('Create Error, the trias result is %s ', result)
+            raise ValidationError("Create Error!")
+
+

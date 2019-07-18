@@ -1,5 +1,6 @@
 import requests
 import binascii
+from requests.adapters import HTTPAdapter
 
 
 def hex_prefix(value):
@@ -34,8 +35,11 @@ class TRY(object):
         # TODO 判断超时时间
         endpoint = '{}{}'.format(self.url, name)
         payload = convert_args(args)
+        s = requests.Session()
+        s.mount('http://', HTTPAdapter(max_retries=3, pool_connections=100, pool_maxsize=100))
+        s.keep_alive = False
         try:
-            result = requests.get(endpoint, params=payload)
+            result = s.get(endpoint, params=payload, timeout=5)
             return result.json()
         except Exception as e:
             print('trias_rpc_client ,call ,Error parsing response: {}'.format(e))

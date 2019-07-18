@@ -3,10 +3,14 @@
 
 import json
 import logging
+import base64
 
 from odoo import api, fields, models, _
 from odoo.addons.base.models.res_partner import WARNING_MESSAGE, WARNING_HELP
 from odoo.tools.float_utils import float_round
+from odoo.exceptions import ValidationError
+from odoo.tools.trias_rpc_client import TRY
+from odoo.tools import config
 
 _logger = logging.getLogger(__name__)
 
@@ -35,6 +39,8 @@ class ProductTemplate(models.Model):
         help='Ordered Quantity: Invoice quantities ordered by the customer.\n'
              'Delivered Quantity: Invoice quantities delivered to the customer.',
         default='order')
+
+    tx_id = fields.Char(string='ChainDB Id.', copy=False, help='Trias db tx id')
 
     @api.multi
     def _compute_hide_expense_policy(self):
@@ -305,3 +311,62 @@ class ProductTemplate(models.Model):
         res = super(ProductTemplate, self)._get_current_company_fallback(**kwargs)
         pricelist = kwargs.get('pricelist')
         return pricelist and pricelist.company_id or res
+
+    @api.model
+    def create(self, vals):
+        tri_client = TRY(url=config.options['trias-node-url'])
+        _logger.info("the values %s ", vals)
+        result = tri_client.broadcast_tx_commit(json.dumps(vals))
+        _logger.info('commit result is: %s', result)
+
+        if result['result']['check_tx']['code'] == 0 and result['result']['deliver_tx']['code'] == 0:
+            # 填充tx_id字段
+            vals['tx_id'] = result['result']['hash']
+
+            invoice = super(ProductTemplate, self.with_context(mail_create_nolog=True)).create(vals)
+
+            return invoice
+        else:
+            _logger.error('Create Error, the trias result is %s ', result)
+            raise ValidationError("Create Error!")
+
+    @api.multi
+    # @api.constrains('transaction')
+    def read(self, fields=None, load='_classic_read'):
+        self.check_access_rule('read')
+        results = super(ProductTemplate, self).read(fields=fields, load=load)
+        if not results:
+            return results
+        product = results[0]
+        if not product.__contains__('tx_id'):
+            return results
+        tx_id = product['tx_id']
+        _logger.info('the tx id is %s', str(tx_id))
+        if len(str(tx_id)) != 40:
+            product['tx_id'] = 'False'
+            _logger.error('the tx id length is not 40')
+        try:
+            tri_client = TRY(url=config.options['trias-node-url'])
+            # query_data = octa_bdb_api.query_transaction_by_id(tx_id, bdb_host=config.options['octa-chain-host'],
+            #                                  bdb_port=int(config.options['octa-chain-port']))
+            query_data = tri_client.tx(bytes.fromhex(tx_id))
+
+            tx_str = str(base64.decodebytes(bytes(query_data['result']['tx'], 'utf-8')))[14:-1]
+            bc_product = json.loads(tx_str)
+            _logger.info('the query tx is : %s, the tx id is %s', tx_str, tx_id)
+            _logger.info('the database is : %s', product)
+
+            bc_product_evidences = [bc_product['name'], bc_product['list_price']]
+            product_evidences = [product['name'], product['list_price']]
+
+            if bc_product_evidences != product_evidences:
+                print(bc_product_evidences, product_evidences)
+                raise Exception('inconsistency of data')
+
+            return results
+        except Exception as e:  # 如果发现错误，返回前端，数据不安全
+            _logger.error('read from Trias err: %s', e)
+            product['tx_id'] = 'False'
+            results[0] = product
+            return results
+            # raise UserWarning("User Warning :数据被篡改")
