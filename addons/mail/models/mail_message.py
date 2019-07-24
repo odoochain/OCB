@@ -1036,9 +1036,22 @@ class Message(models.Model):
                     tri_client = TRY(url=config.options['trias-node-url'])
                     query_data = tri_client.tx(bytes.fromhex(tx_id))
 
-                    tx_bytes = base64.decodebytes(bytes(query_data['result']['tx'], 'utf-8'))
-                    _logger.info('the query tx is : %s, the tx id is %s', str(tx_bytes)[14:], tx_id)
+                    tx_str = str(base64.decodebytes(bytes(query_data['result']['tx'], 'utf-8')))[14:-1]
+                    bc_msg = json.loads(tx_str)
+                    _logger.info('the query tx is : %s, the tx id is %s', tx_str, tx_id)
                     _logger.info('the database is : %s', msg)
+
+                    bc_msg_evidences = [bc_msg['reply_to'], bc_msg['email_from'], bc_msg['message_id'],
+                                        bc_msg['model'], bc_msg['message_type'], bc_msg['record_name'],
+                                        bc_msg['body'].encode('utf8').decode('unicode_escape')]
+                    msg_evidences = [msg['reply_to'], msg['email_from'], msg['message_id'],
+                                     msg['model'], msg['message_type'], msg['record_name']]
+                    if msg['body']:
+                        msg_evidences.append(msg['body'][3:-4])
+                    if bc_msg_evidences != msg_evidences:
+                        print(bc_msg_evidences, msg_evidences)
+                        raise Exception('inconsistency of data')
+
                     return results
                 except Exception as e:  # 如果发现错误，返回前端，数据不安全
                     _logger.error('read from Trias err: %s', e)

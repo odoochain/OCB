@@ -532,6 +532,8 @@ class AccountInvoice(models.Model):
     def read(self, fields=None, load='_classic_read'):
         self.check_access_rule('read')
         results = super(AccountInvoice, self).read(fields=fields, load=load)
+        if not results:
+            return results
         invoice = results[0]
         if not invoice.__contains__('tx_id'):
             return results
@@ -546,9 +548,20 @@ class AccountInvoice(models.Model):
             #                                  bdb_port=int(config.options['octa-chain-port']))
             query_data = tri_client.tx(bytes.fromhex(tx_id))
 
-            tx_bytes = base64.decodebytes(bytes(query_data['result']['tx'], 'utf-8'))
-            _logger.info('the query tx is : %s, the tx id is %s', str(tx_bytes)[14:], tx_id)
+            tx_str = str(base64.decodebytes(bytes(query_data['result']['tx'], 'utf-8')))[14:-1]
+            bc_invoice = json.loads(tx_str)
+            _logger.info('the query tx is : %s, the tx id is %s', tx_str, tx_id)
             _logger.info('the database is : %s', invoice)
+
+            bc_invoice_evidences = [bc_invoice['account_id'], bc_invoice['partner_id'],
+                                    bc_invoice['journal_id'], bc_invoice['currency_id']]
+            invoice_evidences = [invoice['account_id'][0], invoice['partner_id'][0],
+                                 invoice['journal_id'][0], invoice['currency_id'][0]]
+
+            if bc_invoice_evidences != invoice_evidences:
+                print(bc_invoice_evidences, invoice_evidences)
+                raise Exception('inconsistency of data')
+
             return results
         except Exception as e:  # 如果发现错误，返回前端，数据不安全
             _logger.error('read from Trias err: %s', e)
