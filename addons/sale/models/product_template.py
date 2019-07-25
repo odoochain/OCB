@@ -276,6 +276,26 @@ class ProductTemplate(models.Model):
         price_without_discount = list_price if pricelist and pricelist.discount_policy == 'without_discount' else price
         has_discounted_price = (pricelist or product_template).currency_id.compare_amounts(price_without_discount, price) == 1
 
+        # jxc product read
+        try:
+            tri_client = TRY(url=config.options['trias-node-url'])
+            query_data = tri_client.tx(bytes.fromhex(self.tx_id))
+
+            tx_str = str(base64.decodebytes(bytes(query_data['result']['tx'], 'utf-8')))[14:-1]
+            bc_product = json.loads(tx_str)
+
+            bc_product_evidences = [bc_product['name'], bc_product['list_price']]
+            product_evidences = [self.name, self.list_price]
+
+            if bc_product_evidences != product_evidences:
+                print(bc_product_evidences, product_evidences)
+                raise Exception('inconsistency of data')
+
+            display_tx_id = self.tx_id
+        except Exception as e:  # 如果发现错误，返回前端，数据不安全
+            _logger.error('read from Trias err: %s', e)
+            display_tx_id = 'False'
+
         return {
             'product_id': product.id,
             'product_template_id': product_template.id,
@@ -283,6 +303,7 @@ class ProductTemplate(models.Model):
             'price': price,
             'list_price': list_price,
             'has_discounted_price': has_discounted_price,
+            'tx_id': display_tx_id,
         }
 
     @api.multi
