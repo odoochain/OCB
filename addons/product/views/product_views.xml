@@ -30,6 +30,7 @@
                     <div class="oe_title">
                         <label class="oe_edit_only" for="name" string="Product Name"/>
                         <h1><field name="name" placeholder="Product Name"/></h1>
+                        <field name="tx_id" invisible="1" widget="product_validator"/>
                         <div name="options" groups="base.group_user">
                             <div>
                                 <field name="sale_ok"/>
