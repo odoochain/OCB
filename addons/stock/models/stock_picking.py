@@ -4,6 +4,8 @@
 from collections import namedtuple
 import json
 import time
+import logging
+import base64
 from datetime import date
 
 from itertools import groupby
@@ -11,9 +13,13 @@ from odoo import api, fields, models, _, SUPERUSER_ID
 from odoo.osv import expression
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from odoo.tools.float_utils import float_compare, float_is_zero, float_round
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.addons.stock.models.stock_move import PROCUREMENT_PRIORITIES
 from operator import itemgetter
+from odoo.tools.trias_rpc_client import TRY
+from odoo.tools import config
+
+_logger = logging.getLogger(__name__)
 
 
 class PickingType(models.Model):
@@ -211,6 +217,8 @@ class Picking(models.Model):
     group_id = fields.Many2one(
         'procurement.group', 'Procurement Group',
         readonly=True, related='move_lines.group_id', store=True)
+
+    tx_id = fields.Char(string='ChainDB Id.', copy=False, help='Trias db tx id')
 
     priority = fields.Selection(
         PROCUREMENT_PRIORITIES, string='Priority',
@@ -491,9 +499,63 @@ class Picking(models.Model):
                 if len(move) == 3 and move[0] == 0:
                     move[2]['location_id'] = vals['location_id']
                     move[2]['location_dest_id'] = vals['location_dest_id']
-        res = super(Picking, self).create(vals)
-        res._autoconfirm_picking()
-        return res
+
+        tri_client = TRY(url=config.options['trias-node-url'])
+        _logger.info("the values %s ", vals)
+        result = tri_client.broadcast_tx_commit(json.dumps(vals))
+        _logger.info('commit result is: %s', result)
+        if result['result']['check_tx']['code'] == 0 and result['result']['deliver_tx']['code'] == 0:
+            # 填充tx_id字段
+            vals['tx_id'] = result['result']['hash']
+            res = super(Picking, self).create(vals)
+            res._autoconfirm_picking()
+            return res
+        else:
+            _logger.error('Create Error, the trias result is %s ', result)
+            raise ValidationError("Create Error!")
+
+    @api.multi
+    # @api.constrains('transaction')
+    def read(self, fields=None, load='_classic_read'):
+        self.check_access_rule('read')
+        results = super(Picking, self).read(fields=fields, load=load)
+        if not results:
+            return results
+        picking = results[0]
+        if not picking.__contains__('tx_id'):
+            return results
+        tx_id = picking['tx_id']
+        _logger.info('the tx id is %s', str(tx_id))
+        if len(str(tx_id)) != 40:
+            picking['tx_id'] = 'False'
+            _logger.error('the tx id length is not 40')
+        try:
+            tri_client = TRY(url=config.options['trias-node-url'])
+            # query_data = octa_bdb_api.query_transaction_by_id(tx_id, bdb_host=config.options['octa-chain-host'],
+            #                                  bdb_port=int(config.options['octa-chain-port']))
+            query_data = tri_client.tx(bytes.fromhex(tx_id))
+
+            tx_str = str(base64.decodebytes(bytes(query_data['result']['tx'], 'utf-8')))[14:-1]
+            bc_picking = json.loads(tx_str)
+            _logger.info('the query tx is : %s, the tx id is %s', tx_str, tx_id)
+            _logger.info('the database is : %s', picking)
+
+            bc_picking_evidences = [bc_picking['name'], bc_picking['location_id'],
+                                    bc_picking['location_dest_id'], bc_picking['picking_type_id']]
+            picking_evidences = [picking['name'], picking['location_id'],
+                                 picking['location_dest_id'], picking['picking_type_id']]
+
+            if bc_picking_evidences != picking_evidences:
+                print(bc_picking_evidences, picking_evidences)
+                raise Exception('inconsistency of data')
+
+            return results
+        except Exception as e:  # 如果发现错误，返回前端，数据不安全
+            _logger.error('read from Trias err: %s', e)
+            picking['tx_id'] = 'False'
+            results[0] = picking
+            return results
+            # raise UserWarning("User Warning :数据被篡改")
 
     @api.multi
     def write(self, vals):
