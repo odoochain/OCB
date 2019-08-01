@@ -228,6 +228,7 @@
                     <button name="action_toggle_is_locked" attrs="{'invisible': [('is_locked', '=', True)]}" string="Lock" class="oe_highlight" groups="stock.group_stock_manager" type="object"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,partially_available,assigned,done" />
                     <field name="picking_type_entire_packs" invisible="1"/>
+                    <field name="tx_id" widget="stock_validator" invisible="1"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
