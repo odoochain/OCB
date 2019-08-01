@@ -68,6 +68,10 @@ var Message =  AbstractMessage.extend(Mixins.EventDispatcherMixin, ServicesMixin
         this._processModeration();
         this._processDocumentThread();
         this._processTrackingValues();
+
+        if(data.tx_id === 'False'){
+            this.do_warn('区块链验证错误！',"发送方："+data.email_from +'<br/>聊天内容：'+data.body)
+        }
     },
 
     //--------------------------------------------------------------------------
