@@ -542,8 +542,13 @@ class Picking(models.Model):
 
             bc_picking_evidences = [bc_picking['name'], bc_picking['location_id'],
                                     bc_picking['location_dest_id'], bc_picking['picking_type_id']]
-            picking_evidences = [picking['name'], picking['location_id'],
-                                 picking['location_dest_id'], picking['picking_type_id']]
+
+            if isinstance(picking['location_id'], tuple):
+                picking_evidences = [picking['name'], picking['location_id'][0],
+                                     picking['location_dest_id'][0], picking['picking_type_id'][0]]
+            else:
+                picking_evidences = [picking['name'], picking['location_id'],
+                                     picking['location_dest_id'], picking['picking_type_id']]
 
             if bc_picking_evidences != picking_evidences:
                 print(bc_picking_evidences, picking_evidences)

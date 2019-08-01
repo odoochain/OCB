@@ -1027,7 +1027,7 @@ class Message(models.Model):
         copy_results = []
         for msg in results:
             _logger.info(msg)
-            if 'tx_id' in msg:
+            if 'tx_id' in msg and '<p>' in msg['body']:
                 tx_id = msg['tx_id']
                 _logger.info('the tx id is %s', str(tx_id))
                 if len(str(tx_id)) != 40:
