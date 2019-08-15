@@ -349,13 +349,19 @@
             width: 100%;
 
             color: white;
-            background-color: $o-brand-primary;
+            background:rgba(0,0,0,1);
+            border-radius:0px 0px 1px 1px;
+            // background-color: $o-brand-primary;
             opacity: 0;
             transition: opacity ease 400ms;
 
             > button.fa {
                 border: none;
                 background-color: transparent;
+                color: #FFFFFF;
+                &.o_clear_file_button{
+                    color: #91999E;
+                }
             }
 
             > .fa {

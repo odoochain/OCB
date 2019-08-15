@@ -46,9 +46,10 @@
     // Button box
     .oe_button_box {
         width: 400px;
-        text-align: right;
+        // text-align: right;
         float: right;
         margin-bottom: 4px;
+        background:rgba(244,246,249,1);
 
         &, & + .oe_avatar {
             + .oe_title {
@@ -65,14 +66,23 @@
         .oe_stat_button {
             color: $o-main-text-color;
             text-align: left;
-            width: 132px !important;
+            width: 162px !important;
             height: 40px;
             margin: 0px -1px -1px 0px;
             padding: 0;
             border-radius: 0;
-            border-color: #ccc;
-            background: white;
+            // border-color: #ccc;
+            background: transparent;
             outline: none;
+            padding-right: 30px;
+
+            &:first-child,&:nth-child(2){
+                margin-top:20px;
+            }
+
+            &:nth-child(2n+1){
+                margin-left:24px;
+            }
 
             &:hover {
                 background-color: #e6e6e6;
@@ -84,7 +94,7 @@
                 padding: 0px 3px;
                 text-align: center;
                 vertical-align: middle;
-                color: #7C7BAD;
+                color: #91999E;
                 font-size: 24px;
             }
 
@@ -117,6 +127,21 @@
                 padding: 0;
                 line-height: 120%;
                 vertical-align: middle;
+            }
+        }
+
+        .oe_stat_button[name="toggle_active"]{
+            display: block;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #cbd0d3;
+            padding: 3px 27px;
+            height: 30px;
+            margin: 42px 0 24px 24px;
+            text-align: center;
+            .fa-archive{
+                width: 24px;
+                font-size: 14px;
             }
         }
 
