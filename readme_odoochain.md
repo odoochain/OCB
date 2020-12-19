@@ -60,4 +60,16 @@ the following command from an elevated command prompt:
 ## database manager
 
 http://127.0.0.1:8069/web/database/manager
+
 http://127.0.0.1:8099/web/database/manager
+
+## begin
+
+-r odoo -w odoo -d immartian14 
+-i base 
+
+## todo
+
+Odoo referral:Allow you to refer your friends to Odoo and get rewards
+
+

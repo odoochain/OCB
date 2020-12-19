@@ -29,7 +29,7 @@ class Partner(models.Model):
                 [False] + [e[0] for e in type(self).base_onboarding_company_state.selection])),
             ('primary_color', populate.iterate([False, '', '#ff7755'])),
             ('secondary_color', populate.iterate([False, '', '#ffff55'], seed='primary_color')),
-            ('currency_id', populate.iterate([ref('base.EUR').id, ref('base.USD').id, ref('base.CHF').id, ref('base.CHF').id])),  # add more?
+            ('currency_id', populate.iterate([ref('base.EUR').id, ref('base.USD').id, ref('base.CNY').id, ref('base.CHF').id])),  # add more?
             ('name', populate.compute(get_name)),
         ]
 
