@@ -128,7 +128,11 @@ insert into res_currency (id, name, symbol) VALUES (1, 'EUR', '€');
 insert into ir_model_data (name, module, model, noupdate, res_id) VALUES ('EUR', 'base', 'res.currency', true, 1);
 select setval('res_currency_id_seq', 1);
 
-insert into res_company (id, name, partner_id, currency_id, create_date) VALUES (1, 'My Company', 1, 1, now() at time zone 'UTC');
+insert into res_currency (id, name, symbol) VALUES (7, 'CNY', '¥');
+insert into ir_model_data (name, module, model, noupdate, res_id) VALUES ('CNY', 'base', 'res.currency', true, 7);
+select setval('res_currency_id_seq', 7);
+
+insert into res_company (id, name, partner_id, currency_id, create_date) VALUES (1, 'My Company', 1, 7, now() at time zone 'UTC');
 insert into ir_model_data (name, module, model, noupdate, res_id) VALUES ('main_company', 'base', 'res.company', true, 1);
 select setval('res_company_id_seq', 1);
 
