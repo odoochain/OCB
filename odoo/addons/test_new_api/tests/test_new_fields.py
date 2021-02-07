@@ -553,7 +553,6 @@ class TestFields(TransactionCaseWithUserDemo):
         self.assertEqual(foo1.name, 'Bar')
         self.assertEqual(foo2.name, 'Bar')
 
-
         # create/write on 'foo' should only invoke the compute method
         log = []
         model = self.env['test_new_api.compute.inverse'].with_context(log=log)
@@ -629,16 +628,6 @@ class TestFields(TransactionCaseWithUserDemo):
         with self.assertRaises(AccessError):
             foo.with_user(user).display_name = 'Forbidden'
 
-    def test_13_inverse_access(self):
-        """ test access rights on inverse fields """
-        foo = self.env['test_new_api.category'].create({'name': 'Foo'})
-        user = self.env['res.users'].create({'name': 'Foo', 'login': 'foo'})
-        self.assertFalse(user.has_group('base.group_system'))
-        # add group on non-stored inverse field
-        self.patch(type(foo).display_name, 'groups', 'base.group_system')
-        with self.assertRaises(AccessError):
-            foo.with_user(user).display_name = 'Forbidden'
-
     def test_14_search(self):
         """ test search on computed fields """
         discussion = self.env.ref('test_new_api.discussion_0')
@@ -682,6 +671,38 @@ class TestFields(TransactionCaseWithUserDemo):
         with self.assertRaises(ValidationError):
             discussion.name = "X"
             discussion.flush()
+
+    def test_15_constraint_inverse(self):
+        """ test constraint method on normal field and field with inverse """
+        log = []
+        model = self.env['test_new_api.compute.inverse'].with_context(log=log, log_constraint=True)
+
+        # create/write with normal field only
+        log.clear()
+        record = model.create({'baz': 'Hi'})
+        self.assertCountEqual(log, ['constraint'])
+
+        log.clear()
+        record.write({'baz': 'Ho'})
+        self.assertCountEqual(log, ['constraint'])
+
+        # create/write with inverse field only
+        log.clear()
+        record = model.create({'bar': 'Hi'})
+        self.assertCountEqual(log, ['inverse', 'constraint'])
+
+        log.clear()
+        record.write({'bar': 'Ho'})
+        self.assertCountEqual(log, ['inverse', 'constraint'])
+
+        # create/write with both fields only
+        log.clear()
+        record = model.create({'bar': 'Hi', 'baz': 'Hi'})
+        self.assertCountEqual(log, ['inverse', 'constraint'])
+
+        log.clear()
+        record.write({'bar': 'Ho', 'baz': 'Ho'})
+        self.assertCountEqual(log, ['inverse', 'constraint'])
 
     def test_16_compute_unassigned(self):
         model = self.env['test_new_api.compute.unassigned']
@@ -1353,6 +1374,12 @@ class TestFields(TransactionCaseWithUserDemo):
         self.assertEqual(attribute_record.company.foo, 'DEF')
         self.assertEqual(attribute_record.bar, 'DEFDEF')
 
+        # a low priviledge user should be able to search on company_dependent fields
+        company_record.env.user.groups_id -= self.env.ref('base.group_system')
+        self.assertFalse(company_record.env.user.has_group('base.group_system'))
+        company_records = self.env['test_new_api.company'].search([('foo', '=', 'DEF')])
+        self.assertEqual(len(company_records), 1)
+
     def test_30_read(self):
         """ test computed fields as returned by read(). """
         discussion = self.env.ref('test_new_api.discussion_0')
@@ -1662,6 +1689,13 @@ class TestFields(TransactionCaseWithUserDemo):
         self.assertEqual(len(new_move.line_ids), 1)
         self.assertFalse(new_move.line_ids.id)
         self.assertEqual(new_move.line_ids.quantity, 2)
+
+        # assign line to new move without origin
+        new_move = move.new()
+        new_move.line_ids = line
+        self.assertFalse(new_move.line_ids.id)
+        self.assertEqual(new_move.line_ids._origin, line)
+        self.assertEqual(new_move.line_ids.move_id, new_move)
 
     @mute_logger('odoo.addons.base.models.ir_model')
     def test_41_new_related(self):
