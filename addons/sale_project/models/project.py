@@ -16,7 +16,7 @@ class Project(models.Model):
         help="Sales order item to which the project is linked. Link the timesheet entry to the sales order item defined on the project. "
         "Only applies on tasks without sale order item defined, and if the employee is not in the 'Employee/Sales Order Item Mapping' of the project.")
     sale_order_id = fields.Many2one('sale.order', 'Sales Order',
-        domain="[('order_line.product_id.type', '=', 'service'), ('partner_id', '=', partner_id)]",
+        domain="[('order_line.product_id.type', '=', 'service'), ('partner_id', '=', partner_id), ('state', 'in', ['sale', 'done'])]",
         copy=False, help="Sales order to which the project is linked.")
 
     _sql_constraints = [
@@ -35,7 +35,7 @@ class ProjectTask(models.Model):
 
     sale_order_id = fields.Many2one('sale.order', 'Sales Order', help="Sales order to which the task is linked.")
     sale_line_id = fields.Many2one(
-        'sale.order.line', 'Sales Order Item', domain="[('is_service', '=', True), ('order_partner_id', 'child_of', commercial_partner_id), ('is_expense', '=', False), ('state', 'in', ['sale', 'done']), ('order_id', '=?', project_sale_order_id)]",
+        'sale.order.line', 'Sales Order Item', domain="[('company_id', '=', company_id), ('is_service', '=', True), ('order_partner_id', 'child_of', commercial_partner_id), ('is_expense', '=', False), ('state', 'in', ['sale', 'done']), ('order_id', '=?', project_sale_order_id)]",
         compute='_compute_sale_line', store=True, readonly=False, copy=False,
         help="Sales order item to which the project is linked. Link the timesheet entry to the sales order item defined on the project. "
         "Only applies on tasks without sale order item defined, and if the employee is not in the 'Employee/Sales Order Item Mapping' of the project.")
@@ -66,8 +66,8 @@ class ProjectTask(models.Model):
                 if not task.sale_line_id.is_service or task.sale_line_id.is_expense:
                     raise ValidationError(_(
                         'You cannot link the order item %(order_id)s - %(product_id)s to this task because it is a re-invoiced expense.',
-                        order_id=task.sale_line_id.order_id.id,
-                        product_id=task.sale_line_id.product_id.name,
+                        order_id=task.sale_line_id.order_id.name,
+                        product_id=task.sale_line_id.product_id.display_name,
                     ))
 
     def unlink(self):
