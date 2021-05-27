@@ -1892,6 +1892,42 @@ QUnit.test('chat window should scroll to the newly posted message just after pos
     );
 });
 
+QUnit.test('chat window: post message on non-mailing channel with "CTRL-Enter" keyboard shortcut for small screen size', async function (assert) {
+    assert.expect(1);
+
+    this.data['mail.channel'].records.push({
+        id: 20,
+        is_minimized: true,
+        mass_mailing: false,
+    });
+    await this.start({
+        env: {
+            device: {
+                isMobile: true, // here isMobile is used for the small screen size, not actually for the mobile devices
+            },
+        },
+    });
+
+    await afterNextRender(() => document.querySelector(`.o_MessagingMenu_toggler`).click());
+    await afterNextRender(() =>
+        document.querySelector(`.o_MessagingMenu_dropdownMenu .o_NotificationList_preview`).click()
+    );
+    // insert some HTML in editable
+    await afterNextRender(() => {
+        document.querySelector(`.o_ComposerTextInput_textarea`).focus();
+        document.execCommand('insertText', false, "Test");
+    });
+    await afterNextRender(() => {
+        const kevt = new window.KeyboardEvent('keydown', { ctrlKey: true, key: "Enter" });
+        document.querySelector('.o_ComposerTextInput_textarea').dispatchEvent(kevt);
+    });
+    assert.containsOnce(
+        document.body,
+        '.o_Message',
+        "should now have single message in channel after posting message from pressing 'CTRL-Enter' in text input of composer for small screen"
+    );
+});
+
 QUnit.test('[technical] chat window: composer state conservation on toggle home menu when folded', async function (assert) {
     // technical as show/hide home menu simulation are involved and home menu implementation
     // have side-effects on DOM that may make chat window components not work
@@ -2186,8 +2222,8 @@ QUnit.test('chat window does not fetch messages if hidden', async function (asse
     );
 });
 
-QUnit.test('new message separator is shown in a chat window of a chat on receiving new message', async function (assert) {
-    assert.expect(6);
+QUnit.test('new message separator is shown in a chat window of a chat on receiving new message if there is a history of conversation', async function (assert) {
+    assert.expect(3);
 
     this.data['res.partner'].records.push({ id: 10, name: "Demo" });
     this.data['res.users'].records.push({
@@ -2205,16 +2241,13 @@ QUnit.test('new message separator is shown in a chat window of a chat on receivi
             uuid: 'channel-10-uuid',
         },
     ];
-    await this.start({
-        mockRPC(route, args) {
-            if (args.method === 'channel_fold') {
-                const channel_uuid = args.kwargs.uuid;
-                assert.strictEqual(channel_uuid, 'channel-10-uuid', "chat window fold state should have been sent to server");
-                assert.step(`rpc:channel_fold:${channel_uuid}`);
-            }
-            return this._super(...arguments);
-        },
+    this.data['mail.message'].records.push({
+        body: "not empty",
+        channel_ids: [10],
+        model: 'mail.channel',
+        res_id: 10,
     });
+    await this.start();
 
     // simulate receiving a message
     await afterNextRender(async () => this.env.services.rpc({
@@ -2232,19 +2265,51 @@ QUnit.test('new message separator is shown in a chat window of a chat on receivi
         '.o_ChatWindow',
         "a chat window should be visible after receiving a new message from a chat"
     );
-    assert.containsOnce(
+    assert.containsN(
         document.body,
         '.o_Message',
-        "chat window should have a single message (the newly received one)"
+        2,
+        "chat window should have 2 messages"
     );
     assert.containsOnce(
         document.body,
         '.o_MessageList_separatorNewMessages',
         "should display 'new messages' separator in the conversation, from reception of new messages"
     );
-    assert.verifySteps(
-        ['rpc:channel_fold:channel-10-uuid'],
-        "fold state of chat window of chat should have been updated to server"
+});
+
+QUnit.test('new message separator is not shown in a chat window of a chat on receiving new message if there is no history of conversation', async function (assert) {
+    assert.expect(1);
+
+    this.data['res.partner'].records.push({ id: 10, name: "Demo" });
+    this.data['res.users'].records.push({
+        id: 42,
+        name: "Foreigner user",
+        partner_id: 10,
+    });
+    this.data['mail.channel'].records = [{
+        channel_type: "chat",
+        id: 10,
+        members: [this.data.currentPartnerId, 10],
+        uuid: 'channel-10-uuid',
+    }];
+    await this.start();
+
+    // simulate receiving a message
+    await afterNextRender(async () => this.env.services.rpc({
+        route: '/mail/chat_post',
+        params: {
+            context: {
+                mockedUserId: 42,
+            },
+            message_content: "hu",
+            uuid: 'channel-10-uuid',
+        },
+    }));
+    assert.containsNone(
+        document.body,
+        '.o_MessageList_separatorNewMessages',
+        "should not display 'new messages' separator in the conversation of a chat on receiving new message if there is no history of conversation"
     );
 });
 
@@ -2268,6 +2333,12 @@ QUnit.test('focusing a chat window of a chat should make new message separator d
             uuid: 'channel-10-uuid',
         },
     );
+    this.data['mail.message'].records.push({
+        body: "not empty",
+        channel_ids: [10],
+        model: 'mail.channel',
+        res_id: 10,
+    });
     await this.start();
 
     // simulate receiving a message
@@ -2302,6 +2373,46 @@ QUnit.test('focusing a chat window of a chat should make new message separator d
         document.body,
         '.o_MessageList_separatorNewMessages',
         "new message separator should no longer be shown, after focus on composer text input of chat window"
+    );
+});
+
+QUnit.test('chat window should remain folded when new message is received', async function (assert) {
+    assert.expect(1);
+
+    this.data['res.partner'].records.push({ id: 10, name: "Demo" });
+    this.data['res.users'].records.push({
+        id: 42,
+        name: "Foreigner user",
+        partner_id: 10,
+    });
+    this.data['mail.channel'].records = [
+        {
+            channel_type: "chat",
+            id: 10,
+            is_minimized: true,
+            is_pinned: false,
+            members: [this.data.currentPartnerId, 10],
+            state: 'folded',
+            uuid: 'channel-10-uuid',
+        },
+    ];
+
+    await this.start();
+    // simulate receiving a new message
+    await afterNextRender(async () => this.env.services.rpc({
+        route: '/mail/chat_post',
+        params: {
+            context: {
+                mockedUserId: 42,
+            },
+            message_content: "New Message 2",
+            uuid: 'channel-10-uuid',
+        },
+    }));
+    assert.hasClass(
+        document.querySelector(`.o_ChatWindow`),
+        'o-folded',
+        "chat window should remain folded"
     );
 });
 

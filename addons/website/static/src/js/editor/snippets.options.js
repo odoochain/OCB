@@ -1671,6 +1671,7 @@ options.registry.collapse = options.Class.extend({
         var self = this;
         this.$target.on('shown.bs.collapse hidden.bs.collapse', '[role="tabpanel"]', function () {
             self.trigger_up('cover_update');
+            self.$target.trigger('content_changed');
         });
         return this._super.apply(this, arguments);
     },
@@ -1684,8 +1685,6 @@ options.registry.collapse = options.Class.extend({
      * @override
      */
     onClone: function () {
-        this.$target.find('[data-toggle="collapse"]').removeAttr('data-target').removeData('target');
-        this.$target.find('.collapse').removeAttr('id');
         this._createIDs();
     },
     /**
@@ -1714,30 +1713,30 @@ options.registry.collapse = options.Class.extend({
      * @private
      */
     _createIDs: function () {
-        var time = new Date().getTime();
-        var $tab = this.$target.find('[data-toggle="collapse"]');
+        let time = new Date().getTime();
+        const $tablist = this.$target.closest('[role="tablist"]');
+        const $tab = this.$target.find('[role="tab"]');
+        const $panel = this.$target.find('[role="tabpanel"]');
 
-        // link to the parent group
-        var $tablist = this.$target.closest('.accordion');
-        var tablist_id = $tablist.attr('id');
-        if (!tablist_id) {
-            tablist_id = 'myCollapse' + time;
-            $tablist.attr('id', tablist_id);
-        }
-        $tab.attr('data-parent', '#' + tablist_id);
-        $tab.data('parent', '#' + tablist_id);
-
-        // link to the collapse
-        var $panel = this.$target.find('.collapse');
-        var panel_id = $panel.attr('id');
-        if (!panel_id) {
-            while ($('#' + (panel_id = 'myCollapseTab' + time)).length) {
-                time++;
+        const setUniqueId = ($elem, label) => {
+            let elemId = $elem.attr('id');
+            if (!elemId || $('[id="' + elemId + '"]').length > 1) {
+                do {
+                    time++;
+                    elemId = label + time;
+                } while ($('#' + elemId).length);
+                $elem.attr('id', elemId);
             }
-            $panel.attr('id', panel_id);
-        }
-        $tab.attr('data-target', '#' + panel_id);
-        $tab.data('target', '#' + panel_id);
+            return elemId;
+        };
+
+        const tablistId = setUniqueId($tablist, 'myCollapse');
+        $panel.attr('data-parent', '#' + tablistId);
+        $panel.data('parent', '#' + tablistId);
+
+        const panelId = setUniqueId($panel, 'myCollapseTab');
+        $tab.attr('data-target', '#' + panelId);
+        $tab.data('target', '#' + panelId);
     },
 });
 
@@ -1963,6 +1962,42 @@ options.registry.topMenuColor = options.Class.extend({
                 onSuccess: value => resolve(!!value),
             });
         });
+    },
+});
+
+/**
+ * Manage the visibility of snippets on mobile.
+ */
+options.registry.MobileVisibility = options.Class.extend({
+
+    //--------------------------------------------------------------------------
+    // Options
+    //--------------------------------------------------------------------------
+
+    /**
+     * Allows to show or hide the associated snippet in mobile display mode.
+     *
+     * @see this.selectClass for parameters
+     */
+    showOnMobile(previewMode, widgetValue, params) {
+        const classes = `d-none d-md-${this.$target.css('display')}`;
+        this.$target.toggleClass(classes, !widgetValue);
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * @override
+     */
+    async _computeWidgetState(methodName, params) {
+        if (methodName === 'showOnMobile') {
+            const classList = [...this.$target[0].classList];
+            return classList.includes('d-none') &&
+                classList.some(className => className.startsWith('d-md-')) ? '' : 'true';
+        }
+        return await this._super(...arguments);
     },
 });
 
@@ -2476,6 +2511,7 @@ options.registry.SnippetMove = options.Class.extend({
             dom.scrollTo(this.$target[0], {
                 extraOffset: 50,
                 easing: 'linear',
+                duration: 550,
             });
         }
     },

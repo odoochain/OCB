@@ -294,12 +294,18 @@ class StockWarehouseOrderpoint(models.Model):
         """
         action = self.env["ir.actions.actions"]._for_xml_id("stock.action_orderpoint_replenish")
         action['context'] = self.env.context
-        orderpoints = self.env['stock.warehouse.orderpoint'].search([])
+        # Search also with archived ones to avoid to trigger product_location_check SQL constraints later
+        # It means that when there will be a archived orderpoint on a location + product, the replenishment
+        # report won't take in account this location + product and it won't create any manual orderpoint
+        # In master: the active field should be remove
+        orderpoints = self.env['stock.warehouse.orderpoint'].with_context(active_test=False).search([])
         # Remove previous automatically created orderpoint that has been refilled.
         to_remove = orderpoints.filtered(lambda o: o.create_uid.id == SUPERUSER_ID and o.qty_to_order <= 0.0 and o.trigger == 'manual')
         to_remove.unlink()
         orderpoints = orderpoints - to_remove
         to_refill = defaultdict(float)
+        all_product_ids = []
+        all_warehouse_ids = []
         qty_by_product_warehouse = self.env['report.stock.quantity'].read_group(
             [('date', '=', fields.date.today()), ('state', '=', 'forecast')],
             ['product_id', 'product_qty', 'warehouse_id'],
@@ -308,7 +314,39 @@ class StockWarehouseOrderpoint(models.Model):
             warehouse_id = group.get('warehouse_id') and group['warehouse_id'][0]
             if group['product_qty'] >= 0.0 or not warehouse_id:
                 continue
+            all_product_ids.append(group['product_id'][0])
+            all_warehouse_ids.append(warehouse_id)
             to_refill[(group['product_id'][0], warehouse_id)] = group['product_qty']
+        if not to_refill:
+            return action
+
+        # Recompute the forecasted quantity for missing product today but at this time
+        # with their real lead days.
+        key_to_remove = []
+
+        # group product by lead_days and warehouse in order to read virtual_available
+        # in batch
+        pwh_per_day = defaultdict(list)
+        for (product, warehouse), quantity in to_refill.items():
+            product = self.env['product.product'].browse(product).with_prefetch(all_product_ids)
+            warehouse = self.env['stock.warehouse'].browse(warehouse).with_prefetch(all_warehouse_ids)
+            rules = product._get_rules_from_location(warehouse.lot_stock_id)
+            lead_days = rules.with_context(bypass_delay_description=True)._get_lead_days(product)[0]
+            pwh_per_day[(lead_days, warehouse)].append(product.id)
+        for (days, warehouse), p_ids in pwh_per_day.items():
+            products = self.env['product.product'].browse(p_ids)
+            qties = products.with_context(
+                warehouse=warehouse.id,
+                to_date=fields.datetime.now() + relativedelta.relativedelta(days=days)
+            ).read(['virtual_available'])
+            for qty in qties:
+                if float_compare(qty['virtual_available'], 0, precision_rounding=product.uom_id.rounding) >= 0:
+                    key_to_remove.append((qty['id'], warehouse.id))
+                else:
+                    to_refill[(qty['id'], warehouse.id)] = qty['virtual_available']
+
+        for key in key_to_remove:
+            del to_refill[key]
         if not to_refill:
             return action
 
@@ -317,13 +355,13 @@ class StockWarehouseOrderpoint(models.Model):
         dummy, qty_by_product_wh = self.env['product.product'].browse(product_ids)._get_quantity_in_progress(warehouse_ids=warehouse_ids)
         rounding = self.env['decimal.precision'].precision_get('Product Unit of Measure')
         # Group orderpoint by product-warehouse
-        grouped_orderpoint_data = self.env['stock.warehouse.orderpoint'].read_group(
+        orderpoint_by_product_warehouse = self.env['stock.warehouse.orderpoint'].read_group(
             [('id', 'in', orderpoints.ids)],
             ['product_id', 'warehouse_id', 'qty_to_order:sum'],
             ['product_id', 'warehouse_id'], lazy=False)
         orderpoint_by_product_warehouse = {
             (record.get('product_id')[0], record.get('warehouse_id')[0]): record.get('qty_to_order')
-            for record in grouped_orderpoint_data
+            for record in orderpoint_by_product_warehouse
         }
         for (product, warehouse), product_qty in to_refill.items():
             qty_in_progress = qty_by_product_wh.get((product, warehouse)) or 0.0
@@ -340,12 +378,22 @@ class StockWarehouseOrderpoint(models.Model):
         ], ['lot_stock_id'])
         lot_stock_id_by_warehouse = {w['id']: w['lot_stock_id'][0] for w in lot_stock_id_by_warehouse}
 
+        # With archived ones to avoid `product_location_check` SQL constraints
+        orderpoint_by_product_location = self.env['stock.warehouse.orderpoint'].with_context(active_test=False).read_group(
+            [('id', 'in', orderpoints.ids)],
+            ['product_id', 'location_id', 'ids:array_agg(id)'],
+            ['product_id', 'location_id'], lazy=False)
+        orderpoint_by_product_location = {
+            (record.get('product_id')[0], record.get('location_id')[0]): record.get('ids')[0]
+            for record in orderpoint_by_product_location
+        }
+
         orderpoint_values_list = []
         for (product, warehouse), product_qty in to_refill.items():
             lot_stock_id = lot_stock_id_by_warehouse[warehouse]
-            orderpoint = orderpoints.filtered(lambda o: o.product_id.id == product and o.location_id.id == lot_stock_id)
-            if orderpoint:
-                orderpoint[0].qty_forecast += product_qty
+            orderpoint_id = orderpoint_by_product_location.get((product, lot_stock_id))
+            if orderpoint_id:
+                self.env['stock.warehouse.orderpoint'].browse(orderpoint_id).qty_forecast += product_qty
             else:
                 orderpoint_values = self.env['stock.warehouse.orderpoint']._get_orderpoint_values(product, lot_stock_id)
                 orderpoint_values.update({

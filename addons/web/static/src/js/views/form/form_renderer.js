@@ -238,7 +238,7 @@ var FormRenderer = BasicRenderer.extend({
             const name = notebook.dataset.name;
             if (name in state) {
                 const navs = notebook.querySelectorAll(':scope .o_notebook_headers .nav-item');
-                const pages = notebook.querySelectorAll(':scope .tab-content > .tab-pane');
+                const pages = notebook.querySelectorAll(':scope > .tab-content > .tab-pane');
                 // We can't base the amount on the 'navs' length since some overrides
                 // are adding pageless nav items.
                 const validTabsAmount = pages.length;
@@ -966,6 +966,13 @@ var FormRenderer = BasicRenderer.extend({
                         $link.removeClass('active');
                         tab.$page.removeClass('active');
                         self.inactiveNotebooks.push(renderedTabs);
+                    }
+                    if (!modifiers.invisible) {
+                        // make first page active if there is only one page to display
+                        var $visibleTabs = $headers.find('li:not(.o_invisible_modifier)');
+                        if ($visibleTabs.length === 1) {
+                            self.inactiveNotebooks.push(renderedTabs);
+                        }
                     }
                 },
             });

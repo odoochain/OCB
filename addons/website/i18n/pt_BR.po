@@ -10,6 +10,7 @@
 # Marcos Abreu <marcoos.abreu@gmail.com>, 2020
 # Luiz Fernando <lfpsgs@outlook.com>, 2020
 # Ramiro Pereira de Magalhães <ramiro.p.magalhaes@gmail.com>, 2020
+# PopSolutions Cooperativa Digital <popsolutions.co@gmail.com>, 2020
 # Lucas Rabelo <lucas.rabelo@nextsolucoes.net.br>, 2020
 # Wagner Pereira <wagner@wagner.pereira.nom.br>, 2020
 # Adriel Kotviski <kotviski@gmail.com>, 2020
@@ -18,11 +19,9 @@
 # André Augusto Firmino Cordeiro <a.cordeito@gmail.com>, 2020
 # Keli Brugalli <kbr@odoo.com>, 2020
 # André Carvalho <and2carvalho@gmail.com>, 2020
-# PopSolutions Cooperativa Digital <popsolutions.co@gmail.com>, 2020
 # Rodrigo de Almeida Sottomaior Macedo <rmsolucoeseminformatica@protonmail.com>, 2020
 # Rafael H L Moretti <rafael.moretti@gmail.com>, 2020
 # Hildeberto Abreu Magalhães <hildeberto@gmail.com>, 2020
-# danimaribeiro <danimaribeiro@gmail.com>, 2020
 # Rui Andrada <shingonoide@gmail.com>, 2020
 # Luiz Carlos de Lima <luiz.carlos@akretion.com.br>, 2020
 # grazziano <gra.negocia@gmail.com>, 2020
@@ -34,6 +33,7 @@
 # Martin Trigaux, 2020
 # Marcel Savegnago <marcel.savegnago@gmail.com>, 2020
 # Mateus Lopes <mateus1@gmail.com>, 2020
+# danimaribeiro <danimaribeiro@gmail.com>, 2021
 # Éder Brito <britoederr@gmail.com>, 2021
 # 
 msgid ""
@@ -430,11 +430,8 @@ msgstr "<b>Clique</b> neste cabeçalho para configurá-lo."
 #. openerp-web
 #: code:addons/website/static/src/js/tours/tour_utils.js:0
 #, python-format
-msgid ""
-"<b>Click</b> on this option to change the ${optionTooltipLabel} of the "
-"block."
+msgid "<b>Click</b> on this option to change the %s of the block."
 msgstr ""
-"<b>Clique</b> nesta opção para alterar o/a ${optionTooltipLabel} do bloco."
 
 #. module: website
 #. openerp-web
@@ -496,8 +493,8 @@ msgstr ""
 #. openerp-web
 #: code:addons/website/static/src/js/tours/tour_utils.js:0
 #, python-format
-msgid "<b>Select</b> a ${optionTooltipLabel}."
-msgstr "<b>Selecione</b> um ${optionTooltipLabel}."
+msgid "<b>Select</b> a %s."
+msgstr ""
 
 #. module: website
 #. openerp-web
@@ -510,8 +507,8 @@ msgstr "<b>Selecione</b> uma Paleta de Cores."
 #. openerp-web
 #: code:addons/website/static/src/js/tours/tour_utils.js:0
 #, python-format
-msgid "<b>Slide</b> this button to change the ${direction} padding"
-msgstr "<b>Deslize</b> este botão para alterar o ${direction} preenchimento"
+msgid "<b>Slide</b> this button to change the %s padding"
+msgstr ""
 
 #. module: website
 #. openerp-web
@@ -1816,6 +1813,13 @@ msgstr "Sistema de construção de blocos"
 
 #. module: website
 #. openerp-web
+#: code:addons/website/static/src/js/menu/new_content.js:0
+#, python-format
+msgid "Building your %s"
+msgstr ""
+
+#. module: website
+#. openerp-web
 #: code:addons/website/static/src/xml/theme_preview.xml:0
 #, python-format
 msgid "Building your website..."
@@ -3107,10 +3111,8 @@ msgstr "Arraste outro bloco na sua página, abaixo da capa."
 #: code:addons/website/static/src/js/tours/tour_utils.js:0
 #, python-format
 msgid ""
-"Drag the <b>${snippet.name}</b> building block and drop it in your page."
+"Drag the <b>%s</b> building block and drop it at the bottom of your page."
 msgstr ""
-"Arraste o bloco de construção <b>${snippet.name}</b>  e solte-o na sua "
-"página."
 
 #. module: website
 #. openerp-web
@@ -4471,7 +4473,7 @@ msgstr "Herdar"
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website_page__inherit_id
 msgid "Inherited View"
-msgstr "View herdada"
+msgstr "Visualização herdada"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_progress_bar_options
@@ -4603,7 +4605,7 @@ msgstr "Está Conectado"
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website_page__website_indexed
 msgid "Is Indexed"
-msgstr "Está Indexado"
+msgstr "Está Indexada"
 
 #. module: website
 #: model:ir.model.fields,field_description:website.field_ir_module_module__is_installed_on_current_website
@@ -4624,7 +4626,7 @@ msgstr "É Mega Menu"
 #: model:ir.model.fields,field_description:website.field_website_snippet_filter__is_published
 #: model_terms:ir.ui.view,arch_db:website.website_pages_tree_view
 msgid "Is Published"
-msgstr "Está publicado"
+msgstr "Está publicada"
 
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website_menu__is_visible
@@ -4989,7 +4991,7 @@ msgstr "Permitir seus clientes conectarem para ver os documentos deles"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.onboarding_website_theme_step
 msgid "Let's start!"
-msgstr "Let's start!"
+msgstr "Vamos Começar!"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
@@ -6593,6 +6595,11 @@ msgstr ""
 "com apenas alguns cliques."
 
 #. module: website
+#: model_terms:ir.ui.view,arch_db:website.website_search_box
+msgid "Search..."
+msgstr "Pesquisar..."
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_features
 msgid "Second Feature"
 msgstr "Segunda Característica"
@@ -7730,7 +7737,7 @@ msgstr "Número total de páginas rastreadas em visitas"
 #: model:ir.model.fields,field_description:website.field_ir_ui_view__track
 #: model:ir.model.fields,field_description:website.field_website_page__track
 msgid "Track"
-msgstr "Faixa"
+msgstr "Rastrear"
 
 #. module: website
 #. openerp-web
@@ -8185,7 +8192,7 @@ msgstr "Tipo de Visão"
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website_page__mode
 msgid "View inheritance mode"
-msgstr "View inheritance mode"
+msgstr "Visualizar modo de herança"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_product_list

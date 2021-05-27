@@ -406,7 +406,9 @@ class AccountBankStatement(models.Model):
                 statement._set_next_sequence()
 
         self.write({'state': 'posted'})
-        self.line_ids.move_id._post(soft=False)
+        lines_of_moves_to_post = self.line_ids.filtered(lambda line: line.move_id.state != 'posted')
+        if lines_of_moves_to_post:
+            lines_of_moves_to_post.move_id._post(soft=False)
 
     def button_validate(self):
         if any(statement.state != 'posted' or not statement.all_lines_reconciled for statement in self):
@@ -777,8 +779,10 @@ class AccountBankStatementLine(models.Model):
     # COMPUTE METHODS
     # -------------------------------------------------------------------------
 
-    @api.depends('currency_id', 'amount', 'foreign_currency_id', 'amount_currency',
-                 'move_id.line_ids', 'move_id.line_ids.matched_debit_ids', 'move_id.line_ids.matched_credit_ids')
+    @api.depends('journal_id', 'currency_id', 'amount', 'foreign_currency_id', 'amount_currency',
+                 'move_id.line_ids.account_id', 'move_id.line_ids.amount_currency',
+                 'move_id.line_ids.amount_residual_currency', 'move_id.line_ids.currency_id',
+                 'move_id.line_ids.matched_debit_ids', 'move_id.line_ids.matched_credit_ids')
     def _compute_is_reconciled(self):
         ''' Compute the field indicating if the statement lines are already reconciled with something.
         This field is used for display purpose (e.g. display the 'cancel' button on the statement lines).
@@ -1165,6 +1169,12 @@ class AccountBankStatementLine(models.Model):
 
                 counterpart_vals['account_id'] = open_balance_account.id
                 counterpart_vals['partner_id'] = partner.id
+            else:
+                if self.amount > 0:
+                    open_balance_account = self.company_id.partner_id.with_company(self.company_id).property_account_receivable_id
+                else:
+                    open_balance_account = self.company_id.partner_id.with_company(self.company_id).property_account_payable_id
+                counterpart_vals['account_id'] = open_balance_account.id
 
             open_balance_vals = self._prepare_counterpart_move_line_vals(counterpart_vals)
         else:
@@ -1240,6 +1250,7 @@ class AccountBankStatementLine(models.Model):
 
         line_vals_list = [reconciliation_vals['line_vals'] for reconciliation_vals in reconciliation_overview]
         new_lines = self.env['account.move.line'].create(line_vals_list)
+        new_lines = new_lines.with_context(skip_account_move_synchronization=True)
         for reconciliation_vals, line in zip(reconciliation_overview, new_lines):
             if reconciliation_vals.get('payment'):
                 accounts = (self.journal_id.payment_debit_account_id, self.journal_id.payment_credit_account_id)
@@ -1259,6 +1270,10 @@ class AccountBankStatementLine(models.Model):
                                         if overview.get('counterpart_line') and overview['counterpart_line'].partner_id)
             if len(rec_overview_partners) == 1:
                 self.line_ids.write({'partner_id': rec_overview_partners.pop()})
+
+        # Refresh analytic lines.
+        self.move_id.line_ids.analytic_line_ids.unlink()
+        self.move_id.line_ids.create_analytic_lines()
 
     # -------------------------------------------------------------------------
     # BUSINESS METHODS

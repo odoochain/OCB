@@ -2978,6 +2978,9 @@ class _RelationalMulti(_Relational):
             value = record.env[self.comodel_name].browse(value)
 
         if isinstance(value, BaseModel) and value._name == self.comodel_name:
+            def get_origin(val):
+                return val._origin if isinstance(val, BaseModel) else val
+
             # make result with new and existing records
             inv_names = {field.name for field in record._field_inverses[self]}
             result = [(6, 0, [])]
@@ -2996,7 +2999,7 @@ class _RelationalMulti(_Relational):
                         values = record._convert_to_write({
                             name: record[name]
                             for name in record._cache
-                            if name not in inv_names and record[name] != origin[name]
+                            if name not in inv_names and get_origin(record[name]) != origin[name]
                         })
                         if values:
                             result.append((1, origin.id, values))
@@ -3018,7 +3021,7 @@ class _RelationalMulti(_Relational):
 
     def _setup_regular_full(self, model):
         super(_RelationalMulti, self)._setup_regular_full(model)
-        if isinstance(self.domain, list):
+        if not self.compute and isinstance(self.domain, list):
             self.depends = tuple(unique(itertools.chain(self.depends, (
                 self.name + '.' + arg[0]
                 for arg in self.domain
@@ -3507,6 +3510,7 @@ class Many2many(_RelationalMulti):
         context.update(self.context)
         comodel = records.env[self.comodel_name].with_context(**context)
         domain = self.get_domain_list(records)
+        comodel._flush_search(domain)
         wquery = comodel._where_calc(domain)
         comodel._apply_ir_rules(wquery, 'read')
         order_by = comodel._generate_order_by(None, wquery)

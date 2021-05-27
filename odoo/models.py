@@ -412,6 +412,10 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         field = cls._fields.pop(name, None)
         if hasattr(cls, name):
             delattr(cls, name)
+        if cls._rec_name == name:
+            # fixup _rec_name and display_name's dependencies
+            cls._rec_name = None
+            cls.display_name.depends = tuple(dep for dep in cls.display_name.depends if dep != name)
         return field
 
     @api.model
@@ -907,7 +911,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                         if lines2:
                             # merge first line with record's main line
                             for j, val in enumerate(lines2[0]):
-                                if val or isinstance(val, bool):
+                                if val or isinstance(val, (int, float)):
                                     current[j] = val
                             # append the other lines at the end
                             lines += lines2[1:]
@@ -2848,14 +2852,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 raise
 
         for name in bad_fields:
-            del cls._fields[name]
-            delattr(cls, name)
-
-        # fix up _rec_name
-        if 'x_name' in bad_fields and cls._rec_name == 'x_name':
-            cls._rec_name = None
-            field = cls._fields['display_name']
-            field.depends = tuple(name for name in field.depends if name != 'x_name')
+            self._pop_field(name)
 
     @api.model
     def _setup_complete(self):
@@ -3688,6 +3685,11 @@ Fields:
             real_recs._validate_fields(vals, inverse_fields)
 
             for fields in determine_inverses.values():
+                # write again on non-stored fields that have been invalidated from cache
+                for field in fields:
+                    if not field.store and any(self.env.cache.get_missing_ids(real_recs, field)):
+                        field.write(real_recs, vals[field.name])
+
                 # inverse records that are not being computed
                 try:
                     fields[0].determine_inverse(real_recs)
@@ -5294,6 +5296,9 @@ Fields:
                 result.append(self.browse())
             else:
                 (key, comparator, value) = d
+                if comparator in ('child_of', 'parent_of'):
+                    result.append(self.search([('id', 'in', self.ids), d]))
+                    continue
                 if key.endswith('.id'):
                     key = key[:-3]
                 if key == 'id':
@@ -5310,9 +5315,6 @@ Fields:
                 records_ids = OrderedSet()
                 for rec in self:
                     data = rec.mapped(key)
-                    if comparator in ('child_of', 'parent_of'):
-                        value = data.search([(data._parent_name, comparator, value)]).ids
-                        comparator = 'in'
                     if isinstance(data, BaseModel):
                         v = value
                         if (isinstance(value, list) or isinstance(value, tuple)) and len(value):

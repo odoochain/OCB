@@ -517,7 +517,7 @@ class Partner(models.Model):
             self.invalidate_cache(['user_ids'], self._ids)
             for partner in self:
                 if partner.active and partner.user_ids:
-                    raise ValidationError(_('You cannot archive a contact linked to an internal user.'))
+                    raise ValidationError(_('You cannot archive a contact linked to a portal or internal user.'))
         # res.partner must only allow to set the company_id of a partner if it
         # is the same as the company of all users that inherit from this partner
         # (this is to allow the code from res_users to write to the partner!) or
@@ -793,7 +793,7 @@ class Partner(models.Model):
                                vat=unaccent('res_partner.vat'),)
 
             where_clause_params += [search_name]*3  # for email / display_name, reference
-            where_clause_params += [re.sub('[^a-zA-Z0-9]+', '', search_name) or None]  # for vat
+            where_clause_params += [re.sub('[^a-zA-Z0-9\-\.]+', '', search_name) or None]  # for vat
             where_clause_params += [search_name]  # for order by
             if limit:
                 query += ' limit %s'
