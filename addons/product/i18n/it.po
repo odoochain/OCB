@@ -686,7 +686,7 @@ msgstr "Creato da"
 #: model:ir.model.fields,field_description:product.field_product_template_attribute_line__create_date
 #: model:ir.model.fields,field_description:product.field_product_template_attribute_value__create_date
 msgid "Created on"
-msgstr "Creato il"
+msgstr "Data creazione"
 
 #. module: product
 #: model:ir.model.fields.selection,name:product.selection__res_config_settings__product_volume_volume_in_cubic_feet__1
@@ -2473,8 +2473,8 @@ msgid ""
 "This pricelist will be used, instead of the default one, for sales to the "
 "current partner"
 msgstr ""
-"Listino prezzi utilizzato, al posto di quello predefinito, per le vendite al"
-" partner corrente"
+"Listino prezzi utilizzato, al posto di quello predefinito, per vendite al "
+"partner corrente"
 
 #. module: product
 #: code:addons/product/models/uom_uom.py:0
@@ -2964,6 +2964,16 @@ msgstr ""
 "%s"
 
 #. module: product
+#: code:addons/product/models/product_pricelist.py:0
+#, python-format
+msgid ""
+"You cannot delete this pricelist (%s), it is used in other pricelist(s) : \n"
+"%s"
+msgstr ""
+"Impossibile eliminare il listino prezzi (%s), è utilizzato in altri listini : \n"
+"%s"
+
+#. module: product
 #: code:addons/product/models/product.py:0
 #, python-format
 msgid ""
@@ -3062,7 +3072,7 @@ msgstr "prodotto"
 #. module: product
 #: model_terms:ir.ui.view,arch_db:product.view_partner_property_form
 msgid "the parent company"
-msgstr "azienda madre"
+msgstr "azienda principale"
 
 #. module: product
 #: model_terms:ir.ui.view,arch_db:product.product_variant_easy_edit_view

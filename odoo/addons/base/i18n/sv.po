@@ -22,6 +22,7 @@
 # Robert Frykelius <robert.frykelius@linserv.se>, 2021
 # Chrille Hedberg <hedberg.chrille@gmail.com>, 2021
 # Jakob Krabbe <jakob.krabbe@vertel.se>, 2021
+# Simon Strömberg <simon.stromberg@vertel.se>, 2021
 # Anders Wallenquist <anders.wallenquist@vertel.se>, 2021
 # 
 msgid ""
@@ -6285,12 +6286,12 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 msgid ""
 "<span class=\"o_form_label o_td_label\" name=\"address_name\">\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', 'contact')]}\">Company Address</b>\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', 'invoice')]}\">Invoice Address</b>\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', 'delivery')]}\">Delivery Address</b>\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', 'other')]}\">Other Address</b>\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', 'private')]}\">Private Address</b>\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', False)]}\">Address</b>\n"
+"                                <b attrs=\"{'invisible': [('company_type', '!=', 'company')]}\">Company Address</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'invoice'), ('company_type', '=', 'company')]}\">Invoice Address</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'delivery'), ('company_type', '=', 'company')]}\">Delivery Address</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'other'), ('company_type', '=', 'company')]}\">Other Address</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'private'), ('company_type', '=', 'company')]}\">Private Address</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', 'not in', (False, 'contact')), ('company_type', '=', 'company')]}\">Address</b>\n"
 "                            </span>"
 msgstr ""
 
@@ -6321,6 +6322,8 @@ msgid ""
 "<span class=\"searchIcon\"><i class=\"fa fa-search\" role=\"img\" aria-"
 "label=\"Search\" title=\"Search\"/></span>"
 msgstr ""
+"<span class=\"searchIcon\"><i class=\"fa fa-search\" role=\"img\" aria-"
+"label=\"Search\" title=\"Search\"/></span>"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.demo_force_install_form
@@ -6413,7 +6416,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_res_company_kanban
 msgid "<strong>Email:</strong>"
-msgstr ""
+msgstr "<strong>E-post:</strong>"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.report_irmodeloverview
@@ -6533,7 +6536,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.report_irmodeloverview
 msgid "<u><strong>Views</strong></u>"
-msgstr ""
+msgstr "<u><strong>Visningar</strong></u>"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_mx_edi_landing
@@ -6971,7 +6974,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_users_form_simple_modif
 msgid "Account Security"
-msgstr ""
+msgstr "Kontosäkerhet"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_taxcloud
@@ -7590,7 +7593,7 @@ msgstr ""
 #: model:ir.module.module,description:base.module_payment_adyen
 #: model:ir.module.module,shortdesc:base.module_payment_adyen
 msgid "Adyen Payment Acquirer"
-msgstr "Adyen Payment Acquirer"
+msgstr "Adyen betalväxel"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_adyen_platforms
@@ -7752,7 +7755,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_website_slides_forum
 msgid "Allows to link forum on a course"
-msgstr ""
+msgstr "Länka ett forum till kursen"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_sale_coupon_delivery
@@ -8267,7 +8270,7 @@ msgstr "Författares namn"
 #: model:ir.module.module,description:base.module_payment_authorize
 #: model:ir.module.module,shortdesc:base.module_payment_authorize
 msgid "Authorize.Net Payment Acquirer"
-msgstr "Authorize.Net Payment Acquirer"
+msgstr "Authorize.Net Betalväxel"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_module_module_dependency__auto_install_required
@@ -8972,7 +8975,7 @@ msgstr "Brunei Darussalam"
 #: model:ir.module.module,description:base.module_payment_buckaroo
 #: model:ir.module.module,shortdesc:base.module_payment_buckaroo
 msgid "Buckaroo Payment Acquirer"
-msgstr "Buckaroo Payment Acquirer"
+msgstr "Buckaroo betalväxel"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_budget
@@ -9416,7 +9419,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner_category__child_ids
 msgid "Child Tags"
-msgstr ""
+msgstr "Underetiketter"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_ir_actions_server__child_ids
@@ -10048,13 +10051,13 @@ msgstr "Kontaktnamn"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_partner_category_form
 msgid "Contact Tag"
-msgstr "Kontakttagg"
+msgstr "Kontaktetikett"
 
 #. module: base
 #: model:ir.actions.act_window,name:base.action_partner_category_form
 #: model_terms:ir.ui.view,arch_db:base.view_partner_category_list
 msgid "Contact Tags"
-msgstr "Kontakttaggar"
+msgstr "Kontaktetiketter"
 
 #. module: base
 #: model:ir.actions.act_window,name:base.action_partner_title_contact
@@ -10120,7 +10123,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_hr_contract_sign
 msgid "Contract - Signature"
-msgstr ""
+msgstr "Avtal - signatur"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_human_resources_contracts
@@ -10243,7 +10246,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_slides_survey
 msgid "Course Certifications"
-msgstr ""
+msgstr "Kurs för examen"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_model_access__perm_create
@@ -10318,12 +10321,12 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_actions_server__state__object_create
 msgid "Create a new Record"
-msgstr ""
+msgstr "Skapa en ny post"
 
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_res_bank_form
 msgid "Create a new bank"
-msgstr ""
+msgstr "Skapa en ny bank"
 
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_res_company_form
@@ -10333,7 +10336,7 @@ msgstr "Skapa ett nytt bolag"
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_partner_category_form
 msgid "Create a new contact tag"
-msgstr "Skapa ny kontakt tag"
+msgstr "Skapa ny kontaktetikett"
 
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_partner_customer_form
@@ -11635,7 +11638,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_documents_sign
 msgid "Documents - Signatures"
-msgstr ""
+msgstr "Dokument - signaturer"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_documents_hr_holidays
@@ -11959,7 +11962,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_users__signature
 msgid "Email Signature"
-msgstr ""
+msgstr "E-posta signatur"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner__employee
@@ -12920,7 +12923,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__base_partner_merge_automatic_wizard__state__finished
 msgid "Finished"
-msgstr "Klart"
+msgstr "Slutförda"
 
 #. module: base
 #: model:res.country,name:base.fi
@@ -13110,7 +13113,7 @@ msgstr "Forum"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_slides_forum
 msgid "Forum on Courses"
-msgstr ""
+msgstr "Forum på kurser"
 
 #. module: base
 #: code:addons/models.py:0
@@ -16675,7 +16678,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_mass_mailing_slides
 msgid "Mass mailing on course members"
-msgstr ""
+msgstr "Massutskick till kursdeltagare"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_mass_mailing_crm
@@ -17449,7 +17452,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_users_form_simple_modif
 msgid "New API Key"
-msgstr ""
+msgstr "Ny API-nyckel"
 
 #. module: base
 #: model:res.country,name:base.nc
@@ -19526,7 +19529,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_actions_report__report_type__qweb-pdf
 msgid "PDF"
-msgstr ""
+msgstr "PDF"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__base_language_export__format__po
@@ -19717,7 +19720,7 @@ msgstr ""
 #. module: base
 #: model:ir.model,name:base.model_res_partner_category
 msgid "Partner Tags"
-msgstr ""
+msgstr "Kontaktetikett"
 
 #. module: base
 #: model:ir.model,name:base.model_res_partner_title
@@ -19826,12 +19829,12 @@ msgstr "Betalnings Inlösare"
 #. module: base
 #: model:ir.module.module,description:base.module_payment
 msgid "Payment Acquirer Base Module"
-msgstr "Payment Acquirer Base Module"
+msgstr "Betalväxel basmodul"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_adyen
 msgid "Payment Acquirer: Adyen Implementation"
-msgstr "Payment Acquirer: Adyen Implementation"
+msgstr "Betalväxel: Adyen Implementation"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_alipay
@@ -19841,12 +19844,12 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_authorize
 msgid "Payment Acquirer: Authorize.net Implementation"
-msgstr "Payment Acquirer: Authorize.net Implementation"
+msgstr "Betalväxel: Authorize.net Implementation"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_buckaroo
 msgid "Payment Acquirer: Buckaroo Implementation"
-msgstr "Payment Acquirer: Buckaroo Implementation"
+msgstr "Betalväxel: Buckaroo Implementation"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_ingenico
@@ -19856,12 +19859,12 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_odoo_by_adyen
 msgid "Payment Acquirer: Odoo Payments by Adyen"
-msgstr ""
+msgstr "Betalväxel: Odoo Payments by Adyen"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_paypal
 msgid "Payment Acquirer: Paypal Implementation"
-msgstr "Payment Acquirer: Paypal Implementation"
+msgstr "Betalväxel: Paypal Implementation"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_payulatam
@@ -19871,7 +19874,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_payumoney
 msgid "Payment Acquirer: PayuMoney Implementation"
-msgstr "Payment Acquirer: PayuMoney Implementation"
+msgstr "Betalväxel: PayuMoney Implementation"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_sepa_direct_debit
@@ -19881,12 +19884,12 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_stripe
 msgid "Payment Acquirer: Stripe Implementation"
-msgstr "Payment Acquirer: Stripe Implementation"
+msgstr "Betalväxel: Stripe Implementation"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_payment_transfer
 msgid "Payment Acquirer: Transfer Implementation"
-msgstr "Payment Acquirer: Transfer Implementation"
+msgstr "Betalväxel: Transfer Implementation"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_accounting_payment_acquirers
@@ -19907,7 +19910,7 @@ msgstr ""
 #: model:ir.module.module,description:base.module_payment_paypal
 #: model:ir.module.module,shortdesc:base.module_payment_paypal
 msgid "Paypal Payment Acquirer"
-msgstr "Paypal Payment Acquirer"
+msgstr "Paypal betalväxel"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_human_resources_payroll
@@ -19938,7 +19941,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_payment_payumoney
 msgid "PayuMoney Payment Acquirer"
-msgstr "PayuMoney Payment Acquirer"
+msgstr "PayuMoney betalväxel"
 
 #. module: base
 #: model:ir.module.module,description:base.module_payment_payulatam
@@ -20533,7 +20536,7 @@ msgstr "Inköp"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_purchase_requisition
 msgid "Purchase Agreements"
-msgstr ""
+msgstr "Inköpsavtal"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_purchase_intrastat
@@ -21962,7 +21965,7 @@ msgstr "Själv"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_sale_slides
 msgid "Sell Courses"
-msgstr ""
+msgstr "Sälj kurser"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_helpdesk_sale_timesheet
@@ -21987,7 +21990,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_website_sale_slides
 msgid "Sell your courses online"
-msgstr ""
+msgstr "Sälj dina kurser online"
 
 #. module: base
 #: model:ir.module.module,description:base.module_website_sale_slides
@@ -22616,7 +22619,7 @@ msgstr "Sri Lanka"
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_sequence__implementation__standard
 msgid "Standard"
-msgstr ""
+msgstr "Standard"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_saft
@@ -22812,7 +22815,7 @@ msgstr "Gata 2"
 #: model:ir.module.module,description:base.module_payment_stripe
 #: model:ir.module.module,shortdesc:base.module_payment_stripe
 msgid "Stripe Payment Acquirer"
-msgstr "Stripe Payment Acquirer"
+msgstr "Stripe betalväxel"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_translation__type__model_terms
@@ -23072,23 +23075,23 @@ msgstr "Tabloid 29 279.4 x 431.8 mm"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_res_partner_filter
 msgid "Tag"
-msgstr "Tagg"
+msgstr "Etiketter"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner_category__name
 msgid "Tag Name"
-msgstr "Namn på tagg"
+msgstr "Etikettnamn"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner__category_id
 #: model:ir.model.fields,field_description:base.field_res_users__category_id
 msgid "Tags"
-msgstr "Taggar"
+msgstr "Etiketter"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 msgid "Tags..."
-msgstr "Taggar..."
+msgstr "Etiketter..."
 
 #. module: base
 #: model:res.country,name:base.tw
@@ -24354,7 +24357,7 @@ msgstr ""
 #: model:ir.module.module,description:base.module_payment_transfer
 #: model:ir.module.module,shortdesc:base.module_payment_transfer
 msgid "Transfer Payment Acquirer"
-msgstr "Transfer Payment Acquirer"
+msgstr "Transfer betalväxel"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_model_search
@@ -25490,7 +25493,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.view_view_tree
 #: model_terms:ir.ui.view,arch_db:base.view_window_action_form
 msgid "Views"
-msgstr "Vyer"
+msgstr "Visningar"
 
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_ui_view
@@ -25517,7 +25520,7 @@ msgstr "Jungfruöarna (USA)"
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_module_category__visible
 msgid "Visible"
-msgstr ""
+msgstr "Synlig"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_stock_account
@@ -25983,7 +25986,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_users_simple_form
 msgid "You are inviting a new user."
-msgstr ""
+msgstr "Du bjuder in en ny användare"
 
 #. module: base
 #: code:addons/base/models/ir_model.py:0
