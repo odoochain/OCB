@@ -197,7 +197,7 @@ class CustomerPortal(Controller):
         })
 
         response = request.render("portal.portal_my_details", values)
-        response.headers['X-Frame-Options'] = 'DENY'
+        # response.headers['X-Frame-Options'] = 'DENY'
         return response
 
     @route('/my/security', type='http', auth='user', website=True, methods=['GET', 'POST'])
