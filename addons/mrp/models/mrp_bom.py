@@ -108,6 +108,18 @@ class MrpBom(models.Model):
                             bom_product=bom_line.parent_product_tmpl_id.display_name
                         ))
 
+    @api.onchange('bom_line_ids', 'product_qty')
+    def onchange_bom_structure(self):
+        if self.type == 'phantom' and self._origin and self.env['stock.move'].search([('bom_line_id', 'in', self._origin.bom_line_ids.ids)], limit=1):
+            return {
+                'warning': {
+                    'title': _('Warning'),
+                    'message': _(
+                        'The product has already been used at least once, editing its structure may lead to undesirable behaviours. '
+                        'You should rather archive the product and create a new one with a new bill of materials.'),
+                }
+            }
+
     @api.onchange('product_uom_id')
     def onchange_product_uom_id(self):
         res = {}
@@ -131,8 +143,9 @@ class MrpBom(models.Model):
         res = super().copy(default)
         for bom_line in res.bom_line_ids:
             if bom_line.operation_id:
-                operation = res.operation_ids.filtered(lambda op: op.name == bom_line.operation_id.name and op.workcenter_id == bom_line.operation_id.workcenter_id)
-                bom_line.operation_id = operation
+                operation = res.operation_ids.filtered(lambda op: op._get_comparison_values() == bom_line.operation_id._get_comparison_values())
+                # Two operations could have the same values so we take the first one
+                bom_line.operation_id = operation[:1]
         return res
 
     @api.model
@@ -205,12 +218,12 @@ class MrpBom(models.Model):
             domain += [('type', '=', bom_type)]
 
         if len(products) == 1:
-            bom = self.search(domain, order='sequence, product_id', limit=1)
+            bom = self.search(domain, order='sequence, product_id, id', limit=1)
             if bom:
                 bom_by_product[products] = bom
             return bom_by_product
 
-        boms = self.search(domain, order='sequence, product_id')
+        boms = self.search(domain, order='sequence, product_id, id')
 
         products_ids = set(products.ids)
         for bom in boms:
