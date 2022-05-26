@@ -150,7 +150,7 @@ class StockRule(models.Model):
         delay, delay_description = super()._get_lead_days(product)
         bypass_delay_description = self.env.context.get('bypass_delay_description')
         buy_rule = self.filtered(lambda r: r.action == 'buy')
-        seller = product.with_company(buy_rule.company_id)._select_seller()
+        seller = product.with_company(buy_rule.company_id)._select_seller(quantity=None)
         if not buy_rule or not seller:
             return delay, delay_description
         buy_rule.ensure_one()
@@ -262,11 +262,10 @@ class StockRule(models.Model):
         params values: values of procurements
         params origins: procuremets origins to write on the PO
         """
-        dates = [fields.Datetime.from_string(value['date_planned']) for value in values]
+        purchase_date = min([fields.Datetime.from_string(value['date_planned']) - relativedelta(days=int(value['supplier'].delay)) for value in values])
 
-        procurement_date_planned = min(dates)
-        schedule_date = (procurement_date_planned - relativedelta(days=company_id.po_lead))
-        supplier_delay = max([int(value['supplier'].delay) for value in values])
+        purchase_date = (purchase_date - relativedelta(days=company_id.po_lead))
+
 
         # Since the procurements are grouped if they share the same domain for
         # PO but the PO does not exist. In this case it will create the PO from
@@ -274,7 +273,6 @@ class StockRule(models.Model):
         # arbitrary procurement. In this case the first.
         values = values[0]
         partner = values['supplier'].name
-        purchase_date = schedule_date - relativedelta(days=supplier_delay)
 
         fpos = self.env['account.fiscal.position'].with_company(company_id).get_fiscal_position(partner.id)
 
