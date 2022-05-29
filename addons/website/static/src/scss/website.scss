@@ -746,7 +746,16 @@ $-transition-duration: 200ms;
     display: block;
     @include o-position-absolute(0, 0, auto, 0);
     position: fixed;
-    background: $light;
+
+    // TODO remove me in master, the $light color makes no sense as is visible
+    // if the header uses rounded corners but is impossible to edit / remove.
+    // As a stable fix, it was decided to not remove it if the header uses a
+    // transparent color, in which case mixing it with $light actually alters
+    // the whole menu color.
+    $-menu-color: o-color('menu');
+    @if $-menu-color and alpha($-menu-color) < 0.95 {
+        background: $light;
+    }
 
     &:not(.o_header_no_transition) {
         transition: transform $-transition-duration;
@@ -1004,7 +1013,7 @@ header {
                 }
             }
 
-            .o_connected_user:not(.editor_has_snippets) header & {
+            .o_connected_user:not(.editor_has_snippets):not(.o_fullscreen) header & {
                 top: -$o-navbar-height;
                 padding-top: $o-navbar-height;
             }
@@ -1098,7 +1107,7 @@ header {
                 }
             }
         }
-        body.o_connected_user {
+        body.o_connected_user:not(.o_fullscreen) {
             &:not(.editor_has_snippets) #wrapwrap > header {
                 top: $o-navbar-height;
             }
@@ -1258,7 +1267,12 @@ header {
     @include media-breakpoint-up(lg) {
         #wrapwrap.o_footer_effect_enable {
             > main {
-                background-color: $body-bg;
+                @if o-website-value('layout') == 'full' {
+                    // Ensure a transparent snippet at the end of the content
+                    // still appears with the same background when hovering the
+                    // footer during the scroll effect.
+                    background-color: $body-bg;
+                }
                 @if o-website-value('footer-effect') == 'slideout_shadow' {
                     box-shadow: $box-shadow;
                 }
@@ -1427,6 +1441,13 @@ $ribbon-padding: 100px;
 #website_cookies_bar {
     :not(.o_cookies_popup) {
         bottom: 0;
+    }
+    .o_cookies_discrete {
+        .js_close_popup.o_cookies_bar_text_button, .o_cookies_bar_text_policy {
+            @include media-breakpoint-down(md) {
+                margin-bottom: 1rem;
+            }
+        }
     }
 }
 
