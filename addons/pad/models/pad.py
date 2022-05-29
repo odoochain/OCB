@@ -88,6 +88,7 @@ class PadCommon(models.AbstractModel):
             path = len(split_url) == 2 and split_url[1]
             try:
                 content = myPad.getHtml(path).get('html', '')
+                # todo  pad跨域和不显示问题
             except IOError:
                 _logger.warning('Http Error: the credentials might be absent for url: "%s". Falling back.' % url)
                 try:

@@ -1,4 +1,4 @@
-cd C:\Users\xiaxiaozheng\Documents\Z-dev\x-server\etherpad-lite-win
+cd D:\Documents\Z-dev\x-server\etherpad-lite-win
 ./start.bat
 
 -r
