@@ -1884,6 +1884,7 @@ exports.Orderline = Backbone.Model.extend({
     getPackLotLinesToEdit: function(isAllowOnlyOneLot) {
         const currentPackLotLines = this.pack_lot_lines.models;
         let nExtraLines = Math.abs(this.quantity) - currentPackLotLines.length;
+        nExtraLines = Math.ceil(nExtraLines);
         nExtraLines = nExtraLines > 0 ? nExtraLines : 1;
         const tempLines = currentPackLotLines
             .map(lotLine => ({
@@ -1930,7 +1931,9 @@ exports.Orderline = Backbone.Model.extend({
         }
 
         // Set the quantity of the line based on number of pack lots.
-        this.pack_lot_lines.set_quantity_by_lot();
+        if(!this.product.to_weight){
+            this.pack_lot_lines.set_quantity_by_lot();
+        }
     },
     set_product_lot: function(product){
         this.has_product_lot = product.tracking !== 'none';
