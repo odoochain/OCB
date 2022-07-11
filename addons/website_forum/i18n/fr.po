@@ -39,6 +39,7 @@
 # Sébastien BÜHL <buhlsebastien@gmail.com>, 2021
 # Alexandra Jubert <aju@odoo.com>, 2021
 # sakodoo <sak@odoo.com>, 2021
+# Grégory Schreiner <gregory@mokatourisme.fr>, 2022
 # Cécile Collart <cco@odoo.com>, 2022
 # 
 msgid ""
@@ -53,7 +54,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: fr\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. module: website_forum
 #: model:ir.model.fields,field_description:website_forum.field_forum_forum__total_answers
@@ -692,7 +693,7 @@ msgstr "<span class=\"o_stat_text\">Favoris</span>"
 #: model_terms:ir.ui.view,arch_db:website_forum.view_forum_forum_form
 #: model_terms:ir.ui.view,arch_db:website_forum.view_forum_post_form
 msgid "<span class=\"o_stat_text\">Go to <br/>Website</span>"
-msgstr ""
+msgstr "<span class=\"o_stat_text\">Aller au <br/>Site web</span>"
 
 #. module: website_forum
 #: model_terms:ir.ui.view,arch_db:website_forum.view_forum_forum_form
@@ -2727,6 +2728,9 @@ msgid ""
 "Signed In: Forum is visible for signed in users\n"
 "Some users: Forum and their content are hidden for non members of selected group"
 msgstr ""
+"Public : Le forum est public\\n Utilisateurs connectés : Le forum est "
+"visible pour les utilisateurs connectés\\n Certains utilisateurs : Le forum "
+"et ses contenus sont pour les nom-membres des groupes sélectionnés"
 
 #. module: website_forum
 #. openerp-web
@@ -2737,6 +2741,9 @@ msgid ""
 "users\\nSome users: Forum and their content are hidden for non members of "
 "selected group"
 msgstr ""
+"Public : Le forum est public\\nUtilisateurs connectés : Le forum est visible"
+" pour les utilisateurs connectés\\nCertains utilisateurs : Le forum et ses "
+"contenus sont pour les nom-membres des groupes sélectionnés"
 
 #. module: website_forum
 #: model:gamification.badge,name:website_forum.badge_25
