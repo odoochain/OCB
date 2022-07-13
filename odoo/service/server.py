@@ -123,7 +123,7 @@ class RequestHandler(werkzeug.serving.WSGIRequestHandler):
             self.timeout = 5
         # flag the current thread as handling a http request
         super(RequestHandler, self).setup()
-        me = threading.currentThread()
+        me = threading.current_thread()
         me.name = 'odoo.service.http.request.%s' % (me.ident,)
 
 
