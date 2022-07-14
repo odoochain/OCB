@@ -116,7 +116,7 @@ class IrRule(models.Model):
         if self.env.su:
             return self.browse(())
 
-        query = """ SELECT r.id FROM ir_rule r JOIN ir_model m ON (r.model_id=m.id)
+        query = r""" SELECT r.id FROM ir_rule r JOIN ir_model m ON (r.model_id=m.id)
                     WHERE m.model=%s AND r.active AND r.perm_{mode}
                     AND (r.id IN (SELECT rule_group_id FROM rule_group_rel rg
                                   JOIN res_groups_users_rel gu ON (rg.group_id=gu.gid)
