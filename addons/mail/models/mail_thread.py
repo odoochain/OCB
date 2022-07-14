@@ -937,7 +937,7 @@ class MailThread(models.AbstractModel):
         #       we also need to verify if the message come from "mailer-daemon"
         #    If not a bounce: reset bounce information
         if bounce_alias and any(email.startswith(bounce_alias) for email in email_to_localparts):
-            bounce_re = re.compile("%s\+(\d+)-?([\w.]+)?-?(\d+)?" % re.escape(bounce_alias), re.UNICODE)
+            bounce_re = re.compile(r"%s\+(\d+)-?([\w.]+)?-?(\d+)?" % re.escape(bounce_alias), re.UNICODE)
             bounce_match = bounce_re.search(email_to)
             if bounce_match:
                 self._routing_handle_bounce(message, message_dict)
