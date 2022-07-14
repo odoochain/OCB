@@ -51,6 +51,7 @@ from .service.server import memory_info
 from .service import security, model as service_model
 from .sql_db import flush_env
 from .tools.func import lazy_property
+from .tools import profiler
 from .tools import ustr, consteq, frozendict, pycompat, unique, date_utils
 from .tools.mimetypes import guess_mimetype
 from .tools.misc import str2bool
@@ -308,12 +309,27 @@ class WebRequest(object):
         # WARNING: do not inline or it breaks: raise...from evaluates strictly
         # LTR so would first remove traceback then copy lack of traceback
         new_cause = Exception().with_traceback(exception.__traceback__)
-        new_cause.__cause__ = exception.__cause__
+        new_cause.__cause__ = exception.__cause__ or exception.__context__
         # tries to provide good chained tracebacks, just re-raising exception
         # generates a weird message as stacks just get concatenated, exceptions
         # not guaranteed to copy.copy cleanly & we want `exception` as leaf (for
         # callers to check & look at)
         raise exception.with_traceback(None) from new_cause
+
+    def redirect(self, location, code=303, local=True):
+        # compatibility, Werkzeug support URL as location
+        if isinstance(location, urls.URL):
+            location = location.to_url()
+        if local:
+            location = '/' + urls.url_parse(location).replace(scheme='', netloc='').to_url().lstrip('/')
+        if request and request.db:
+            return request.registry['ir.http']._redirect(location, code)
+        return werkzeug.utils.redirect(location, code, Response=Response)
+
+    def redirect_query(self, location, query=None, code=303, local=True):
+        if query:
+            location += '?' + urls.url_encode(query)
+        return self.redirect(location, code=code, local=local)
 
     def _is_cors_preflight(self, endpoint):
         return False
@@ -335,7 +351,7 @@ class WebRequest(object):
 
         first_time = True
 
-        # Correct exception handling and concurency retry
+        # Correct exception handling and concurrency retry
         @service_model.check
         def checked_call(___dbname, *a, **kw):
             nonlocal first_time
@@ -514,6 +530,10 @@ def route(route=None, **kw):
             else:
                 routes = [route]
             routing['routes'] = routes
+            wrong = routing.pop('method', None)
+            if wrong:
+                kw.setdefault('methods', wrong)
+                _logger.warning("<function %s.%s> defined with invalid routing parameter 'method', assuming 'methods'", f.__module__, f.__name__)
 
         @functools.wraps(f)
         def response_wrap(*args, **kw):
@@ -1448,7 +1468,7 @@ class Root(object):
 
     def set_csp(self, response):
         # ignore HTTP errors
-        if not isinstance(response, werkzeug.wrappers.BaseResponse):
+        if not isinstance(response, werkzeug.wrappers.Response):
             return
 
         headers = response.headers

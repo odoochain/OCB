@@ -22,7 +22,7 @@ from odoo.tools.pycompat import to_text
 from odoo.tools.misc import file_open
 from odoo.http import request
 from odoo.modules.module import get_resource_path
-from .qweb import escape
+from .qweb import iescape
 import psycopg2
 from odoo.tools import func, misc
 
@@ -808,7 +808,7 @@ class StylesheetAsset(WebAsset):
                 ["type", "text/css"],
                 ["rel", "stylesheet"],
                 ["href", self.html_url],
-                ["media", escape(to_text(self.media)) if self.media else None],
+                ["media", iescape(to_text(self.media)) if self.media else None],
                 ['data-asset-xmlid', self.bundle.name],
                 ['data-asset-version', self.bundle.version],
             ])
@@ -816,7 +816,7 @@ class StylesheetAsset(WebAsset):
         else:
             attr = OrderedDict([
                 ["type", "text/css"],
-                ["media", escape(to_text(self.media)) if self.media else None],
+                ["media", iescape(to_text(self.media)) if self.media else None],
                 ['data-asset-xmlid', self.bundle.name],
                 ['data-asset-version', self.bundle.version],
             ])

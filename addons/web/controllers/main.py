@@ -18,7 +18,10 @@ import os
 import re
 import sys
 import tempfile
+import unicodedata
+from collections import OrderedDict, defaultdict
 
+import babel.messages.pofile
 import werkzeug
 import werkzeug.exceptions
 import werkzeug.utils
@@ -889,25 +892,25 @@ class Home(http.Controller):
 
     @http.route('/', type='http', auth="none")
     def index(self, s_action=None, db=None, **kw):
-        return http.local_redirect('/web', query=request.params, keep_hash=True)
+        return request.redirect_query('/web', query=request.params)
 
     # ideally, this route should be `auth="user"` but that don't work in non-monodb mode.
     @http.route('/web', type='http', auth="none")
     def web_client(self, s_action=None, **kw):
         ensure_db()
         if not request.session.uid:
-            return werkzeug.utils.redirect('/web/login', 303)
+            return request.redirect('/web/login', 303)
         if kw.get('redirect'):
-            return werkzeug.utils.redirect(kw.get('redirect'), 303)
+            return request.redirect(kw.get('redirect'), 303)
 
         request.uid = request.session.uid
         try:
             context = request.env['ir.http'].webclient_rendering_context()
             response = request.render('web.webclient_bootstrap', qcontext=context)
-            # response.headers['X-Frame-Options'] = 'DENY'
+            response.headers['X-Frame-Options'] = 'DENY'
             return response
         except AccessError:
-            return werkzeug.utils.redirect('/web/login?error=access')
+            return request.redirect('/web/login?error=access')
 
     @http.route('/web/webclient/load_menus/<string:unique>', type='http', auth='user', methods=['GET'])
     def web_load_menus(self, unique):
@@ -916,7 +919,7 @@ class Home(http.Controller):
         :param unique: this parameters is not used, but mandatory: it is used by the HTTP stack to make a unique request
         :return: the menus (including the images in Base64)
         """
-        menus = request.env["ir.ui.menu"].load_menus(request.session.debug)
+        menus = request.env["ir.ui.menu"].load_web_menus(request.session.debug)
         body = json.dumps(menus, default=ustr)
         response = request.make_response(body, [
             # this method must specify a content-type application/json instead of using the default text/html set because
@@ -934,7 +937,7 @@ class Home(http.Controller):
         ensure_db()
         request.params['login_success'] = False
         if request.httprequest.method == 'GET' and redirect and request.session.uid:
-            return http.redirect_with_hash(redirect)
+            return request.redirect(redirect)
 
         if not request.uid:
             request.uid = odoo.SUPERUSER_ID
@@ -950,7 +953,7 @@ class Home(http.Controller):
             try:
                 uid = request.session.authenticate(request.session.db, request.params['login'], request.params['password'])
                 request.params['login_success'] = True
-                return http.redirect_with_hash(self._login_redirect(uid, redirect=redirect))
+                return request.redirect(self._login_redirect(uid, redirect=redirect))
             except odoo.exceptions.AccessDenied as e:
                 request.uid = old_uid
                 if e.args == odoo.exceptions.AccessDenied().args:
@@ -968,7 +971,7 @@ class Home(http.Controller):
             values['disable_database_manager'] = True
 
         response = request.render('web.login', values)
-        # response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-Frame-Options'] = 'DENY'
         return response
 
     @http.route('/web/become', type='http', auth='user', sitemap=False)
@@ -980,7 +983,17 @@ class Home(http.Controller):
             request.env['res.users'].clear_caches()
             request.session.session_token = security.compute_session_token(request.session, request.env)
 
-        return http.local_redirect(self._login_redirect(uid), keep_hash=True)
+        return request.redirect(self._login_redirect(uid))
+
+    @http.route('/web/health', type='http', auth='none', save_session=False)
+    def health(self):
+        data = json.dumps({
+            'status': 'pass',
+        })
+        headers = [('Content-Type', 'application/json'),
+                   ('Cache-Control', 'no-store')]
+        return request.make_response(data, headers)
+
 
 class WebClient(http.Controller):
 

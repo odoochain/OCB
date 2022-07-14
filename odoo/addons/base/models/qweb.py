@@ -5,6 +5,7 @@ import os.path
 import re
 import traceback
 
+from markupsafe import Markup, escape
 from collections import OrderedDict
 from collections.abc import Sized, Mapping
 from functools import reduce
@@ -15,7 +16,7 @@ import itertools
 from lxml import etree, html
 from psycopg2.extensions import TransactionRollbackError
 import werkzeug
-from werkzeug.utils import escape as _escape
+# from werkzeug.utils import escape as _escape
 
 from odoo.tools import pycompat, freehash
 from odoo.tools.safe_eval import check_values
@@ -161,7 +162,7 @@ class QWebException(Exception):
         return str(self)
 
 # Avoid DeprecationWarning while still remaining compatible with werkzeug pre-0.9
-escape = (lambda text: _escape(text, quote=True)) if parse_version(getattr(werkzeug, '__version__', '0.0')) < parse_version('0.9.0') else _escape
+iescape = (lambda text: escape(text, quote=True)) if parse_version(getattr(werkzeug, '__version__', '0.0')) < parse_version('0.9.0') else escape
 
 def foreach_iterator(base_ctx, enum, name):
     ctx = base_ctx.copy()
@@ -1066,7 +1067,6 @@ class QWeb(object):
             for item in el:
                 # ignore comments & processing instructions
                 if isinstance(item, etree._Comment):
-                    body.extend(self._compile_tail(item))
                     continue
                 body.extend(self._compile_node(item, options))
                 body.extend(self._compile_tail(item))
@@ -1726,5 +1726,14 @@ class QWeb(object):
         ), elts)
 
     def _compile_expr(self, expr):
-        """This method must be overridden by <ir.qweb> in order to compile the template."""
-        raise NotImplementedError("Templates should use the ir.qweb compile method")
+        """ Compiles a purported Python expression to ast, and alter its
+        variable references to access values data instead exept for
+        python buildins.
+        This compile method is unsafe!
+        Can be overridden to use a safe eval method.
+        """
+        # string must be stripped otherwise whitespace before the start for
+        # formatting purpose are going to break parse/compile
+        st = ast.parse(expr.strip(), mode='eval')
+        # ast.Expression().body -> expr
+        return Contextifier(builtin_defaults).visit(st).body

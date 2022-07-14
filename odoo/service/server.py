@@ -129,7 +129,7 @@ class RequestHandler(werkzeug.serving.WSGIRequestHandler):
 
 class ThreadedWSGIServerReloadable(LoggingBaseWSGIServerMixIn, werkzeug.serving.ThreadedWSGIServer):
     """ werkzeug Threaded WSGI Server patched to allow reusing a listen socket
-    given by the environement, this is used by autoreload to keep the listen
+    given by the environment, this is used by autoreload to keep the listen
     socket open when a reload happens.
     """
     def __init__(self, host, port, app):
@@ -306,6 +306,7 @@ class FSWatcherInotify(FSWatcherBase):
 class CommonServer(object):
     def __init__(self, app):
         self.app = app
+        self._on_stop_funcs = []
         # config
         self.interface = config['http_interface'] or '0.0.0.0'
         self.port = config['http_port']
@@ -332,6 +333,19 @@ class CommonServer(object):
             if e.errno != errno.ENOTCONN or platform.system() not in ['Darwin', 'Windows']:
                 raise
         sock.close()
+
+    def on_stop(self, func):
+        """ Register a cleanup function to be executed when the server stops """
+        self._on_stop_funcs.append(func)
+
+    def stop(self):
+        for func in self._on_stop_funcs:
+            try:
+                _logger.debug("on_close call %s", func)
+                func()
+            except Exception:
+                _logger.warning("Exception in %s", func.__name__, exc_info=True)
+
 
 class ThreadedServer(CommonServer):
     def __init__(self, app):
@@ -400,20 +414,47 @@ class ThreadedServer(CommonServer):
             self.limit_reached_time = None
 
     def cron_thread(self, number):
+        # Steve Reich timing style with thundering herd mitigation.
+        #
+        # On startup, all workers bind on a notification channel in
+        # postgres so they can be woken up at will. At worst they wake
+        # up every SLEEP_INTERVAL with a jitter. The jitter creates a
+        # chorus effect that helps distribute on the timeline the moment
+        # when individual worker wake up.
+        #
+        # On NOTIFY, all workers are awaken at the same time, sleeping
+        # just a bit prevents they all poll the database at the exact
+        # same time. This is known as the thundering herd effect.
+
         from odoo.addons.base.models.ir_cron import ir_cron
-        while True:
-            time.sleep(SLEEP_INTERVAL + number)     # Steve Reich timing style
-            registries = odoo.modules.registry.Registry.registries
-            _logger.debug('cron%d polling for jobs', number)
-            for db_name, registry in registries.d.items():
-                if registry.ready:
-                    thread = threading.current_thread()
-                    thread.start_time = time.time()
-                    try:
-                        ir_cron._acquire_job(db_name)
-                    except Exception:
-                        _logger.warning('cron%d encountered an Exception:', number, exc_info=True)
-                    thread.start_time = None
+        conn = odoo.sql_db.db_connect('postgres')
+        with conn.cursor() as cr:
+            pg_conn = cr._cnx
+            # LISTEN / NOTIFY doesn't work in recovery mode
+            cr.execute("SELECT pg_is_in_recovery()")
+            in_recovery = cr.fetchone()[0]
+            if not in_recovery:
+                cr.execute("LISTEN cron_trigger")
+            else:
+                _logger.warning("PG cluster in recovery mode, cron trigger not activated")
+            cr.commit()
+
+            while True:
+                select.select([pg_conn], [], [], SLEEP_INTERVAL + number)
+                time.sleep(number / 100)
+                pg_conn.poll()
+
+                registries = odoo.modules.registry.Registry.registries
+                _logger.debug('cron%d polling for jobs', number)
+                for db_name, registry in registries.d.items():
+                    if registry.ready:
+                        thread = threading.current_thread()
+                        thread.start_time = time.time()
+                        try:
+                            ir_cron._process_jobs(db_name)
+                        except Exception:
+                            _logger.warning('cron%d encountered an Exception:', number, exc_info=True)
+                        thread.start_time = None
 
     def cron_spawn(self):
         """ Start the above runner function in a daemon thread.
@@ -464,11 +505,11 @@ class ThreadedServer(CommonServer):
 
         test_mode = config['test_enable'] or config['test_file']
         if test_mode or (config['http_enable'] and not stop):
-            # some tests need the http deamon to be available...
+            # some tests need the http daemon to be available...
             self.http_spawn()
 
     def stop(self):
-        """ Shutdown the WSGI server. Wait for non deamon threads.
+        """ Shutdown the WSGI server. Wait for non daemon threads.
         """
         if getattr(odoo, 'phoenix', None):
             _logger.info("Initiating server reload")
@@ -480,6 +521,8 @@ class ThreadedServer(CommonServer):
 
         if self.httpd:
             self.httpd.shutdown()
+
+        super().stop()
 
         # Manually join() all threads before calling sys.exit() to allow a second signal
         # to trigger _force_quit() in case some non-daemon threads won't exit cleanly.
@@ -639,6 +682,7 @@ class GeventServer(CommonServer):
     def stop(self):
         import gevent
         self.httpd.stop()
+        super().stop()
         gevent.shutdown()
 
     def run(self, preload, stop):
@@ -652,6 +696,7 @@ class PreforkServer(CommonServer):
     dispatcher to will parse the first HTTP request line.
     """
     def __init__(self, app):
+        super().__init__(app)
         # config
         self.address = config['http_enable'] and \
             (config['http_interface'] or '0.0.0.0', config['http_port'])
@@ -813,7 +858,7 @@ class PreforkServer(CommonServer):
                 raise
 
     def start(self):
-        # wakeup pipe, python doesnt throw EINTR when a syscall is interrupted
+        # wakeup pipe, python doesn't throw EINTR when a syscall is interrupted
         # by a signal simulating a pseudo SA_RESTART. We write to a pipe in the
         # signal handler to overcome this behaviour
         self.pipe = self.pipe_new()
@@ -829,7 +874,7 @@ class PreforkServer(CommonServer):
 
         if self.address:
             # listen to socket
-            _logger.info('HTTP service (werkzeug) running on %s:%s', *self.address)
+            _logger.info('HTTP service (werkzeug) running on %s:%s', self.interface, self.port)
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.setblocking(0)
@@ -843,6 +888,7 @@ class PreforkServer(CommonServer):
             self.long_polling_pid = None
         if graceful:
             _logger.info("Stopping gracefully")
+            super().stop()
             limit = time.time() + self.timeout
             for pid in self.workers:
                 self.worker_kill(pid, signal.SIGINT)
@@ -937,7 +983,7 @@ class Worker(object):
                 raise
 
     def check_limits(self):
-        # If our parent changed sucide
+        # If our parent changed suicide
         if self.ppid != os.getppid():
             _logger.info("Worker (%s) Parent changed", self.pid)
             self.alive = False
@@ -1001,7 +1047,7 @@ class Worker(object):
                          len(odoo.modules.registry.Registry.registries))
             self.stop()
         except Exception:
-            _logger.exception("Worker (%s) Exception occured, exiting..." % self.pid)
+            _logger.exception("Worker (%s) Exception occurred, exiting...", self.pid)
             # should we use 3 to abort everything ?
             sys.exit(1)
 
@@ -1019,7 +1065,7 @@ class Worker(object):
                     break
                 self.process_work()
         except:
-            _logger.exception("Worker %s (%s) Exception occured, exiting...", self.__class__.__name__, self.pid)
+            _logger.exception("Worker %s (%s) Exception occurred, exiting...", self.__class__.__name__, self.pid)
             sys.exit(1)
 
 class WorkerHTTP(Worker):
@@ -1029,7 +1075,7 @@ class WorkerHTTP(Worker):
 
         # The ODOO_HTTP_SOCKET_TIMEOUT environment variable allows to control socket timeout for
         # extreme latency situations. It's generally better to use a good buffering reverse proxy
-        # to quickly free workers rather than increasing this timeout to accomodate high network
+        # to quickly free workers rather than increasing this timeout to accommodate high network
         # latencies & b/w saturation. This timeout is also essential to protect against accidental
         # DoS due to idle HTTP connections.
         sock_timeout = os.environ.get("ODOO_HTTP_SOCKET_TIMEOUT")
@@ -1083,8 +1129,10 @@ class WorkerCron(Worker):
 
             # simulate interruptible sleep with select(wakeup_fd, timeout)
             try:
-                select.select([self.wakeup_fd_r], [], [], interval)
-                # clear wakeup pipe if we were interrupted
+                select.select([self.wakeup_fd_r, self.dbcursor._cnx], [], [], interval)
+                # clear pg_conn/wakeup pipe if we were interrupted
+                time.sleep(self.pid / 100 % .1)
+                self.dbcursor._cnx.poll()
                 empty_pipe(self.wakeup_fd_r)
             except select.error as e:
                 if e.args[0] != errno.EINTR:
@@ -1111,7 +1159,7 @@ class WorkerCron(Worker):
                 start_memory = memory_info(psutil.Process(os.getpid()))
 
             from odoo.addons import base
-            base.models.ir_cron.ir_cron._acquire_job(db_name)
+            base.models.ir_cron.ir_cron._process_jobs(db_name)
 
             # dont keep cursors in multi database mode
             if len(db_names) > 1:
@@ -1137,6 +1185,21 @@ class WorkerCron(Worker):
         Worker.start(self)
         if self.multi.socket:
             self.multi.socket.close()
+
+        dbconn = odoo.sql_db.db_connect('postgres')
+        self.dbcursor = dbconn.cursor()
+        # LISTEN / NOTIFY doesn't work in recovery mode
+        self.dbcursor.execute("SELECT pg_is_in_recovery()")
+        in_recovery = self.dbcursor.fetchone()[0]
+        if not in_recovery:
+            self.dbcursor.execute("LISTEN cron_trigger")
+        else:
+            _logger.warning("PG cluster in recovery mode, cron trigger not activated")
+        self.dbcursor.commit()
+
+    def stop(self):
+        super().stop()
+        self.dbcursor.close()
 
 #----------------------------------------------------------
 # start/stop public api
@@ -1266,7 +1329,7 @@ def start(preload=None, stop=False):
             # On 32bit systems the default size of an arena is 512K while on 64bit systems it's 64M [3],
             # hence a threaded worker will quickly reach it's default memory soft limit upon concurrent requests.
             # We therefore set the maximum arenas allowed to 2 unless the MALLOC_ARENA_MAX env variable is set.
-            # Note: Setting MALLOC_ARENA_MAX=0 allow to explicitely set the default glibs's malloc() behaviour.
+            # Note: Setting MALLOC_ARENA_MAX=0 allow to explicitly set the default glibs's malloc() behaviour.
             #
             # [1] https://sourceware.org/glibc/wiki/MallocInternals#Arenas_and_Heaps
             # [2] https://www.gnu.org/software/libc/manual/html_node/The-GNU-Allocator.html
