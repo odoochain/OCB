@@ -148,3 +148,11 @@ def randint(a, b, seed=None):
     def get_rand_int(random=None, **kwargs):
         return random.randint(a, b)
     return compute(get_rand_int, seed=seed)
+
+def randfloat(a, b, seed=None):
+    """ Return a factory for an iterator of values dicts that sets the field
+    to a random float between a and b included in each input dict.
+    """
+    def get_rand_float(random=None, **kwargs):
+        return random.uniform(a, b)
+    return compute(get_rand_float, seed=seed)

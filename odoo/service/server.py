@@ -371,7 +371,7 @@ class ThreadedServer(CommonServer):
         memory = memory_info(psutil.Process(os.getpid()))
         if config['limit_memory_soft'] and memory > config['limit_memory_soft']:
             _logger.warning('Server memory limit (%s) reached.', memory)
-            self.limits_reached_threads.add(threading.currentThread())
+            self.limits_reached_threads.add(threading.current_thread())
 
         for thread in threading.enumerate():
             if not thread.daemon or getattr(thread, 'type', None) == 'cron':
