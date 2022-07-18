@@ -16,7 +16,8 @@ class HrWorkEntry(models.Model):
 
     name = fields.Char(required=True)
     active = fields.Boolean(default=True)
-    employee_id = fields.Many2one('hr.employee', required=True, domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]", index=True)
+    employee_id = fields.Many2one('hr.employee', required=True, domain="['|', ('company_id', '=', False), "
+                                                                       "('company_id', '=', company_id)]", index=True)
     date_start = fields.Datetime(required=True, string='From')
     date_stop = fields.Datetime(compute='_compute_date_stop', store=True, readonly=False, string='To')
     duration = fields.Float(compute='_compute_duration', store=True, string="Period")
@@ -33,7 +34,8 @@ class HrWorkEntry(models.Model):
     conflict = fields.Boolean('Conflicts', compute='_compute_conflict', store=True)  # Used to show conflicting work entries first
 
     _sql_constraints = [
-        ('_work_entry_has_end', 'check (date_stop IS NOT NULL)', 'Work entry must end. Please define an end date or a duration.'),
+        ('_work_entry_has_end', 'check (date_stop IS NOT NULL)', 'Work entry must end. Please define an end date or a '
+                                                                 'duration.'),
         ('_work_entry_start_before_end', 'check (date_stop > date_start)', 'Starting time should be before end time.')
     ]
 
