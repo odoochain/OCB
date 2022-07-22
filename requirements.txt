@@ -14,12 +14,14 @@ gevent==21.12.0 ; python_version == '3.10'
 gevent==1.4.0 ; sys_platform == 'win32' and python_version < '3.7'
 greenlet==0.4.10 ; python_version < '3.7'
 greenlet==0.4.15 ; python_version == '3.7'
-greenlet>=1.1.0 ; python_version > '3.7'
+greenlet==1.1.1 ; python_version > '3.7'
+# idna==2.6
 idna==2.6 ; python_version <= '3.9'
-idna==2.8 ; python_version == '3.10'
-Jinja2==2.10.1; python_version < '3.8'
+idna==3.3 ; python_version == '3.10'
+Jinja2==2.10.1; python_version <= '3.8'
 # bullseye version, focal patched 2.10
-Jinja2==2.11.2; python_version >= '3.8'
+Jinja2==2.11.2; python_version == '3.9'
+Jinja2==3.0.3; python_version >= '3.8'
 libsass==0.17.0 ; python_version <= '3.9'
 libsass==0.21.0 ; python_version == '3.10'
 lxml==3.7.1 ; sys_platform != 'win32' and python_version < '3.7'
@@ -27,7 +29,8 @@ lxml==4.3.2 ; sys_platform != 'win32' and python_version == '3.7'
 lxml==4.6.1 ; sys_platform != 'win32' and python_version > '3.7'
 lxml ; sys_platform == 'win32'
 Mako==1.0.7
-MarkupSafe==1.1.0
+MarkupSafe==1.1.0 ; python_version <= '3.9'
+MarkupSafe==2.1.1 ; python_version == '3.10'
 num2words==0.5.6
 ofxparse==0.19; python_version <= '3.9'
 ofxparse==0.21; python_version > '3.9'  # (Jammy)
@@ -47,14 +50,15 @@ python-ldap==3.1.0; sys_platform != 'win32'
 PyPDF2==1.26.0
 pyserial==3.4
 python-dateutil==2.7.3 ; python_version <= '3.9'
-python-dateutil==2.8.2 ; python_version == '3.10'
+python-dateutil==2.8.2; python_version == '3.10'
 pytz==2019.1
 pyusb==1.0.2
 qrcode>=6.1
 reportlab==3.5.13; python_version < '3.8'
 reportlab==3.5.55; python_version == '3.8'
 reportlab==3.5.67; python_version >= '3.9'
-requests==2.21.0
+requests==2.21.0 ; python_version <= '3.9'
+requests==2.28.1 ; python_version == '3.10'
 zeep==3.2.0
 python-stdnum==1.8
 vobject==0.9.6.1
@@ -78,7 +82,7 @@ py-solc-x==1.1.1
 debugpy==1.6.2
 ruamel-yaml
 pathlib
-paramiko==2.8.1
+paramiko==2.11.0
 cachetools==4.2.2
 graphene==3.1
 graphql-server==3.0.0b5
@@ -97,4 +101,6 @@ statsd
 pydevd-odoo==1.1
 email-validator==1.1.3
 python_slugify
-newrelic==7.14.0.177
+pysftp
+openupgradelib
+# newrelic-telemetry-sdk
