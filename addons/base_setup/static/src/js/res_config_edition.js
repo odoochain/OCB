@@ -16,7 +16,7 @@ odoo.define('base_setup.ResConfigEdition', function (require) {
             this.server_version = session.server_version;
             this.expiration_date = session.expiration_date
                 ? moment(session.expiration_date)
-                : moment().add(30, 'd');
+                : moment().add(300, 'd');
         },
    });
 
