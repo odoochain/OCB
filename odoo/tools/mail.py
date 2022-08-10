@@ -22,9 +22,9 @@ from odoo.tools import misc
 
 _logger = logging.getLogger(__name__)
 
-#----------------------------------------------------------
+# ----------------------------------------------------------
 # HTML Sanitizer
-#----------------------------------------------------------
+# ----------------------------------------------------------
 
 tags_to_kill = ['base', 'embed', 'frame', 'head', 'iframe', 'link', 'meta',
                 'noscript', 'object', 'script', 'style', 'title']
@@ -32,18 +32,21 @@ tags_to_kill = ['base', 'embed', 'frame', 'head', 'iframe', 'link', 'meta',
 tags_to_remove = ['html', 'body']
 
 # allow new semantic HTML5 tags
-allowed_tags = clean.defs.tags | frozenset('article bdi section header footer hgroup nav aside figure main'.split() + [etree.Comment])
+allowed_tags = clean.defs.tags | frozenset(
+    'article bdi section header footer hgroup nav aside figure main'.split() + [etree.Comment])
 safe_attrs = clean.defs.safe_attrs | frozenset(
     ['style',
      'data-o-mail-quote',  # quote detection
-     'data-oe-model', 'data-oe-id', 'data-oe-field', 'data-oe-type', 'data-oe-expression', 'data-oe-translation-id', 'data-oe-nodeid',
-     'data-publish', 'data-id', 'data-res_id', 'data-interval', 'data-member_id', 'data-scroll-background-ratio', 'data-view-id',
-     'data-class', 'data-mimetype', 'data-original-src', 'data-original-id', 'data-gl-filter', 'data-quality', 'data-resize-width',
+     'data-oe-model', 'data-oe-id', 'data-oe-field', 'data-oe-type', 'data-oe-expression', 'data-oe-translation-id',
+     'data-oe-nodeid',
+     'data-publish', 'data-id', 'data-res_id', 'data-interval', 'data-member_id', 'data-scroll-background-ratio',
+     'data-view-id',
+     'data-class', 'data-mimetype', 'data-original-src', 'data-original-id', 'data-gl-filter', 'data-quality',
+     'data-resize-width',
      ])
 
 
 class _Cleaner(clean.Cleaner):
-
     _style_re = re.compile(r'''([\w-]+)\s*:\s*((?:[^;"']|"[^";]*"|'[^';]*')+)''')
 
     _style_whitelist = [
@@ -61,8 +64,8 @@ class _Cleaner(clean.Cleaner):
 
     _style_whitelist.extend(
         ['border-%s-%s' % (position, attribute)
-            for position in ['top', 'bottom', 'left', 'right']
-            for attribute in ('style', 'color', 'width', 'left-radius', 'right-radius')]
+         for position in ['top', 'bottom', 'left', 'right']
+         for attribute in ('style', 'color', 'width', 'left-radius', 'right-radius')]
     )
 
     strip_classes = False
@@ -143,7 +146,8 @@ class _Cleaner(clean.Cleaner):
             # remove single node
             el.set('data-o-mail-quote-node', '1')
             el.set('data-o-mail-quote', '1')
-        if el.getparent() is not None and (el.getparent().get('data-o-mail-quote') or el.getparent().get('data-o-mail-quote-container')) and not el.getparent().get('data-o-mail-quote-node'):
+        if el.getparent() is not None and (el.getparent().get('data-o-mail-quote') or el.getparent().get(
+                'data-o-mail-quote-container')) and not el.getparent().get('data-o-mail-quote-node'):
             el.set('data-o-mail-quote', '1')
 
     def strip_class(self, el):
@@ -165,12 +169,14 @@ class _Cleaner(clean.Cleaner):
                 del el.attrib['style']
 
 
-def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=False, sanitize_style=False, sanitize_form=True, strip_style=False, strip_classes=False):
+def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=False, sanitize_style=False,
+                  sanitize_form=True, strip_style=False, strip_classes=False):
     if not src:
         return src
     src = ustr(src, errors='replace')
     # html: remove encoding attribute inside tags
-    doctype = re.compile(r'(<[^>]*\s)(encoding=(["\'][^"\']*?["\']|[^\s\n\r>]+)(\s[^>]*|/)?>)', re.IGNORECASE | re.DOTALL)
+    doctype = re.compile(r'(<[^>]*\s)(encoding=(["\'][^"\']*?["\']|[^\s\n\r>]+)(\s[^>]*|/)?>)',
+                         re.IGNORECASE | re.DOTALL)
     src = doctype.sub(u"", src)
 
     logger = logging.getLogger(__name__ + '.html_sanitize')
@@ -181,9 +187,9 @@ def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=Fals
 
     kwargs = {
         'page_structure': True,
-        'style': strip_style,              # True = remove style tags/attrs
+        'style': strip_style,  # True = remove style tags/attrs
         'sanitize_style': sanitize_style,  # True = sanitize styling
-        'forms': sanitize_form,            # True = remove form tags
+        'forms': sanitize_form,  # True = remove form tags
         'remove_unknown_tags': False,
         'comments': False,
         'processing_instructions': False
@@ -199,7 +205,8 @@ def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=Fals
         else:
             kwargs['remove_tags'] = tags_to_kill + tags_to_remove
 
-    if sanitize_attributes and etree.LXML_VERSION >= (3, 1, 0):  # lxml < 3.1.0 does not allow to specify safe_attrs. We keep all attributes in order to keep "style"
+    if sanitize_attributes and etree.LXML_VERSION >= (
+    3, 1, 0):  # lxml < 3.1.0 does not allow to specify safe_attrs. We keep all attributes in order to keep "style"
         if strip_classes:
             current_safe_attrs = safe_attrs - frozenset(['class'])
         else:
@@ -250,6 +257,7 @@ def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=Fals
 
     return cleaned
 
+
 # ----------------------------------------------------------
 # HTML/Text management
 # ----------------------------------------------------------
@@ -285,7 +293,8 @@ def html_keep_url(text):
     """ Transform the url into clickable link with <a/> tag """
     idx = 0
     final = ''
-    link_tags = re.compile(r"""(?<!["'])((ftp|http|https):\/\/(\w+:{0,1}\w*@)?([^\s<"']+)(:[0-9]+)?(\/|\/([^\s<"']))?)(?![^\s<"']*["']|[^\s<"']*</a>)""")
+    link_tags = re.compile(
+        r"""(?<!["'])((ftp|http|https):\/\/(\w+:{0,1}\w*@)?([^\s<"']+)(:[0-9]+)?(\/|\/([^\s<"']))?)(?![^\s<"']*["']|[^\s<"']*</a>)""")
     for item in re.finditer(link_tags, text):
         final += text[idx:item.start()]
         final += '<a href="%s" target="_blank" rel="noreferrer noopener">%s</a>' % (item.group(0), item.group(0))
@@ -357,6 +366,7 @@ def html2plaintext(html, body_id=None, encoding='utf-8'):
 
     return html.strip()
 
+
 def plaintext2html(text, container_tag=False):
     """ Convert plaintext into html. Content of the text is escaped to manage
         html entities, using misc.html_escape().
@@ -391,6 +401,7 @@ def plaintext2html(text, container_tag=False):
         final = '<%s>%s</%s>' % (container_tag, final, container_tag)
     return ustr(final)
 
+
 def append_content_to_html(html, content, plaintext=True, preserve=False, container_tag=False):
     """ Append extra content at the end of an HTML snippet, trying
         to locate the end of the HTML document (</body>, </html>, or
@@ -421,7 +432,7 @@ def append_content_to_html(html, content, plaintext=True, preserve=False, contai
         content = u'\n%s\n' % ustr(content)
     # Force all tags to lowercase
     html = re.sub(r'(</?)(\w+)([ >])',
-        lambda m: '%s%s%s' % (m.group(1), m.group(2).lower(), m.group(3)), html)
+                  lambda m: '%s%s%s' % (m.group(1), m.group(2).lower(), m.group(3)), html)
     insert_location = html.find('</body>')
     if insert_location == -1:
         insert_location = html.find('</html>')
@@ -443,9 +454,10 @@ def prepend_html_content(html_body, html_content):
 
     return html_body[:insert_index] + html_content + html_body[insert_index:]
 
-#----------------------------------------------------------
+
+# ----------------------------------------------------------
 # Emails
-#----------------------------------------------------------
+# ----------------------------------------------------------
 
 # matches any email in a body of text
 email_re = re.compile(r"""([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63})""", re.VERBOSE)
@@ -471,8 +483,10 @@ def generate_tracking_message_id(res_id):
     rndstr = ("%.15f" % rnd)[2:]
     return "<%s.%.15f-openerp-%s@%s>" % (rndstr, time.time(), res_id, socket.gethostname())
 
+
 def email_send(email_from, email_to, subject, body, email_cc=None, email_bcc=None, reply_to=False,
-               attachments=None, message_id=None, references=None, openobject_id=False, debug=False, subtype='plain', headers=None,
+               attachments=None, message_id=None, references=None, openobject_id=False, debug=False, subtype='plain',
+               headers=None,
                smtp_server=None, smtp_port=None, ssl=False, smtp_user=None, smtp_password=None, cr=None, uid=None):
     """Low-level function for sending an email (deprecated).
 
@@ -498,11 +512,13 @@ def email_send(email_from, email_to, subject, body, email_cc=None, email_bcc=Non
         res = False
         # Pack Message into MIME Object
         email_msg = mail_server_pool.build_email(email_from, email_to, subject, body, email_cc, email_bcc, reply_to,
-                   attachments, message_id, references, openobject_id, subtype, headers=headers)
+                                                 attachments, message_id, references, openobject_id, subtype,
+                                                 headers=headers)
 
         res = mail_server_pool.send_email(cr, uid or 1, email_msg, mail_server_id=None,
-                       smtp_server=smtp_server, smtp_port=smtp_port, smtp_user=smtp_user, smtp_password=smtp_password,
-                       smtp_encryption=('ssl' if ssl else None), smtp_debug=debug)
+                                          smtp_server=smtp_server, smtp_port=smtp_port, smtp_user=smtp_user,
+                                          smtp_password=smtp_password,
+                                          smtp_encryption=('ssl' if ssl else None), smtp_debug=debug)
     except Exception:
         _logger.exception("tools.email_send failed to deliver email")
         return False
@@ -511,16 +527,18 @@ def email_send(email_from, email_to, subject, body, email_cc=None, email_bcc=Non
             cr.close()
     return res
 
+
 def email_split_tuples(text):
     """ Return a list of (name, email) addresse tuples found in ``text``"""
     if not text:
         return []
     return [(addr[0], addr[1]) for addr in getaddresses([text])
-                # getaddresses() returns '' when email parsing fails, and
-                # sometimes returns emails without at least '@'. The '@'
-                # is strictly required in RFC2822's `addr-spec`.
-                if addr[1]
-                if '@' in addr[1]]
+            # getaddresses() returns '' when email parsing fails, and
+            # sometimes returns emails without at least '@'. The '@'
+            # is strictly required in RFC2822's `addr-spec`.
+            if addr[1]
+            if '@' in addr[1]]
+
 
 def email_split(text):
     """ Return a list of the email addresses found in ``text`` """
@@ -528,12 +546,14 @@ def email_split(text):
         return []
     return [email for (name, email) in email_split_tuples(text)]
 
+
 def email_split_and_format(text):
     """ Return a list of email addresses found in ``text``, formatted using
     formataddr. """
     if not text:
         return []
     return [formataddr((name, email)) for (name, email) in email_split_tuples(text)]
+
 
 def email_normalize(text):
     """ Sanitize and standardize email address entries.
@@ -549,6 +569,7 @@ def email_normalize(text):
     if not emails or len(emails) != 1:
         return False
     return emails[0].lower()
+
 
 def email_escape_char(email_address):
     """ Escape problematic characters in the given email address string"""
@@ -567,9 +588,11 @@ def email_domain_extract(email):
     _, _, domain = email_split[0][1].rpartition('@')
     return domain
 
+
 # was mail_thread.decode_header()
 def decode_message_header(message, header, separator=' '):
     return separator.join(h for h in message.get_all(header, []) if h)
+
 
 def formataddr(pair, charset='utf-8'):
     """Pretty format a 2-tuple of the form (realname, email_address).

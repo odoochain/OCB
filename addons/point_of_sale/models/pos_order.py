@@ -532,7 +532,7 @@ class PosOrder(models.Model):
             'res_model': 'account.move',
             'context': "{'move_type':'out_invoice'}",
             'type': 'ir.actions.act_window',
-            'nodestroy': True,
+            # 'nodestroy': True,
             'target': 'current',
             'res_id': moves and moves.ids[0] or False,
         }

@@ -73,14 +73,14 @@ class MassMailing(models.Model):
              'In most inboxes, this is displayed next to the subject.\n'
              'Keep it empty if you prefer the first characters of your email content to appear instead.')
     email_from = fields.Char(string='Send From', required=True,
-        default=lambda self: self.env.user.email_formatted)
+                             default=lambda self: self.env.user.email_formatted)
     sent_date = fields.Datetime(string='Sent Date', copy=False)
     schedule_date = fields.Datetime(string='Scheduled for', tracking=True)
     # don't translate 'body_arch', the translations are only on 'body_html'
     body_arch = fields.Html(string='Body', translate=False)
     body_html = fields.Html(string='Body converted to be sent by mail', sanitize_attributes=False)
     attachment_ids = fields.Many2many('ir.attachment', 'mass_mailing_ir_attachments_rel',
-        'mass_mailing_id', 'attachment_id', string='Attachments')
+                                      'mass_mailing_id', 'attachment_id', string='Attachments')
     keep_archives = fields.Boolean(string='Keep Archives')
     campaign_id = fields.Many2one('utm.campaign', string='UTM Campaign', index=True)
     source_id = fields.Many2one('utm.source', string='Source', required=True, ondelete='cascade',
@@ -90,9 +90,10 @@ class MassMailing(models.Model):
         compute='_compute_medium_id', readonly=False, store=True,
         help="UTM Medium: delivery method (email, sms, ...)")
     state = fields.Selection([('draft', 'Draft'), ('in_queue', 'In Queue'), ('sending', 'Sending'), ('done', 'Sent')],
-        string='Status', required=True, tracking=True, copy=False, default='draft', group_expand='_group_expand_states')
+                             string='Status', required=True, tracking=True, copy=False, default='draft',
+                             group_expand='_group_expand_states')
     color = fields.Integer(string='Color Index')
-    user_id = fields.Many2one('res.users', string='Responsible', tracking=True,  default=lambda self: self.env.user)
+    user_id = fields.Many2one('res.users', string='Responsible', tracking=True, default=lambda self: self.env.user)
     # mailing options
     mailing_type = fields.Selection([('mail', 'Email')], string="Mailing Type", default="mail", required=True)
     reply_to_mode = fields.Selection([
@@ -116,15 +117,16 @@ class MassMailing(models.Model):
         string='Domain', compute='_compute_mailing_domain',
         readonly=False, store=True)
     mail_server_id = fields.Many2one('ir.mail_server', string='Mail Server',
-        default=_get_default_mail_server_id,
-        help="Use a specific mail server in priority. Otherwise Odoo relies on the first outgoing mail server available (based on their sequencing) as it does for normal mails.")
+                                     default=_get_default_mail_server_id,
+                                     help="Use a specific mail server in priority. Otherwise Odoo relies on the first outgoing mail server available (based on their sequencing) as it does for normal mails.")
     contact_list_ids = fields.Many2many('mailing.list', 'mail_mass_mailing_list_rel', string='Mailing Lists')
     contact_ab_pc = fields.Integer(string='A/B Testing percentage',
-        help='Percentage of the contacts that will be mailed. Recipients will be taken randomly.', default=100)
+                                   help='Percentage of the contacts that will be mailed. Recipients will be taken randomly.',
+                                   default=100)
     unique_ab_testing = fields.Boolean(string='Allow A/B Testing', default=False,
-        help='If checked, recipients will be mailed only once for the whole campaign. '
-             'This lets you send different mailings to randomly selected recipients and test '
-             'the effectiveness of the mailings, without causing duplicate messages.')
+                                       help='If checked, recipients will be mailed only once for the whole campaign. '
+                                            'This lets you send different mailings to randomly selected recipients and test '
+                                            'the effectiveness of the mailings, without causing duplicate messages.')
     kpi_mail_required = fields.Boolean('KPI mail required', copy=False)
     # statistics data
     mailing_trace_ids = fields.One2many('mailing.trace', 'mass_mailing_id', string='Emails Statistics')
@@ -169,9 +171,9 @@ class MassMailing(models.Model):
     def _compute_statistics(self):
         """ Compute statistics of the mass mailing """
         for key in (
-            'scheduled', 'expected', 'ignored', 'sent', 'delivered', 'opened',
-            'clicked', 'replied', 'bounced', 'failed', 'received_ratio',
-            'opened_ratio', 'replied_ratio', 'bounced_ratio',
+                'scheduled', 'expected', 'ignored', 'sent', 'delivered', 'opened',
+                'clicked', 'replied', 'bounced', 'failed', 'received_ratio',
+                'opened_ratio', 'replied_ratio', 'bounced_ratio',
         ):
             self[key] = False
         if not self.ids:
@@ -200,7 +202,7 @@ class MassMailing(models.Model):
                 m.id IN %s
             GROUP BY
                 m.id
-        """, (tuple(self.ids), ))
+        """, (tuple(self.ids),))
         for row in self.env.cr.dictfetchall():
             total = (row['expected'] - row['ignored']) or 1
             row['received_ratio'] = 100.0 * row['delivered'] / total
@@ -229,7 +231,8 @@ class MassMailing(models.Model):
     @api.depends('mailing_model_id')
     def _compute_model(self):
         for record in self:
-            record.mailing_model_real = (record.mailing_model_id.model != 'mailing.list') and record.mailing_model_id.model or 'mailing.contact'
+            record.mailing_model_real = (
+                                                    record.mailing_model_id.model != 'mailing.list') and record.mailing_model_id.model or 'mailing.contact'
 
     @api.depends('mailing_model_id')
     def _compute_reply_to_mode(self):
@@ -267,10 +270,11 @@ class MassMailing(models.Model):
     @api.model
     def create(self, values):
         if values.get('subject') and not values.get('name'):
-            values['name'] = "%s %s" % (values['subject'], datetime.strftime(fields.datetime.now(), tools.DEFAULT_SERVER_DATETIME_FORMAT))
+            values['name'] = "%s %s" % (
+            values['subject'], datetime.strftime(fields.datetime.now(), tools.DEFAULT_SERVER_DATETIME_FORMAT))
         if values.get('body_html'):
             values['body_html'] = self._convert_inline_images_to_urls(values['body_html'])
-        return super().create(values)\
+        return super().create(values) \
             ._fix_attachment_ownership()
 
     def write(self, values):
@@ -363,7 +367,7 @@ class MassMailing(models.Model):
     def _action_view_traces_filtered(self, view_filter):
         action = self.env["ir.actions.actions"]._for_xml_id("mass_mailing.mailing_trace_action")
         action['name'] = _('%s Traces') % (self.name)
-        action['context'] = {'search_default_mass_mailing_id': self.id,}
+        action['context'] = {'search_default_mass_mailing_id': self.id, }
         filter_key = 'search_default_filter_%s' % (view_filter)
         action['context'][filter_key] = True
         return action
@@ -426,7 +430,8 @@ class MassMailing(models.Model):
                 # filter the list_id by record
                 record_lists = opt_out_records.filtered(lambda rec: rec.contact_id.id == record.id)
                 if len(record_lists) > 0:
-                    record.sudo().message_post(body=message % ', '.join(str(list.name) for list in record_lists.mapped('list_id')))
+                    record.sudo().message_post(
+                        body=message % ', '.join(str(list.name) for list in record_lists.mapped('list_id')))
 
     # ------------------------------------------------------
     # Email Sending
@@ -443,8 +448,10 @@ class MassMailing(models.Model):
             # TODO DBE Fixme : Optimise the following to get real opt_out and opt_in
             target_list_contacts = self.env['mailing.contact.subscription'].search(
                 [('list_id', 'in', self.contact_list_ids.ids)])
-            opt_out_contacts = target_list_contacts.filtered(lambda rel: rel.opt_out).mapped('contact_id.email_normalized')
-            opt_in_contacts = target_list_contacts.filtered(lambda rel: not rel.opt_out).mapped('contact_id.email_normalized')
+            opt_out_contacts = target_list_contacts.filtered(lambda rel: rel.opt_out).mapped(
+                'contact_id.email_normalized')
+            opt_in_contacts = target_list_contacts.filtered(lambda rel: not rel.opt_out).mapped(
+                'contact_id.email_normalized')
             opt_out = set(c for c in opt_out_contacts if c not in opt_in_contacts)
 
             _logger.info(
@@ -511,7 +518,8 @@ class MassMailing(models.Model):
                AND s.model = %%(target_model)s;
             """
         query = query % {'target': target._table, 'mail_field': mail_field}
-        params = {'mailing_id': self.id, 'mailing_campaign_id': self.campaign_id.id, 'target_model': self.mailing_model_real}
+        params = {'mailing_id': self.id, 'mailing_campaign_id': self.campaign_id.id,
+                  'target_model': self.mailing_model_real}
         self._cr.execute(query, params)
         seen_list = set(m[0] for m in self._cr.fetchall())
         _logger.info(
@@ -639,13 +647,16 @@ class MassMailing(models.Model):
             if mass_mailing.medium_id:
                 vals['medium_id'] = mass_mailing.medium_id.id
 
-            res[mass_mailing.id] = mass_mailing._shorten_links(html, vals, blacklist=['/unsubscribe_from_list', '/view'])
+            res[mass_mailing.id] = mass_mailing._shorten_links(html, vals,
+                                                               blacklist=['/unsubscribe_from_list', '/view'])
 
         return res
 
     @api.model
     def _process_mass_mailing_queue(self):
-        mass_mailings = self.search([('state', 'in', ('in_queue', 'sending')), '|', ('schedule_date', '<', fields.Datetime.now()), ('schedule_date', '=', False)])
+        mass_mailings = self.search(
+            [('state', 'in', ('in_queue', 'sending')), '|', ('schedule_date', '<', fields.Datetime.now()),
+             ('schedule_date', '=', False)])
         for mass_mailing in mass_mailings:
             user = mass_mailing.write_uid or self.env.user
             mass_mailing = mass_mailing.with_context(**user.with_user(user).context_get())
@@ -695,7 +706,7 @@ class MassMailing(models.Model):
                     'company': user.company_id,
                     'user': user,
                     'display_mobile_banner': True,
-                    ** mailing._prepare_statistics_email_values()
+                    **mailing._prepare_statistics_email_values()
                 },
             )
 
@@ -729,7 +740,7 @@ class MassMailing(models.Model):
             random_tip = random.choice(random_tip).tip_description
 
         formatted_date = tools.format_datetime(
-            self.env, self.sent_date, self.user_id.tz, 'MMM dd, YYYY',  self.user_id.lang
+            self.env, self.sent_date, self.user_id.tz, 'MMM dd, YYYY', self.user_id.lang
         ) if self.sent_date else False
 
         web_base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
@@ -817,7 +828,7 @@ class MassMailing(models.Model):
             attachment = self.env['ir.attachment'].create({
                 'datas': b64image,
                 'name': "cropped_image_mailing_{}".format(self.id),
-                'type': 'binary',})
+                'type': 'binary', })
 
             attachment.generate_access_token()
 
