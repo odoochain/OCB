@@ -27,7 +27,8 @@ class View(models.Model):
     track = fields.Boolean(string='Track', default=False, help="Allow to specify for one page of the website to be trackable or not")
     visibility = fields.Selection([('', 'All'), ('connected', 'Signed In'), ('restricted_group', 'Restricted Group'), ('password', 'With Password')], default='')
     visibility_password = fields.Char(groups='base.group_system', copy=False)
-    visibility_password_display = fields.Char(compute='_get_pwd', inverse='_set_pwd', groups='website.group_website_designer')
+    visibility_password_display = fields.Char(compute='_get_pwd', inverse='_set_pwd',
+                                              groups='website.group_website_designer')
 
     @api.depends('visibility_password')
     def _get_pwd(self):
