@@ -108,7 +108,7 @@ class Registry(Mapping):
         return registry
 
     def init(self, db_name):
-        self.models = {}    # model name/model instance mapping
+        self.models = {}  # model name/model instance mapping
         self._sql_constraints = set()
         self._init = True
         self._assertion_report = odoo.tests.runner.OdooTestResult()
@@ -119,7 +119,7 @@ class Registry(Mapping):
 
         # modules fully loaded (maintained during init phase by `loading` module)
         self._init_modules = set()
-        self.updated_modules = []       # installed/updated modules
+        self.updated_modules = []  # installed/updated modules
         self.loaded_xmlids = set()
 
         self.db_name = db_name
@@ -130,8 +130,8 @@ class Registry(Mapping):
         self.test_lock = None
 
         # Indicates that the registry is
-        self.loaded = False             # whether all modules are loaded
-        self.ready = False              # whether everything is set up
+        self.loaded = False  # whether all modules are loaded
+        self.ready = False  # whether everything is set up
 
         # Inter-process signaling:
         # The `base_registry_signaling` sequence indicates the whole registry
@@ -454,7 +454,10 @@ class Registry(Mapping):
                 except psycopg2.OperationalError:
                     _schema.error("Unable to add index for %s", self)
             elif not index and indexname in existing:
-                _schema.info("Keep unexpected index %s on table %s", indexname, tablename)
+                if indexname == "mail_message_subtype_id_index":
+                    pass
+                else:
+                    _schema.info("Keep unexpected index %s on table %s", indexname, tablename)
 
     def add_foreign_key(self, table1, column1, table2, column2, ondelete,
                         model, module, force=True):
@@ -586,7 +589,8 @@ class Registry(Mapping):
             # must be reloaded.
             # The `base_cache_signaling` sequence indicates when all caches must
             # be invalidated (i.e. cleared).
-            cr.execute("SELECT sequence_name FROM information_schema.sequences WHERE sequence_name='base_registry_signaling'")
+            cr.execute(
+                "SELECT sequence_name FROM information_schema.sequences WHERE sequence_name='base_registry_signaling'")
             if not cr.fetchall():
                 cr.execute("CREATE SEQUENCE base_registry_signaling INCREMENT BY 1 START WITH 1")
                 cr.execute("SELECT nextval('base_registry_signaling')")
@@ -706,11 +710,15 @@ class Registry(Mapping):
 
 class DummyRLock(object):
     """ Dummy reentrant lock, to be used while running rpc and js tests """
+
     def acquire(self):
         pass
+
     def release(self):
         pass
+
     def __enter__(self):
         self.acquire()
+
     def __exit__(self, type, value, traceback):
         self.release()

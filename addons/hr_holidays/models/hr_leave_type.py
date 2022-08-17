@@ -93,9 +93,11 @@ class HolidaysType(models.Model):
              '\tAllow Employees Requests: allocated by HR and users can request time off and allocations; '
              '\tSet by Time Off Officer: allocated by HR and cannot be bypassed; users can request time off;')
     validity_start = fields.Date("From",
-                                 help='Adding validity to types of time off so that it cannot be selected outside this time period')
+                                 help='Adding validity to types of time off so that it cannot be selected outside '
+                                      'this time period')
     validity_stop = fields.Date("To")
-    valid = fields.Boolean(compute='_compute_valid', search='_search_valid', help='This indicates if it is still possible to use this type of leave')
+    valid = fields.Boolean(compute='_compute_valid', search='_search_valid', help='This indicates if it is still '
+                                                                                  'possible to use this type of leave')
     time_type = fields.Selection([('leave', 'Time Off'), ('other', 'Other')], default='leave', string="Kind of Leave",
                                  help="Whether this should be computed as a holiday or as work time (eg: formation)")
     request_unit = fields.Selection([

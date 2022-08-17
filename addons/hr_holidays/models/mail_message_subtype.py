@@ -3,7 +3,7 @@
 
 import logging
 
-from odoo import api, models
+from odoo import api, models, fields
 
 _logger = logging.getLogger(__name__)
 
@@ -11,6 +11,9 @@ _logger = logging.getLogger(__name__)
 class MailMessageSubtype(models.Model):
     _inherit = 'mail.message.subtype'
 
+
+    # https: // github.com / odoo / odoo / pull / 75340
+    # Keep unexpected index
     def _get_department_subtype(self):
         return self.search([
             ('res_model', '=', 'hr.department'),
