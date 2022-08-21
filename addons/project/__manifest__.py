@@ -18,6 +18,7 @@
         'web',
         'web_tour',
         'digest',
+        'pl_wecom_widget',
     ],
     'description': "",
     'data': [
@@ -44,7 +45,10 @@
         'wizard/project_task_type_delete_views.xml',
     ],
     'demo': ['data/project_demo.xml'],
-    'qweb': ['static/src/xml/project_templates.xml'],
+    'qweb': [
+        'static/src/xml/project_templates.xml',
+        'static/src/xml/many2one_avatar_user.xml',
+    ],
     'test': [
     ],
     'installable': True,
