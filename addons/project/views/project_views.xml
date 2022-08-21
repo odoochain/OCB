@@ -630,7 +630,7 @@
             </field>
         </record>
 
-        <!-- Task -->
+        <!-- Task old -->
         <record id="view_task_form2" model="ir.ui.view">
             <field name="name">project.task.form</field>
             <field name="model">project.task</field>
@@ -645,10 +645,11 @@
                     <field name="repeat_show_week" invisible="1" />
                     <field name="repeat_show_month" invisible="1" />
                     <field name="recurrence_id" invisible="1" />
+                    <field name="allow_task_dependencies" invisible="1" />
                     <header>
                         <button name="action_assign_to_me" string="Assign to Me" type="object" class="oe_highlight"
                             attrs="{'invisible' : [('user_id', '!=', False)]}"/>
-                        <field name="stage_id" widget="statusbar" options="{'clickable': '1', 'fold_field': 'fold'}" groups="project.group_project_stages" attrs="{'invisible': [('project_id', '=', False)]}"/>
+                        <field name="stage_id" widget="statusbar" options="{'clickable': '1', 'fold_field': 'fold'}" groups="project.group_project_stages" attrs="{'invisible': [('project_id', '=', False), ('stage_id', '=', False)]}"/>
                     </header>
                     <div class="text-center alert alert-primary" role="alert" attrs="{'invisible': ['|', ('ribbon_message', '=', False), ('ribbon_message', '=', '')]}">
                         <field name="ribbon_message"/>
@@ -772,6 +773,218 @@
                                     <field name="subtask_project_id" invisible="1" />
                                     <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
                                     <field name="displayed_image_id" groups="base.group_no_one"/>
+                                </group>
+                                <group>
+                                    <field name="date_assign" groups="base.group_no_one"/>
+                                    <field name="date_last_stage_update" groups="base.group_no_one"/>
+                                </group>
+                                <group string="Working Time to Assign" attrs="{'invisible': [('working_hours_open', '=', 0.0)]}">
+                                    <field name="working_hours_open" string="Hours"/>
+                                    <field name="working_days_open" string="Days"/>
+                                </group>
+                                <group string="Working Time to Close" attrs="{'invisible': [('working_hours_close', '=', 0.0)]}">
+                                    <field name="working_hours_close" string="Hours"/>
+                                    <field name="working_days_close" string="Days"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" options="{'post_refresh':True}" groups="base.group_user"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+<!--         Task -->
+        <record id="view_task_form3" model="ir.ui.view">
+            <field name="name">project.task.form</field>
+            <field name="model">project.task</field>
+            <field eval="2" name="priority"/>
+            <field name="arch" type="xml">
+                <form string="Task" class="o_form_project_tasks" js_class="project_form">
+                    <field name="allow_subtasks" invisible="1" />
+                    <field name="is_closed" invisible="1" />
+                    <field name="allow_recurring_tasks" invisible="1" />
+                    <field name="repeat_show_dow" invisible="1" />
+                    <field name="repeat_show_day" invisible="1" />
+                    <field name="repeat_show_week" invisible="1" />
+                    <field name="repeat_show_month" invisible="1" />
+                    <field name="recurrence_id" invisible="1" />
+                    <field name="allow_task_dependencies" invisible="1" />
+                    <header>
+                        <button name="action_assign_to_me" string="Assign to Me" type="object" class="oe_highlight"
+                            attrs="{'invisible' : &quot;[('user_ids', 'in', uid)]&quot;}" data-hotkey="q"/>
+                        <field name="stage_id" widget="statusbar" options="{'clickable': '1', 'fold_field': 'fold'}" attrs="{'invisible': [('project_id', '=', False), ('stage_id', '=', False)]}"/>
+                    </header>
+                    <div class="alert alert-info oe_edit_only mb-0" role="status" attrs="{'invisible': ['|', ('recurring_task', '=', False), ('recurrence_id', '=', False)]}">
+                        <p>Edit recurring task</p>
+                        <field name="recurrence_update" widget="radio"/>
+                    </div>
+                    <sheet string="Task">
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_parent_task" type="object" class="oe_stat_button" icon="fa-tasks" string="Parent Task" attrs="{'invisible': ['|', ('allow_subtasks', '=', False), ('parent_id', '=', False)]}" groups="project.group_subtask_project"/>
+                        <button name="%(rating_rating_action_task)d" type="action" attrs="{'invisible': [('rating_count', '=', 0)]}" class="oe_stat_button" icon="fa-smile-o" groups="project.group_project_rating">
+                            <field name="rating_count" string="Rating" widget="statinfo"/>
+                        </button>
+                        <button name="action_recurring_tasks" type="object" attrs="{'invisible': [('recurrence_id', '=', False)]}" class="oe_stat_button" icon="fa-repeat" groups="project.group_project_recurring_tasks">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="recurring_count" widget="statinfo" nolabel="1" />
+                                    Tasks
+                                </span>
+                                <span class="o_stat_text">in Recurrence</span>
+                            </div>
+                        </button>
+<!--                        <button name="action_dependent_tasks" type="object" attrs="{'invisible': [('dependent_tasks_count', '=', 0)]}" class="oe_stat_button" icon="fa-tasks" groups="project.group_project_task_dependencies">-->
+<!--                            <div class="o_field_widget o_stat_info">-->
+<!--                                <span class="o_stat_text">Blocking</span>-->
+<!--                                <span class="o_stat_value ">-->
+<!--                                    <field name="dependent_tasks_count" widget="statinfo" nolabel="1" />-->
+<!--                                    Tasks-->
+<!--                                </span>-->
+<!--                            </div>-->
+<!--                        </button>-->
+                    </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
+                    <div class="oe_title pr-0">
+                        <h1 class="d-flex flex-row justify-content-between">
+                            <field name="priority" widget="priority" class="mr-3"/>
+                            <field name="name" class="o_task_name text-truncate" placeholder="Task Title..." default_focus="1" />
+                            <field name="kanban_state" widget="state_selection" class="ml-auto"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <label for="project_id" attrs="{'invisible': [('parent_id', '!=', False)]}" class="oe_read_only"/>
+                            <div colspan="1" class="oe_read_only">
+                                <i class="o_project_task_project_field text-danger" attrs="{'invisible': [('project_id', '!=', False)]}">Private</i>
+                                <field name="project_id" attrs="{'invisible': ['|', ('parent_id', '!=', False), ('project_id', '=', False)]}" nolabel="1"/>
+                            </div>
+                            <field name="project_id" attrs="{'invisible': [('parent_id', '!=', False)]}" domain="[('active', '=', True), ('company_id', '=', company_id)]"
+                                placeholder="Private" class="o_project_task_project_field oe_edit_only"/>
+                            <field name="display_project_id" string="Project" attrs="{'invisible': [('parent_id', '=', False)]}" domain="[('active', '=', True), ('company_id', '=', company_id)]"/>
+                            <field name="user_ids"
+                                class="o_task_user_field"
+                                options="{'no_open': True}"
+                                widget="many2many_avatar_user"
+                                domain="[('share', '=', False), ('active', '=', True)]"/>
+                            <field name="parent_id"
+                                attrs="{'invisible' : [('allow_subtasks', '=', False)]}"
+                                groups="base.group_no_one"
+                            />
+                        </group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                            <field name="partner_id" widget="res_partner_many2one" class="o_task_customer_field"/>
+                            <field name="partner_phone" widget="phone" attrs="{'invisible': True}"/>
+                            <field name="date_deadline" attrs="{'invisible': [('is_closed', '=', True)]}"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create_edit': True}"/>
+                            <field name="recurring_task" attrs="{'invisible': ['|', ('allow_recurring_tasks', '=', False), ('active', '=', False)]}" />
+                            <field name="legend_blocked" invisible="1"/>
+                            <field name="legend_normal" invisible="1"/>
+                            <field name="legend_done" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="description_page" string="Description">
+                            <field name="description" type="html" options="{'collaborative': true}"/>
+                        </page>
+                        <page name="sub_tasks_page" string="Sub-tasks" attrs="{'invisible': [('allow_subtasks', '=', False)]}">
+                            <field name="child_ids" context="{'default_project_id': project_id if not parent_id or not display_project_id else display_project_id, 'default_user_ids': user_ids, 'default_parent_id': id, 'default_partner_id': partner_id}">
+                                <tree editable="bottom">
+                                    <field name="project_id" invisible="1"/>
+                                    <field name="is_closed" invisible="1"/>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="display_project_id" string="Project" optional="hide"/>
+                                    <field name="partner_id" optional="hide"/>
+                                    <field name="user_ids" widget="many2many_avatar_user" optional="show" domain="[('share', '=', False), ('active', '=', True)]"/>
+                                    <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                                    <field name="activity_ids" widget="list_activity" optional="hide"/>
+                                    <field name="date_deadline" attrs="{'invisible': [('is_closed', '=', True)]}" optional="show"/>
+                                    <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="hide"/>
+                                    <field name="kanban_state" widget="state_selection" optional="hide"/>
+                                    <field name="stage_id" optional="show" context="{'default_project_id': project_id}"/>
+                                    <button name="action_open_task" type="object" title="View Task" string="View Task" class="btn btn-link pull-right"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page name="task_dependencies" string="Blocked By" attrs="{'invisible': [('allow_task_dependencies', '=', False)]}" groups="project.group_project_task_dependencies">
+                            <field name="depend_on_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="is_closed" invisible="1" />
+                                    <field name="name" />
+                                    <field name="project_id" optional="hide" />
+                                    <field name="user_ids" widget="many2many_avatar_user" optional="show" domain="[('share', '=', False), ('active', '=', True)]"/>
+                                    <field name="company_id" optional="hide" groups="base.group_multi_company" />
+                                    <field name="activity_ids" widget="list_activity" optional="hide"/>
+                                    <field name="date_deadline" attrs="{'invisible': [('is_closed', '=', True)]}" optional="show" />
+                                    <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="hide"/>
+                                    <field name="kanban_state" widget="state_selection" optional="hide" />
+                                    <field name="stage_id" optional="show" />
+                                    <button class="oe_link float-right" string="View Task" name="action_open_task" type="object"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page name="recurrence" string="Recurrence" attrs="{'invisible': [('recurring_task', '=', False)]}">
+                            <group>
+                                <group>
+                                    <label for="repeat_interval" />
+                                    <div class="o_col">
+                                        <div class="o_row">
+                                            <field name="repeat_interval" attrs="{'required': [('recurring_task', '=', True)]}" />
+                                            <field name="repeat_unit" attrs="{'required': [('recurring_task', '=', True)]}" />
+                                        </div>
+                                        <widget name="week_days" attrs="{'invisible': [('repeat_show_dow', '=', False)]}"/>
+                                    </div>
+
+                                    <label for="repeat_on_month" string="Repeat On" attrs="{'invisible': [('repeat_unit', 'not in', ('month', 'year'))]}" />
+                                    <div class="o_row">
+                                        <field name="repeat_on_month" attrs="{'invisible': [('repeat_unit', '!=', 'month')], 'required': [('repeat_unit', '=', 'month')]}" />
+                                        <field name="repeat_on_year" attrs="{'invisible': [('repeat_unit', '!=', 'year')], 'required': [('repeat_unit', '=', 'year')]}" />
+
+                                        <field name="repeat_day" attrs="{'invisible': [('repeat_show_day', '=', False)], 'required': [('repeat_show_day', '=', True)]}" />
+                                        <field name="repeat_week" attrs="{'invisible': [('repeat_show_week', '=', False)], 'required': [('repeat_show_week', '=', True)]}" />
+                                        <field name="repeat_weekday" attrs="{'invisible': [('repeat_show_week', '=', False)], 'required': [('repeat_show_week', '=', True)]}" />
+                                        <span attrs="{'invisible': ['|', ('repeat_show_week', '=', False), ('repeat_show_month', '=', False)]}">of</span>
+                                        <field name="repeat_month" attrs="{'invisible': [('repeat_show_month', '=', False)], 'required': [('repeat_show_month', '=', True)]}" />
+                                    </div>
+                                    <!-- Those fields are added to trigger the compute method for the recurrence feature. -->
+                                    <field name="mon" invisible="1"/>
+                                    <field name="tue" invisible="1"/>
+                                    <field name="wed" invisible="1"/>
+                                    <field name="thu" invisible="1"/>
+                                    <field name="fri" invisible="1"/>
+                                    <field name="sat" invisible="1"/>
+                                    <field name="sun" invisible="1"/>
+
+                                    <label for="repeat_type" />
+                                    <div class="o_row">
+                                        <field name="repeat_type" attrs="{'required': [('recurring_task', '=', True)]}" />
+                                        <field name="repeat_until" attrs="{'invisible': [('repeat_type', '!=', 'until')], 'required': [('repeat_type', '=', 'until')]}" />
+                                        <field name="repeat_number" attrs="{'invisible': [('repeat_type', '!=', 'after')], 'required': [('repeat_type', '=', 'after')]}" />
+                                    </div>
+                                </group>
+                            </group>
+                            <group attrs="{'invisible': ['|', ('recurring_task', '=', False), ('recurrence_message', '=', False)]}">
+                                <div class="alert alert-success o_form_project_recurrence_message" role="status">
+                                    <field name="recurrence_message" widget="html" class="mb-0" />
+                                </div>
+                            </group>
+                        </page>
+                        <page name="extra_info" string="Extra Info" groups="base.group_no_one">
+                            <group>
+                                <group>
+                                    <field name="analytic_account_id" groups="analytic.group_analytic_accounting" context="{'default_partner_id': partner_id}"/>
+                                    <field name="analytic_tag_ids" groups="analytic.group_analytic_tags" widget="many2many_tags"/>
+                                    <field name="sequence" groups="base.group_no_one"/>
+                                    <field name="email_from" invisible="1"/>
+                                    <field name="email_cc" groups="base.group_no_one"/>
+                                    <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                                    <field name="displayed_image_id" groups="base.group_no_one" options="{'no_create': True}"/>
                                 </group>
                                 <group>
                                     <field name="date_assign" groups="base.group_no_one"/>

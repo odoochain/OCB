@@ -11,6 +11,8 @@ class ReportProjectTaskUser(models.Model):
     _auto = False
 
     name = fields.Char(string='Task Title', readonly=True)
+    user_ids = fields.Many2many('res.users', relation='project_task_user_rel', column1='task_id', column2='user_id',
+                                string='Assignees', readonly=True)
     user_id = fields.Many2one('res.users', string='Assigned To', readonly=True)
     date_assign = fields.Datetime(string='Assignment Date', readonly=True)
     date_end = fields.Datetime(string='Ending Date', readonly=True)
