@@ -12,6 +12,49 @@ from odoo.osv.expression import OR
 
 from .project_task_recurrence import DAYS, WEEKS
 
+PROJECT_TASK_READABLE_FIELDS = {
+    'id',
+    'active',
+    'description',
+    'priority',
+    'kanban_state_label',
+    'project_id',
+    'display_project_id',
+    'color',
+    'partner_is_company',
+    'commercial_partner_id',
+    'allow_subtasks',
+    'subtask_count',
+    'child_text',
+    'is_closed',
+    'email_from',
+    'create_date',
+    'write_date',
+    'company_id',
+    'displayed_image_id',
+    'display_name',
+    'portal_user_names',
+    'legend_normal',
+    'legend_blocked',
+    'legend_done',
+    'user_ids',
+}
+
+PROJECT_TASK_WRITABLE_FIELDS = {
+    'name',
+    'partner_id',
+    'partner_email',
+    'date_deadline',
+    'tag_ids',
+    'sequence',
+    'stage_id',
+    'kanban_state',
+    'child_ids',
+    'parent_id',
+    'priority',
+}
+
+
 class ProjectTaskType(models.Model):
     _name = 'project.task.type'
     _description = 'Task Stage'
@@ -54,6 +97,7 @@ class ProjectTaskType(models.Model):
             " * A medium or a bad feedback will set the kanban state to 'blocked' (red bullet).\n")
     is_closed = fields.Boolean('Closing Stage', help="Tasks in this stage are considered as closed.")
     disabled_rating_warning = fields.Text(compute='_compute_disabled_rating_warning')
+    user_id = fields.Many2one('res.users', 'Stage Owner', index=True)
 
     def unlink_wizard(self, stage_view=False):
         self = self.with_context(active_test=False)
@@ -134,6 +178,10 @@ class Project(models.Model):
         action['context'] = "{'default_res_model': '%s','default_res_id': %d}" % (self._name, self.id)
         return action
 
+    def _default_stage_id(self):
+        # Since project stages are order by sequence first, this should fetch the one with the lowest sequence number.
+        return self.env['project.project.stage'].search([], limit=1)
+
     def _compute_is_favorite(self):
         for project in self:
             project.is_favorite = self.env.user in project.favorite_user_ids
@@ -152,6 +200,10 @@ class Project(models.Model):
 
     def _get_default_favorite_user_ids(self):
         return [(6, 0, [self.env.uid])]
+
+    @api.model
+    def _read_group_stage_ids(self, stages, domain, order):
+        return self.env['project.project.stage'].search([], order=order)
 
     name = fields.Char("Name", index=True, required=True, tracking=True)
     description = fields.Html()
@@ -185,6 +237,7 @@ class Project(models.Model):
         related='company_id.resource_calendar_id')
     type_ids = fields.Many2many('project.task.type', 'project_task_type_rel', 'project_id', 'type_id', string='Tasks Stages')
     task_count = fields.Integer(compute='_compute_task_count', string="Task Count")
+    # task_count_with_subtasks = fields.Integer(compute='_compute_task_count')
     task_ids = fields.One2many('project.task', 'project_id', string='Tasks',
                                domain=['|', ('stage_id.fold', '=', False), ('stage_id', '=', False)])
     color = fields.Integer(string='Color Index')
@@ -219,6 +272,11 @@ class Project(models.Model):
         help="Project in which sub-tasks of the current project will be created. It can be the current project itself.")
     allow_subtasks = fields.Boolean('Sub-tasks', default=lambda self: self.env.user.has_group('project.group_subtask_project'))
     allow_recurring_tasks = fields.Boolean('Recurring Tasks', default=lambda self: self.env.user.has_group('project.group_project_recurring_tasks'))
+    allow_recurring_tasks = fields.Boolean('Recurring Tasks', default=lambda self: self.env.user.has_group(
+        'project.group_project_recurring_tasks'))
+    allow_task_dependencies = fields.Boolean('Task Dependencies', default=lambda self: self.env.user.has_group(
+        'project.group_project_task_dependencies'))
+    tag_ids = fields.Many2many('project.tags', relation='project_project_project_tags_rel', string='Tags')
 
     # rating fields
     rating_request_deadline = fields.Datetime(compute='_compute_rating_request_deadline', store=True)
@@ -238,6 +296,22 @@ class Project(models.Model):
         ('monthly', 'Once a Month'),
         ('quarterly', 'Quarterly'),
         ('yearly', 'Yearly')], 'Rating Frequency', required=True, default='monthly')
+
+    # Not `required` since this is an option to enable in project settings.
+    stage_id = fields.Many2one('project.project.stage', string='Stage', ondelete='restrict', groups="project.group_project_stages",
+        tracking=True, index=True, copy=False, default=_default_stage_id, group_expand='_read_group_stage_ids')
+
+    # update_ids = fields.One2many('project.update', 'project_id')
+    # last_update_id = fields.Many2one('project.update', string='Last Update', copy=False)
+    # last_update_status = fields.Selection(selection=[
+    #     ('on_track', 'On Track'),
+    #     ('at_risk', 'At Risk'),
+    #     ('off_track', 'Off Track'),
+    #     ('on_hold', 'On Hold')
+    # ], default='on_track', compute='_compute_last_update_status', store=True)
+    # last_update_color = fields.Integer(compute='_compute_last_update_color')
+    # milestone_ids = fields.One2many('project.milestone', 'project_id')
+    # milestone_count = fields.Integer(compute='_compute_milestone_count')
 
     _sql_constraints = [
         ('project_date_greater', 'check(date >= date_start)', 'Error! project start-date must be lower than project end-date.')
@@ -452,6 +526,28 @@ class Project(models.Model):
             defaults['project_id'] = self.id
         return values
 
+        # ---------------------------------------------------
+        # Mail gateway
+        # ---------------------------------------------------
+
+    def _track_template(self, changes):
+        res = super()._track_template(changes)
+        project = self[0]
+        if self.user_has_groups(
+                'project.group_project_stages') and 'stage_id' in changes and project.stage_id.mail_template_id:
+            res['stage_id'] = (project.stage_id.mail_template_id, {
+                'auto_delete_message': True,
+                'subtype_id': self.env['ir.model.data'].xmlid_to_res_id('mail.mt_note'),
+                'email_layout_xmlid': 'mail.mail_notification_light',
+            })
+        return res
+
+    # def _track_subtype(self, init_values):
+    #     self.ensure_one()
+    #     if 'stage_id' in init_values:
+    #         return self.env.ref('project.mt_project_stage_change')
+    #     return super()._track_subtype(init_values)
+
     # ---------------------------------------------------
     #  Actions
     # ---------------------------------------------------
@@ -491,6 +587,13 @@ class Project(models.Model):
         action_context['search_default_parent_res_name'] = self.name
         action_context.pop('group_by', None)
         return dict(action, context=action_context)
+
+    @api.model
+    def _action_open_all_projects(self):
+        action = self.env['ir.actions.act_window']._for_xml_id(
+            'project.open_view_project_all' if not self.user_has_groups('project.group_project_stages') else
+            'project.open_view_project_all_group_stage')
+        return action
 
     # ---------------------------------------------------
     #  Business Methods

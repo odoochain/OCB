@@ -3,6 +3,9 @@ Project Management
 
 ### Infinitely flexible. Incredibly easy to use.
 
+参照：
+
+https://github.com/odoo/odoo/commit/25f85544260201903495160634f30526b9a984d0
 
 Odoo's collaborative and realtime <a href="https://www.odoo.com/page/project-management">open source project management</a>
 helps your team get work done. Keep track of everything, from the big picture
