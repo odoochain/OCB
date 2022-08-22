@@ -84,12 +84,24 @@ class ReportProjectTaskUser(models.Model):
         """
         return group_by_str
 
+    # def init(self):
+    #     tools.drop_view_if_exists(self._cr, self._table)
+    #     self._cr.execute("""
+    #         CREATE view %s as
+    #           %s
+    #           FROM project_task t
+    #             WHERE t.active = 'true'
+    #             AND t.project_id IS NOT NULL
+    #             %s
+    #     """ % (self._table, self._select(), self._group_by()))
+
     def init(self):
         tools.drop_view_if_exists(self._cr, self._table)
         self._cr.execute("""
             CREATE view %s as
               %s
               FROM project_task t
+              LEFT JOIN project_task_user_rel tu on t.id=tu.task_id
                 WHERE t.active = 'true'
                 AND t.project_id IS NOT NULL
                 %s
