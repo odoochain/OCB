@@ -28,12 +28,19 @@ class ProductAttribute(models.Model):
         - Never: Variants are never created for the attribute.
         Note: the variants creation mode cannot be changed once the attribute is used on at least one product.""",
         required=True)
+    number_related_products = fields.Integer(compute='_compute_number_related_products')
     is_used_on_products = fields.Boolean('Used on Products', compute='_compute_is_used_on_products')
     product_tmpl_ids = fields.Many2many('product.template', string="Related Products", compute='_compute_products', store=True)
     display_type = fields.Selection([
         ('radio', 'Radio'),
+        ('pills', 'Pills'),
         ('select', 'Select'),
         ('color', 'Color')], default='radio', required=True, help="The display type used in the Product Configurator.")
+
+    @api.depends('product_tmpl_ids')
+    def _compute_number_related_products(self):
+        for pa in self:
+            pa.number_related_products = len(pa.product_tmpl_ids)
 
     @api.depends('product_tmpl_ids')
     def _compute_is_used_on_products(self):
@@ -71,6 +78,24 @@ class ProductAttribute(models.Model):
             self.flush()
             self.invalidate_cache()
         return res
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_used_on_product(self):
+        for pa in self:
+            if pa.number_related_products:
+                raise UserError(
+                    _("You cannot delete the attribute %s because it is used on the following products:\n%s") %
+                    (pa.display_name, ", ".join(pa.product_tmpl_ids.mapped('display_name')))
+                )
+
+    def action_open_related_products(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _("Related Products"),
+            'res_model': 'product.template',
+            'view_mode': 'tree,form',
+            'domain': [('id', 'in', self.product_tmpl_ids.ids)],
+        }
 
     def unlink(self):
         for pa in self:

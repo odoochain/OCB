@@ -141,7 +141,7 @@
             </t>
         </ul>
     </template>
-    
+
      <template id="badge_extra_price" name="Badge Extra Price">
         <t t-set="combination_info_variant" t-value="product._get_combination_info(ptav, pricelist=pricelist)"/>
         <span class="badge badge-pill badge-light border" t-if="combination_info_variant['price_extra']">

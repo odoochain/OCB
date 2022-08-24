@@ -51,6 +51,47 @@
         </field>
     </record>
 
+    <record id="product_attribute_view_form15" model="ir.ui.view">
+        <field name="name">product.attribute.form</field>
+        <field name="model">product.attribute</field>
+        <field name="arch" type="xml">
+            <form string="Product Attribute">
+            <field name="number_related_products" invisible="1"/>
+            <sheet>
+                <div class="oe_button_box" name="button_box">
+                    <button class="oe_stat_button" name="action_open_related_products"
+                            type="object" icon="fa-bars"
+                            attrs="{'invisible': [('number_related_products', '=', [])]}">
+                        <div class="o_stat_info">
+                            <span class="o_stat_value"><field name="number_related_products"/></span>
+                            <span class="o_stat_text">Related Products</span>
+                        </div>
+                    </button>
+                </div>
+                <group name="main_fields" class="o_label_nowrap">
+                    <label for="name" string="Attribute Name"/>
+                    <field name="name" nolabel="1"/>
+                    <field name="display_type" widget="radio"/>
+                    <field name="create_variant" widget="radio" attrs="{'readonly': [('number_related_products', '!=', 0)]}"/>
+                </group>
+                <notebook>
+                    <page string="Attribute Values" name="attribute_values">
+                        <field name="value_ids" widget="one2many" nolabel="1">
+                            <tree string="Values" editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="name"/>
+                                <field name="display_type" invisible="1"/>
+                                <field name="is_custom" groups="product.group_product_variant"/>
+                                <field name="html_color" attrs="{'column_invisible': [('parent.display_type', '!=', 'color')]}" widget="color"/>
+                            </tree>
+                        </field>
+                    </page>
+                </notebook>
+            </sheet>
+            </form>
+        </field>
+    </record>
+
     <record id="attribute_action" model="ir.actions.act_window">
         <field name="name">Attributes</field>
         <field name="type">ir.actions.act_window</field>
