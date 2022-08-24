@@ -60,7 +60,7 @@ class ProjectTaskRecurrence(models.Model):
         ('until', 'End Date'),
         ('after', 'Number of Repetitions'),
     ], default="forever", string="Until")
-    repeat_until = fields.Date(string="End Date")
+    repeat_until = fields.Date(string="Repeat Until")
     repeat_number = fields.Integer(string="Repetitions")
 
     repeat_on_month = fields.Selection([
