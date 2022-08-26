@@ -38,7 +38,6 @@ class ProductPackaging(models.Model):
         else:
             self.shipper_package_code = False
 
-
     def _compute_length_uom_name(self):
         for packaging in self:
             packaging.length_uom_name = self.env['product.template']._get_length_uom_name_from_ir_config_parameter()

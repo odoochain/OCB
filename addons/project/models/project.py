@@ -860,7 +860,7 @@ class Task(models.Model):
         ('until', 'End Date'),
         ('after', 'Number of Repetitions'),
     ], default="forever", string="Until", compute='_compute_repeat', readonly=False)
-    repeat_until = fields.Date(string="End Date", compute='_compute_repeat', readonly=False)
+    repeat_until = fields.Date(string="Repeat Date", compute='_compute_repeat', readonly=False)
     repeat_number = fields.Integer(string="Repetitions", default=1, compute='_compute_repeat', readonly=False)
 
     repeat_on_month = fields.Selection([

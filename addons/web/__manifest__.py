@@ -53,37 +53,37 @@ This module provides the core of the Odoo Web Client.
         #   > web_editor.assets_wysiwyg = assets needed by components defined in the "web_editor" module.
 
         'web.assets_qweb': [
-            'web/static/src/**/*.xml',
+            # 'web/static/src/**/*.xml',
         ],
         'web.assets_common_minimal': [
-            'web/static/lib/es6-promise/es6-promise-polyfill.js',
+            # 'web/static/lib/es6-promise/es6-promise-polyfill.js',
         ],
         'web.assets_common': [
-            ('include', 'web._assets_helpers'),
-
-            'web/static/lib/bootstrap/scss/_variables.scss',
-            ('include', 'web.assets_common_minimal'),
-            ('include', 'web._assets_common_scripts'),
+            # ('include', 'web._assets_helpers'),
+            #
+            # 'web/static/lib/bootstrap/scss/_variables.scss',
+            # ('include', 'web.assets_common_minimal'),
+            # ('include', 'web._assets_common_scripts'),
         ],
         'web.assets_common_lazy': [
-            ('include', 'web.assets_common'),
+            # ('include', 'web.assets_common'),
             # Remove assets_common_minimal
-            ('remove', 'web/static/lib/es6-promise/es6-promise-polyfill.js'),
+            # ('remove', 'web/static/lib/es6-promise/es6-promise-polyfill.js'),
         ],
         'web.assets_backend': [
-            ('include', 'web._assets_helpers'),
-
-            'web/static/lib/bootstrap/scss/_variables.scss',
-
-            'base/static/src/css/modules.css',
-            'base/static/src/js/res_config_settings.js',
-
-
-
-            'web/static/lib/jquery.scrollTo/jquery.scrollTo.js',
-            'web/static/lib/py.js/lib/py.js',
-            'web/static/lib/py.js/lib/py_extras.js',
-            'web/static/lib/jquery.ba-bbq/jquery.ba-bbq.js',
+            # ('include', 'web._assets_helpers'),
+            #
+            # 'web/static/lib/bootstrap/scss/_variables.scss',
+            #
+            # 'base/static/src/css/modules.css',
+            # 'base/static/src/js/res_config_settings.js',
+            #
+            #
+            #
+            # 'web/static/lib/jquery.scrollTo/jquery.scrollTo.js',
+            # 'web/static/lib/py.js/lib/py.js',
+            # 'web/static/lib/py.js/lib/py_extras.js',
+            # 'web/static/lib/jquery.ba-bbq/jquery.ba-bbq.js',
         ],
         # "web.assets_backend_legacy_lazy": [
         #     ("include", "web._assets_helpers"),
@@ -103,7 +103,7 @@ This module provides the core of the Odoo Web Client.
             ('include', 'web._assets_helpers'),
             # ('include', 'web._assets_frontend_helpers'),
 
-            'web/static/lib/bootstrap/scss/_variables.scss',
+            # 'web/static/lib/bootstrap/scss/_variables.scss',
             # 'web/static/lib/luxon/luxon.js',
             #
             # ('include', 'web._assets_bootstrap'),
@@ -148,8 +148,8 @@ This module provides the core of the Odoo Web Client.
         # For now, it is only use to display the PDF slide Viewer during an embed.
         # Bundlized, the size is reduced to 5300≈ lines.
         'web.pdf_js_lib': [
-            'web/static/lib/pdfjs/build/pdf.js',
-            'web/static/lib/pdfjs/build/pdf.worker.js',
+            # 'web/static/lib/pdfjs/build/pdf.js',
+            # 'web/static/lib/pdfjs/build/pdf.worker.js',
         ],
         # 'web.report_assets_common': [
         #     ('include', 'web._assets_helpers'),
@@ -199,8 +199,8 @@ This module provides the core of the Odoo Web Client.
         #     'web/static/src/legacy/scss/secondary_variables.scss',
         # ],
         'web._assets_helpers': [
-            'web/static/lib/bootstrap/scss/_functions.scss',
-            'web/static/lib/bootstrap/scss/_mixins.scss',
+            # 'web/static/lib/bootstrap/scss/_functions.scss',
+            # 'web/static/lib/bootstrap/scss/_mixins.scss',
             # 'web/static/src/legacy/scss/bs_mixins_overrides.scss',
             # 'web/static/src/legacy/scss/utils.scss',
 
@@ -330,9 +330,9 @@ This module provides the core of the Odoo Web Client.
         ],
 
         # Used during the transition of the web architecture
-        # 'web.frontend_legacy': [
-        #     'web/static/src/legacy/frontend/**/*',
-        # ],
+        'web.frontend_legacy': [
+            # 'web/static/src/legacy/frontend/**/*',
+        ],
 
         # ---------------------------------------------------------------------
         # TESTS BUNDLES

@@ -28,9 +28,9 @@ from PyPDF2 import PdfFileWriter, PdfFileReader, utils
 from collections import OrderedDict
 from collections.abc import Iterable
 from PIL import Image, ImageFile
+
 # Allow truncated images
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
 
 _logger = logging.getLogger(__name__)
 
@@ -99,15 +99,16 @@ class IrActionsReport(models.Model):
         ('qweb-pdf', 'PDF'),
         ('qweb-text', 'Text'),
     ], required=True, default='qweb-pdf',
-    help='The type of the report that will be rendered, each one having its own'
-        ' rendering method. HTML means the report will be opened directly in your'
-        ' browser PDF means the report will be rendered using Wkhtmltopdf and'
-        ' downloaded by the user.')
+        help='The type of the report that will be rendered, each one having its own'
+             ' rendering method. HTML means the report will be opened directly in your'
+             ' browser PDF means the report will be rendered using Wkhtmltopdf and'
+             ' downloaded by the user.')
     report_name = fields.Char(string='Template Name', required=True)
     report_file = fields.Char(string='Report File', required=False, readonly=False, store=True,
                               help="The path to the main report file (depending on Report Type) or empty if the content is in another field")
     groups_id = fields.Many2many('res.groups', 'res_groups_report_rel', 'uid', 'gid', string='Groups')
-    multi = fields.Boolean(string='On Multiple Doc.', help="If set to true, the action will not be displayed on the right toolbar of a form view.")
+    multi = fields.Boolean(string='On Multiple Doc.',
+                           help="If set to true, the action will not be displayed on the right toolbar of a form view.")
 
     paperformat_id = fields.Many2one('report.paperformat', 'Paper Format')
     print_report_name = fields.Char('Printed Report Name', translate=True,
@@ -179,11 +180,11 @@ class IrActionsReport(models.Model):
         self.filtered('binding_model_id').write({'binding_model_id': False})
         return True
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Main report methods
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     def _retrieve_stream_from_attachment(self, attachment):
-        #This import is needed to make sure a PDF stream can be saved in Image
+        # This import is needed to make sure a PDF stream can be saved in Image
         from PIL import PdfImagePlugin
         if attachment.mimetype.startswith('image'):
             stream = io.BytesIO(base64.b64decode(attachment.datas))
@@ -204,9 +205,9 @@ class IrActionsReport(models.Model):
         if not attachment_name:
             return None
         return self.env['ir.attachment'].search([
-                ('name', '=', attachment_name),
-                ('res_model', '=', self.model),
-                ('res_id', '=', record.id)
+            ('name', '=', attachment_name),
+            ('res_model', '=', self.model),
+            ('res_id', '=', record.id)
         ], limit=1)
 
     def _postprocess_pdf_report(self, record, buffer):
@@ -384,7 +385,8 @@ class IrActionsReport(models.Model):
                 # set header/lang to body lang prioritizing current user language
                 if not layout_sections or node.get('data-oe-lang') == self.env.lang:
                     layout_sections = layout_with_lang
-            body = layout_with_lang._render(dict(subst=False, body=lxml.html.tostring(node), base_url=base_url, report_xml_id=self.xml_id))
+            body = layout_with_lang._render(
+                dict(subst=False, body=lxml.html.tostring(node), base_url=base_url, report_xml_id=self.xml_id))
             bodies.append(body)
             if node.get('data-oe-model') == self.model:
                 res_ids.append(int(node.get('data-oe-id', 0)))
@@ -402,8 +404,10 @@ class IrActionsReport(models.Model):
             if attribute[0].startswith('data-report-'):
                 specific_paperformat_args[attribute[0]] = attribute[1]
 
-        header = (layout_sections or layout)._render(dict(subst=True, body=lxml.html.tostring(header_node), base_url=base_url))
-        footer = (layout_sections or layout)._render(dict(subst=True, body=lxml.html.tostring(footer_node), base_url=base_url))
+        header = (layout_sections or layout)._render(
+            dict(subst=True, body=lxml.html.tostring(header_node), base_url=base_url))
+        footer = (layout_sections or layout)._render(
+            dict(subst=True, body=lxml.html.tostring(footer_node), base_url=base_url))
 
         return bodies, res_ids, header, footer, specific_paperformat_args
 
@@ -588,7 +592,8 @@ class IrActionsReport(models.Model):
         if request and hasattr(request, 'website'):
             if request.website is not None:
                 website = request.website
-                context = dict(context, translatable=context.get('lang') != request.env['ir.http']._get_default_lang().code)
+                context = dict(context,
+                               translatable=context.get('lang') != request.env['ir.http']._get_default_lang().code)
 
         view_obj = self.env['ir.ui.view'].sudo().with_context(context)
         values.update(
@@ -755,7 +760,8 @@ class IrActionsReport(models.Model):
 
         # In case of test environment without enough workers to perform calls to wkhtmltopdf,
         # fallback to render_html.
-        if (tools.config['test_enable'] or tools.config['test_file']) and not self.env.context.get('force_report_rendering'):
+        if (tools.config['test_enable'] or tools.config['test_file']) and not self.env.context.get(
+                'force_report_rendering'):
             return self_sudo._render_qweb_html(res_ids, data=data)
 
         # As the assets are generated during the same transaction as the rendering of the
@@ -827,11 +833,12 @@ class IrActionsReport(models.Model):
         # Ensure the current document is utf-8 encoded.
         html = html.decode('utf-8')
 
-        bodies, html_ids, header, footer, specific_paperformat_args = self_sudo.with_context(context)._prepare_html(html)
+        bodies, html_ids, header, footer, specific_paperformat_args = self_sudo.with_context(context)._prepare_html(
+            html)
 
         if self_sudo.attachment and set(res_ids) != set(html_ids):
             raise UserError(_("The report's template '%s' is wrong, please contact your administrator. \n\n"
-                "Can not separate file to save as attachment because the report's template does not contains the attributes 'data-oe-model' and 'data-oe-id' on the div with 'article' classname.") %  self.name)
+                              "Can not separate file to save as attachment because the report's template does not contains the attributes 'data-oe-model' and 'data-oe-id' on the div with 'article' classname.") % self.name)
 
         pdf_content = self._run_wkhtmltopdf(
             bodies,
@@ -843,7 +850,8 @@ class IrActionsReport(models.Model):
         )
         if res_ids:
             self._raise_on_unreadable_pdfs(save_in_attachment.values(), stream_record)
-            _logger.info('The PDF report has been generated for model: %s, records %s.' % (self_sudo.model, str(res_ids)))
+            _logger.info(
+                'The PDF report has been generated for model: %s, records %s.' % (self_sudo.model, str(res_ids)))
             return self_sudo._post_pdf(save_in_attachment, pdf_content=pdf_content, res_ids=html_ids), 'pdf'
         return pdf_content, 'pdf'
 
