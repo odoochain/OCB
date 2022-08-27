@@ -200,7 +200,7 @@ def load_certificate():
     db_uuid = read_file_first_line('odoo-db-uuid.conf')
     enterprise_code = read_file_first_line('odoo-enterprise-code.conf')
     if db_uuid and enterprise_code:
-        url = 'https://www.odoo.com/odoo-enterprise/iot/x509'
+        url = 'https://www.odoochain.com/odoo-enterprise/iot/x509'
         data = {
             'params': {
                 'db_uuid': db_uuid,
