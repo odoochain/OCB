@@ -990,7 +990,8 @@ class Task(models.Model):
     # A -> project_id=P, display_project_id=P
     # B -> project_id=P (to inherit from ACL/security rules), display_project_id=False
     display_project_id = fields.Many2one('project.project', index=True)
-    planned_hours = fields.Float("Initially Planned Hours", help='Time planned to achieve this task (including its sub-tasks).', tracking=True)
+    planned_hours = fields.Float("Initially Planned Hours",
+                                 help='Time planned to achieve this task (including its sub-tasks).', tracking=True)
     subtask_planned_hours = fields.Float("Sub-tasks Planned Hours", compute='_compute_subtask_planned_hours',
         help="Sum of the time planned of all the sub-tasks linked to this task. Usually less than or equal to the initially planned time of this task.")
     # Tracking of this field is done in the write function
