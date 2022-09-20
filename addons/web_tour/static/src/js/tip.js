@@ -7,8 +7,8 @@ var Widget = require('web.Widget');
 var _t = core._t;
 
 var Tip = Widget.extend({
-    template: "Tip",
-    xmlDependencies: ['/web_tour/static/src/xml/tip.xml'],
+    template: "web_tour.Tip",
+    xmlDependencies: ['/web_tour/static/src/xml/tip2.xml'],
     events: {
         click: '_onTipClicked',
         mouseenter: '_onMouseEnter',
@@ -518,14 +518,14 @@ var Tip = Widget.extend({
 
         var mbLeft = 0;
         var mbTop = 0;
-        var overflow = false;
+        var overflow;
         var posVertical = (this.info.position === "top" || this.info.position === "bottom");
         if (posVertical) {
             overflow = (offset.left + this.content_width + this.info.overlay.x > this.$window.width());
         } else {
             overflow = (offset.top + this.content_height + this.info.overlay.y > this.$window.height());
         }
-        if (posVertical && overflow || this.info.position === "left" || (_t.database.parameters.direction === 'rtl' && this.info.position == "right")) {
+        if (posVertical && overflow || this.info.position === "left" || (_t.database.parameters.direction === 'rtl' && this.info.position === "right")) {
             mbLeft -= (this.content_width - this.init_width);
         }
         if (!posVertical && overflow || this.info.position === "top") {

@@ -19,6 +19,7 @@ Odoo Web tours.
     'assets': {
         'web.assets_qweb': [
             'web_tour/static/src/debug/tour_dialog_component.xml',
+            'web_tour/static/src/xml/tip2.xml',
         ],
         'web.assets_common': [
             'web_tour/static/src/scss/**/*',
