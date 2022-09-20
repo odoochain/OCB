@@ -11,7 +11,7 @@ odoo.define('web_tour.tour_manager_tests', async function (require) {
     const { qweb } = require('web.core');
 
     // Pre-load the Tip widget template
-    await ajax.loadXML('/web_tour/static/src/xml/tip.xml', qweb);
+    ajax.loadXML('/web_tour/static/src/xml/tip.xml', qweb);
 
     /**
      * Create a widget and a TourManager instance with a list of given Tour objects.
