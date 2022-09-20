@@ -116,7 +116,7 @@ var Dialog = Widget.extend({
         var self = this;
         return this._super.apply(this, arguments).then(function () {
             // Render modal once xml dependencies are loaded
-            self.$modal = $(QWeb.render('Dialog', {
+            self.$modal = $(QWeb.render('web.Dialog', {
                 fullscreen: self.fullscreen,
                 title: self.title,
                 subtitle: self.subtitle,
