@@ -15,6 +15,7 @@ from os.path import join as opj
 import odoo
 import odoo.tools as tools
 import odoo.release as release
+from odoo import exceptions
 from odoo.tools import pycompat
 
 MANIFEST_NAMES = ('__manifest__.py', '__openerp__.py')
@@ -282,7 +283,29 @@ def read_manifest(addons_path, module):
     if manifest_path:
         with tools.file_open(manifest_path, 'r') as fd:
             manifest_data = fd.read()
-        return ast.literal_eval(manifest_data)
+        try:
+            manifest_data = ast.literal_eval(manifest_data)
+        except exceptions.ValidationError as e:
+            msg = "Invalid JSON data: %s" % str(e)
+            _logger.info("%s: %s", manifest_path, msg)
+        except SyntaxError as e:
+            msg = "Invalid JSON data: %s" % str(e)
+            _logger.info("%s: %s", manifest_path, msg)
+            _exc_type, exc_value, exc_traceback = sys.exc_info()
+            print("ERROR: %r" % exc_value)
+            # traceback.print_tb(exc_traceback)
+            pass
+        except ValueError as e:
+            _exc_type, exc_value, exc_traceback = sys.exc_info()
+            print("ERROR: %r" % exc_value)
+            # traceback.print_tb(exc_traceback)
+            last_tb = exc_traceback
+            while last_tb.tb_next:
+                last_tb = last_tb.tb_next
+            print("Error location: line=%d, col=%d" % (
+                last_tb.tb_frame.f_locals["node"].lineno,
+                last_tb.tb_frame.f_locals["node"].col_offset))
+        return manifest_data
 
 def get_module_root(path):
     """
