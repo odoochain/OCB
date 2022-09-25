@@ -20,6 +20,7 @@ from dateutil.relativedelta import relativedelta
 
 import pytz
 from lxml import etree, builder
+
 try:
     import jingtrang
 except ImportError:
@@ -36,22 +37,28 @@ from odoo.exceptions import ValidationError
 _logger = logging.getLogger(__name__)
 
 from .safe_eval import safe_eval as s_eval, pytz, time
+
 safe_eval = lambda expr, ctx={}: s_eval(expr, ctx, nocopy=True)
+
 
 class ParseError(Exception):
     ...
+
 
 class RecordDictWrapper(dict):
     """
     Used to pass a record as locals in eval:
     records do not strictly behave like dict, so we force them to.
     """
+
     def __init__(self, record):
         self.record = record
+
     def __getitem__(self, key):
         if key in self.record:
             return self.record[key]
         return dict.__getitem__(self, key)
+
 
 def _get_idref(self, env, model_str, idref):
     idref2 = dict(idref,
@@ -67,6 +74,7 @@ def _get_idref(self, env, model_str, idref):
     if model_str:
         idref2['obj'] = env[model_str].browse
     return idref2
+
 
 def _fix_multiple_roots(node):
     """
@@ -86,13 +94,14 @@ def _fix_multiple_roots(node):
             data_node.append(child)
         node.append(data_node)
 
+
 def _eval_xml(self, node, env):
-    if node.tag in ('field','value'):
-        t = node.get('type','char')
+    if node.tag in ('field', 'value'):
+        t = node.get('type', 'char')
         f_model = node.get('model')
         if node.get('search'):
             f_search = node.get("search")
-            f_use = node.get("use",'id')
+            f_use = node.get("use", 'id')
             f_name = node.get("name")
             idref2 = {}
             if f_search:
@@ -119,6 +128,7 @@ def _eval_xml(self, node, env):
                 logging.getLogger('odoo.tools.convert.init').error(
                     'Could not eval(%s) for %s in %s', a_eval, node.get('name'), env.context)
                 raise
+
         def _process(s):
             matches = re.finditer(br'[^%]%\((.*?)\)[ds]'.decode('utf-8'), s)
             done = set()
@@ -134,13 +144,13 @@ def _eval_xml(self, node, env):
                 # bytestring of n nuls. In Python 2 it obviously returns the
                 # stringified number, which is what we're expecting here
                 s = s.replace(found, str(self.idref[id]))
-            s = s.replace('%%', '%') # Quite weird but it's for (somewhat) backward compatibility sake
+            s = s.replace('%%', '%')  # Quite weird but it's for (somewhat) backward compatibility sake
             return s
 
         if t == 'xml':
             _fix_multiple_roots(node)
-            return '<?xml version="1.0"?>\n'\
-                +_process("".join(etree.tostring(n, encoding='unicode') for n in node))
+            return '<?xml version="1.0"?>\n' \
+                   + _process("".join(etree.tostring(n, encoding='unicode') for n in node))
         if t == 'html':
             return _process("".join(etree.tostring(n, encoding='unicode') for n in node))
 
@@ -174,11 +184,11 @@ def _eval_xml(self, node, env):
         if t == 'float':
             return float(data.strip())
 
-        if t in ('list','tuple'):
-            res=[]
+        if t in ('list', 'tuple'):
+            res = []
             for n in node.iterchildren(tag='value'):
                 res.append(_eval_xml(self, n, env))
-            if t=='tuple':
+            if t == 'tuple':
                 return tuple(res)
             return res
     elif node.tag == "function":
@@ -209,6 +219,7 @@ def _eval_xml(self, node, env):
 def str2bool(value):
     return value.lower() not in ('0', 'false', 'off')
 
+
 def nodeattr2bool(node, attr, default=False):
     if not node.get(attr):
         return default
@@ -216,6 +227,7 @@ def nodeattr2bool(node, attr, default=False):
     if not val:
         return default
     return str2bool(val)
+
 
 class xml_import(object):
     def get_env(self, node, eval_context=None):
@@ -274,7 +286,7 @@ form: module.record_id""" % (xml_id,)
 
     def _tag_report(self, rec):
         res = {}
-        for dest,f in (('name','string'),('model','model'),('report_name','name')):
+        for dest, f in (('name', 'string'), ('model', 'model'), ('report_name', 'name')):
             res[dest] = rec.get(f)
             assert res[dest], "Attribute %s of report is empty !" % (f,)
         for field, dest in (('attachment', 'attachment'),
@@ -288,18 +300,18 @@ form: module.record_id""" % (xml_id,)
             if rec.get(field):
                 res[dest] = rec.get(field)
         if rec.get('auto'):
-            res['auto'] = safe_eval(rec.get('auto','False'))
+            res['auto'] = safe_eval(rec.get('auto', 'False'))
         if rec.get('header'):
-            res['header'] = safe_eval(rec.get('header','False'))
+            res['header'] = safe_eval(rec.get('header', 'False'))
 
-        res['multi'] = rec.get('multi') and safe_eval(rec.get('multi','False'))
+        res['multi'] = rec.get('multi') and safe_eval(rec.get('multi', 'False'))
 
-        xml_id = rec.get('id','')
+        xml_id = rec.get('id', '')
         self._test_xml_id(xml_id)
         warnings.warn(f"The <report> tag is deprecated, use a <record> tag for {xml_id!r}.", DeprecationWarning)
 
         if rec.get('groups'):
-            g_names = rec.get('groups','').split(',')
+            g_names = rec.get('groups', '').split(',')
             groups_value = []
             for group in g_names:
                 if group.startswith('-'):
@@ -319,9 +331,9 @@ form: module.record_id""" % (xml_id,)
         report = self.env['ir.actions.report']._load_records([data], self.mode == 'update')
         self.idref[xml_id] = report.id
 
-        if not rec.get('menu') or safe_eval(rec.get('menu','False')):
+        if not rec.get('menu') or safe_eval(rec.get('menu', 'False')):
             report.create_action()
-        elif self.mode=='update' and safe_eval(rec.get('menu','False'))==False:
+        elif self.mode == 'update' and safe_eval(rec.get('menu', 'False')) == False:
             # Special check for report having attribute menu=False on update
             report.unlink_action()
         return report.id
@@ -334,7 +346,7 @@ form: module.record_id""" % (xml_id,)
 
     def _tag_act_window(self, rec):
         name = rec.get('name')
-        xml_id = rec.get('id','')
+        xml_id = rec.get('id', '')
         self._test_xml_id(xml_id)
         warnings.warn(f"The <act_window> tag is deprecated, use a <record> for {xml_id!r}.", DeprecationWarning)
         view_id = False
@@ -387,9 +399,9 @@ form: module.record_id""" % (xml_id,)
             # Some domains contain references that are only valid at runtime at
             # client-side, so in that case we keep the original domain string
             # as it is. We also log it, just in case.
-            _logger.debug('Domain value (%s) for element with id "%s" does not parse '\
-                'at server-side, keeping original string, in case it\'s meant for client side only',
-                domain, xml_id or 'n/a', exc_info=True)
+            _logger.debug('Domain value (%s) for element with id "%s" does not parse ' \
+                          'at server-side, keeping original string, in case it\'s meant for client side only',
+                          domain, xml_id or 'n/a', exc_info=True)
         res = {
             'name': name,
             'type': 'ir.actions.act_window',
@@ -403,7 +415,7 @@ form: module.record_id""" % (xml_id,)
         }
 
         if rec.get('groups'):
-            g_names = rec.get('groups','').split(',')
+            g_names = rec.get('groups', '').split(',')
             groups_value = []
             for group in g_names:
                 if group.startswith('-'):
@@ -415,7 +427,7 @@ form: module.record_id""" % (xml_id,)
             res['groups_id'] = groups_value
 
         if rec.get('target'):
-            res['target'] = rec.get('target','')
+            res['target'] = rec.get('target', '')
         if binding_model:
             res['binding_model_id'] = self.env['ir.model']._get(binding_model).id
             res['binding_type'] = rec.get('binding_type') or 'action'
@@ -447,7 +459,6 @@ form: module.record_id""" % (xml_id,)
         elif rec.get('web_icon'):
             values['web_icon'] = rec.attrib['web_icon']
 
-
         if rec.get('name'):
             values['name'] = rec.attrib['name']
 
@@ -459,12 +470,12 @@ form: module.record_id""" % (xml_id,)
             act = self.env.ref(a_action).sudo()
             values['action'] = "%s,%d" % (act.type, act.id)
 
-            if not values.get('name') and act.type.endswith(('act_window', 'wizard', 'url', 'client', 'server')) and act.name:
+            if not values.get('name') and act.type.endswith(
+                    ('act_window', 'wizard', 'url', 'client', 'server')) and act.name:
                 values['name'] = act.name
 
         if not values.get('name'):
             values['name'] = rec_id or '?'
-
 
         groups = []
         for group in rec.get('groups', '').split(','):
@@ -476,7 +487,6 @@ form: module.record_id""" % (xml_id,)
                 groups.append(odoo.Command.link(group_id))
         if groups:
             values['groups_id'] = groups
-
 
         data = {
             'xml_id': self.make_xml_id(rec_id),
@@ -534,14 +544,14 @@ form: module.record_id""" % (xml_id,)
 
         res = {}
         for field in rec.findall('./field'):
-            #TODO: most of this code is duplicated above (in _eval_xml)...
+            # TODO: most of this code is duplicated above (in _eval_xml)...
             f_name = field.get("name")
             f_ref = field.get("ref")
             f_search = field.get("search")
             f_model = field.get("model")
             if not f_model and f_name in model._fields:
                 f_model = model._fields[f_name].comodel_name
-            f_use = field.get("use",'') or 'id'
+            f_use = field.get("use", '') or 'id'
             f_val = False
 
             if f_search:
@@ -640,7 +650,7 @@ form: module.record_id""" % (xml_id,)
         groups = el.attrib.pop('groups', None)
         if groups:
             grp_lst = [("ref('%s')" % x) for x in groups.split(',')]
-            record.append(Field(name="groups_id", eval="[Command.set(["+', '.join(grp_lst)+"])]"))
+            record.append(Field(name="groups_id", eval="[Command.set([" + ', '.join(grp_lst) + "])]"))
         if el.get('primary') == 'True':
             # Pseudo clone mode, we'll set the t-name to the full canonical xmlid
             el.append(
@@ -688,7 +698,8 @@ form: module.record_id""" % (xml_id,)
                     err=err.args[0],
                 )
                 _logger.debug(msg, exc_info=True)
-                raise ParseError(msg) from None  # Restart with "--log-handler odoo.tools.convert:DEBUG" for complete traceback
+                raise ParseError(
+                    msg) from None  # Restart with "--log-handler odoo.tools.convert:DEBUG" for complete traceback
             except Exception as e:
                 raise ParseError('while parsing %s:%s, somewhere inside\n%s' % (
                     rec.getroottree().docinfo.URL,
@@ -729,7 +740,9 @@ form: module.record_id""" % (xml_id,)
     def parse(self, de):
         assert de.tag in self.DATA_ROOTS, "Root xml tag must be <openerp>, <odoo> or <data>."
         self._tag_root(de)
+
     DATA_ROOTS = ['odoo', 'data', 'openerp']
+
 
 def convert_file(cr, module, filename, idref, mode='update', noupdate=False, kind=None, pathname=None):
     if pathname is None:
@@ -744,15 +757,17 @@ def convert_file(cr, module, filename, idref, mode='update', noupdate=False, kin
         elif ext == '.xml':
             convert_xml_import(cr, module, fp, idref, mode, noupdate)
         elif ext == '.js':
-            pass # .js files are valid but ignored here.
+            pass  # .js files are valid but ignored here.
         else:
             raise ValueError("Can't load unknown file type %s.", filename)
 
+
 def convert_sql_import(cr, fp):
-    cr.execute(fp.read()) # pylint: disable=sql-injection
+    cr.execute(fp.read())  # pylint: disable=sql-injection
+
 
 def convert_csv_import(cr, module, fname, csvcontent, idref=None, mode='init',
-        noupdate=False):
+                       noupdate=False):
     '''Import csv file :
         quote: "
         delimiter: ,
@@ -784,7 +799,9 @@ def convert_csv_import(cr, module, fname, csvcontent, idref=None, mode='init',
     if any(msg['type'] == 'error' for msg in result['messages']):
         # Report failed import and abort module install
         warning_msg = "\n".join(msg['message'] for msg in result['messages'])
-        raise Exception(_('Module loading %s failed: file %s could not be processed:\n %s') % (module, fname, warning_msg))
+        raise Exception(
+            _('Module loading %s failed: file %s could not be processed:\n %s') % (module, fname, warning_msg))
+
 
 def convert_xml_import(cr, module, xmlfile, idref=None, mode='init', noupdate=False, report=None):
     doc = etree.parse(xmlfile)

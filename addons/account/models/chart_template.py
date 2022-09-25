@@ -89,7 +89,8 @@ class AccountChartTemplate(models.Model):
     parent_id = fields.Many2one('account.chart.template', string='Parent Chart Template')
     code_digits = fields.Integer(string='# of Digits', required=True, default=6, help="No. of Digits to use for account code")
     visible = fields.Boolean(string='Can be Visible?', default=True,
-        help="Set this to False if you don't want this template to be used actively in the wizard that generate Chart of Accounts from "
+        help="Set this to False if you don't want this template to be used actively in the wizard that generate Chart "
+             "of Accounts from "
             "templates, this is useful when you want to generate accounts of this template only when loading its child template.")
     currency_id = fields.Many2one('res.currency', string='Currency', required=True)
     use_anglo_saxon = fields.Boolean(string="Use Anglo-Saxon accounting", default=False)
