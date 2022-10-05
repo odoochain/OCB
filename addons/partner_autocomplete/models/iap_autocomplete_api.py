@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 class IapAutocompleteEnrichAPI(models.AbstractModel):
     _name = 'iap.autocomplete.api'
     _description = 'IAP Partner Autocomplete API'
-    _DEFAULT_ENDPOINT = 'https://partner-autocomplete.odoochain.com'
+    _DEFAULT_ENDPOINT = 'https://partner-autocomplete.odoo.com'
 
     @api.model
     def _contact_iap(self, local_endpoint, action, params, timeout=15):
