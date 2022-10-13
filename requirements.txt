@@ -1,7 +1,7 @@
-Babel==2.9.1  # min version = 2.6.0 (Focal with security backports)
+Babel>=2.9.1  # min version = 2.6.0 (Focal with security backports)
 chardet==3.0.4
 
-cryptography==2.6.1  # incompatibility between pyopenssl 19.0.0 and cryptography>=37.0.0
+cryptography>=2.6.1  # incompatibility between pyopenssl 19.0.0 and cryptography>=37.0.0
 decorator==4.4.2
 docutils==0.16
 
@@ -14,7 +14,7 @@ gevent==21.8.0 ; python_version > '3.9'  # (Jammy)
 greenlet==0.4.15 ; python_version == '3.7'
 greenlet==0.4.17 ; python_version > '3.7' and python_version <= '3.9'
 greenlet==1.1.2 ; python_version  > '3.9'  # (Jammy)
-idna==3.3
+idna>=2.8
 Jinja2~=2.11.2
 libsass==0.18.0
 lxml~=4.9.1
