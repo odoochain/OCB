@@ -1,51 +1,81 @@
-Babel==2.9.1  # min version = 2.6.0 (Focal with security backports)
-chardet==3.0.4
+Babel==2.9.1  ; python_version < '3.11' # min version = 2.6.0 (Focal with security backports)
+Babel==2.10.3  ; python_version >= '3.11'
+chardet==3.0.4 ; python_version < '3.11'
+chardet==4.0.0 ; python_version >= '3.11'
 cryptography==3.4.8
-decorator==4.4.2
+decorator==4.4.2 ; python_version < '3.11'
+decorator==5.1.1 ; python_version >= '3.11'
 docutils==0.16
 ebaysdk==2.1.5
 freezegun==0.3.11; python_version < '3.8'
-freezegun==0.3.15; python_version >= '3.8'
+freezegun==0.3.15; python_version >= '3.8' and python_version < '3.11'
+freezegun==1.1.0; python_version >= '3.11'
 gevent==1.5.0 ; python_version == '3.7'
 gevent==20.9.0 ; python_version > '3.7' and python_version <= '3.9'
-gevent==21.8.0 ; python_version > '3.9'  # (Jammy)
+gevent==21.8.0 ; python_version > '3.9'  and python_version < '3.11' # (Jammy)
+gevent==21.12.0; python_version >= '3.11'
 greenlet==0.4.15 ; python_version == '3.7'
 greenlet==0.4.17 ; python_version > '3.7' and python_version <= '3.9'
-greenlet==1.1.2 ; python_version  > '3.9'  # (Jammy)
-idna==2.8
-Jinja2==3.1.2 # min version = 2.10.1 (Focal - with security backports)
+greenlet==1.1.2 ; python_version  > '3.9'  and python_version < '3.11' # (Jammy)
+greenlet==1.1.3 ; python_version  >= '3.11'
+idna==2.8 ; python_version < '3.11'
+idna==3.3 ; python_version >= '3.11'
+Jinja2==2.11.3 ; python_version < '3.11' # min version = 2.10.1 (Focal - with security backports)
+Jinja2==3.0.3 ; python_version >= '3.11'
 libsass==0.18.0
-lxml==4.9.2 # min version = 4.5.0 (Focal - with security backports)
-MarkupSafe==2.1.1
-num2words==0.5.12
-ofxparse==0.19; python_version <= '3.9'
-ofxparse==0.21; python_version > '3.9'  # (Jammy)
-passlib==1.7.3 # min version = 1.7.2 (Focal with security backports)
-Pillow==9.0.1  # min version = 7.0.0 (Focal with security backports)
-polib==1.1.0
-psutil==5.6.7 # min version = 5.5.1 (Focal with security backports)
-psycopg2==2.7.7; sys_platform != 'win32' and python_version < '3.8'
-psycopg2==2.8.6; sys_platform == 'win32' or python_version >= '3.8'
-psycopg2==2.9.5
-pydot==1.4.2
-pyopenssl==19.0.0
+lxml==4.6.5 ; python_version < '3.11' # min version = 4.5.0 (Focal - with security backports)
+lxml==4.9.1 ; python_version >= '3.11'
+MarkupSafe==1.1.0 ; python_version < '3.11'
+MarkupSafe==2.1.1 ; python_version >= '3.11'
+num2words==0.5.6 ; python_version < '3.11'
+num2words==0.5.10 ; python_version >= '3.11'
+ofxparse==0.19 ; python_version <= '3.9'
+ofxparse==0.21 ; python_version > '3.9'  # (Jammy)
+passlib==1.7.3  ; python_version < '3.11' # min version = 1.7.2 (Focal with security backports)
+passlib==1.7.4  ; python_version >= '3.11'
+Pillow==9.0.1 ; python_version < '3.11' # min version = 7.0.0 (Focal with security backports)
+Pillow==9.2.0 ; python_version >= '3.11'
+polib==1.1.0 ; python_version < '3.11'
+polib==1.1.1 ; python_version >= '3.11'
+psutil==5.6.7 ; python_version < '3.11' # min version = 5.5.1 (Focal with security backports)
+psutil==5.9.2 ; python_version < '3.11'
+psycopg2==2.7.7 ; sys_platform != 'win32' and python_version < '3.8'
+psycopg2==2.8.6 ; sys_platform == 'win32' or ( python_version >= '3.8' and python_version < '3.11' )
+psycopg2==2.9.4 ; sys_platform != 'win32' and python_version >= '3.11'
+pydot==1.4.1 ; python_version < '3.11'
+pydot==1.4.2 ; python_version >= '3.11'
+pyopenssl==19.0.0 ; python_version < '3.11'
+pyopenssl==21.0.0 ; python_version >= '3.11'
 PyPDF2==1.26.0
+# PyPDF2==2.11.1 ; python_version >= '3.11'
 pypiwin32 ; sys_platform == 'win32'
-pyserial==3.4
-python-dateutil==2.7.3
-python-ldap==3.4.0 ; sys_platform != 'win32'  # min version = 3.2.0 (Focal with security backports)
-python-stdnum==1.13
-pytz==2022.7
-pyusb==1.2.1
-qrcode==6.1
-reportlab==3.6.12 # version < 3.5.54 are not compatible with Pillow 8.1.2 and 3.5.59 is bullseye
-requests==2.25.1 # versions < 2.25 aren't compatible w/ urllib3 1.26. Bullseye = 2.25.1. min version = 2.22.0 (Focal)
-urllib3==1.26.13 # indirect / min version = 1.25.8 (Focal with security backports)
+pyserial==3.4 ; python_version < '3.11'
+pyserial==3.5 ; python_version >= '3.11'
+python-dateutil==2.7.3 ; python_version < '3.11'
+python-dateutil==2.8.2 ; python_version >= '3.11'
+python-ldap==3.4.0 ; sys_platform != 'win32' and python_version < '3.11'  # min version = 3.2.0 (Focal with security backports)
+python-ldap==3.4.3 ; sys_platform != 'win32' and python_version >= '3.11'  # min version = 3.2.0 (Focal with security backports)
+python-stdnum==1.13 ; python_version < '3.11'
+python-stdnum==1.17 ; python_version >= '3.11'
+pytz==2019.3 ; python_version < '3.11'
+pytz==2022.6 ; python_version >= '3.11'
+pyusb==1.0.2 ; python_version < '3.11'
+pyusb==1.2.1 ; python_version >= '3.11'
+qrcode==6.1 ; python_version < '3.11'
+qrcode==7.3.1 ; python_version >= '3.11'
+reportlab==3.5.59 ; python_version < '3.11' # version < 3.5.54 are not compatible with Pillow 8.1.2 and 3.5.59 is bullseye
+reportlab==3.6.12 ; python_version >= '3.11'
+requests==2.25.1 ; python_version < '3.11' # versions < 2.25 aren't compatible w/ urllib3 1.26. Bullseye = 2.25.1. min version = 2.22.0 (Focal)
+requests==2.27.1 ; python_version >= '3.11'
+urllib3==1.26.5 ; python_version < '3.11' # indirect / min version = 1.25.8 (Focal with security backports)
+urllib3==1.26.12 ; python_version >= '3.11'
 vobject==0.9.6.1
 Werkzeug==0.16.1 ; python_version <= '3.9'
 Werkzeug==2.0.2 ; python_version > '3.9'  # (Jammy)
 xlrd==1.1.0; python_version < '3.8'
 xlrd==1.2.0; python_version >= '3.8'
-XlsxWriter==1.1.2
+XlsxWriter==1.1.2 ; python_version < '3.11'
+XlsxWriter==3.0.2 ; python_version >= '3.11'
 xlwt==1.3.*
-zeep==3.4.0
+zeep==3.4.0 ; python_version < '3.11'
+zeep==4.1.0 ; python_version >= '3.11'
