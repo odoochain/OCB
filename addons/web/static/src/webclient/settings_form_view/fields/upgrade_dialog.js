@@ -15,7 +15,7 @@ export class UpgradeDialog extends Component {
             [["share", "=", false]],
         ]);
         this.router.redirect(
-            "https://www.odoo.com/odoo-enterprise/upgrade?num_users=" + usersCount
+            "https://www.odoochain.com/odoo-enterprise/upgrade?num_users=" + usersCount
         );
     }
 }
