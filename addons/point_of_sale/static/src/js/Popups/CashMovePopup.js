@@ -3,7 +3,7 @@ odoo.define('point_of_sale.CashMovePopup', function (require) {
 
     const AbstractAwaitablePopup = require('point_of_sale.AbstractAwaitablePopup');
     const Registries = require('point_of_sale.Registries');
-    const { _t } = require('web.core');
+    const { _lt } = require('@web/core/l10n/translation');
     const { parse } = require('web.field_utils');
 
     const { useRef, useState } = owl;
@@ -42,7 +42,7 @@ odoo.define('point_of_sale.CashMovePopup', function (require) {
                 this.errorMessage = this.env._t('Insert a positive amount with the Cash In option.');
                 return;
             }
-            if (this.state.inputAmount < 0) {
+            if (parse.float(this.state.inputAmount) < 0) {
                 this.state.inputAmount = this.state.inputAmount.substring(1);
             }
             return super.confirm();
@@ -75,8 +75,8 @@ odoo.define('point_of_sale.CashMovePopup', function (require) {
     }
     CashMovePopup.template = 'point_of_sale.CashMovePopup';
     CashMovePopup.defaultProps = {
-        cancelText: _t('Cancel'),
-        title: _t('Cash In/Out'),
+        cancelText: _lt('Cancel'),
+        title: _lt('Cash In/Out'),
     };
 
     Registries.Component.add(CashMovePopup);

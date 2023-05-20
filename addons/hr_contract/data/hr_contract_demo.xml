@@ -15,7 +15,7 @@
         <field name="department_id" model="hr.department"
             eval="obj().env.ref('hr.employee_admin').department_id.id"/>
         <field eval="7540.0" name="wage"/>
-        <field name="state">draft</field>
+        <field name="state">close</field>
         <field name="kanban_state">normal</field>
         <field name="resource_calendar_id" ref="resource.resource_calendar_std_38h"/>
     </record>
@@ -74,7 +74,7 @@
 
     <record id="hr_contract_qdp" model="hr.contract">
         <field name="name">Demo Contract</field>
-        <field name="date_start" eval="time.strftime('%Y')+'-1-1'"/>
+        <field name="date_start" eval="(DateTime.today() + relativedelta(years=-1, month=9))"/>
         <field name="employee_id" ref="hr.employee_qdp"/>
         <field name="job_id" model="hr.job"
             eval="obj().env.ref('hr.employee_qdp').job_id.id"/>

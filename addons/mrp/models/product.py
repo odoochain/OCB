@@ -35,8 +35,8 @@ class ProductTemplate(models.Model):
     is_kits = fields.Boolean(compute='_compute_is_kits', compute_sudo=False)
     days_to_prepare_mo = fields.Float(
         string="Days to prepare Manufacturing Order", default=0.0,
-        help="Create and confirm Manufacturing Orders these many days in advance, to have enough time to replenish components or manufacture semi-finished products.\n"
-             "Note that this does not affect the MO scheduled date, which still respects the just-in-time mechanism.")
+        help="Create and confirm Manufacturing Orders this many days in advance, to have enough time to replenish components or manufacture semi-finished products.\n"
+             "Note that security lead times will also be considered when appropriate.")
 
     def _compute_bom_count(self):
         for product in self:
@@ -53,7 +53,7 @@ class ProductTemplate(models.Model):
         super()._compute_show_qty_status_button()
         for template in self:
             if template.is_kits:
-                template.show_on_hand_qty_status_button = True
+                template.show_on_hand_qty_status_button = template.product_variant_count <= 1
                 template.show_forecasted_qty_status_button = False
 
     def _compute_used_in_bom_count(self):
@@ -83,7 +83,7 @@ class ProductTemplate(models.Model):
         action['domain'] = [('state', '=', 'done'), ('product_tmpl_id', 'in', self.ids)]
         action['context'] = {
             'graph_measure': 'product_uom_qty',
-            'time_ranges': {'field': 'date_planned_start', 'range': 'last_365_days'}
+            'search_default_filter_plan_date': 1,
         }
         return action
 

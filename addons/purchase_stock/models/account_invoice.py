@@ -2,7 +2,8 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models
-from odoo.tools import float_compare
+from odoo.tools import float_compare, float_is_zero
+from odoo.tools.misc import groupby
 
 
 class AccountMove(models.Model):
@@ -42,21 +43,17 @@ class AccountMove(models.Model):
                     continue
 
                 # Retrieve accounts needed to generate the price difference.
-                accounts = line.product_id.product_tmpl_id.get_product_accounts(fiscal_pos=move.fiscal_position_id)
-                debit_expense_account = accounts['expense']
+                debit_expense_account = line._get_price_diff_account()
                 if not debit_expense_account:
                     continue
+                # Retrieve stock valuation moves.
+                valuation_stock_moves = self.env['stock.move'].search([
+                    ('purchase_line_id', '=', line.purchase_line_id.id),
+                    ('state', '=', 'done'),
+                    ('product_qty', '!=', 0.0),
+                ]) if line.purchase_line_id else self.env['stock.move']
 
                 if line.product_id.cost_method != 'standard' and line.purchase_line_id:
-
-                    # Retrieve stock valuation moves.
-                    valuation_stock_moves = self.env['stock.move'].search([
-                        ('purchase_line_id', '=', line.purchase_line_id.id),
-                        ('state', '=', 'done'),
-                        ('product_qty', '!=', 0.0),
-                        ('product_id', '=', line.product_id.id),    # kits must be handled manually
-                    ])
-
                     if move.move_type == 'in_refund':
                         valuation_stock_moves = valuation_stock_moves.filtered(lambda stock_move: stock_move._is_out())
                     else:
@@ -68,16 +65,25 @@ class AccountMove(models.Model):
                     valuation_price_unit_total, valuation_total_qty = valuation_stock_moves._get_valuation_price_and_qty(line, move.currency_id)
                     valuation_price_unit = valuation_price_unit_total / valuation_total_qty
                     valuation_price_unit = line.product_id.uom_id._compute_price(valuation_price_unit, line.product_uom_id)
-
                 else:
-                    continue
+                    # Valuation_price unit is always expressed in invoice currency, so that it can always be computed with the good rate
+                    price_unit = line.product_id.uom_id._compute_price(line.product_id.standard_price, line.product_uom_id)
+                    price_unit = -price_unit if line.move_id.move_type == 'in_refund' else price_unit
+                    valuation_date = valuation_stock_moves and max(valuation_stock_moves.mapped('date')) or move.date
+                    valuation_price_unit = line.company_currency_id._convert(
+                        price_unit, move.currency_id,
+                        move.company_id, valuation_date, round=False
+                    )
 
 
                 price_unit = line._get_gross_unit_price()
 
                 price_unit_val_dif = price_unit - valuation_price_unit
                 # If there are some valued moves, we only consider their quantity already used
-                relevant_qty = line._get_out_and_not_invoiced_qty(valuation_stock_moves)
+                if line.product_id.cost_method == 'standard':
+                    relevant_qty = line.quantity
+                else:
+                    relevant_qty = line._get_out_and_not_invoiced_qty(valuation_stock_moves)
                 price_subtotal = relevant_qty * price_unit_val_dif
 
                 # We consider there is a price difference if the subtotal is not zero. In case a
@@ -139,7 +145,38 @@ class AccountMove(models.Model):
         if self._context.get('move_reverse_cancel'):
             return super()._post(soft)
         self.env['account.move.line'].create(self._stock_account_prepare_anglo_saxon_in_lines_vals())
-        return super()._post(soft)
+
+        # Create correction layer if invoice price is different
+        stock_valuation_layers = self.env['stock.valuation.layer'].sudo()
+        valued_lines = self.env['account.move.line'].sudo()
+        for invoice in self:
+            if invoice.sudo().stock_valuation_layer_ids:
+                continue
+            if invoice.move_type in ('in_invoice', 'in_refund', 'in_receipt'):
+                valued_lines |= invoice.invoice_line_ids.filtered(
+                    lambda l: l.product_id and l.product_id.cost_method != 'standard')
+        if valued_lines:
+            stock_valuation_layers |= valued_lines._create_in_invoice_svl()
+
+        for (product, company), dummy in groupby(stock_valuation_layers, key=lambda svl: (svl.product_id, svl.company_id)):
+            product = product.with_company(company.id)
+            if not float_is_zero(product.quantity_svl, precision_rounding=product.uom_id.rounding):
+                product.sudo().with_context(disable_auto_svl=True).write({'standard_price': product.value_svl / product.quantity_svl})
+
+        if stock_valuation_layers:
+            stock_valuation_layers._validate_accounting_entries()
+
+        posted = super()._post(soft)
+        # The invoice reference is set during the super call
+        for layer in stock_valuation_layers:
+            description = f"{layer.account_move_line_id.move_id.display_name} - {layer.product_id.display_name}"
+            layer.description = description
+            if layer.product_id.valuation != 'real_time':
+                continue
+            layer.account_move_id.ref = description
+            layer.account_move_id.line_ids.write({'name': description})
+
+        return posted
 
     def _stock_account_get_last_step_stock_moves(self):
         """ Overridden from stock_account.

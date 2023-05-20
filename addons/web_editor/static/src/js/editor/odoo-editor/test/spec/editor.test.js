@@ -1,5 +1,6 @@
 import { OdooEditor } from '../../src/OdooEditor.js';
 import {
+    childNodeIndex,
     getTraversedNodes,
     setSelection,
 } from '../../src/utils/utils.js';
@@ -16,6 +17,7 @@ import {
     unformat,
     triggerEvent,
     nextTickFrame,
+    nextTick,
 } from '../utils.js';
 
 async function twoDeleteForward(editor) {
@@ -1003,11 +1005,16 @@ X[]
                     contentAfter: '<div>a<p>b[]e</p>f</div>',
                 });
             });
-            it('should delete empty nodes ', async () => {
+            it('should not delete single remaining empty inline', async () => {
                 // Forward selection
                 await testEditor(BasicEditor, {
                     contentBefore: '<h1><font>[abcdef]</font></h1>',
                     stepFunction: deleteForward,
+                    // The flagged 200B is there to preserve the font so if we
+                    // write now, we still write in the font element's style.
+                    contentAfterEdit: '<h1><font data-oe-zws-empty-inline="">[]\u200B</font><br></h1>',
+                    // The flagged 200B is removed by the sanitizer if its
+                    // parent remains empty.
                     contentAfter: '<h1>[]<br></h1>',
                 });
             });
@@ -1189,6 +1196,11 @@ X[]
                     stepFunction: deleteForward,
                     // JW cAfter: '<p>[]def</p>',
                     contentAfter: '<h1>[]<br></h1><p>def</p>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<h1>[abc</h1><p>]<br></p><p>def</p>',
+                    stepFunction: deleteForward,
+                    contentAfter: '<h1>[]<br></h1><p><br></p><p>def</p>',
                 });
             });
             it('should delete last character of paragraph, ignoring the selected paragraph break', async () => {
@@ -2668,6 +2680,11 @@ X[]
                     // JW cAfter: '<p>[]def</p>',
                     contentAfter: '<h1>[]<br></h1><p>def</p>',
                 });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<h1>[abc</h1><p>]<br></p><p>def</p>',
+                    stepFunction: deleteBackward,
+                    contentAfter: '<h1>[]<br></h1><p><br></p><p>def</p>',
+                });
             });
             it('should delete last character of paragraph, ignoring the selected paragraph break', async () => {
                 await testEditor(BasicEditor, {
@@ -2677,6 +2694,14 @@ X[]
                     // doesn't remove a paragraph break.
                     stepFunction: deleteBackward,
                     contentAfter: '<p>ab[]</p><p>def</p>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab[c</p><p>]<br></p><p>def</p>',
+                    // This type of selection (typically done with a triple
+                    // click) is "corrected" before remove so triple clicking
+                    // doesn't remove a paragraph break.
+                    stepFunction: deleteBackward,
+                    contentAfter: '<p>ab[]</p><p><br></p><p>def</p>',
                 });
             });
             it('should delete first character of paragraph, as well as selected paragraph break', async () => {
@@ -2694,6 +2719,22 @@ X[]
                     // doesn't remove a paragraph break.
                     stepFunction: deleteBackward,
                     contentAfter: '<p>ab[]</p><p t="unbreak">def</p>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab[c</p><p t="unbreak">]<br></p><p>def</p>',
+                    // This type of selection (typically done with a triple
+                    // click) is "corrected" before remove so triple clicking
+                    // doesn't remove a paragraph break.
+                    stepFunction: deleteBackward,
+                    contentAfter: '<p>ab[]</p><p t="unbreak"><br></p><p>def</p>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab[c</p><p>]<br></p><p t="unbreak">def</p>',
+                    // This type of selection (typically done with a triple
+                    // click) is "corrected" before remove so triple clicking
+                    // doesn't remove a paragraph break.
+                    stepFunction: deleteBackward,
+                    contentAfter: '<p>ab[]</p><p><br></p><p t="unbreak">def</p>',
                 });
             });
             it('should delete first character of unbreakable, ignoring selected paragraph break', async () => {
@@ -2715,6 +2756,15 @@ X[]
                     ),
                     stepFunction: deleteBackward,
                     contentAfter: '<p>a[]l</p>',
+                });
+            });
+            it('should delete nothing when in an empty table cell', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<table><tbody><tr><td>abc</td><td>[]<br></td><td>abc</td></tr></tbody></table>',
+                    stepFunction: deleteBackward,
+                    contentAfter:
+                        '<table><tbody><tr><td>abc</td><td>[]<br></td><td>abc</td></tr></tbody></table>',
                 });
             });
             it('should only remove the text content of cells in a partly selected table', async () => {
@@ -2857,6 +2907,18 @@ X[]
                     contentBefore: '<p>ab<b class="oe_unremovable">[cd]</b>ef</p>',
                     stepFunction: deleteBackward,
                     contentAfter: '<p>ab<b class="oe_unremovable">[]\u200B</b>ef</p>',
+                });
+            });
+            it('should delete if first element and append in paragraph', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: `<blockquote><br>[]</blockquote>`,
+                    stepFunction: deleteBackward,
+                    contentAfter: `<p>[]<br></p>`,
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: `<h1>[]abcd</h1>`,
+                    stepFunction: deleteBackward,
+                    contentAfter: `<p>[]abcd</p>`,
                 });
             });
         });
@@ -3338,9 +3400,16 @@ X[]
                 });
             });
             describe('POC extra tests', () => {
-                it('should duplicate an empty h1', async () => {
+                it('should insert a paragraph after an empty h1', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<h1>[]<br></h1>',
+                        stepFunction: insertParagraphBreak,
+                        contentAfter: '<h1><br></h1><p>[]<br></p>',
+                    });
+                });
+                it('should insert a paragraph after an empty h1 with styles and a zero-width space', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<h1><font style="color: red;" data-oe-zws-empty-inline="">[]\u200B</font><br></h1>',
                         stepFunction: insertParagraphBreak,
                         contentAfter: '<h1><br></h1><p>[]<br></p>',
                     });
@@ -5427,6 +5496,24 @@ X[]
                     // Final state: '<p>ab<span>\u200B</span>c[]d</p>'
                 });
             });
+            it('should move past a zws (collapsed at the end of a block)', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab[]<span>\u200B</span></p><p>cd</p>',
+                    stepFunction: async editor => {
+                        triggerEvent(editor.editable, 'keydown', { key: 'ArrowRight'});
+                    },
+                    contentAfter: '<p>ab<span>\u200B[]</span></p><p>cd</p>',
+                    // Final state: '<p>ab<span>\u200B</span></p><p>[]cd</p>'
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab<span>[]\u200B</span></p><p>cd</p>',
+                    stepFunction: async editor => {
+                        triggerEvent(editor.editable, 'keydown', { key: 'ArrowRight'});
+                    },
+                    contentAfter: '<p>ab<span>\u200B[]</span></p><p>cd</p>',
+                    // Final state: '<p>ab<span>\u200B</span></p><p>[]cd</p>'
+                });
+            });
             it('should select a zws', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>[ab]<span>\u200B</span>cd</p>',
@@ -5658,6 +5745,22 @@ X[]
                 });
             });
         });
+        it('should apply a color to a slice of text containing a span', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>a[b<span>c</span>d]e</p>',
+                stepFunction: editor => editor.execCommand('applyColor', 'rgb(255, 0, 0)', 'color'),
+                contentAfter: '<p>a<font style="color: rgb(255, 0, 0);">[b<span>c</span>d]</font>e</p>',
+            });
+        });
+        it('should distribute color to texts and to button separately', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>a[b<a class="btn">c</a>d]e</p>',
+                stepFunction: editor => editor.execCommand('applyColor', 'rgb(255, 0, 0)', 'color'),
+                contentAfter: '<p>a<font style="color: rgb(255, 0, 0);">[b</font>' +
+                    '<a class="btn"><font style="color: rgb(255, 0, 0);">c</font></a>' +
+                    '<font style="color: rgb(255, 0, 0);">d]</font>e</p>',
+            });
+        });
     });
 
     describe('markdown', () => {
@@ -5668,12 +5771,24 @@ X[]
                     stepFunction: async editor => insertText(editor, '`'),
                     contentAfter: '<p>\u200B<code class="o_inline_code">ab</code>\u200B[]cd</p>',
                 });
+                // BACKWARDS
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[]ab`cd</p>',
+                    stepFunction: async editor => insertText(editor, '`'),
+                    contentAfter: '<p>\u200B<code class="o_inline_code">[]ab</code>cd</p>',
+                });
             });
             it('should convert text into inline code (middle)', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab`cd[]ef</p>',
                     stepFunction: async editor => insertText(editor, '`'),
                     contentAfter: '<p>ab<code class="o_inline_code">cd</code>\u200B[]ef</p>',
+                });
+                // BACKWARDS
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab[]cd`ef</p>',
+                    stepFunction: async editor => insertText(editor, '`'),
+                    contentAfter: '<p>ab<code class="o_inline_code">[]cd</code>ef</p>',
                 });
             });
             it('should convert text into inline code (end)', async () => {
@@ -5682,12 +5797,25 @@ X[]
                     stepFunction: async editor => insertText(editor, '`'),
                     contentAfter: '<p>ab<code class="o_inline_code">cd</code>\u200B[]</p>',
                 });
+                // BACKWARDS
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab[]cd`</p>',
+                    stepFunction: async editor => insertText(editor, '`'),
+                    contentAfter: '<p>ab<code class="o_inline_code">[]cd</code></p>',
+                });
             });
-            it('should convert text into inline code and leave an earlier and a later backtick alone', async () => {
+            it('should convert text into inline code, with parasite backticks', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a`b`cd[]e`f</p>',
                     stepFunction: async editor => insertText(editor, '`'),
+                    // The closest PREVIOUS backtick is prioritary
                     contentAfter: '<p>a`b<code class="o_inline_code">cd</code>\u200B[]e`f</p>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab[]cd`e`f</p>',
+                    stepFunction: async editor => insertText(editor, '`'),
+                    // If there is no previous backtick, use the closest NEXT backtick.
+                    contentAfter: '<p>ab<code class="o_inline_code">[]cd</code>e`f</p>',
                 });
             });
             it('should not convert text into inline code when traversing HTMLElements', async () => {
@@ -5709,6 +5837,56 @@ X[]
                     contentBefore: '<p>a<code class="o_inline_code">b`cd[]e</code>f</p>',
                     stepFunction: async editor => insertText(editor, '`'),
                     contentAfter: '<p>a<code class="o_inline_code">b`cd`[]e</code>f</p>',
+                });
+            });
+            it('should convert text into inline code even when text nodes are split', async () => {
+                // BEFORE
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>b`c[]d</p>',
+                    stepFunction: async editor => {
+                        editor.document.getSelection().anchorNode.before(document.createTextNode('a'));
+                        insertText(editor, '`');
+                    },
+                    contentAfter: '<p>ab<code class="o_inline_code">c</code>\u200B[]d</p>',
+                });
+                // AFTER
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>a`b[]c</p>',
+                    stepFunction: async editor => {
+                        editor.document.getSelection().anchorNode.after(document.createTextNode('d'));
+                        insertText(editor, '`');
+                    },
+                    contentAfter: '<p>a<code class="o_inline_code">b</code>\u200B[]cd</p>',
+                });
+                // BOTH
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>b`c[]d</p>',
+                    stepFunction: async editor => {
+                        editor.document.getSelection().anchorNode.before(document.createTextNode('a'));
+                        editor.document.getSelection().anchorNode.after(document.createTextNode('e'));
+                        insertText(editor, '`');
+                    },
+                    contentAfter: '<p>ab<code class="o_inline_code">c</code>\u200B[]de</p>',
+                });
+            });
+            it('should convert text into inline code even when the other backtick is in a separate text node', async () => {
+                // BACKTICK IS PREVIOUS SIBLING
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab[]c</p>',
+                    stepFunction: async editor => {
+                        editor.document.getSelection().anchorNode.before(document.createTextNode('`'));
+                        insertText(editor, '`');
+                    },
+                    contentAfter: '<p>\u200B<code class="o_inline_code">ab</code>\u200B[]c</p>',
+                });
+                // BACKTICK IS NEXT SIBLING
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab[]c</p>',
+                    stepFunction: async editor => {
+                        editor.document.getSelection().anchorNode.after(document.createTextNode('`'));
+                        insertText(editor, '`');
+                    },
+                    contentAfter: '<p>ab<code class="o_inline_code">[]c</code></p>',
                 });
             });
         });
@@ -5763,6 +5941,214 @@ X[]
             await testEditor(BasicEditor, {
                 contentBefore: '<div><p>a[]</p></div><div data-oe-protected="true"><p>a</p></div>',
                 contentAfter: '<div><p>a[]</p></div><div data-oe-protected="true"></div>',
+            });
+        });
+    });
+    describe('selection', () => {
+        describe('after an arrow key press', () => {
+            // Simulates placing the cursor at the editable root after an arrow key press
+            const simulateArrowKeyPress = async (editor, key) => {
+                const selection = editor.document.getSelection();
+                const node = selection.anchorNode;
+                let editableChild = node;
+                while (editableChild.parentNode !== editor.editable) {
+                    editableChild = editableChild.parentNode;
+                }
+                const index = (key === 'ArrowRight') ? childNodeIndex(editableChild) + 1 : childNodeIndex(editableChild);
+                const pos = [editor.editable, index];
+                triggerEvent(editor.editable, 'keydown', { key });
+                selection.setBaseAndExtent(...pos, ...pos);
+                await nextTick();
+            };
+            it('should place cursor in the table below', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<table><tbody><tr><td><p>a</p><p>b[]</p></td></tr></tbody></table>' +
+                        '<table><tbody><tr><td><p>c</p><p>d</p></td></tr></tbody></table>',
+                    stepFunction: async editor => simulateArrowKeyPress(editor, 'ArrowRight'),
+                    contentAfter:
+                        '<table><tbody><tr><td><p>a</p><p>b</p></td></tr></tbody></table>' +
+                        '<table><tbody><tr><td><p>[]c</p><p>d</p></td></tr></tbody></table>',
+                });
+            });
+            it('should place cursor in the table above', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<table><tbody><tr><td><p>a</p><p>b</p></td></tr></tbody></table>' +
+                        '<table><tbody><tr><td><p>[]c</p><p>d</p></td></tr></tbody></table>',
+                    stepFunction: async editor => simulateArrowKeyPress(editor, 'ArrowLeft'),
+                    contentAfter:
+                        '<table><tbody><tr><td><p>a</p><p>b[]</p></td></tr></tbody></table>' +
+                        '<table><tbody><tr><td><p>c</p><p>d</p></td></tr></tbody></table>',
+                });
+            });
+            it('should place cursor in the paragraph below', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<table><tbody><tr><td><p>a</p><p>b[]</p></td></tr></tbody></table>' +
+                        '<p><br></p>',
+                    stepFunction: async editor => simulateArrowKeyPress(editor, 'ArrowRight'),
+                    contentAfter:
+                        '<table><tbody><tr><td><p>a</p><p>b</p></td></tr></tbody></table>' +
+                        '<p>[]<br></p>',
+                });
+            });
+            it('should place cursor in the paragraph above', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<p><br></p>' +
+                        '<table><tbody><tr><td><p>[]a</p><p>b</p></td></tr></tbody></table>',
+                    stepFunction: async editor => simulateArrowKeyPress(editor, 'ArrowLeft'),
+                    contentAfter:
+                        '<p>[]<br></p>' +
+                        '<table><tbody><tr><td><p>a</p><p>b</p></td></tr></tbody></table>',
+                });
+            });
+            it('should keep cursor at the same position (avoid reaching the editable root)', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<table><tbody><tr><td><p>a</p><p>b[]</p></td></tr></tbody></table>',
+                    stepFunction: async editor => simulateArrowKeyPress(editor, 'ArrowRight'),
+                    contentAfter:
+                        '<table><tbody><tr><td><p>a</p><p>b[]</p></td></tr></tbody></table>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<table><tbody><tr><td><p>[]a</p><p>b</p></td></tr></tbody></table>',
+                    stepFunction: async editor => simulateArrowKeyPress(editor, 'ArrowLeft'),
+                    contentAfter:
+                        '<table><tbody><tr><td><p>[]a</p><p>b</p></td></tr></tbody></table>',
+                });
+            });
+            it('should place cursor after the second separator', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<p>[]<br></p><hr contenteditable="false">' +
+                        '<hr contenteditable="false"><p><br></p>',
+                    stepFunction: async editor => simulateArrowKeyPress(editor, 'ArrowRight'),
+                    contentAfter:
+                        '<p><br></p><hr contenteditable="false">' +
+                        '<hr contenteditable="false"><p>[]<br></p>',
+                });
+            });
+            it('should place cursor before the first separator', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<p><br></p><hr contenteditable="false">' +
+                        '<hr contenteditable="false"><p>[]<br></p>',
+                    stepFunction: async editor => simulateArrowKeyPress(editor, 'ArrowLeft'),
+                    contentAfter:
+                        '<p>[]<br></p><hr contenteditable="false">' +
+                        '<hr contenteditable="false"><p><br></p>',
+                });
+            });
+        });
+        describe('without previous arrow key press', () => {
+            it('should place cursor in the paragraph below', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<hr contenteditable="false">[]<p><br></p>',
+                    contentAfter: '<hr contenteditable="false"><p>[]<br></p>'
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<table></table>[]<p><br></p>',
+                    contentAfter: '<table></table><p>[]<br></p>'
+                });
+            });
+            it('should place cursor in the paragraph above', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p><br></p>[]<hr contenteditable="false">',
+                    contentAfter: '<p>[]<br></p><hr contenteditable="false">'
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p><br></p>[]<table></table>',
+                    contentAfter: '<p>[]<br></p><table></table>'
+                });
+            });
+        });
+        describe('after a mouse click', () => {
+            // Simulates placing the cursor at the editable root after a mouse click.
+            const simulateMouseClick = async (editor, node, after = false) => {
+                let editableChild = node;
+                while (editableChild.parentNode !== editor.editable) {
+                    editableChild = editableChild.parentNode;
+                }
+                const index = after ? childNodeIndex(editableChild) + 1 : childNodeIndex(editableChild);
+                const pos = [editor.editable, index];
+                triggerEvent(editor.editable, 'mousedown');
+                const selection = editor.document.getSelection();
+                selection.setBaseAndExtent(...pos, ...pos);
+                await nextTick();
+                triggerEvent(editor.editable, 'mouseup');
+                await nextTick();
+                triggerEvent(editor.editable, 'click');
+                await nextTick();
+            };
+
+            it('should insert a paragraph at end of editable and place cursor in it', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<hr contenteditable="false">',
+                    stepFunction: async editor => {
+                        const hr = editor.editable.querySelector('hr');
+                        await simulateMouseClick(editor, hr, true);
+                    },
+                    contentAfter: '<hr contenteditable="false"><p>[]<br></p>'
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<table></table>',
+                    stepFunction: async editor => {
+                        const table = editor.editable.querySelector('table');
+                        await simulateMouseClick(editor, table, true);
+                    },
+                    contentAfter: '<table></table><p>[]<br></p>'
+                });
+            });
+            it('should insert a paragraph at beginning of editable and place cursor in it', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<hr contenteditable="false">',
+                    stepFunction: async editor => {
+                        const hr = editor.editable.querySelector('hr');
+                        await simulateMouseClick(editor, hr, false);
+                    },
+                    contentAfter: '<p>[]<br></p><hr contenteditable="false">'
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<table></table>',
+                    stepFunction: async editor => {
+                        const table = editor.editable.querySelector('table');
+                        await simulateMouseClick(editor, table, false);
+                    },
+                    contentAfter: '<p>[]<br></p><table></table>'
+                });
+            });
+            it('should insert a paragraph between the two non-P blocks and place cursor in it', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<hr contenteditable="false"><hr contenteditable="false">',
+                    stepFunction: async editor => {
+                        const firstHR = editor.editable.querySelector('hr');
+                        await simulateMouseClick(editor, firstHR, true);
+                    },
+                    contentAfter: '<hr contenteditable="false"><p>[]<br></p><hr contenteditable="false">'
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<table></table><table></table>',
+                    stepFunction: async editor => {
+                        const firstTable = editor.editable.querySelector('table');
+                        await simulateMouseClick(editor, firstTable, true);
+                    },
+                    contentAfter: '<table></table><p>[]<br></p><table></table>'
+                });
+            });
+        });
+        describe('no arrow key press or mouse click', () => {
+            it('should remove selection', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '[]<hr contenteditable="false">',
+                    contentAfter: '<hr contenteditable="false">',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<hr contenteditable="false">[]',
+                    contentAfter: '<hr contenteditable="false">',
+                });
             });
         });
     });

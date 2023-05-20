@@ -7,8 +7,9 @@
 # Mustafa J. Kadhem <safi2266@gmail.com>, 2022
 # hoxhe Aits <hoxhe0@gmail.com>, 2022
 # Martin Trigaux, 2022
-# Malaz Abuidris <msea@odoo.com>, 2022
 # Niyas Raphy, 2022
+# Mehjabin Farsana, 2022
+# Malaz Abuidris <msea@odoo.com>, 2023
 # 
 msgid ""
 msgstr ""
@@ -16,8 +17,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-10-10 10:22+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Niyas Raphy, 2022\n"
-"Language-Team: Arabic (https://www.transifex.com/odoo/teams/41243/ar/)\n"
+"Last-Translator: Malaz Abuidris <msea@odoo.com>, 2023\n"
+"Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -625,6 +626,8 @@ msgid ""
 "As you are a member of no Sales Team, you are showed the Pipeline of the <b>first team by default.</b>\n"
 "                                        To work with the CRM, you should <a name=\"%d\" type=\"action\" tabindex=\"-1\">join a team.</a>"
 msgstr ""
+"بما أنك لست عضواً في أي فريق مبيعات، سيتم إظهار مخطط سير عمل <b>أول فريق مبيعات افتراضياً.</b>\n"
+"                                        لتعمل ياستخدام تطبيق إدارة علاقات العملاء، عليك <a name=\"%d\" type=\"action\" tabindex=\"-1\">الانضمام إلى فريق.</a> "
 
 #. module: crm
 #: code:addons/crm/models/crm_team.py:0
@@ -633,6 +636,8 @@ msgid ""
 "As you are a member of no Sales Team, you are showed the Pipeline of the <b>first team by default.</b>\n"
 "                                        To work with the CRM, you should join a team."
 msgstr ""
+"بما أنك لست عضواً في أي فريق مبيعات، سيتم إظهار مخطط سير عمل <b>أول فريق مبيعات افتراضياً.</b>\n"
+"                                        لتعمل ياستخدام تطبيق إدارة علاقات العملاء، عليك الانضمام إلى فريق. "
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
@@ -757,7 +762,7 @@ msgstr "الهاتف الذي تم إدراجه في القائمة السودا
 #: code:addons/crm/models/crm_lead.py:0
 #, python-format
 msgid "Boom! Team record for the past 30 days."
-msgstr "بوم! رقم قياسي للفريق خلال الـ30 يومًا الماضية."
+msgstr "بوم! رقم قياسي للفريق خلال الـ30 يوم الماضية. "
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__message_bounce
@@ -869,6 +874,8 @@ msgid ""
 "Click on the breadcrumb to go back to your Pipeline. Odoo will save all "
 "modifications as you navigate."
 msgstr ""
+"اضغط على آثار التتبع للعودة إلى مخطط سير عملك. سيقوم أودو بحفظ كافة "
+"التعديلات بينما تتنقل. "
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_activity_report__date_closed
@@ -967,7 +974,7 @@ msgstr "جهة الاتصال"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Contact Details:"
-msgstr ""
+msgstr "بيانات المتصل:"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_form
@@ -982,7 +989,7 @@ msgstr "اسم جهة الاتصال"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Contact:"
-msgstr ""
+msgstr "اتصال:"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead2opportunity_partner__name
@@ -1172,7 +1179,7 @@ msgstr "أنشئ في"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Created on:"
-msgstr ""
+msgstr "أنشئ في: "
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_activity_report__lead_create_date
@@ -1313,7 +1320,7 @@ msgstr ""
 #. module: crm
 #: model:ir.model,name:crm.model_digest_digest
 msgid "Digest"
-msgstr "الملخص"
+msgstr "الموجز "
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_activity_report__display_name
@@ -1411,7 +1418,7 @@ msgstr "نسخة البريد الإلكتروني "
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Email cc:"
-msgstr ""
+msgstr "نسخة البريد الإلكتروني: "
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
@@ -1703,7 +1710,7 @@ msgstr "الأيقونة"
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_lead__activity_exception_icon
 msgid "Icon to indicate an exception activity."
-msgstr "الأيقونة للإشارة إلى استثناء النشاط"
+msgstr "الأيقونة للإشارة إلى النشاط المستثنى. "
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_lead2opportunity_partner__force_assignment
@@ -1845,7 +1852,7 @@ msgstr "هل الشريك مرئي"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_stage__is_won
 msgid "Is Won Stage?"
-msgstr "المرحلة لفوز المبيعات"
+msgstr "مرحلة ربح الصفقة؟ "
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__is_automated_probability
@@ -1902,7 +1909,7 @@ msgstr "الإجراء الأخير "
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Last Action:"
-msgstr ""
+msgstr "أخر فعل:"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_activity_report____last_update
@@ -2005,7 +2012,7 @@ msgstr "استقطاب العملاء المهتمين "
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__lead_properties_definition
 msgid "Lead Properties"
-msgstr ""
+msgstr "خصائص العملاء المهتمين "
 
 #. module: crm
 #: model:ir.model,name:crm.model_crm_lead_scoring_frequency
@@ -2242,7 +2249,7 @@ msgstr "ضائع "
 #: code:addons/crm/wizard/crm_lead_lost.py:0
 #, python-format
 msgid "Lost Comment"
-msgstr ""
+msgstr "التعليق المفقود"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead_scoring_frequency__lost_count
@@ -2325,7 +2332,7 @@ msgstr "التسويق"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Marketing:"
-msgstr ""
+msgstr "تسويق:"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__medium_id
@@ -2339,13 +2346,13 @@ msgstr "متوسط "
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Medium:"
-msgstr ""
+msgstr "متوسط:"
 
 #. module: crm
 #: code:addons/crm/models/crm_lead.py:0
 #, python-format
 msgid "Meeting scheduled at '%s'<br> Subject: %s <br> Duration: %s"
-msgstr ""
+msgstr "الاجتماع محدد في '%s'<br> الموضوع: %s <br> المدة: %s "
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.act_crm_opportunity_calendar_event_new
@@ -2402,7 +2409,7 @@ msgstr "الرسائل"
 #. module: crm
 #: model:ir.model.fields.selection,name:crm.selection__res_config_settings__crm_auto_assignment_interval_type__minutes
 msgid "Minutes"
-msgstr "دقائق "
+msgstr "الدقائق"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__mobile
@@ -2637,7 +2644,7 @@ msgstr "الملاحظات"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Notes:"
-msgstr ""
+msgstr "الملاحظات: "
 
 #. module: crm
 #. openerp-web
@@ -2654,7 +2661,7 @@ msgstr "عدد الإجراءات"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__message_has_error_counter
 msgid "Number of errors"
-msgstr "عدد الاخطاء"
+msgstr "عدد الأخطاء "
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_res_config_settings__crm_auto_assignment_interval_number
@@ -3051,7 +3058,7 @@ msgstr "الاحتمالية (%)"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Probability:"
-msgstr ""
+msgstr "الاحتمالية: "
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__lead_properties
@@ -3230,7 +3237,7 @@ msgstr "إعدادات فريق المبيعات"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Sales Team:"
-msgstr ""
+msgstr "فريق المبيعات:"
 
 #. module: crm
 #: model:ir.ui.menu,name:crm.crm_team_config
@@ -3253,7 +3260,7 @@ msgstr "مندوب المبيعات "
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Salesperson:"
-msgstr ""
+msgstr "مندوب المبيعات: "
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead2opportunity_partner_mass__user_ids
@@ -3377,7 +3384,7 @@ msgstr "المصدر"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Source:"
-msgstr ""
+msgstr "مصدر:"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_stage__team_id
@@ -3424,7 +3431,7 @@ msgstr "تم تغيير المرحلة"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "Stage:"
-msgstr ""
+msgstr "المرحلة: "
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.crm_stage_action
@@ -3537,6 +3544,8 @@ msgid ""
 "The contacts below have been added as followers of this lead\n"
 "                        because they have been contacted less than 30 days ago on"
 msgstr ""
+"لقد تمت إضافة جهات الاتصال أدناه كمتابعين لهذا العميل المهتم\n"
+"                        لأنه قد تم التواصل معهم قبل أقل من 30 يوم على "
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_team__alias_id
@@ -3800,7 +3809,7 @@ msgstr "يستخدم النوع للفصل بين العملاء المهتمي�
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_lead__activity_exception_decoration
 msgid "Type of the exception activity on record."
-msgstr "نوع النشاط الاستثنائي المسجل."
+msgstr "نوع النشاط المستثنى في السجل. "
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
@@ -4039,7 +4048,7 @@ msgstr "الربح المستهدف في الفرص"
 #: code:addons/crm/models/crm_lead.py:0
 #, python-format
 msgid "Yeah! Deal of the last 7 days for the team."
-msgstr "أجل! صفقة الـ7 أيام الماضية للفريق."
+msgstr "أجل! أفضل صفقة في الـ7 أيام الماضية للفريق. "
 
 #. module: crm
 #: model:crm.recurring.plan,name:crm.crm_recurring_plan_yearly
@@ -4057,7 +4066,7 @@ msgstr "نعم"
 #: code:addons/crm/static/src/js/tours/crm.js:0
 #, python-format
 msgid "You can make your opportunity advance through your pipeline from here."
-msgstr ""
+msgstr "يمكنك مساعدة فرصتك على المضي قدماً في مخطط سير عملك من هنا. "
 
 #. module: crm
 #: code:addons/crm/models/crm_lead.py:0

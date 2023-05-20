@@ -41,7 +41,7 @@ export const WebsiteRoot = publicRootData.PublicRoot.extend(KeyboardNavigationMi
         // broken and its content is not visible.
         // This class will be used in scss to instead add the border size to the
         // padding directly on Safari when "sidebar" menu is enabled.
-        if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+        if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent) && document.querySelector('#wrapwrap')) {
             document.querySelector('#wrapwrap').classList.add('o_safari_browser');
         }
 
@@ -154,7 +154,7 @@ export const WebsiteRoot = publicRootData.PublicRoot.extend(KeyboardNavigationMi
                     this._gmapAPILoading = false;
                     return;
                 }
-                await loadJS(`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&callback=odoo_gmap_api_post_load&key=${key}`);
+                await loadJS(`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&callback=odoo_gmap_api_post_load&key=${encodeURIComponent(key)}`);
             });
         }
         return this._gmapAPILoading;
@@ -186,7 +186,7 @@ export const WebsiteRoot = publicRootData.PublicRoot.extend(KeyboardNavigationMi
         var $target = $(ev.currentTarget);
         // retrieve the hash before the redirect
         var redirect = {
-            lang: $target.data('url_code'),
+            lang: encodeURIComponent($target.data('url_code')),
             url: encodeURIComponent($target.attr('href').replace(/[&?]edit_translations[^&?]+/, '')),
             hash: encodeURIComponent(window.location.hash)
         };

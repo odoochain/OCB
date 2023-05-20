@@ -119,6 +119,7 @@ class ReportBomStructure(models.AbstractModel):
             'bom_qty': bom_quantity,
             'is_variant_applied': self.env.user.user_has_groups('product.group_product_variant') and len(bom_product_variants) > 1,
             'is_uom_applied': self.env.user.user_has_groups('uom.group_uom'),
+            'precision': self.env['decimal.precision'].precision_get('Product Unit of Measure'),
         }
 
     @api.model
@@ -177,7 +178,7 @@ class ReportBomStructure(models.AbstractModel):
             'quantity_available': quantities_info.get('free_qty', 0),
             'quantity_on_hand': quantities_info.get('on_hand_qty', 0),
             'base_bom_line_qty': bom_line.product_qty if bom_line else False,  # bom_line isn't defined only for the top-level product
-            'name': product.display_name,
+            'name': product.display_name or bom.product_tmpl_id.display_name,
             'uom': bom.product_uom_id if bom else product.uom_id,
             'uom_name': bom.product_uom_id.name if bom else product.uom_id.name,
             'route_type': route_info.get('route_type', ''),
@@ -188,7 +189,7 @@ class ReportBomStructure(models.AbstractModel):
             'currency_id': company.currency_id.id,
             'product': product,
             'product_id': product.id,
-            'link_id': product.id if product.product_variant_count > 1 else product.product_tmpl_id.id,
+            'link_id': (product.id if product.product_variant_count > 1 else product.product_tmpl_id.id) or bom.product_tmpl_id.id,
             'link_model': 'product.product' if product.product_variant_count > 1 else 'product.template',
             'code': bom and bom.display_name or '',
             'prod_cost': prod_cost,
@@ -209,7 +210,7 @@ class ReportBomStructure(models.AbstractModel):
         components = []
         for component_index, line in enumerate(bom.bom_line_ids):
             new_index = f"{index}{component_index}"
-            if line._skip_bom_line(product):
+            if product and line._skip_bom_line(product):
                 continue
             line_quantity = (current_quantity / (bom.product_qty or 1.0)) * line.product_qty
             if line.child_bom_id:
@@ -328,7 +329,7 @@ class ReportBomStructure(models.AbstractModel):
                 'currency_id': company.currency_id.id,
                 'name': byproduct.product_id.display_name,
                 'quantity': line_quantity,
-                'uom': byproduct.product_uom_id.name,
+                'uom_name': byproduct.product_uom_id.name,
                 'prod_cost': company.currency_id.round(price),
                 'parent_id': bom.id,
                 'level': level or 0,
@@ -350,7 +351,8 @@ class ReportBomStructure(models.AbstractModel):
                 continue
             capacity = operation.workcenter_id._get_capacity(product)
             operation_cycle = float_round(qty / capacity, precision_rounding=1, rounding_method='UP')
-            duration_expected = (operation_cycle * operation.time_cycle * 100.0 / operation.workcenter_id.time_efficiency) + (operation.workcenter_id.time_stop + operation.workcenter_id.time_start)
+            duration_expected = (operation_cycle * operation.time_cycle * 100.0 / operation.workcenter_id.time_efficiency) + \
+                                operation.workcenter_id._get_expected_duration(product)
             total = ((duration_expected / 60.0) * operation.workcenter_id.costs_hour)
             operations.append({
                 'type': 'operation',
@@ -360,7 +362,7 @@ class ReportBomStructure(models.AbstractModel):
                 'link_id': operation.id,
                 'link_model': 'mrp.routing.workcenter',
                 'name': operation.name + ' - ' + operation.workcenter_id.name,
-                'uom': _("Minutes"),
+                'uom_name': _("Minutes"),
                 'quantity': duration_expected,
                 'bom_cost': self.env.company.currency_id.round(total),
                 'currency_id': company.currency_id.id,
@@ -378,7 +380,7 @@ class ReportBomStructure(models.AbstractModel):
         if product_id:
             product = self.env['product.product'].browse(int(product_id))
         else:
-            product = bom.product_id or bom.product_tmpl_id.product_variant_id
+            product = bom.product_id or bom.product_tmpl_id.product_variant_id or bom.product_tmpl_id.with_context(active_test=False).product_variant_id
 
         if self.env.context.get('warehouse'):
             warehouse = self.env['stock.warehouse'].browse(self.env.context.get('warehouse'))
@@ -459,7 +461,7 @@ class ReportBomStructure(models.AbstractModel):
                     'name': byproduct['name'],
                     'type': 'byproduct',
                     'quantity': byproduct['quantity'],
-                    'uom': byproduct['uom'],
+                    'uom': byproduct['uom_name'],
                     'prod_cost': byproduct['prod_cost'],
                     'bom_cost': byproduct['bom_cost'],
                     'level': level + 1,
@@ -495,12 +497,13 @@ class ReportBomStructure(models.AbstractModel):
             wh_manufacture_rules = product._get_rules_from_location(product.property_stock_production, route_ids=warehouse.route_ids)
             wh_manufacture_rules -= rules
             rules_delay += sum(rule.delay for rule in wh_manufacture_rules)
+            manufacturing_lead = bom.company_id.manufacturing_lead if bom and bom.company_id else 0
             return {
                 'route_type': 'manufacture',
                 'route_name': manufacture_rules[0].route_id.display_name,
                 'route_detail': bom.display_name,
-                'lead_time': product.produce_delay + rules_delay,
-                'manufacture_delay': product.produce_delay + rules_delay,
+                'lead_time': product.produce_delay + rules_delay + manufacturing_lead,
+                'manufacture_delay': product.produce_delay + rules_delay + manufacturing_lead,
             }
         return {}
 

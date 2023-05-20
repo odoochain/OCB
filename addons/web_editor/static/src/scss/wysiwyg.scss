@@ -501,11 +501,7 @@ img.o_we_selected_image {
 .fa.o_we_selected_image::before {
     @extend %o-we-selected-image;
 }
-// Override default image selection color from portal. It prevents your from
-// seeing the images' quality clearly in the wysiwyg.
-img::selection {
-    background: transparent;
-}
+
 .o_we_media_author {
     font-size: 11px;
     @include o-position-absolute($bottom: 0, $left: 0, $right: 0);
@@ -522,6 +518,23 @@ img::selection {
         height: initial !important;
         top: initial !important;
         left: initial !important;
+    }
+
+    .oe-toolbar.oe-floating {
+        box-shadow: 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+        overflow-y: visible;
+
+        .dropdown-menu {
+            max-height: 200px;
+            overflow: auto;
+
+            &.colorpicker-menu {
+                bottom: auto;
+            }
+        }
     }
 }
 
@@ -564,14 +577,14 @@ img::selection {
     border: $o-we-border-width solid $o-we-fg-light;
     overflow: auto;
     height: 100%;
-    padding: 4px;
+    padding: 4px 40px 4px 4px;
     min-height: 10px;
     border-radius: 3px;
 }
 
 .oe-bordered-editor>.note-editable {
     border-width: 1px;
-    padding: 4px;
+    padding: 4px 40px 4px 4px;
     min-height: 180px;
 }
 
@@ -592,6 +605,7 @@ img::selection {
         margin-top: 0.5rem;
         display: flex;
         flex-wrap: wrap;
+        bottom: 1rem;
 
         input[type=radio] {
             display: none;
@@ -667,7 +681,7 @@ img::selection {
     }
 
     .o_we_url_link {
-        word-break: break-all;
+        width: 100px;
     }
 
     .o_we_full_url {

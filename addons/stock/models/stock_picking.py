@@ -99,7 +99,7 @@ class PickingType(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if 'sequence_id' not in vals or not vals['sequence_id']:
+            if not vals.get('sequence_id') and vals.get('sequence_code'):
                 if vals.get('warehouse_id'):
                     wh = self.env['stock.warehouse'].browse(vals['warehouse_id'])
                     vals['sequence_id'] = self.env['ir.sequence'].sudo().create({
@@ -750,6 +750,12 @@ class Picking(models.Model):
             "location_id": self.location_id,
             "location_dest_id": self.location_dest_id
         })
+        if any(line.reserved_qty or line.qty_done for line in self.move_ids.move_line_ids):
+            return {'warning': {
+                    'title': 'Locations to update',
+                    'message': _("You might want to update the locations of this transfer's operations")
+                }
+            }
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -823,7 +829,7 @@ class Picking(models.Model):
 
     def should_print_delivery_address(self):
         self.ensure_one()
-        return self.move_ids_without_package and self.move_ids_without_package[0].partner_id and self._is_to_external_location()
+        return self.move_ids and self.move_ids[0].partner_id and self._is_to_external_location()
 
     def _is_to_external_location(self):
         self.ensure_one()
@@ -863,6 +869,7 @@ class Picking(models.Model):
     def action_cancel(self):
         self.move_ids._action_cancel()
         self.write({'is_locked': True})
+        self.filtered(lambda x: not x.move_ids).state = 'cancel'
         return True
 
     def _action_done(self):
@@ -1079,21 +1086,21 @@ class Picking(models.Model):
         pickings_not_to_backorder.with_context(cancel_backorder=True)._action_done()
         pickings_to_backorder.with_context(cancel_backorder=False)._action_done()
 
-        if self.user_has_groups('stock.group_reception_report') \
-                and self.picking_type_id.auto_show_reception_report:
-            lines = self.move_ids.filtered(lambda m: m.product_id.type == 'product' and m.state != 'cancel' and m.quantity_done and not m.move_dest_ids)
+        if self.user_has_groups('stock.group_reception_report'):
+            pickings_show_report = self.filtered(lambda p: p.picking_type_id.auto_show_reception_report)
+            lines = pickings_show_report.move_ids.filtered(lambda m: m.product_id.type == 'product' and m.state != 'cancel' and m.quantity_done and not m.move_dest_ids)
             if lines:
                 # don't show reception report if all already assigned/nothing to assign
-                wh_location_ids = self.env['stock.location']._search([('id', 'child_of', self.picking_type_id.warehouse_id.view_location_id.ids), ('usage', '!=', 'supplier')])
+                wh_location_ids = self.env['stock.location']._search([('id', 'child_of', pickings_show_report.picking_type_id.warehouse_id.view_location_id.ids), ('usage', '!=', 'supplier')])
                 if self.env['stock.move'].search([
                         ('state', 'in', ['confirmed', 'partially_available', 'waiting', 'assigned']),
                         ('product_qty', '>', 0),
                         ('location_id', 'in', wh_location_ids),
                         ('move_orig_ids', '=', False),
-                        ('picking_id', 'not in', self.ids),
+                        ('picking_id', 'not in', pickings_show_report.ids),
                         ('product_id', 'in', lines.product_id.ids)], limit=1):
-                    action = self.action_view_reception_report()
-                    action['context'] = {'default_picking_ids': self.ids}
+                    action = pickings_show_report.action_view_reception_report()
+                    action['context'] = {'default_picking_ids': pickings_show_report.ids}
                     return action
         return True
 

@@ -379,6 +379,8 @@ var BasicModel = AbstractModel.extend({
             })
             .then(function () {
                 _.each(records, function (record) {
+                    // discard any changes to prevent creating a new record with auto-save
+                    self.discardChanges(record.id);
                     var parent = record.parentID && self.localData[record.parentID];
                     if (parent && parent.type === 'list') {
                         parent.data = _.without(parent.data, record.id);
@@ -1201,6 +1203,12 @@ var BasicModel = AbstractModel.extend({
                                 });
                             } else {
                                 _.extend(record.data, _changes);
+                                record._changes = {};
+                                for (const fieldName in record.fields) {
+                                    if (['many2many', 'one2many'].includes(record.fields[fieldName].type) && record.data[fieldName]) {
+                                        self.localData[record.data[fieldName]]._changes = [];
+                                    }
+                                }
                                 resolve(changedFields);
                             }
                         }).guardedCatch(reject);
@@ -3991,6 +3999,11 @@ var BasicModel = AbstractModel.extend({
                         });
                     }
                     return ids;
+                }
+                if (field.type === "properties" && _.isArray(fieldValue)) {
+                    // remove deleted properties to be able
+                    // to filter based on empty properties field
+                    return fieldValue.filter(definition => !definition.definition_deleted);
                 }
                 return fieldValue;
             }

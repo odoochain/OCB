@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
-
+from odoo.tools.sql import column_exists, create_column
 
 
 class StockQuantPackage(models.Model):
@@ -64,6 +64,25 @@ class StockQuantPackage(models.Model):
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    def _auto_init(self):
+        if not column_exists(self.env.cr, "stock_picking", "weight"):
+            # In order to speed up module installation when dealing with hefty data
+            # We create the column weight manually, but the computation will be skipped
+            # Therefore we do the computation in a query by getting weight sum from stock moves
+            create_column(self.env.cr, "stock_picking", "weight", "numeric")
+            self.env.cr.execute("""
+                WITH computed_weight AS (
+                    SELECT SUM(weight) AS weight_sum, picking_id
+                    FROM stock_move
+                    WHERE picking_id IS NOT NULL
+                    GROUP BY picking_id
+                )
+                UPDATE stock_picking
+                SET weight = weight_sum
+                FROM computed_weight
+                WHERE stock_picking.id = computed_weight.picking_id;
+            """)
+        return super()._auto_init()
 
     @api.depends('move_line_ids', 'move_line_ids.result_package_id')
     def _compute_packages(self):
@@ -85,13 +104,20 @@ class StockPicking(models.Model):
             ['picking_id', 'product_id', 'product_uom_id', 'qty_done'],
             lazy=False, orderby='qty_done asc'
         )
+        products_by_id = {
+            product_res['id']: (product_res['uom_id'][0], product_res['weight'])
+            for product_res in
+            self.env['product.product'].with_context(active_test=False).search_read(
+                [('id', 'in', list(set(grp["product_id"][0] for grp in res_groups)))], ['uom_id', 'weight'])
+        }
         for res_group in res_groups:
-            product_id = self.env['product.product'].browse(res_group['product_id'][0])
+            uom_id, weight = products_by_id[res_group['product_id'][0]]
+            uom = self.env['uom.uom'].browse(uom_id)
             product_uom_id = self.env['uom.uom'].browse(res_group['product_uom_id'][0])
             picking_weights[res_group['picking_id'][0]] += (
                 res_group['__count']
-                * product_uom_id._compute_quantity(res_group['qty_done'], product_id.uom_id)
-                * product_id.weight
+                * product_uom_id._compute_quantity(res_group['qty_done'], uom)
+                * weight
             )
         for picking in self:
             picking.weight_bulk = picking_weights[picking.id]
@@ -202,8 +228,10 @@ class StockPicking(models.Model):
     def send_to_shipper(self):
         self.ensure_one()
         res = self.carrier_id.send_shipping(self)[0]
-        if self.carrier_id.free_over and self.sale_id and self.sale_id._compute_amount_total_without_delivery() >= self.carrier_id.amount:
-            res['exact_price'] = 0.0
+        if self.carrier_id.free_over and self.sale_id:
+            amount_without_delivery = self.sale_id._compute_amount_total_without_delivery()
+            if self.carrier_id._compute_currency(self.sale_id, amount_without_delivery, 'pricelist_to_company') >= self.carrier_id.amount:
+                res['exact_price'] = 0.0
         self.carrier_price = res['exact_price'] * (1.0 + (self.carrier_id.margin / 100.0))
         if res['tracking_number']:
             previous_pickings = self.env['stock.picking']
@@ -240,13 +268,12 @@ class StockPicking(models.Model):
         sale_order = self.sale_id
         if sale_order and self.carrier_id.invoice_policy == 'real' and self.carrier_price:
             delivery_lines = sale_order.order_line.filtered(lambda l: l.is_delivery and l.currency_id.is_zero(l.price_unit) and l.product_id == self.carrier_id.product_id)
-            carrier_price = self.carrier_price * (1.0 + (float(self.carrier_id.margin) / 100.0))
             if not delivery_lines:
-                sale_order._create_delivery_line(self.carrier_id, carrier_price)
+                sale_order._create_delivery_line(self.carrier_id, self.carrier_price)
             else:
                 delivery_line = delivery_lines[0]
                 delivery_line[0].write({
-                    'price_unit': carrier_price,
+                    'price_unit': self.carrier_price,
                     # remove the estimated price from the description
                     'name': self.carrier_id.with_context(lang=self.partner_id.lang).name,
                 })

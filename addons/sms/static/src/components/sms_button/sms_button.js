@@ -27,7 +27,8 @@ export class SendSMSButton extends Component {
             }
         }, {
             onClose: () => {
-                this.props.record.model.load()
+                this.props.record.load();
+                this.props.record.model.notify();
             },
         });
     }
