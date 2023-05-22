@@ -65,6 +65,24 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
     },
 
     //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * @todo adapt in master. This override will disable the link popover on
+     * "s_share" items in stable versions. It should be replaced simply by
+     * adding the "o_no_link_popover" class in XML.
+     *
+     * @override
+     */
+    async callPostSnippetDrop($target) {
+        if ($target[0].classList.contains('s_share')) {
+            $target[0].classList.add('o_no_link_popover');
+        }
+        return this._super(...arguments);
+    },
+
+    //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
@@ -99,6 +117,8 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
                 </we-select>
             </div>
         `, _t("Position"), _t("Cover"), _t("Contain"))));
+        // TODO remove me in master
+        $html.find('[data-attribute-name="interval"]')[0].dataset.attributeName = "bsInterval";
     },
     /**
      * Depending of the demand, reconfigure they gmap key or configure it
@@ -189,7 +209,7 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
      */
     async _validateGMapAPIKey(key) {
         try {
-            const response = await fetch(`https://maps.googleapis.com/maps/api/staticmap?center=belgium&size=10x10&key=${key}`);
+            const response = await fetch(`https://maps.googleapis.com/maps/api/staticmap?center=belgium&size=10x10&key=${encodeURIComponent(key)}`);
             const isValid = (response.status === 200);
             return {
                 isValid: isValid,
@@ -488,7 +508,7 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
                 }
             }
         }
-    }
+    },
 });
 
 weSnippetEditor.SnippetEditor.include({

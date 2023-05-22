@@ -509,9 +509,11 @@ export function getNormalizedCursorPosition(node, offset, full = true) {
             if (!leftInlineNode || leftVisibleEmpty) {
                 const rightInlineNode = rightLeafOnlyInScopeNotBlockPath(el, elOffset).next().value;
                 if (rightInlineNode) {
+                    const closest = closestElement(rightInlineNode);
                     const rightVisibleEmpty =
                         isVisibleEmpty(rightInlineNode) ||
-                        !closestElement(rightInlineNode).isContentEditable;
+                        !closest ||
+                        !closest.isContentEditable;
                     if (!(leftVisibleEmpty && rightVisibleEmpty)) {
                         [node, offset] = rightVisibleEmpty
                             ? leftPos(rightInlineNode)
@@ -669,7 +671,8 @@ export function getTraversedNodes(editable, range = getDeepRange(editable)) {
             const selectedTable = closestElement(node, '.o_selected_table');
             if (selectedTable) {
                 for (const selectedTd of selectedTable.querySelectorAll('.o_selected_td')) {
-                    traversedNodes.add(selectedTd, ...descendants(selectedTd));
+                    traversedNodes.add(selectedTd);
+                    descendants(selectedTd).forEach(descendant => traversedNodes.add(descendant));
                 }
             } else {
                 traversedNodes.add(node);
@@ -692,7 +695,7 @@ export function getSelectedNodes(editable) {
         return [];
     }
     const range = sel.getRangeAt(0);
-    return getTraversedNodes(editable).flatMap(
+    return [...new Set(getTraversedNodes(editable).flatMap(
         node => {
             const td = closestElement(node, '.o_selected_td');
             if (td) {
@@ -703,7 +706,7 @@ export function getSelectedNodes(editable) {
                 return [];
             }
         },
-    );
+    ))];
 }
 
 /**
@@ -763,17 +766,18 @@ export function getDeepRange(editable, { range, sel, splitText, select, correctT
             }
         }
     }
-    // A selection spanning multiple nodes and ending at position 0 of a
-    // node, like the one resulting from a triple click, are corrected so
-    // that it ends at the last position of the previous node instead.
-    const beforeEnd = end.previousSibling;
+    // A selection spanning multiple nodes and ending at position 0 of a node,
+    // like the one resulting from a triple click, is corrected so that it ends
+    // at the last position of the previous node instead.
+    const endLeaf = firstLeaf(end);
+    const beforeEnd = endLeaf.previousSibling;
     if (
         correctTripleClick &&
         !endOffset &&
         (start !== end || startOffset !== endOffset) &&
         (!beforeEnd || (beforeEnd.nodeType === Node.TEXT_NODE && !isVisibleStr(beforeEnd)))
     ) {
-        const previous = previousLeaf(end, editable, true);
+        const previous = previousLeaf(endLeaf, editable, true);
         if (previous && closestElement(previous).isContentEditable) {
             [end, endOffset] = [previous, nodeSize(previous)];
         }
@@ -914,7 +918,7 @@ const formatsSpecs = {
     },
     fontSize: {
         isFormatted: isFontSize,
-        hasStyle: (node, props) => node.style && node.style['font-size'] === props.size,
+        hasStyle: (node) => node.style && node.style['font-size'],
         addStyle: (node, props) => node.style['font-size'] = props.size,
         removeStyle: (node) => removeStyle(node, 'font-size'),
     },
@@ -954,7 +958,7 @@ const removeFormat = (node, formatSpec) => {
         }
     }
 
-    if (formatSpec.isTag(node)) {
+    if (formatSpec.isTag && formatSpec.isTag(node)) {
         const attributesNames = node.getAttributeNames().filter((name)=> {
             return name !== 'data-oe-zws-empty-inline';
         });
@@ -1008,79 +1012,48 @@ export const formatSelection = (editor, formatName, {applyStyle, formatProps} = 
 
     const formatSpec = formatsSpecs[formatName];
     for (const selectedTextNode of selectedTextNodes) {
-        // Compute inline ancestors until finding one which is a block or has a class.
         const inlineAncestors = [];
-        let node = selectedTextNode;
-        while ((node = node.parentElement) && (!isBlock(node) && !(node.classList && node.classList.length))) {
-            inlineAncestors.unshift(node);
-        }
-        const blockOrInlineClass = node;
+        let currentNode = selectedTextNode;
+        let parentNode = selectedTextNode.parentElement;
 
-        const firstBlockOrClassHasFormat = formatSpec.isFormatted(blockOrInlineClass, formatProps);
+        // Remove the format on all inline ancestors until a block or an element
+        // with a class (in case the formating comes from the class).
+        while (parentNode && (!isBlock(parentNode) && !(parentNode.classList && parentNode.classList.length))) {
+            const isUselessZws = parentNode.tagName === 'SPAN' &&
+                parentNode.hasAttribute('data-oe-zws-empty-inline') &&
+                parentNode.getAttributeNames().length === 1;
 
-        let previousAncestorHasFormat = firstBlockOrClassHasFormat;
-        let lastAncestorInlineFormat;
-
-        for (const ancestor of inlineAncestors) {
-            const ancestorIsTag = formatSpec.isTag && formatSpec.isTag(ancestor);
-            const ancestorHasStyle = formatSpec.hasStyle && formatSpec.hasStyle(ancestor, formatProps);
-            const ancestorTagIsFormated = ancestorIsTag || ancestorHasStyle;
-            const isUselessZwsSpan =
-                ancestor.tagName === 'SPAN' &&
-                ancestor.hasAttribute('data-oe-zws-empty-inline') &&
-                ancestor.getAttributeNames().length === 1;
-            const ancestorIsFormatted = formatSpec.isFormatted(ancestor, formatProps);
-
-            if (ancestorTagIsFormated && previousAncestorHasFormat !== ancestorIsFormatted) {
-                if (lastAncestorInlineFormat) {
-                    // Remove format on two node that switch the format to flatten the DOM.
-                    const newLastAncestorInlineFormat = splitAroundUntil(ancestor, lastAncestorInlineFormat);
-                    removeFormat(newLastAncestorInlineFormat, formatSpec);
-                    removeFormat(ancestor, formatSpec);
-                    lastAncestorInlineFormat = undefined;
-                } else {
-                    lastAncestorInlineFormat = ancestor;
+            if (isUselessZws) {
+                unwrapContents(parentNode);
+            } else {
+                const newLastAncestorInlineFormat = splitAroundUntil(currentNode, parentNode);
+                removeFormat(newLastAncestorInlineFormat, formatSpec);
+                if (newLastAncestorInlineFormat.isConnected) {
+                    inlineAncestors.push(newLastAncestorInlineFormat);
+                    currentNode = newLastAncestorInlineFormat;
                 }
-                // if there is two consecutive format that are the same, remove one.
-            } else if (
-                (ancestorIsTag || ancestorHasStyle) &&
-                (
-                    previousAncestorHasFormat ||
-                    (!previousAncestorHasFormat && !ancestorIsFormatted)
-                )
-            ) {
-                removeFormat(ancestor, formatSpec);
-            } else if (isUselessZwsSpan) {
-                unwrapContents(ancestor);
             }
-            previousAncestorHasFormat = ancestor.parentElement && formatSpec.isFormatted(ancestor, formatProps);
+
+            parentNode = currentNode.parentElement;
         }
 
-        if (selectedTextNode.nodeType === Node.TEXT_NODE) {
-            const isLeafNodeFormated = formatSpec.isFormatted(selectedTextNode, formatProps);
-            if (isLeafNodeFormated !== applyStyle) {
-                if (lastAncestorInlineFormat) {
-                    const splitNode = splitAroundUntil(selectedTextNode, lastAncestorInlineFormat);
-                    removeFormat(splitNode, formatSpec);
-                } else {
-                    if (firstBlockOrClassHasFormat && !applyStyle) {
-                        formatSpec.addNeutralStyle && formatSpec.addNeutralStyle(getOrCreateSpan(selectedTextNode, inlineAncestors));
-                    } else if (!firstBlockOrClassHasFormat && applyStyle) {
-                        const tag = formatSpec.tagName && document.createElement(formatSpec.tagName);
-                        if (tag) {
-                            selectedTextNode.after(tag);
-                            tag.append(selectedTextNode);
+        const firstBlockOrClassHasFormat = formatSpec.isFormatted(parentNode, formatProps);
 
-                            if (!formatSpec.isFormatted(tag, formatProps)) {
-                                tag.after(selectedTextNode);
-                                tag.remove();
-                                formatSpec.addStyle(getOrCreateSpan(selectedTextNode, inlineAncestors), formatProps);
-                            }
-                        } else {
-                            formatSpec.addStyle(getOrCreateSpan(selectedTextNode, inlineAncestors), formatProps);
-                        }
-                    }
+        if (firstBlockOrClassHasFormat && !applyStyle) {
+            formatSpec.addNeutralStyle && formatSpec.addNeutralStyle(getOrCreateSpan(selectedTextNode, inlineAncestors));
+        } else if (!firstBlockOrClassHasFormat && applyStyle) {
+            const tag = formatSpec.tagName && document.createElement(formatSpec.tagName);
+            if (tag) {
+                selectedTextNode.after(tag);
+                tag.append(selectedTextNode);
+
+                if (!formatSpec.isFormatted(tag, formatProps)) {
+                    tag.after(selectedTextNode);
+                    tag.remove();
+                    formatSpec.addStyle(getOrCreateSpan(selectedTextNode, inlineAncestors), formatProps);
                 }
+            } else if (formatName !== 'fontSize' || formatProps.size !== undefined) {
+                formatSpec.addStyle(getOrCreateSpan(selectedTextNode, inlineAncestors), formatProps);
             }
         }
     }
@@ -1383,6 +1356,23 @@ export function isMediaElement(node) {
     );
 }
 
+// https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+const VOID_ELEMENT_NAMES = ['AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG',
+    'INPUT', 'KEYGEN', 'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR'];
+
+// TODO on master: remove this function.
+export function isVoidElement(node) {
+    return isArtificialVoidElement(node);
+}
+
+export function isArtificialVoidElement(node) {
+    return isMediaElement(node) || node.nodeName === 'HR';
+}
+
+export function isNotAllowedContent(node) {
+    return isArtificialVoidElement(node) || VOID_ELEMENT_NAMES.includes(node.nodeName);
+}
+
 export function containsUnremovable(node) {
     if (!node) {
         return false;
@@ -1441,7 +1431,7 @@ export function getColumnIndex(td) {
 
 // This is a list of "paragraph-related elements", defined as elements that
 // behave like paragraphs.
-const paragraphRelatedElements = [
+export const paragraphRelatedElements = [
     'P',
     'H1',
     'H2',
@@ -1522,7 +1512,7 @@ export function getOuid(node, optimize = false) {
  * @returns {boolean}
  */
 export function isHtmlContentSupported(node) {
-    return !closestElement(node, '[data-oe-model]:not([data-oe-field="arch"]),[data-oe-translation-id]', true);
+    return !closestElement(node, '[data-oe-model]:not([data-oe-field="arch"]):not([data-oe-type="html"]),[data-oe-translation-id]', true);
 }
 /**
  * Returns whether the given node is a element that could be considered to be
@@ -1738,7 +1728,7 @@ export function isEmptyBlock(blockEl) {
     for (const node of nodes) {
         // There is no text and no double BR, the only thing that could make
         // this visible is a "visible empty" node like an image.
-        if (node.nodeName != 'BR' && isVisibleEmpty(node)) {
+        if (node.nodeName != 'BR' && (isVisibleEmpty(node) || isFontAwesome(node))) {
             return false;
         }
     }
@@ -1922,12 +1912,7 @@ export function fillEmpty(el) {
         blockEl.appendChild(br);
         fillers.br = br;
     }
-    if (
-        !el.textContent.length &&
-        !isBlock(el) &&
-        el.nodeName !== 'BR' &&
-        !el.hasAttribute("data-oe-zws-empty-inline")
-    ) {
+    if (!isVisible(el) && !el.hasAttribute("data-oe-zws-empty-inline")) {
         // As soon as there is actual content in the node, the zero-width space
         // is removed by the sanitize function.
         const zws = document.createTextNode('\u200B');
@@ -2511,7 +2496,7 @@ export function getRangePosition(el, document, options = {}) {
         clonedRange.detach();
     }
 
-    if (!offset || offset.heigh === 0) {
+    if (!offset || offset.height === 0) {
         const clonedRange = range.cloneRange();
         const shadowCaret = document.createTextNode('|');
         clonedRange.insertNode(shadowCaret);
@@ -2601,4 +2586,15 @@ export function peek(arr) {
  */
 export function isMacOS() {
     return window.navigator.userAgent.includes('Mac');
+}
+
+/**
+ * Remove zero-width spaces from the provided node and its descendants.
+ *
+ * @param {Node} node
+ */
+export function cleanZWS(node) {
+    [node, ...descendants(node)]
+        .filter(node => node.nodeType === Node.TEXT_NODE)
+        .forEach(node => node.nodeValue = node.nodeValue.replace(/\u200B/g, ''));
 }

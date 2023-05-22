@@ -27,6 +27,8 @@ from odoo.tools import OrderedSet, escape_psql, html_escape as escape
 from odoo.addons.http_routing.models.ir_http import slug, slugify, _guess_mimetype
 from odoo.addons.portal.controllers.portal import pager as portal_pager
 from odoo.addons.portal.controllers.web import Home
+from odoo.addons.web.controllers.binary import Binary
+from odoo.addons.website.tools import get_base_domain
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +139,7 @@ class Website(Home):
 
         if not isredir and website.domain:
             domain_from = request.httprequest.environ.get('HTTP_HOST', '')
-            domain_to = werkzeug.urls.url_parse(website.domain).netloc
+            domain_to = get_base_domain(website.domain)
             if domain_from != domain_to:
                 # redirect to correct domain for a correct routing map
                 url_to = werkzeug.urls.url_join(website.domain, '/website/force/%s?isredir=1&path=%s' % (website.id, path))
@@ -282,7 +284,19 @@ class Website(Home):
 
         return request.make_response(content, [('Content-Type', mimetype)])
 
-    @http.route('/website/info', type='http', auth="public", website=True, sitemap=True)
+    def sitemap_website_info(env, rule, qs):
+        website = env['website'].get_current_website()
+        if not (
+            website.viewref('website.website_info', False).active
+            and website.viewref('website.show_website_info', False).active
+        ):
+            # avoid 404 or blank page in sitemap
+            return False
+
+        if not qs or qs.lower() in '/website/info':
+            yield {'loc': '/website/info'}
+
+    @http.route('/website/info', type='http', auth="public", website=True, sitemap=sitemap_website_info)
     def website_info(self, **kwargs):
         Module = request.env['ir.module.module'].sudo()
         apps = Module.search([('state', '=', 'installed'), ('application', '=', True)])
@@ -595,7 +609,7 @@ class Website(Home):
         template = template and dict(template=template) or {}
         website_id = kwargs.get('website_id')
         if website_id:
-            website = request.env['website'].browse(website_id)
+            website = request.env['website'].browse(int(website_id))
             website._force()
         page = request.env['website'].new_page(path, add_menu=add_menu, **template)
         url = page['url']
@@ -775,7 +789,32 @@ class Website(Home):
         return request.redirect('/')
 
 
-class WebsiteBinary(http.Controller):
+class WebsiteBinary(Binary):
+
+    # Retrocompatibility routes
+    @http.route([
+        '/website/image',
+        '/website/image/<xmlid>',
+        '/website/image/<xmlid>/<int:width>x<int:height>',
+        '/website/image/<xmlid>/<field>',
+        '/website/image/<xmlid>/<field>/<int:width>x<int:height>',
+        '/website/image/<model>/<id>/<field>',
+        '/website/image/<model>/<id>/<field>/<int:width>x<int:height>'
+    ], type='http', auth="public", website=False, multilang=False)
+    # pylint: disable=redefined-builtin,invalid-name
+    def website_content_image(self, id=None, max_width=0, max_height=0, **kw):
+        if max_width:
+            kw['width'] = max_width
+        if max_height:
+            kw['height'] = max_height
+        if id:
+            id, _, unique = id.partition('_')
+            kw['id'] = int(id)
+            if unique:
+                kw['unique'] = unique
+        return self.content_image(**kw)
+
+    # TODO in master: move this route outside the WebsiteBinary class
     # if not icon provided in DOM, browser tries to access /favicon.ico, eg when opening an order pdf
     @http.route(['/favicon.ico'], type='http', auth='public', website=True, multilang=False, sitemap=False)
     def favicon(self, **kw):

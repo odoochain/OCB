@@ -27,7 +27,7 @@ options.registry.InnerChart = options.Class.extend({
     init: function () {
         this._super.apply(this, arguments);
         this.themeArray = ['o-color-1', 'o-color-2', 'o-color-3', 'o-color-4', 'o-color-5'];
-        this.style = window.getComputedStyle(document.documentElement);
+        this.style = window.getComputedStyle(this.$target[0].ownerDocument.documentElement);
     },
     /**
      * @override
@@ -68,9 +68,6 @@ options.registry.InnerChart = options.Class.extend({
         }
 
         await this._super(...arguments);
-
-        // prevent the columns from becoming too small.
-        this.tableEl.classList.toggle('o_we_matrix_five_col', this.tableEl.querySelectorAll('tr:first-child th').length > 5);
 
         this.backSelectEl.querySelector('we-title').textContent = this._isPieChart() ? _t("Data Color") : _t("Dataset Color");
         this.borderSelectEl.querySelector('we-title').textContent = this._isPieChart() ? _t("Data Border") : _t("Dataset Border");

@@ -1,3 +1,5 @@
+/** @odoo-module **/
+
 import { OdooEditor } from '../src/OdooEditor.js';
 import { sanitize } from '../src/utils/sanitize.js';
 import { closestElement } from '../src/utils/utils.js';
@@ -275,13 +277,15 @@ export function customErrorMessage(assertLocation, value, expected) {
 
 export async function testEditor(Editor = OdooEditor, spec, options = {}) {
     const testNode = document.createElement('div');
-    document.querySelector('#editor-test-container').innerHTML = '';
-    document.querySelector('#editor-test-container').appendChild(testNode);
+    const testContainer = document.querySelector('#editor-test-container');
+    testContainer.innerHTML = '';
+    testContainer.append(testNode);
+    testContainer.append(document.createTextNode('')); // Formatting spaces.
     let styleTag;
     if (spec.styleContent) {
         styleTag = document.createElement('style');
         styleTag.textContent = spec.styleContent;
-        document.querySelector('#editor-test-container').appendChild(styleTag);
+        testContainer.append(styleTag);
     }
 
     // Add the content to edit and remove the "[]" markers *before* initializing
@@ -570,6 +574,7 @@ function getEventConstructor(win, type) {
         'dragend': win.DragEvent,
         'drop': win.DragEvent,
         'beforecut': win.ClipboardEvent,
+        'copy': win.ClipboardEvent,
         'cut': win.ClipboardEvent,
         'paste': win.ClipboardEvent,
         'touchstart': win.TouchEvent,

@@ -2,7 +2,7 @@
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 from odoo.tests import tagged
 from odoo.tests.common import Form, TransactionCase
-from odoo import fields, api, SUPERUSER_ID
+from odoo import fields, api, SUPERUSER_ID, Command
 from odoo.exceptions import ValidationError, UserError
 from odoo.tools import mute_logger
 
@@ -11,6 +11,7 @@ from freezegun import freeze_time
 from functools import reduce
 import json
 import psycopg2
+from unittest.mock import patch
 
 
 class TestSequenceMixinCommon(AccountTestInvoicingCommon):
@@ -64,6 +65,61 @@ class TestSequenceMixin(TestSequenceMixinCommon):
         self.test_move.date = '2020-01-02'
         self.test_move.action_post()
         self.assertEqual(self.test_move.name, 'MyMISC/2020/0000001')
+
+    def test_sequence_change_date_with_quick_edit_mode(self):
+        """
+        Test the sequence update behavior when changing the date of a move in quick edit mode.
+        The sequence should only be recalculated if a value (year or month) utilized in the sequence is modified.
+        """
+        self.env.company.quick_edit_mode = "out_and_in_invoices"
+        self.env.company.fiscalyear_last_day = 30
+        self.env.company.fiscalyear_last_month = '12'
+
+        bill = self.env['account.move'].create({
+            'partner_id': 1,
+            'move_type': 'in_invoice',
+            'date': '2016-01-01',
+            'line_ids': [
+                Command.create({
+                    'name': 'line',
+                    'account_id': self.company_data['default_account_revenue'].id,
+                }),
+            ]
+        })
+        bill = bill.copy({'date': '2016-01-01'})
+        bill.copy({'date': '2016-01-01'})
+
+        self.assertEqual(bill.name, 'BILL/2016/01/0002')
+        with Form(bill) as bill_form:
+            bill_form.date = '2016-01-02'
+            self.assertEqual(bill_form.name, 'BILL/2016/01/0002')
+            bill_form.date = '2016-02-02'
+            self.assertEqual(bill_form.name, 'BILL/2016/02/0001')
+            bill_form.date = '2017-01-01'
+            self.assertEqual(bill_form.name, 'BILL/2017/01/0001')
+
+        invoice = self.env['account.move'].create({
+            'partner_id': 1,
+            'move_type': 'out_invoice',
+            'date': '2016-01-01',
+            'line_ids': [
+                Command.create({
+                    'name': 'line',
+                    'account_id': self.company_data['default_account_revenue'].id,
+                }),
+            ]
+        })
+        invoice = invoice.copy({'date': '2016-01-01'})
+        invoice.copy({'date': '2016-01-01'})
+
+        self.assertEqual(invoice.name, 'INV/2016/00002')
+        with Form(invoice) as invoice_form:
+            invoice_form.date = '2016-01-02'
+            self.assertEqual(invoice_form.name, 'INV/2016/00002')
+            invoice_form.date = '2016-02-02'
+            self.assertEqual(invoice_form.name, 'INV/2016/00002')
+            invoice_form.date = '2017-01-01'
+            self.assertEqual(invoice_form.name, 'INV/2017/00001')
 
     def test_journal_sequence(self):
         self.assertEqual(self.test_move.name, 'MISC/2016/01/0001')
@@ -382,6 +438,27 @@ class TestSequenceMixin(TestSequenceMixinCommon):
             move_form.journal_id = journal
         self.assertEqual(move.name, 'AJ/2021/10/0001')
 
+    def test_sequence_move_name_related_field_well_computed(self):
+        AccountMove = type(self.env['account.move'])
+        _compute_name = AccountMove._compute_name
+        def _flushing_compute_name(self):
+            self.env['account.move.line'].flush_model(fnames=['move_name'])
+            _compute_name(self)
+
+        payments = self.env['account.payment'].create([{
+            'payment_type': 'inbound',
+            'payment_method_id': self.env.ref('account.account_payment_method_manual_in').id,
+            'partner_type': 'customer',
+            'partner_id': self.partner_a.id,
+            'amount': 500,
+        }] * 2)
+
+        with patch.object(AccountMove, '_compute_name', _flushing_compute_name):
+            payments.action_post()
+
+        for move in payments.move_id:
+            self.assertRecordValues(move.line_ids, [{'move_name': move.name}] * len(move.line_ids))
+
 
 @tagged('post_install', '-at_install')
 class TestSequenceMixinDeletion(TestSequenceMixinCommon):
@@ -411,12 +488,6 @@ class TestSequenceMixinDeletion(TestSequenceMixinCommon):
         # A draft move without any name can always be deleted.
         self.move_draft.unlink()
 
-        # The moves that are not at the end of their sequence chain cannot be deleted
-        for move in (self.move_1_1, self.move_1_2, self.move_2_1):
-            move.button_draft()
-            with self.assertRaises(UserError):
-                move.unlink()
-
         # The last element of each sequence chain should allow deletion.
         # Everything should be deletable if we follow this order (a bit randomized on purpose)
         for move in (self.move_1_3, self.move_1_2, self.move_3_1, self.move_2_2, self.move_2_1, self.move_1_1):
@@ -428,20 +499,6 @@ class TestSequenceMixinDeletion(TestSequenceMixinCommon):
         all_moves = (self.move_1_3 + self.move_1_2 + self.move_3_1 + self.move_2_2 + self.move_2_1 + self.move_1_1)
         all_moves.button_draft()
         all_moves.unlink()
-
-    def test_sequence_deletion_3(self):
-        """Cannot delete non sequential batches."""
-        all_moves = (self.move_1_3 + self.move_3_1 + self.move_2_2 + self.move_2_1 + self.move_1_1)
-        all_moves.button_draft()
-        with self.assertRaises(UserError):
-            all_moves.unlink()
-
-    def test_sequence_deletion_4(self):
-        """Cannot delete batches not containing the last entry."""
-        all_moves = (self.move_1_2 + self.move_3_1 + self.move_2_2 + self.move_2_1 + self.move_1_1)
-        all_moves.button_draft()
-        with self.assertRaises(UserError):
-            all_moves.unlink()
 
 
 @tagged('post_install', '-at_install')

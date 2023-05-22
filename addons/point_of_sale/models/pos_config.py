@@ -28,13 +28,17 @@ class PosConfig(models.Model):
     def _default_payment_methods(self):
         """ Should only default to payment methods that are compatible to this config's company and currency.
         """
-        return self.env['pos.payment.method'].search([
+        domain = [
             ('split_transactions', '=', False),
             ('company_id', '=', self.env.company.id),
             '|',
                 ('journal_id', '=', False),
                 ('journal_id.currency_id', 'in', (False, self.env.company.currency_id.id)),
-        ])
+        ]
+        non_cash_pm = self.env['pos.payment.method'].search(domain + [('is_cash_count', '=', False)])
+        available_cash_pm = self.env['pos.payment.method'].search(domain + [('is_cash_count', '=', True),
+                                                                            ('config_ids', '=', False)], limit=1)
+        return non_cash_pm | available_cash_pm
 
     def _default_pricelist(self):
         return self.env['product.pricelist'].search([('company_id', 'in', (False, self.env.company.id)), ('currency_id', '=', self.env.company.currency_id.id)], limit=1)
@@ -165,27 +169,31 @@ class PosConfig(models.Model):
                                                    "When the session is open, we keep on loading all remaining products in the background.\n"
                                                    "In the meantime, you can click on the 'database icon' in the searchbar to load products from database.")
     limited_products_amount = fields.Integer(default=20000)
-    product_load_background = fields.Boolean(default=True)
+    product_load_background = fields.Boolean(default=False)
     limited_partners_loading = fields.Boolean('Limited Partners Loading',
                                               default=True,
                                               help="By default, 100 partners are loaded.\n"
                                                    "When the session is open, we keep on loading all remaining partners in the background.\n"
                                                    "In the meantime, you can use the 'Load Customers' button to load partners from database.")
     limited_partners_amount = fields.Integer(default=100)
-    partner_load_background = fields.Boolean(default=True)
+    partner_load_background = fields.Boolean(default=False)
 
     @api.depends('payment_method_ids')
     def _compute_cash_control(self):
         for config in self:
             config.cash_control = bool(config.payment_method_ids.filtered('is_cash_count'))
 
+    @api.onchange('payment_method_ids')
+    def _check_cash_payment_method(self):
+        for config in self:
+            if len(config.payment_method_ids.filtered('is_cash_count')) > 1:
+                config.payment_method_ids = config.payment_method_ids._origin
+                raise ValidationError(_('You can only have one cash payment method.'))
+
     @api.depends('company_id')
     def _compute_company_has_template(self):
         for config in self:
-            if config.company_id.chart_template_id:
-                config.company_has_template = True
-            else:
-                config.company_has_template = False
+            config.company_has_template = self.env['account.chart.template'].existing_accounting(config.company_id) or config.company_id.chart_template_id
 
     def _compute_is_installed_account_accountant(self):
         account_accountant = self.env['ir.module.module'].sudo().search([('name', '=', 'account_accountant'), ('state', '=', 'installed')])
@@ -498,7 +506,7 @@ class PosConfig(models.Model):
             domain.append(('pos_categ_id', 'in', self.iface_available_categ_ids.ids))
         if not self.env['product.product'].search(domain):
             return {
-                'name': _("There is no products linked to your PoS"),
+                'name': _("There is no product linked to your PoS"),
                 'type': 'ir.actions.act_window',
                 'view_type': 'form',
                 'view_mode': 'form',

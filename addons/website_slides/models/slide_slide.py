@@ -171,7 +171,10 @@ class Slide(models.Model):
     # google
     google_drive_id = fields.Char('Google Drive ID of the external URL', compute='_compute_google_drive_id')
     # content - webpage
-    html_content = fields.Html("HTML Content", help="Custom HTML content for slides of category 'Article'.", translate=True, sanitize_attributes=False, sanitize_form=False)
+    html_content = fields.Html(
+        "HTML Content", translate=True,
+        sanitize_attributes=False, sanitize_form=False, sanitize_overridable=True,
+        help="Custom HTML content for slides of category 'Article'.")
     # content - images
     image_binary_content = fields.Binary('Image Content', related='binary_content', readonly=False) # Used to filter file input to images only
     image_google_url = fields.Char('Image Link', related='url', readonly=False,
@@ -216,7 +219,7 @@ class Slide(models.Model):
     embed_ids = fields.One2many('slide.embed', 'slide_id', string="External Slide Embeds")
     embed_count = fields.Integer('# of Embeds', compute='_compute_embed_counts')
     slide_views = fields.Integer('# of Website Views', store=True, compute="_compute_slide_views")
-    public_views = fields.Integer('# of Public Views', copy=False)
+    public_views = fields.Integer('# of Public Views', copy=False, default=0, readonly=True)
     total_views = fields.Integer("# Total Views", default="0", compute='_compute_total', store=True)
     # comments
     comments_count = fields.Integer('Number of comments', compute="_compute_comments_count")
@@ -936,8 +939,8 @@ class Slide(models.Model):
         """
         if any(not slide.channel_id.is_member or not slide.website_published for slide in self):
             raise UserError(
-                _('You cannot mark a slide quiz as completed if you are not among its members.') if completed
-                else _('You cannot mark a slide quiz as not completed if you are not among its members.')
+                _('You cannot mark a slide quiz as completed if you are not among its members or it is unpublished.') if completed
+                else _('You cannot mark a slide quiz as not completed if you are not among its members or it is unpublished.')
             )
 
         points = 0

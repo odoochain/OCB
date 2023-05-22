@@ -67,8 +67,8 @@ _CONST_OPCODES = set(to_opcodes([
     'BUILD_CONST_KEY_MAP',
     'LIST_EXTEND', 'SET_UPDATE',
     # 3.11 replace DUP_TOP, DUP_TOP_TWO, ROT_TWO, ROT_THREE, ROT_FOUR
-    'COPY',
-    # Added in 3.11 https://docs.python.org/3.11/whatsnew/3.11.html
+    'COPY', 'SWAP',
+    # Added in 3.11 https://docs.python.org/3/whatsnew/3.11.html#new-opcodes
     'RESUME',
 ])) - _BLACKLIST
 
@@ -121,14 +121,15 @@ _SAFE_OPCODES = _EXPR_OPCODES.union(to_opcodes([
 
     'RERAISE', 'JUMP_IF_NOT_EXC_MATCH',
 
+    # Following opcodes were Added in 3.11
     # replacement of opcodes CALL_FUNCTION, CALL_FUNCTION_KW, CALL_METHOD
     'PUSH_NULL', 'PRECALL', 'CALL', 'KW_NAMES',
     # replacement of POP_JUMP_IF_TRUE and POP_JUMP_IF_FALSE
     'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
     'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
-    # replacement of JUMP_ABSOLUTE
+    #replacement of JUMP_ABSOLUTE
     'JUMP_BACKWARD',
-    # replacement of JUMP_IF_NOT_EXC_MATCH
+    #replacement of JUMP_IF_NOT_EXC_MATCH
     'CHECK_EXC_MATCH',
     # new opcodes
     'RETURN_GENERATOR',

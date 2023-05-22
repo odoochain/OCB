@@ -9,6 +9,8 @@ import { addGlobalFilter, selectCell, setCellContent } from "../utils/commands";
 import { getCell, getCellContent, getCellFormula, getCells, getCellValue } from "../utils/getters";
 import { createSpreadsheetWithList } from "../utils/list";
 import { registry } from "@web/core/registry";
+import { RPCError } from "@web/core/network/rpc_service";
+import { getBasicServerData } from "../utils/data";
 
 QUnit.module("spreadsheet > list plugin", {}, () => {
     QUnit.test("List export", async (assert) => {
@@ -45,6 +47,24 @@ QUnit.module("spreadsheet > list plugin", {}, () => {
         const { model } = await createSpreadsheetWithList({ columns: ["bar"] });
         assert.strictEqual(getCellValue(model, "A2"), "TRUE");
         assert.strictEqual(getCellValue(model, "A5"), "FALSE");
+    });
+
+    QUnit.test("properties field displays property display names", async (assert) => {
+        const serverData = getBasicServerData();
+        serverData.models.partner.records = [
+            {
+                id: 45,
+                partner_properties: [
+                    { name: "dbfc66e0afaa6a8d", type: "date", string: "prop 1", default: false },
+                    { name: "f80b6fb58d0d4c72", type: "integer", string: "prop 2", default: 0 },
+                ],
+            },
+        ];
+        const { model } = await createSpreadsheetWithList({
+            serverData,
+            columns: ["partner_properties"],
+        });
+        assert.strictEqual(getCellValue(model, "A2"), "prop 1, prop 2");
     });
 
     QUnit.test("Can display a field which is not in the columns", async function (assert) {
@@ -129,7 +149,7 @@ QUnit.module("spreadsheet > list plugin", {}, () => {
         const { model } = await createSpreadsheetWithList({ linesNumber: 2 });
         const [listId] = model.getters.getListIds();
         const dataSource = model.getters.getListDataSource(listId);
-        assert.strictEqual(dataSource.limit, 2);
+        assert.strictEqual(dataSource.maxPosition, 2);
     });
 
     QUnit.test("can select a List from cell formula within a formula", async function (assert) {
@@ -238,11 +258,7 @@ QUnit.module("spreadsheet > list plugin", {}, () => {
         model.dispatch("ACTIVATE_SHEET", { sheetIdFrom: "sheet1", sheetIdTo: "sheet2" });
         /*
          * Ask a first time the value => It will trigger a loading of the data source.
-         * As the list index limit is to 0, there is loading.
          */
-        assert.equal(getCellValue(model, "A1"), "Loading...");
-        await nextTick();
-        // Ask a second time the value => The list index limit is raised => reload
         assert.equal(getCellValue(model, "A1"), "Loading...");
         await nextTick();
         assert.equal(getCellValue(model, "A1"), 12);
@@ -499,4 +515,74 @@ QUnit.module("spreadsheet > list plugin", {}, () => {
             },
         });
     });
+
+    QUnit.test(
+        "List record limit is computed during the import and UPDATE_CELL",
+        async function (assert) {
+            const spreadsheetData = {
+                sheets: [
+                    {
+                        id: "sheet1",
+                        cells: {
+                            A1: { content: `=ODOO.LIST("1", "1", "foo")` },
+                        },
+                    },
+                ],
+                lists: {
+                    1: {
+                        id: 1,
+                        columns: ["foo", "contact_name"],
+                        domain: [],
+                        model: "partner",
+                        orderBy: [],
+                        context: {},
+                    },
+                },
+            };
+            const model = await createModelWithDataSource({ spreadsheetData });
+            const ds = model.getters.getListDataSource("1");
+            assert.strictEqual(ds.maxPosition, 1);
+            assert.strictEqual(ds.maxPositionFetched, 0);
+            setCellContent(model, "A1", `=ODOO.LIST("1", "42", "foo", 2)`);
+            assert.strictEqual(ds.maxPosition, 42);
+            assert.strictEqual(ds.maxPositionFetched, 0);
+            await waitForDataSourcesLoaded(model);
+            assert.strictEqual(ds.maxPosition, 42);
+            assert.strictEqual(ds.maxPositionFetched, 42);
+        }
+    );
+
+    QUnit.test(
+        "Load list spreadsheet with models that cannot be accessed",
+        async function (assert) {
+            let hasAccessRights = true;
+            const { model } = await createSpreadsheetWithList({
+                mockRPC: async function (route, args) {
+                    if (
+                        args.model === "partner" &&
+                        args.method === "search_read" &&
+                        !hasAccessRights
+                    ) {
+                        const error = new RPCError();
+                        error.data = { message: "ya done!" };
+                        throw error;
+                    }
+                },
+            });
+            const headerCell = getCell(model, "A3");
+            const cell = getCell(model, "C3");
+
+            await waitForDataSourcesLoaded(model);
+            assert.equal(headerCell.evaluated.value, 1);
+            assert.equal(cell.evaluated.value, 42669);
+
+            hasAccessRights = false;
+            model.dispatch("REFRESH_ODOO_LIST", { listId: "1" });
+            await waitForDataSourcesLoaded(model);
+            assert.equal(headerCell.evaluated.value, "#ERROR");
+            assert.equal(headerCell.evaluated.error.message, "ya done!");
+            assert.equal(cell.evaluated.value, "#ERROR");
+            assert.equal(cell.evaluated.error.message, "ya done!");
+        }
+    );
 });
