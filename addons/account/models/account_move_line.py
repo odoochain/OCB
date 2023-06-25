@@ -632,12 +632,15 @@ class AccountMoveLine(models.Model):
                 date=date,
             )
         for line in self:
-            line.currency_rate = get_rate(
-                from_currency=line.company_currency_id,
-                to_currency=line.currency_id,
-                company=line.company_id,
-                date=line.move_id.invoice_date or line.move_id.date or fields.Date.context_today(line),
-            )
+            if line.currency_id:
+                line.currency_rate = get_rate(
+                    from_currency=line.company_currency_id,
+                    to_currency=line.currency_id,
+                    company=line.company_id,
+                    date=line.move_id.invoice_date or line.move_id.date or fields.Date.context_today(line),
+                )
+            else:
+                line.currency_rate = 1
 
     @api.depends('currency_id', 'company_currency_id')
     def _compute_same_currency(self):
@@ -1039,7 +1042,7 @@ class AccountMoveLine(models.Model):
                         'amount_currency': 0.0,
                         'balance': 0.0,
                         'price_subtotal': 0.0,
-                        'tax_ids': [],
+                        'tax_ids': [Command.clear()],
                     },
                 )
                 epd_needed_vals['amount_currency'] += line.amount_currency * percentage * line_percentage
@@ -1158,7 +1161,7 @@ class AccountMoveLine(models.Model):
     # CONSTRAINT METHODS
     # -------------------------------------------------------------------------
 
-    @api.constrains('account_id', 'journal_id')
+    @api.constrains('account_id', 'journal_id', 'currency_id')
     def _check_constrains_account_id_journal_id(self):
         for line in self.filtered(lambda x: x.display_type not in ('line_section', 'line_note')):
             account = line.account_id
@@ -1860,7 +1863,7 @@ class AccountMoveLine(models.Model):
                         if credit_vals.get('record'):
                             exchange_lines_to_fix += credit_vals['record']
                         amounts_list.append({'amount_residual': credit_exchange_amount})
-                        remaining_credit_amount += credit_exchange_amount
+                        remaining_credit_amount -= credit_exchange_amount
                         if credit_vals['currency'] == company_currency:
                             remaining_credit_amount_curr -= credit_exchange_amount
                 else:

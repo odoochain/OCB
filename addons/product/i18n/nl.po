@@ -2440,7 +2440,7 @@ msgstr "Verkoopprijs"
 #. module: product
 #: model:ir.model.fields,field_description:product.field_product_product__lst_price
 msgid "Sales Price"
-msgstr "Verkoop Prijs"
+msgstr "Verkoopprijs"
 
 #. module: product
 #: model:ir.model.fields.selection,name:product.selection__product_attribute__display_type__select
@@ -2731,6 +2731,13 @@ msgstr ""
 "De hoeveelheid in te kopen van deze leverancier om van de prijs te "
 "profiteren, uitgedrukt in de eventuele producteenheid van de leverancier, "
 "anders in de standaard maateenheid van het product."
+
+#. module: product
+#. odoo-python
+#: code:addons/product/models/product_pricelist_item.py:0
+#, python-format
+msgid "The rounding method must be strictly positive."
+msgstr "De afrondingsmethode moet altijd positief zijn."
 
 #. module: product
 #: model:ir.model.fields,help:product.field_product_product__lst_price
