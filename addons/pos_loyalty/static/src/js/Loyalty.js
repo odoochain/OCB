@@ -896,7 +896,9 @@ const PosLoyaltyOrder = (Order) => class PosLoyaltyOrder extends Order {
                         } else {
                             qtyPerProduct[line.reward_product_id || line.get_product().id] = lineQty;
                         }
-                        orderedProductPaid += line.get_price_with_tax();
+                        if(!line.is_reward_line){
+                            orderedProductPaid += line.get_price_with_tax();
+                        }
                     }
                 }
                 if (totalProductQty < rule.minimum_qty) {
@@ -1244,6 +1246,9 @@ const PosLoyaltyOrder = (Order) => class PosLoyaltyOrder extends Order {
         let cheapestLine = false;
         for (const lines of Object.values(discountLinesPerReward)) {
             const lineReward = this.pos.reward_by_id[lines[0].reward_id];
+            if (lineReward.reward_type !== 'discount') {
+                continue;
+            }
             let discountedLines = orderLines;
             if (lineReward.discount_applicability === 'cheapest') {
                 cheapestLine = cheapestLine || this._getCheapestLine();

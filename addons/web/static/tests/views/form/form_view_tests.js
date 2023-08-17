@@ -717,6 +717,46 @@ QUnit.module("Views", (hooks) => {
         assert.containsOnce(target, ".modal .o_form_view .o_field_widget[name=p]");
     });
 
+    QUnit.test("can edit o2m field from form when readonly in list view", async function (assert) {
+        serverData.models.partner.records[0].product_ids = [37];
+        const mockRPC = (route, { method, args }) => {
+            if (method === "write") {
+                assert.step("write");
+                assert.deepEqual(args[1], {
+                    product_ids: [
+                        [
+                            1,
+                            37,
+                            {
+                                display_name: "new",
+                            },
+                        ],
+                    ],
+                });
+            }
+        };
+        await makeView({
+            type: "form",
+            resModel: "partner",
+            serverData,
+            mockRPC,
+            arch: `
+                <form>
+                    <field name="product_ids">
+                        <tree><field name="display_name" readonly="1"/></tree>
+                        <form><field name="display_name"/></form>
+                    </field>
+                </form>`,
+            resId: 1,
+        });
+        await click(target, "td[name=display_name]");
+        await editInput(target, ".modal-dialog .o_field_widget[name=display_name] input", "new");
+        await click(target, ".modal-dialog .o_form_button_save");
+        assert.containsNone(target, ".modal-dialog");
+        await click(target, ".o_form_button_save");
+        assert.verifySteps(["write"]);
+    });
+
     QUnit.test("decoration-bf works on fields", async function (assert) {
         await makeView({
             type: "form",
@@ -13068,6 +13108,59 @@ QUnit.module("Views", (hooks) => {
             await click(target, ".o_dialog .btn-close");
             assert.strictEqual(target.querySelector("[name=foo] input").value, "new value");
             assert.verifySteps(["create", "read"]);
+        }
+    );
+
+    QUnit.test(
+        "commitChanges with a field input removed during an update",
+        async function (assert) {
+            assert.expect(1);
+            serverData.models.partner.records[1].p = [1, 5];
+            serverData.models.partner.onchanges = {
+                foo() {},
+            };
+
+            const def = makeDeferred();
+
+            await makeView({
+                type: "form",
+                resModel: "partner",
+                resId: 2,
+                serverData,
+                arch: `
+                 <form>
+                    <field name="p">
+                        <tree editable="bottom">
+                            <field name="foo"/>
+                        </tree>
+                    </field>
+                </form>`,
+                async mockRPC(route, args) {
+                    if (args.method === "onchange") {
+                        await def;
+                    }
+
+                    if (args.method === "write") {
+                        assert.deepEqual(args.args[1], {
+                            p: [
+                                [1, 1, { foo: "new foo" }],
+                                [4, 5, false],
+                            ],
+                        });
+                    }
+                },
+            });
+
+            await click(target.querySelector('.o_data_cell[name="foo"]'));
+            const input = target.querySelector('.o_data_cell[name="foo"] input');
+            input.value = "new foo";
+            await triggerEvent(input, null, "input");
+
+            triggerHotkey("Tab");
+            await nextTick();
+
+            def.resolve();
+            await click(target, ".o_form_button_save");
         }
     );
 });

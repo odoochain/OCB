@@ -2616,6 +2616,9 @@ class BaseModel(metaclass=MetaModel):
 
         for (key, definition, message) in self._sql_constraints:
             conname = '%s_%s' % (self._table, key)
+            if len(conname) > 63:
+                _logger.info("Constraint name %r has more than 63 characters", conname)
+
             current_definition = tools.constraint_definition(cr, self._table, conname)
             if current_definition == definition:
                 continue
@@ -2859,7 +2862,7 @@ class BaseModel(metaclass=MetaModel):
         :return: provided fields if fields is truthy (or the fields
           readable by the current user).
         :rtype: list
-        :raise AccessDenied: if the user is not allowed to access
+        :raise AccessError: if the user is not allowed to access
           the provided fields.
         """
         if self.env.su:
@@ -3124,6 +3127,11 @@ class BaseModel(metaclass=MetaModel):
         context['translation_show_source'] = callable(field.translate)
 
         return translations, context
+
+    def _get_base_lang(self):
+        """ Returns the base language of the record. """
+        self.ensure_one()
+        return 'en_US'
 
     def _read_format(self, fnames, load='_classic_read'):
         """Returns a list of dictionaries mapping field names to their values,

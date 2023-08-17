@@ -135,7 +135,8 @@ class ReportSaleDetails(models.AbstractModel):
                                 payment['count'] = True
                                 break
                     else:
-                        payment['final_count'] = payment['total'] + session.cash_register_balance_start + session.cash_real_transaction
+                        previous_session = self.env['pos.session'].search([('id', '<', session.id), ('state', '=', 'closed'), ('config_id', '=', session.config_id.id)], limit=1)
+                        payment['final_count'] = payment['total'] + previous_session.cash_register_balance_end_real + session.cash_real_transaction
                         payment['money_counted'] = cash_counted
                         payment['money_difference'] = payment['money_counted'] - payment['final_count']
                         cash_moves = self.env['account.bank.statement.line'].search([('pos_session_id', '=', session.id)])
@@ -319,7 +320,7 @@ class ReportSaleDetails(models.AbstractModel):
             for order in self.order_ids.filtered(lambda o: o.is_invoiced):
                 invoice = {
                     'total': order.account_move.amount_total,
-                    'name': order.account_move.highest_name,
+                    'name': order.account_move.name,
                     'order_ref': order.pos_reference
                 }
                 invoice_list.append(invoice)

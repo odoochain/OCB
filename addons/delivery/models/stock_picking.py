@@ -234,14 +234,18 @@ class StockPicking(models.Model):
                 res['exact_price'] = 0.0
         self.carrier_price = res['exact_price'] * (1.0 + (self.carrier_id.margin / 100.0))
         if res['tracking_number']:
-            previous_pickings = self.env['stock.picking']
+            related_pickings = self
             previous_moves = self.move_ids.move_orig_ids
             while previous_moves:
-                previous_pickings |= previous_moves.picking_id
+                related_pickings |= previous_moves.picking_id
                 previous_moves = previous_moves.move_orig_ids
-            without_tracking = previous_pickings.filtered(lambda p: not p.carrier_tracking_ref)
-            (self + without_tracking).carrier_tracking_ref = res['tracking_number']
-            for p in previous_pickings - without_tracking:
+            next_moves = self.move_ids.move_dest_ids
+            while next_moves:
+                related_pickings |= next_moves.picking_id
+                next_moves = next_moves.move_dest_ids
+            without_tracking = related_pickings.filtered(lambda p: not p.carrier_tracking_ref)
+            without_tracking.carrier_tracking_ref = res['tracking_number']
+            for p in related_pickings - without_tracking:
                 p.carrier_tracking_ref += "," + res['tracking_number']
         order_currency = self.sale_id.currency_id or self.company_id.currency_id
         msg = _(
@@ -263,18 +267,29 @@ class StockPicking(models.Model):
         self.ensure_one()
         self.carrier_id.get_return_label(self)
 
+    def _get_matching_delivery_lines(self):
+        return self.sale_id.order_line.filtered(
+            lambda l: l.is_delivery
+            and l.currency_id.is_zero(l.price_unit)
+            and l.product_id == self.carrier_id.product_id
+        )
+
+    def _prepare_sale_delivery_line_vals(self):
+        return {
+            'price_unit': self.carrier_price,
+            # remove the estimated price from the description
+            'name': self.carrier_id.with_context(lang=self.partner_id.lang).name,
+        }
+
     def _add_delivery_cost_to_so(self):
         self.ensure_one()
         sale_order = self.sale_id
         if sale_order and self.carrier_id.invoice_policy == 'real' and self.carrier_price:
-            delivery_lines = sale_order.order_line.filtered(lambda l: l.is_delivery and l.currency_id.is_zero(l.price_unit) and l.product_id == self.carrier_id.product_id)
+            delivery_lines = self._get_matching_delivery_lines()
             if not delivery_lines:
                 delivery_lines = sale_order._create_delivery_line(self.carrier_id, self.carrier_price)
-            delivery_lines[0].write({
-                'price_unit': self.carrier_price,
-                # remove the estimated price from the description
-                'name': self.carrier_id.with_context(lang=self.partner_id.lang).name,
-            })
+            vals = self._prepare_sale_delivery_line_vals()
+            delivery_lines[0].write(vals)
 
     def open_website_url(self):
         self.ensure_one()

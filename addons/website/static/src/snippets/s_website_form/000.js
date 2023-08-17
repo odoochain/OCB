@@ -89,7 +89,6 @@ odoo.define('website.s_website_form', function (require) {
             for (const [name, funcs] of visibilityFunctionsByFieldName.entries()) {
                 this._visibilityFunctionByFieldName.set(name, () => funcs.some(func => func()));
             }
-            this._updateFieldsVisibility();
 
             this._onFieldInputDebounced = _.debounce(this._onFieldInput.bind(this), 400);
             this.$el.on('input.s_website_form', '.s_website_form_field', this._onFieldInputDebounced);
@@ -137,9 +136,14 @@ odoo.define('website.s_website_form', function (require) {
             if (!this.editTranslations && (dataForEl || Object.keys(this.preFillValues).length)) {
                 const dataForValues = dataForEl ?
                     JSON.parse(dataForEl.dataset.values
-                        .replace('False', '""')
-                        .replace('None', '""')
-                        .replace(/'/g, '"')
+                        // replaces `True` by `true` if they are after `,` or `:` or `[`
+                        .replace(/([,:\[]\s*)True/g, '$1true')
+                        // replaces `False` and `None` by `""` if they are after `,` or `:` or `[`
+                        .replace(/([,:\[]\s*)(False|None)/g, '$1""')
+                        // replaces the `'` by `"` if they are before `,` or `:` or `]` or `}`
+                        .replace(/'(\s*[,:\]}])/g, '"$1')
+                        // replaces the `'` by `"` if they are after `{` or `[` or `,` or `:`
+                        .replace(/([{\[:,]\s*)'/g, '$1"')
                     ) : {};
                 const fieldNames = this.$target.serializeArray().map(el => el.name);
                 // All types of inputs do not have a value property (eg:hidden),
@@ -181,6 +185,8 @@ odoo.define('website.s_website_form', function (require) {
                     }
                 }
             }
+            this._updateFieldsVisibility();
+
             if (session.geoip_phone_code) {
                 this.el.querySelectorAll('input[type="tel"]').forEach(telField => {
                     if (!telField.value) {
@@ -587,32 +593,17 @@ odoo.define('website.s_website_form', function (require) {
          * @returns {boolean}
          */
         _compareTo(comparator, value = '', comparable, between) {
-            const valueWasNull = (value === null);
-            if (valueWasNull) {
-                // TODO One customer apparently reached that case of receiving
-                // a `null` value (actually possible when retrieving a form
-                // data which is an unchecked checkbox for example) but combined
-                // with an operator which really requires the received value to
-                // be a string... but not sure how this is possible. In any
-                // case, it should not make the form crash: it's just a
-                // problematic *visibility* dependency, it should not prevent
-                // using the form. So if the caller sends a `null` value, treat
-                // it as an empty string. For now, let's also add an error in
-                // the console so we may investigate the issue if it ever shows
-                // up in a test (grep: COMPARE_TO_INVALID_OPERATOR)
+            // Value can be null when the compared field is supposed to be
+            // visible, but is not yet retrievable from the FormData() because
+            // the field was conditionally hidden. It can be considered empty.
+            if (value === null) {
                 value = '';
             }
 
             switch (comparator) {
                 case 'contains':
-                    if (valueWasNull) { // grep: COMPARE_TO_INVALID_OPERATOR
-                        console.error("This field value is null but also uses an invalid operator");
-                    }
                     return value.includes(comparable);
                 case '!contains':
-                    if (valueWasNull) { // grep: COMPARE_TO_INVALID_OPERATOR
-                        console.error("This field value is null but also uses an invalid operator");
-                    }
                     return !value.includes(comparable);
                 case 'equal':
                 case 'selected':
@@ -638,9 +629,6 @@ odoo.define('website.s_website_form', function (require) {
                     return value.name === '';
             }
             // Date & Date Time comparison requires formatting the value
-            if (valueWasNull) { // grep: COMPARE_TO_INVALID_OPERATOR
-                console.error("This field value is null but also uses an invalid operator");
-            }
             if (value.includes(':')) {
                 const datetimeFormat = time.getLangDatetimeFormat();
                 value = moment(value, datetimeFormat)._d.getTime() / 1000;
@@ -690,7 +678,9 @@ odoo.define('website.s_website_form', function (require) {
                 }
 
                 const formData = new FormData(this.$target[0]);
-                const currentValueOfDependency = formData.get(dependencyName);
+                const currentValueOfDependency = ["contains","!contains"].includes(comparator)
+                    ? formData.getAll(dependencyName).join()
+                    : formData.get(dependencyName);
                 return this._compareTo(comparator, currentValueOfDependency, visibilityCondition, between);
             };
         },
@@ -698,8 +688,20 @@ odoo.define('website.s_website_form', function (require) {
          * Calculates the visibility for each field with conditional visibility
          */
         _updateFieldsVisibility() {
+            let anyFieldVisibilityUpdated = false;
             for (const [fieldEl, visibilityFunction] of this._visibilityFunctionByFieldEl.entries()) {
-                this._updateFieldVisibility(fieldEl, visibilityFunction());
+                const wasVisible = !fieldEl.closest(".s_website_form_field")
+                    .classList.contains("d-none");
+                const isVisible = !!visibilityFunction();
+                this._updateFieldVisibility(fieldEl, isVisible);
+                anyFieldVisibilityUpdated |= wasVisible !== isVisible;
+            }
+            // Recursive check needed in case of a field (C) that
+            // conditionally displays a prefilled field (B), which in turn
+            // triggers a conditional visibility on another field (A),
+            // registered before B.
+            if (anyFieldVisibilityUpdated) {
+                this._updateFieldsVisibility();
             }
         },
         /**

@@ -2464,10 +2464,18 @@ QUnit.module("Views", ({ beforeEach }) => {
 
         // switch to week mode
         await changeScale(target, "week");
-        assert.containsNone(
+        assert.containsOnce(
             findEvent(target, 2),
             ".fc-content .fc-time",
-            "should not show time in week mode as week mode already have time on y-axis"
+            "should show time in week mode"
+        );
+
+        // switch to day mode
+        await changeScale(target, "day");
+        assert.containsOnce(
+            findEvent(target, 2),
+            ".fc-content .fc-time",
+            "should show time in day mode"
         );
     });
 
@@ -2759,6 +2767,23 @@ QUnit.module("Views", ({ beforeEach }) => {
             partnerSection.querySelector(".o_calendar_filter_item[data-value='56']"),
             "o_cw_filter_color_1"
         );
+    });
+
+    QUnit.test("Colors: use available colors when attr is not number", async (assert) => {
+        await makeView({
+            type: "calendar",
+            resModel: "event",
+            serverData,
+            arch: `
+                <calendar date_start="start" date_stop="stop" color="name">
+                    <field name="partner_ids" write_model="filter_partner" write_field="partner_id" filter_field="partner_checked"  />
+                </calendar>
+            `,
+        });
+        const colorClass = Array.from(findEvent(target, 1).classList).find(className => className.startsWith("o_calendar_color_"));
+        assert.notOk(isNaN(Number(colorClass.split("_").at(-1))));
+        await clickEvent(target, 1);
+        assert.hasClass(target.querySelector(".o_cw_popover"), colorClass);
     });
 
     QUnit.test(`Add filters and specific color`, async (assert) => {
@@ -3517,7 +3542,7 @@ QUnit.module("Views", ({ beforeEach }) => {
         );
         await click(target, ".o-calendar-quick-create--create-btn");
         assert.strictEqual(
-            findEvent(target, 8).textContent,
+            findEvent(target, 8).querySelector(".o_event_title").textContent,
             "new event in quick create",
             "should display the new record after quick create dialog"
         );

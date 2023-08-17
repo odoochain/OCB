@@ -181,11 +181,27 @@ odoo.define('point_of_sale.ProductScreen', function(require) {
             NumberBuffer.reset();
         }
         async _updateSelectedOrderline(event) {
-            if (this.env.pos.numpadMode === 'quantity' && this.env.pos.disallowLineQuantityChange()) {
-                let order = this.env.pos.get_order();
+            const order = this.env.pos.get_order();
+            const selectedLine = order.get_selected_orderline();
+            // This validation must not be affected by `disallowLineQuantityChange`
+            if (selectedLine && selectedLine.isTipLine() && this.env.pos.numpadMode !== "price") {
+                /**
+                 * You can actually type numbers from your keyboard, while a popup is shown, causing
+                 * the number buffer storage to be filled up with the data typed. So we force the
+                 * clean-up of that buffer whenever we detect this illegal action.
+                 */
+                NumberBuffer.reset();
+                if (event.detail.key === "Backspace") {
+                    this._setValue("remove");
+                } else {
+                    this.showPopup("ErrorPopup", {
+                        title: this.env._t("Cannot modify a tip"),
+                        body: this.env._t("Customer tips, cannot be modified directly"),
+                    });
+                }
+            } else if (this.env.pos.numpadMode === 'quantity' && this.env.pos.disallowLineQuantityChange()) {
                 if(!order.orderlines.length)
                     return;
-                let selectedLine = order.get_selected_orderline();
                 let orderlines = order.orderlines;
                 let lastId = orderlines.length !== 0 && orderlines.at(orderlines.length - 1).cid;
                 let currentQuantity = this.env.pos.get_order().get_selected_orderline().get_quantity();
@@ -233,13 +249,16 @@ odoo.define('point_of_sale.ProductScreen', function(require) {
             if (!product) {
                 // find the barcode in the backend
                 let foundProductIds = [];
+                const foundPackagings = [];
                 try {
-                    foundProductIds = await this.rpc({
-                        model: 'product.product',
-                        method: 'search',
-                        args: [[['barcode', '=', code.base_code], ['sale_ok', '=', true]]],
+                    const { product_id = [], packaging = [] } = await this.rpc({
+                        model: 'pos.session',
+                        method: 'find_product_by_barcode',
+                        args: [odoo.pos_session_id, code.base_code],
                         context: this.env.session.user_context,
                     });
+                    foundProductIds.push(...product_id);
+                    foundPackagings.push(...packaging);
                 } catch (error) {
                     if (isConnectionError(error)) {
                         return this.showPopup('OfflineErrorPopup', {
@@ -252,6 +271,9 @@ odoo.define('point_of_sale.ProductScreen', function(require) {
                 }
                 if (foundProductIds.length) {
                     await this.env.pos._addProducts(foundProductIds);
+                    if (foundPackagings.length) {
+                        this.env.pos.db.add_packagings(foundPackagings);
+                    }
                     // assume that the result is unique.
                     product = this.env.pos.db.get_product_by_id(foundProductIds[0]);
                 } else {
@@ -310,20 +332,24 @@ odoo.define('point_of_sale.ProductScreen', function(require) {
                 last_orderline.set_discount(code.value);
             }
         }
+        async _parseElementsFromGS1(parsed_results) {
+            const productBarcode = parsed_results.find(element => element.type === 'product');
+            const lotBarcode = parsed_results.find(element => element.type === 'lot');
+            const product = await this._getProductByBarcode(productBarcode);
+            return { product, lotBarcode, customProductOptions: {} }
+        }
         /**
          * Add a product to the current order using the product identifier and lot number from parsed results.
          * This function retrieves the product identifier and lot number from the `parsed_results` parameter.
          * It then uses these values to retrieve the product and add it to the current order.
          */
         async _barcodeGS1Action(parsed_results) {
-            const productBarcode = parsed_results.find(element => element.type === 'product');
-            const lotBarcode = parsed_results.find(element => element.type === 'lot');
-            const product = await this._getProductByBarcode(productBarcode);
+            const { product, lotBarcode, customProductOptions } = await this._parseElementsFromGS1(parsed_results)
             if (!product) {
                 return;
             }
             const options = await this._getAddProductOptions(product, lotBarcode);
-            await this.currentOrder.add_product(product, options);
+            await this.currentOrder.add_product(product, { ...options, ...customProductOptions });
             NumberBuffer.reset();
         }
         // IMPROVEMENT: The following two methods should be in PosScreenComponent?
@@ -371,7 +397,9 @@ odoo.define('point_of_sale.ProductScreen', function(require) {
                     newLine.set_quantity( - decreasedQuantity, true);
                     order.add_orderline(newLine);
                 }
+                return true;
             }
+            return false;
         }
         async onClickPartner() {
             // IMPROVEMENT: This code snippet is very similar to selectPartner of PaymentScreen.
