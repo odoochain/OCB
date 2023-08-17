@@ -258,7 +258,10 @@ class StockQuant(models.Model):
                 lot_id = self.env['stock.lot'].browse(vals.get('lot_id'))
                 package_id = self.env['stock.quant.package'].browse(vals.get('package_id'))
                 owner_id = self.env['res.partner'].browse(vals.get('owner_id'))
-                quant = self._gather(product, location, lot_id=lot_id, package_id=package_id, owner_id=owner_id, strict=True)
+                quant = self.env['stock.quant']
+                if not self.env.context.get('import_file'):
+                    # Merge quants later, to make sure one line = one record during batch import
+                    quant = self._gather(product, location, lot_id=lot_id, package_id=package_id, owner_id=owner_id, strict=True)
                 if lot_id:
                     quant = quant.filtered(lambda q: q.lot_id)
                 if quant:
@@ -555,10 +558,7 @@ class StockQuant(models.Model):
             return 'location_id ASC, id DESC'
         raise UserError(_('Removal strategy %s not implemented.') % (removal_strategy,))
 
-    def _gather(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False):
-        removal_strategy = self._get_removal_strategy(product_id, location_id)
-        removal_strategy_order = self._get_removal_strategy_order(removal_strategy)
-
+    def _get_gather_domain(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False):
         domain = [('product_id', '=', product_id.id)]
         if not strict:
             if lot_id:
@@ -573,6 +573,12 @@ class StockQuant(models.Model):
             domain = expression.AND([[('package_id', '=', package_id and package_id.id or False)], domain])
             domain = expression.AND([[('owner_id', '=', owner_id and owner_id.id or False)], domain])
             domain = expression.AND([[('location_id', '=', location_id.id)], domain])
+        return domain
+
+    def _gather(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False):
+        removal_strategy = self._get_removal_strategy(product_id, location_id)
+        removal_strategy_order = self._get_removal_strategy_order(removal_strategy)
+        domain = self._get_gather_domain(product_id, location_id, lot_id, package_id, owner_id, strict)
 
         return self.search(domain, order=removal_strategy_order).sorted(lambda q: not q.lot_id)
 

@@ -58,6 +58,16 @@ describe('Copy', () => {
                     window.chai.expect(clipboardData.getData('text/odoo-editor')).to.be.equal('abc<br>efg');
                 },
             });
+            await testEditor(BasicEditor, {
+                contentBefore: `]<table><tbody><tr><td><ul><li>a[</li><li>b</li><li>c</li></ul></td><td><br></td></tr></tbody></table>`,
+                stepFunction: async editor => {
+                    const clipboardData = new DataTransfer();
+                    triggerEvent(editor.editable, 'copy', { clipboardData });
+                    window.chai.expect(clipboardData.getData('text/plain')).to.be.equal('a');
+                    window.chai.expect(clipboardData.getData('text/html')).to.be.equal('<table><tbody><tr><td><ul><li>a</li><li>b</li><li>c</li></ul></td><td><br></td></tr></tbody></table>');
+                    window.chai.expect(clipboardData.getData('text/odoo-editor')).to.be.equal('<table><tbody><tr><td><ul><li>a</li><li>b</li><li>c</li></ul></td><td><br></td></tr></tbody></table>');
+                },
+            });
         });
     });
 });
@@ -277,22 +287,28 @@ describe('Paste', () => {
             });
             // TODO: We might want to have it consider \n as paragraph breaks
             // instead of linebreaks but that would be an opinionated choice.
-            it('should paste text and understand \n newlines', async () => {
+            it('should paste text and understand \\n newlines', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>[]<br/></p>',
                     stepFunction: async editor => {
                         await pasteText(editor, 'a\nb\nc\nd');
                     },
-                    contentAfter: '<p>a<br>b<br>c<br>d[]<br></p>',
+                    contentAfter: '<p style="margin-bottom: 0px;">a</p>' +
+                                  '<p style="margin-bottom: 0px;">b</p>' +
+                                  '<p style="margin-bottom: 0px;">c</p>' +
+                                  '<p>d[]<br></p>',
                 });
             });
-            it('should paste text and understand \r\n newlines', async () => {
+            it('should paste text and understand \\r\\n newlines', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>[]<br/></p>',
                     stepFunction: async editor => {
                         await pasteText(editor, 'a\r\nb\r\nc\r\nd');
                     },
-                    contentAfter: '<p>a<br>b<br>c<br>d[]<br></p>',
+                    contentAfter: '<p style="margin-bottom: 0px;">a</p>' +
+                                  '<p style="margin-bottom: 0px;">b</p>' +
+                                  '<p style="margin-bottom: 0px;">c</p>' +
+                                  '<p>d[]<br></p>',
                 });
             });
         });
@@ -1462,7 +1478,8 @@ describe('Paste', () => {
                     stepFunction: async editor => {
                         await pasteText(editor, 'odoo.com\ngoogle.com');
                     },
-                    contentAfter: '<p><a href="https://odoo.com">odoo.com</a><br><a href="https://google.com">google.com</a>[]<br></p>',
+                    contentAfter: '<p style="margin-bottom: 0px;"><a href="https://odoo.com">odoo.com</a></p>' +
+                                  '<p><a href="https://google.com">google.com</a>[]<br></p>'
                 });
             });
             it('should paste html content over an empty link', async () => {
