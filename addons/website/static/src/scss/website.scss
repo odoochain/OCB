@@ -7,7 +7,7 @@ $-seen-urls: ();
     $-url: o-get-font-info($alias, 'url');
     @if $-url and index($-seen-urls, $-url) == null {
         $-seen-urls: append($-seen-urls, $-url);
-        @import url("https://fonts.googleapis.com/css?family=#{unquote($-url)}&display=swap");
+        @import url("https://fonts.loli.net/css?family=#{unquote($-url)}&display=swap");
     } @else {
         $-name: o-get-font-info($alias, 'name');
         $-attachment: o-get-font-info($alias, 'attachment');
