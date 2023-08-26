@@ -82,7 +82,7 @@ class Assets(models.AbstractModel):
                         statement = src.group()
                         url, font_format = re.match(r'src: url\(([^\)]+)\) (.+)', statement).groups()
                         req = requests.get(url, timeout=5, headers=headers_woff2)
-                        # https://fonts.gstatic.com/s/modak/v18/EJRYQgs1XtIEskMB-hRp7w.woff2
+                        # https://gapis.geekzu.org/g-fonts/s/modak/v18/EJRYQgs1XtIEskMB-hRp7w.woff2
                         # -> s-modak-v18-EJRYQgs1XtIEskMB-hRp7w.woff2
                         name = url_parse(url).path.lstrip('/').replace('/', '-')
                         attachment = IrAttachment.create({
