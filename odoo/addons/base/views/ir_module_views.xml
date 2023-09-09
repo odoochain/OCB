@@ -106,6 +106,7 @@
                                 <field name="application"/>
                                 <field name="state"/>
                                 <field name="create_date"/>
+                                <field name="write_date"/>
                             </group>
                             <group string="Created Views" attrs="{'invisible':[('state','!=','installed')]}"/>
                             <p class="oe_grey" attrs="{'invisible': ['|',('views_by_module','not in',[None,False]),('state','!=','installed')]}"> -This module does not create views.</p>
@@ -154,6 +155,7 @@
                     <field name="author"/>
                     <field name="website"/>
                     <field name="create_date"/>
+                    <field name="write_date"/>
                     <field name="installed_version"/>
                     <field name="state" widget="badge"
                         decoration-muted="state == 'uninstallable'"

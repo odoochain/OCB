@@ -35,7 +35,7 @@
                 <a href="/shop/wishlist" t-attf-class="#{_link_class}">
                     <i t-if="_icon" class="fa fa-1x fa-heart"/>
                     <span t-if="_text">Wishlist</span>
-                    <sup t-esc="wishcount" t-attf-class="my_wish_quantity o_animate_blink badge text-bg-primary"/>
+                    <sup t-out="wishcount" t-attf-class="my_wish_quantity o_animate_blink badge text-bg-primary"/>
                 </a>
             </li>
         </t>
