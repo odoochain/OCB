@@ -44,7 +44,7 @@ DEFAULT_CDN_FILTERS = [
     "^/website/image/",
 ]
 
-DEFAULT_ENDPOINT = 'https://website.api.odoo.com'
+DEFAULT_ENDPOINT = 'https://website.api.odoochain.com'
 
 # TODO: Remove in master.
 SEARCH_TYPE_MODELS = defaultdict(OrderedSet)
