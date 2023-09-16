@@ -11,7 +11,7 @@
     <head>
         <meta charset="utf-8"/>
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-        <title t-out="title or 'Odoo'"/>
+        <title t-out="title or 'OdooChain'"/>
         <link type="image/x-icon" rel="shortcut icon" t-att-href="x_icon or '/web/static/img/favicon.ico'"/>
         <script id="web.layout.odooscript" type="text/javascript">
             var odoo = {
@@ -81,7 +81,7 @@
             <a target="_blank"
                 t-attf-href="http://www.odoo.com?utm_source=db&amp;utm_medium=#{_utm_medium}"
                 class="badge text-bg-light">
-                <img alt="Odoo"
+                <img alt="OdooChain"
                     src="/web/static/img/odoo_logo_tiny.png"
                     width="62" height="20"
                     style="width: auto; height: 1em; vertical-align: baseline;"/>
@@ -117,7 +117,7 @@
                             <t t-if="not disable_database_manager">
                                 <a class="border-end pe-2 me-1" href="/web/database/manager">Manage Databases</a>
                             </t>
-                            <a href="https://www.odoo.com?utm_source=db&amp;utm_medium=auth" target="_blank">Powered by <span>Odoo</span></a>
+                            <a href="https://www.odoochain.com" target="_blank">Powered by <span>OdooChain</span></a>
                         </div>
                     </div>
                 </div>
