@@ -32,7 +32,7 @@
         <div class="col-md-8">
             <select id="lang" name="lang" class="form-select" required="required" autocomplete="off">
                 <t t-foreach="langs" t-as="lang">
-                    <t t-if="lang[0] == 'en_US'">
+                    <t t-if="lang[0] == 'zh_CN'">
                         <option t-att-value="lang[0]" t-out="lang[1]" selected="selected"/>
                     </t>
                     <t t-else="">
@@ -49,6 +49,12 @@
                 <option value=""></option>
                 <t t-foreach="countries" t-as="country">
                     <option t-att-value="country[0]" t-out="country[1]"/>
+<!--                    <t t-if="country[0] == 'vn'">-->
+<!--                        <option t-att-value="country[0]" t-out="country[1]" selected="selected"/>-->
+<!--                    </t>-->
+<!--                    <t t-else="">-->
+<!--                        <option t-att-value="country[0]" t-out="country[1]"/>-->
+<!--                    </t>-->
                 </t>
             </select>
         </div>
