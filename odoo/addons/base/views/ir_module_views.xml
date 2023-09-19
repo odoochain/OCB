@@ -105,7 +105,6 @@
                                 <field name="demo"/>
                                 <field name="application"/>
                                 <field name="state"/>
-                                <field name="create_date"/>
                                 <field name="write_date"/>
                             </group>
                             <group string="Created Views" attrs="{'invisible':[('state','!=','installed')]}"/>
@@ -154,7 +153,6 @@
                     <field name="name" groups="base.group_no_one"/>
                     <field name="author"/>
                     <field name="website"/>
-                    <field name="create_date"/>
                     <field name="write_date"/>
                     <field name="installed_version"/>
                     <field name="state" widget="badge"
