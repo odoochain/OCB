@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 import base64
 from collections import defaultdict, OrderedDict
 from decorator import decorator
@@ -599,16 +599,16 @@ class Module(models.Model):
         assert self.env.registry is registry
 
         # pylint: disable=next-method-called
-        config = self.env['ir.module.module'].next() or {}
-        if config.get('type') not in ('ir.actions.act_window_close',):
-            return config
+        # config = self.env['ir.module.module'].next() or {}
+        # if config.get('type') not in ('ir.actions.act_window_close',):
+        #     return config
 
         # reload the client; open the first available root menu
         menu = self.env['ir.ui.menu'].search([('parent_id', '=', False)])[:1]
         return {
             'type': 'ir.actions.client',
             'tag': 'reload',
-            'params': {'menu_id': menu.id},
+            # 'params': {'menu_id': menu.id},
         }
 
     @assert_log_admin_access

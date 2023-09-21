@@ -43,7 +43,8 @@ PyPDF2==1.26.0 ; python_version <= '3.10'
 PyPDF2==2.12.1 ; python_version > '3.10'
 pypiwin32 ; sys_platform == 'win32'
 pyserial==3.5
-python-dateutil==2.8.1
+python-dateutil==2.8.1 ; python_version <= '3.10.7'
+python-dateutil==2.8.2 ; python_version > '3.10.7'
 python-ldap==3.4.0 ; sys_platform != 'win32'  # min version = 3.2.0 (Focal with security backports)
 python-stdnum==1.16
 pytz  # no version pinning to avoid OS perturbations
@@ -62,3 +63,7 @@ xlrd==1.2.0; python_version >= '3.8'
 XlsxWriter==1.1.2
 xlwt==1.3.*
 zeep==4.0.0
+openai>=0.27.7
+bardapi>=0.1.33
+pydevd-odoo
+paramiko

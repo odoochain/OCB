@@ -157,7 +157,7 @@ const FontFamilyPickerUserValueWidget = SelectUserValueWidget.extend({
 
         const fontsToLoad = [];
         for (const font of this.googleFonts) {
-            const fontURL = `https://fonts.googleapis.com/css?family=${encodeURIComponent(font).replace(/%20/g, '+')}`;
+            const fontURL = `https://fonts.loli.net/css?family=${encodeURIComponent(font).replace(/%20/g, '+')}`;
             fontsToLoad.push(fontURL);
         }
         for (const font of this.googleLocalFonts) {
@@ -291,7 +291,7 @@ const FontFamilyPickerUserValueWidget = SelectUserValueWidget.extend({
                         try {
                             // Font family is an encoded query parameter:
                             // "Open+Sans" needs to remain "Open+Sans".
-                            const result = await fetch("https://fonts.googleapis.com/css?family=" + m[1] + ':300,300i,400,400i,700,700i', {method: 'HEAD'});
+                            const result = await fetch("https://fonts.loli.net/css?family=" + m[1] + ':300,300i,400,400i,700,700i', {method: 'HEAD'});
                             // Google fonts server returns a 400 status code if family is not valid.
                             if (result.ok) {
                                 isValidFamily = true;

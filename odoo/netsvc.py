@@ -164,6 +164,8 @@ def init_logger():
         'astroid',  # deprecated imp module (fixed in 2.5.1)
         'requests_toolbelt', # importing ABC from collections (fixed in 0.9)
         'firebase_admin', # deprecated method_whitelist
+        'locale',
+        'urllib3.contrib.pyopenssl.PyOpenSSLContext'
     ]:
         warnings.filterwarnings('ignore', category=DeprecationWarning, module=module)
 

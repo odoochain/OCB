@@ -8,6 +8,7 @@ class Users(models.Model):
     _inherit = 'res.users'
 
     create_date = fields.Datetime('Create Date', readonly=True, index=True)
+    # Keep unexpected index res_users_create_date_index on table res_users,so we set index not to true todo
     forum_waiting_posts_count = fields.Integer('Waiting post', compute="_get_user_waiting_post")
 
     def _get_user_waiting_post(self):

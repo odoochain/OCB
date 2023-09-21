@@ -14,7 +14,7 @@ export class UpgradeDialog extends Component {
         const usersCount = await this.orm.call("res.users", "search_count", [
             [["share", "=", false]],
         ]);
-        window.open("https://www.odoo.com/odoo-enterprise/upgrade?num_users=" + usersCount, "_blank");
+        window.open("https://www.odoochain.com/odoo-enterprise/upgrade?num_users=" + usersCount, "_blank");
         this.props.close();
     }
 }

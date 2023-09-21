@@ -19,7 +19,24 @@ from socket import gaierror, timeout
 from OpenSSL import crypto as SSLCrypto
 from OpenSSL.crypto import Error as SSLCryptoError, FILETYPE_PEM
 from OpenSSL.SSL import Error as SSLError
-from urllib3.contrib.pyopenssl import PyOpenSSLContext
+
+try:
+    from requests.packages.urllib3.contrib.pyopenssl import PyOpenSSLContext
+except ImportError:
+    try:
+        from urllib3.contrib.pyopenssl import PyOpenSSLContext
+    except ImportError:
+        PyOpenSSLContext = None
+# from urllib3.util.ssl_ import PyOpenSSLContext
+# if SSLContext is None:
+#      from urllib3.contrib.pyopenssl import orig_util_SSLContext as SSLContext
+# try:
+#     # Always import the original SSLContext, even if it has been patched
+#     from urllib3.util.ssl_ import PyOpenSSLContext
+# except ImportError:
+#     from urllib3.contrib.pyopenssl import PyOpenSSLContext
+# from urllib3.contrib.pyopenssl import PyOpenSSLContext
+# PyOpenSSLContext = None
 
 from odoo import api, fields, models, tools, _
 from odoo.exceptions import UserError
