@@ -360,7 +360,8 @@ class PosSession(models.Model):
                           self.cash_journal_id.name))
 
                 st_line_vals['payment_ref'] = _("Cash difference observed during the counting (Loss)") + (_(' - opening') if is_opening else _(' - closing'))
-                st_line_vals['counterpart_account_id'] = self.cash_journal_id.loss_account_id.id
+                if not is_opening:
+                    st_line_vals['counterpart_account_id'] = self.cash_journal_id.loss_account_id.id
             else:
                 # self.cash_register_difference  > 0.0
                 if not self.cash_journal_id.profit_account_id:
@@ -369,7 +370,8 @@ class PosSession(models.Model):
                           self.cash_journal_id.name))
 
                 st_line_vals['payment_ref'] = _("Cash difference observed during the counting (Profit)") + (_(' - opening') if is_opening else _(' - closing'))
-                st_line_vals['counterpart_account_id'] = self.cash_journal_id.profit_account_id.id
+                if not is_opening:
+                    st_line_vals['counterpart_account_id'] = self.cash_journal_id.profit_account_id.id
 
             self.env['account.bank.statement.line'].create(st_line_vals)
 
@@ -1453,7 +1455,8 @@ class PosSession(models.Model):
         # we are querying over the account.move.line because its 'ref' is indexed.
         # And yes, we are only concern for split bank payment methods.
         diff_lines_ref = [self._get_diff_account_move_ref(pm) for pm in self.payment_method_ids if pm.type == 'bank' and pm.split_transactions]
-        return self.env['account.move.line'].search([('ref', 'in', diff_lines_ref)]).mapped('move_id')
+        cost_move_lines = ['pos_order_'+str(rec.id) for rec in self.order_ids]
+        return self.env['account.move.line'].search([('ref', 'in', diff_lines_ref + cost_move_lines)]).mapped('move_id')
 
     def _get_related_account_moves(self):
         pickings = self.picking_ids | self.order_ids.mapped('picking_ids')

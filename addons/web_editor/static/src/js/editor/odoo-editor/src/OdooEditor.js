@@ -3565,9 +3565,10 @@ export class OdooEditor extends EventTarget {
             // Tab
             const tabHtml = '<span class="oe-tabs" contenteditable="false">\u0009</span>\u200B';
             const sel = this.document.getSelection();
-            if (closestElement(sel.anchorNode, 'table')) {
+            const closestLi = closestElement(sel.anchorNode, 'li');
+            if (closestElement(sel.anchorNode, 'table') && !closestLi) {
                 this._onTabulationInTable(ev);
-            } else if (!ev.shiftKey && sel.isCollapsed && !closestElement(sel.anchorNode, 'li')) {
+            } else if (!ev.shiftKey && sel.isCollapsed && !closestLi) {
                 // Indent text (collapsed selection).
                 this.execCommand('insert', parseHTML(tabHtml));
             } else {
@@ -4295,6 +4296,9 @@ export class OdooEditor extends EventTarget {
                 toggleClass(node, 'o_checked');
                 ev.preventDefault();
                 this.historyStep();
+                if (!document.getSelection().isCollapsed) {
+                    this._updateToolbar(true);
+                }
             }
         }
 
@@ -4326,6 +4330,7 @@ export class OdooEditor extends EventTarget {
             this.toolbar.style.pointerEvents = 'none';
             if (this.deselectTable() && hasValidSelection(this.editable)) {
                 this.document.getSelection().collapseToStart();
+                this._updateToolbar(false);
             }
         }
         // Handle table resizing.
@@ -4627,7 +4632,16 @@ export class OdooEditor extends EventTarget {
                         const textFragments = splitAroundUrl[i].split(/\r?\n/);
                         let textIndex = 1;
                         for (const textFragment of textFragments) {
-                            this._applyCommand('insert', textFragment);
+                            // Replace consecutive spaces by alternating nbsp.
+                            const modifiedTextFragment = textFragment.replace(/( {2,})/g, match => {
+                                let alertnateValue = false;
+                                return match.replace(/ /g, () => {
+                                    alertnateValue = !alertnateValue;
+                                    const replaceContent = alertnateValue ? '\u00A0' : ' ';
+                                    return replaceContent;
+                                });
+                            });
+                            this._applyCommand('insert', modifiedTextFragment);
                             if (textIndex < textFragments.length) {
                                 // Break line by inserting new paragraph and
                                 // remove current paragraph's bottom margin.
