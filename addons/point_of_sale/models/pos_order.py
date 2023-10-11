@@ -912,14 +912,8 @@ class PosOrder(models.Model):
         return self.env['pos.order'].search_read(domain=[('id', 'in', order_ids)], fields=['id', 'pos_reference', 'account_move'], load=False)
 
     def _is_the_same_order(self, data, existing_order):
-        creation_date = fields.Datetime.from_string(data['creation_date'].replace('T', ' ')[:19])
-        existing_date = existing_order.date_order
-
-        if creation_date != existing_date:
-            return False
-
-        received_payments = [(fields.Datetime.from_string(p[2]['name']), p[2]['amount'], p[2]['payment_method_id']) for p in data['statement_ids']]
-        existing_payments = [(p.payment_date, p.amount, p.payment_method_id.id) for p in existing_order.payment_ids]
+        received_payments = [(p[2]['amount'], p[2]['payment_method_id']) for p in data['statement_ids']]
+        existing_payments = [(p.amount, p.payment_method_id.id) for p in existing_order.payment_ids]
 
         if not all(received_payment in existing_payments for received_payment in received_payments):
             return False
@@ -1530,7 +1524,7 @@ class ReportSaleDetails(models.AbstractModel):
         data = dict(data or {})
         # initialize data keys with their value if provided, else None
         data.update({
-            'session_ids': data.get('session_ids') or docids,
+            'session_ids': data.get('session_ids'),
             'config_ids': data.get('config_ids'),
             'date_start': data.get('date_start'),
             'date_stop': data.get('date_stop')
