@@ -853,9 +853,8 @@ class PosOrder(models.Model):
             'view_mode': 'form',
             'view_id': self.env.ref('account.view_move_form').id,
             'res_model': 'account.move',
-            'context': "{'move_type':'out_invoice'}",
+            'context': "{'move_type':'out_invoice','nodestroy': True}",
             'type': 'ir.actions.act_window',
-            'nodestroy': True,
             'target': 'current',
             'res_id': moves and moves.ids[0] or False,
         }

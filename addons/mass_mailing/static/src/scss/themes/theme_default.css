@@ -1,0 +1,17 @@
+/* Error: Undefined mixin.
+ *    ,
+ * 27 | @include bg-variant(".bg-o-color-2", $o-mm-def-color-6);
+ *    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *    '
+ *   theme_default.scss 27:1  root stylesheet */
+
+body::before {
+  font-family: "Source Code Pro", "SF Mono", Monaco, Inconsolata, "Fira Mono",
+      "Droid Sans Mono", monospace, monospace;
+  white-space: pre;
+  display: block;
+  padding: 1em;
+  margin-bottom: 1em;
+  border-bottom: 2px solid black;
+  content: 'Error: Undefined mixin.\a    \2577 \a 27 \2502  @include bg-variant(".bg-o-color-2", $o-mm-def-color-6);\a    \2502  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\a    \2575 \a   theme_default.scss 27:1  root stylesheet';
+}
