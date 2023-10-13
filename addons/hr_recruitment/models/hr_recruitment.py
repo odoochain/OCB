@@ -60,6 +60,7 @@ class RecruitmentSource(models.Model):
             email.getparent().remove(email)
         return arch, view
 
+
 class RecruitmentStage(models.Model):
     _name = "hr.recruitment.stage"
     _description = "Recruitment Stages"
@@ -79,7 +80,7 @@ class RecruitmentStage(models.Model):
         "Folded in Kanban",
         help="This stage is folded in the kanban view when there are no records in that stage to display.")
     hired_stage = fields.Boolean('Hired Stage',
-        help="If checked, this stage is used to determine the hire date of an applicant")
+                                 help="If checked, this stage is used to determine the hire date of an applicant")
     legend_blocked = fields.Char(
         'Red Kanban Label', default=lambda self: _('Blocked'), translate=True, required=True)
     legend_done = fields.Char(
@@ -90,7 +91,8 @@ class RecruitmentStage(models.Model):
 
     @api.model
     def default_get(self, fields):
-        if self._context and self._context.get('default_job_id') and not self._context.get('hr_recruitment_stage_mono', False):
+        if self._context and self._context.get('default_job_id') and not self._context.get('hr_recruitment_stage_mono',
+                                                                                           False):
             context = dict(self._context)
             context.pop('default_job_id')
             self = self.with_context(context)
@@ -105,6 +107,7 @@ class RecruitmentStage(models.Model):
                 stage.is_warning_visible = True
             else:
                 stage.is_warning_visible = False
+
 
 class RecruitmentDegree(models.Model):
     _name = "hr.recruitment.degree"
@@ -124,11 +127,14 @@ class Applicant(models.Model):
     _inherit = ['mail.thread.cc', 'mail.activity.mixin', 'utm.mixin']
     _mailing_enabled = True
 
-    name = fields.Char("Subject / Application", required=True, help="Email subject for applications sent via email", index='trigram')
-    active = fields.Boolean("Active", default=True, help="If the active field is set to false, it will allow you to hide the case without removing it.")
+    name = fields.Char("Subject / Application", required=True, help="Email subject for applications sent via email",
+                       index='trigram')
+    active = fields.Boolean("Active", default=True,
+                            help="If the active field is set to false, it will allow you to hide the case without "
+                                 "removing it.")
     description = fields.Html("Description")
     email_from = fields.Char("Email", size=128, compute='_compute_partner_phone_email',
-        inverse='_inverse_partner_email', store=True)
+                             inverse='_inverse_partner_email', store=True)
     probability = fields.Float("Probability")
     partner_id = fields.Many2one('res.partner', "Contact", copy=False)
     create_date = fields.Datetime("Creation Date", readonly=True)
@@ -140,38 +146,51 @@ class Applicant(models.Model):
     last_stage_id = fields.Many2one('hr.recruitment.stage', "Last Stage",
                                     help="Stage of the applicant before being in the current stage. Used for lost cases analysis.")
     categ_ids = fields.Many2many('hr.applicant.category', string="Tags")
-    company_id = fields.Many2one('res.company', "Company", compute='_compute_company', store=True, readonly=False, tracking=True)
+    company_id = fields.Many2one('res.company', "Company", compute='_compute_company', store=True, readonly=False,
+                                 tracking=True)
     user_id = fields.Many2one(
-        'res.users', "Recruiter", compute='_compute_user', domain="[('share', '=', False), ('company_ids', 'in', company_id)]",
+        'res.users', "Recruiter", compute='_compute_user',
+        domain="[('share', '=', False), ('company_ids', 'in', company_id)]",
         tracking=True, store=True, readonly=False)
-    date_closed = fields.Datetime("Hire Date", compute='_compute_date_closed', store=True, readonly=False, tracking=True)
+    date_closed = fields.Datetime("Hire Date", compute='_compute_date_closed', store=True, readonly=False,
+                                  tracking=True)
     date_open = fields.Datetime("Assigned", readonly=True)
     date_last_stage_update = fields.Datetime("Last Stage Update", index=True, default=fields.Datetime.now)
     priority = fields.Selection(AVAILABLE_PRIORITIES, "Evaluation", default='0')
-    job_id = fields.Many2one('hr.job', "Applied Job", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]", tracking=True, index=True)
-    salary_proposed_extra = fields.Char("Proposed Salary Extra", help="Salary Proposed by the Organisation, extra advantages", tracking=True, groups="hr_recruitment.group_hr_recruitment_user")
-    salary_expected_extra = fields.Char("Expected Salary Extra", help="Salary Expected by Applicant, extra advantages", tracking=True, groups="hr_recruitment.group_hr_recruitment_user")
-    salary_proposed = fields.Float("Proposed Salary", group_operator="avg", help="Salary Proposed by the Organisation", tracking=True, groups="hr_recruitment.group_hr_recruitment_user")
-    salary_expected = fields.Float("Expected Salary", group_operator="avg", help="Salary Expected by Applicant", tracking=True, groups="hr_recruitment.group_hr_recruitment_user")
-    availability = fields.Date("Availability", help="The date at which the applicant will be available to start working", tracking=True)
+    job_id = fields.Many2one('hr.job', "Applied Job",
+                             domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]", tracking=True,
+                             index=True)
+    salary_proposed_extra = fields.Char("Proposed Salary Extra",
+                                        help="Salary Proposed by the Organisation, extra advantages", tracking=True,
+                                        groups="hr_recruitment.group_hr_recruitment_user")
+    salary_expected_extra = fields.Char("Expected Salary Extra", help="Salary Expected by Applicant, extra advantages",
+                                        tracking=True, groups="hr_recruitment.group_hr_recruitment_user")
+    salary_proposed = fields.Float("Proposed Salary", group_operator="avg", help="Salary Proposed by the Organisation",
+                                   tracking=True, groups="hr_recruitment.group_hr_recruitment_user")
+    salary_expected = fields.Float("Expected Salary", group_operator="avg", help="Salary Expected by Applicant",
+                                   tracking=True, groups="hr_recruitment.group_hr_recruitment_user")
+    availability = fields.Date("Availability",
+                               help="The date at which the applicant will be available to start working", tracking=True)
     partner_name = fields.Char("Applicant's Name")
     partner_phone = fields.Char("Phone", size=32, compute='_compute_partner_phone_email',
-        inverse='_inverse_partner_phone', store=True)
+                                inverse='_inverse_partner_phone', store=True)
     partner_mobile = fields.Char("Mobile", size=32, compute='_compute_partner_phone_email',
-        inverse='_inverse_partner_mobile', store=True)
+                                 inverse='_inverse_partner_mobile', store=True)
     type_id = fields.Many2one('hr.recruitment.degree', "Degree")
     department_id = fields.Many2one(
         'hr.department', "Department", compute='_compute_department', store=True, readonly=False,
         domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]", tracking=True)
     day_open = fields.Float(compute='_compute_day', string="Days to Open", compute_sudo=True)
     day_close = fields.Float(compute='_compute_day', string="Days to Close", compute_sudo=True)
-    delay_close = fields.Float(compute="_compute_day", string='Delay to Close', readonly=True, group_operator="avg", help="Number of days to close", store=True)
+    delay_close = fields.Float(compute="_compute_day", string='Delay to Close', readonly=True, group_operator="avg",
+                               help="Number of days to close", store=True)
     color = fields.Integer("Color Index", default=0)
     emp_id = fields.Many2one('hr.employee', string="Employee", help="Employee linked to the applicant.", copy=False)
     user_email = fields.Char(related='user_id.email', string="User Email", readonly=True)
     attachment_number = fields.Integer(compute='_get_attachment_number', string="Number of Attachments")
     employee_name = fields.Char(related='emp_id.name', string="Employee Name", readonly=False, tracking=False)
-    attachment_ids = fields.One2many('ir.attachment', 'res_id', domain=[('res_model', '=', 'hr.applicant')], string='Attachments')
+    attachment_ids = fields.One2many('ir.attachment', 'res_id', domain=[('res_model', '=', 'hr.applicant')],
+                                     string='Attachments')
     kanban_state = fields.Selection([
         ('normal', 'Grey'),
         ('done', 'Green'),
@@ -180,7 +199,8 @@ class Applicant(models.Model):
     legend_blocked = fields.Char(related='stage_id.legend_blocked', string='Kanban Blocked')
     legend_done = fields.Char(related='stage_id.legend_done', string='Kanban Valid')
     legend_normal = fields.Char(related='stage_id.legend_normal', string='Kanban Ongoing')
-    application_count = fields.Integer(compute='_compute_application_count', help='Applications with the same email or phone or mobile')
+    application_count = fields.Integer(compute='_compute_application_count',
+                                       help='Applications with the same email or phone or mobile')
     refuse_reason_id = fields.Many2one('hr.applicant.refuse.reason', string='Refuse Reason', tracking=True)
     meeting_ids = fields.One2many('calendar.event', 'applicant_id', 'Meetings')
     meeting_display_text = fields.Char(compute='_compute_meeting_display')
@@ -190,8 +210,8 @@ class Applicant(models.Model):
     medium_id = fields.Many2one(ondelete='set null')
     source_id = fields.Many2one(ondelete='set null')
     interviewer_ids = fields.Many2many('res.users', 'hr_applicant_res_users_interviewers_rel',
-        string='Interviewers', index=True, tracking=True,
-        domain="[('share', '=', False), ('company_ids', 'in', company_id)]")
+                                       string='Interviewers', index=True, tracking=True,
+                                       domain="[('share', '=', False), ('company_ids', 'in', company_id)]")
     linkedin_profile = fields.Char('LinkedIn Profile')
     application_status = fields.Selection([
         ('ongoing', 'Ongoing'),
@@ -532,7 +552,7 @@ class Applicant(models.Model):
             OR other.partner_mobile = hr_applicant.partner_mobile OR other.partner_mobile = hr_applicant.partner_phone
          WHERE hr_applicant.id in %s
         """, (tuple(self.ids),)
-        )
+                            )
         ids = [res['id'] for res in self.env.cr.dictfetchall()]
         return {
             'type': 'ir.actions.act_window',
@@ -589,7 +609,8 @@ class Applicant(models.Model):
         recipients = super(Applicant, self)._message_get_suggested_recipients()
         for applicant in self:
             if applicant.partner_id:
-                applicant._message_add_suggested_recipient(recipients, partner=applicant.partner_id.sudo(), reason=_('Contact'))
+                applicant._message_add_suggested_recipient(recipients, partner=applicant.partner_id.sudo(),
+                                                           reason=_('Contact'))
             elif applicant.email_from:
                 email_from = tools.email_normalize(applicant.email_from)
                 if applicant.partner_name:
@@ -641,7 +662,8 @@ class Applicant(models.Model):
             # suggested recipients. This heuristic allows to avoid ugly hacks in JS.
             email_normalized = tools.email_normalize(self.email_from)
             new_partner = message.partner_ids.filtered(
-                lambda partner: partner.email == self.email_from or (email_normalized and partner.email_normalized == email_normalized)
+                lambda partner: partner.email == self.email_from or (
+                            email_normalized and partner.email_normalized == email_normalized)
             )
             if new_partner:
                 if new_partner[0].create_date.date() == fields.Date.today():
@@ -689,7 +711,8 @@ class Applicant(models.Model):
             'default_address_home_id': address_id,
             'default_department_id': self.department_id.id,
             'default_address_id': self.company_id.partner_id.id,
-            'default_work_email': self.department_id.company_id.email or self.email_from, # To have a valid email address by default
+            'default_work_email': self.department_id.company_id.email or self.email_from,
+            # To have a valid email address by default
             'default_work_phone': self.department_id.company_id.phone,
             'form_view_initial_mode': 'edit',
             'default_applicant_id': self.ids,
@@ -719,10 +742,10 @@ class Applicant(models.Model):
         for job_id in self.mapped('job_id'):
             default_stage[job_id.id] = self.env['hr.recruitment.stage'].search(
                 ['|',
-                    ('job_ids', '=', False),
-                    ('job_ids', '=', job_id.id),
-                    ('fold', '=', False)
-                ], order='sequence asc', limit=1).id
+                 ('job_ids', '=', False),
+                 ('job_ids', '=', job_id.id),
+                 ('fold', '=', False)
+                 ], order='sequence asc', limit=1).id
         for applicant in self:
             applicant.write(
                 {'stage_id': applicant.job_id.id and default_stage[applicant.job_id.id],
@@ -762,7 +785,7 @@ class ApplicantCategory(models.Model):
     color = fields.Integer(string='Color Index', default=_get_default_color)
 
     _sql_constraints = [
-            ('name_uniq', 'unique (name)', "Tag name already exists !"),
+        ('name_uniq', 'unique (name)', "Tag name already exists !"),
     ]
 
 
