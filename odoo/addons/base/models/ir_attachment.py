@@ -325,7 +325,7 @@ class IrAttachment(models.Model):
             max_resolution = ICP('base.image_autoresize_max_px', '1920x1920')
             if str2bool(max_resolution, True):
                 try:
-                    img = False
+                    # img = False
                     if is_raw:
                         img = ImageProcess(values['raw'], verify_resolution=False)
                     else:  # datas
