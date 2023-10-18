@@ -725,7 +725,8 @@
                         <group name="employee_details">
                             <field name="employee_id" context="{'default_company_id': company_id}" widget="many2one_avatar_employee"/>
                             <field name="payment_mode"/>
-                            <field name="journal_id" groups="account.group_account_invoice,account.group_account_readonly" options="{'no_open': True, 'no_create': True}" attrs="{'invisible': [('payment_mode', '!=', 'own_account')]}" context="{'default_company_id': company_id}"/>
+                            <field name="journal_id" groups="account.group_account_invoice,account.group_account_readonly" options="{'no_open': True, 'no_create': True}"
+                                   attrs="{'invisible': [('payment_mode', '!=', 'own_account')]}" context="{'default_company_id': company_id}"/>
                             <field name="bank_journal_id" groups="account.group_account_invoice,account.group_account_readonly" options="{'no_open': True, 'no_create': True}" attrs="{'invisible': [('payment_mode', '!=', 'company_account')]}" context="{'default_company_id': company_id}"/>
                             <field name="address_id" invisible="1" context="{'default_company_id': company_id}"/>
                             <field name="department_id" invisible="1" context="{'default_company_id': company_id}"/>

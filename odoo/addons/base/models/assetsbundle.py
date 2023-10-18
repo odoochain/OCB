@@ -854,6 +854,8 @@ class AssetsBundle(object):
                 rtlcss = misc.find_in_path('rtlcss.cmd')
             except IOError:
                 rtlcss = 'rtlcss'
+                _logger.warning(
+                    'You are in Windows.You need https://rtlcss.com/ to convert css file to right to left compatiblity. Use: npm install -g rtlcss')
 
         cmd = [rtlcss, '-c', get_resource_path("base", "data/rtlcss.json"), '-']
 
