@@ -44,7 +44,7 @@ DEFAULT_CDN_FILTERS = [
     "^/website/image/",
 ]
 
-DEFAULT_ENDPOINT = 'https://website.api.odoochain.com'
+DEFAULT_ENDPOINT = 'https://website.api.odoo.com'
 
 # TODO: Remove in master.
 SEARCH_TYPE_MODELS = defaultdict(OrderedSet)
@@ -140,7 +140,8 @@ class Website(models.Model):
         with tools.file_open(img_path, 'rb') as f:
             return base64.b64encode(f.read())
 
-    favicon = fields.Binary(string="Website Favicon", help="This field holds the image used to display a favicon on the website.", default=_default_favicon)
+    favicon = fields.Binary(string="Website Favicon", help="This field holds the image used to display a favicon on "
+                                                           "the website.", default=_default_favicon)
     theme_id = fields.Many2one('ir.module.module', help='Installed theme')
 
     specific_user_account = fields.Boolean('Specific User Account', help='If True, new accounts will be associated to the current website')

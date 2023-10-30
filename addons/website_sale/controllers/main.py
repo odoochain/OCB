@@ -72,7 +72,7 @@ class TableCompute(object):
             if index >= ppg and ((pos + 1.0) // ppr) > maxy:
                 break
 
-            if x == 1 and y == 1:   # simple heuristic for CPU optimization
+            if x == 1 and y == 1:  # simple heuristic for CPU optimization
                 minpos = pos // ppr
 
             for y2 in range(y):
@@ -144,7 +144,8 @@ class Website(main.Website):
     @http.route()
     def theme_customize_data(self, is_view_data, enable=None, disable=None, reset_view_arch=False):
         super().theme_customize_data(is_view_data, enable, disable, reset_view_arch)
-        if any(key in enable or key in disable for key in ['website_sale.products_list_view', 'website_sale.add_grid_or_list_option']):
+        if any(key in enable or key in disable for key in
+               ['website_sale.products_list_view', 'website_sale.add_grid_or_list_option']):
             request.session.pop('website_sale_shop_layout_mode', None)
 
     @http.route()
@@ -154,6 +155,7 @@ class Website(main.Website):
             'symbol': request.website.currency_id.symbol,
             'position': request.website.currency_id.position,
         }
+
 
 class WebsiteSale(http.Controller):
     _express_checkout_route = '/shop/express_checkout'
@@ -223,7 +225,8 @@ class WebsiteSale(http.Controller):
                 yield {'loc': loc}
 
     def _get_search_options(
-        self, category=None, attrib_values=None, pricelist=None, min_price=0.0, max_price=0.0, conversion_rate=1, **post
+            self, category=None, attrib_values=None, pricelist=None, min_price=0.0, max_price=0.0, conversion_rate=1,
+            **post
     ):
         return {
             'displayDescription': True,
@@ -305,11 +308,14 @@ class WebsiteSale(http.Controller):
         attributes_ids = {v[0] for v in attrib_values}
         attrib_set = {v[1] for v in attrib_values}
 
-        keep = QueryURL('/shop', **self._shop_get_query_url_kwargs(category and int(category), search, min_price, max_price, **post))
+        keep = QueryURL('/shop',
+                        **self._shop_get_query_url_kwargs(category and int(category), search, min_price, max_price,
+                                                          **post))
 
         now = datetime.timestamp(datetime.now())
         pricelist = request.env['product.pricelist'].browse(request.session.get('website_sale_current_pl'))
-        if not pricelist or request.session.get('website_sale_pricelist_time', 0) < now - 60*60: # test: 1 hour in session
+        if not pricelist or request.session.get('website_sale_pricelist_time',
+                                                0) < now - 60 * 60:  # test: 1 hour in session
             pricelist = website.get_current_pricelist()
             request.session['website_sale_pricelist_time'] = now
             request.session['website_sale_current_pl'] = pricelist.id
@@ -339,7 +345,8 @@ class WebsiteSale(http.Controller):
             conversion_rate=conversion_rate,
             **post
         )
-        fuzzy_search_term, product_count, search_product = self._shop_lookup_products(attrib_set, options, post, search, website)
+        fuzzy_search_term, product_count, search_product = self._shop_lookup_products(attrib_set, options, post, search,
+                                                                                      website)
 
         filter_by_price_enabled = website.is_view_active('website_sale.filter_products_price')
         if filter_by_price_enabled:
@@ -453,7 +460,8 @@ class WebsiteSale(http.Controller):
     def product(self, product, category='', search='', **kwargs):
         return request.render("website_sale.product", self._prepare_product_values(product, category, search, **kwargs))
 
-    @http.route(['/shop/product/<model("product.template"):product>'], type='http', auth="public", website=True, sitemap=False)
+    @http.route(['/shop/product/<model("product.template"):product>'], type='http', auth="public", website=True,
+                sitemap=False)
     def old_product(self, product, category='', search='', **kwargs):
         # Compatibility pre-v14
         return request.redirect(_build_url_w_params("/shop/%s" % slug(product), request.params), code=301)
@@ -471,12 +479,14 @@ class WebsiteSale(http.Controller):
 
         image_ids = request.env["ir.attachment"].browse(i['id'] for i in images)
         image_create_data = [Command.create({
-                    'name': image.name,                          # Images uploaded from url do not have any datas. This recovers them manually
-                    'image_1920': image.datas if image.datas else request.env['ir.qweb.field.image'].load_remote_url(image.url),
-                }) for image in image_ids]
+            'name': image.name,  # Images uploaded from url do not have any datas. This recovers them manually
+            'image_1920': image.datas if image.datas else request.env['ir.qweb.field.image'].load_remote_url(image.url),
+        }) for image in image_ids]
 
-        product_product = request.env['product.product'].browse(int(product_product_id)) if product_product_id else False
-        product_template = request.env['product.template'].browse(int(product_template_id)) if product_template_id else False
+        product_product = request.env['product.product'].browse(
+            int(product_product_id)) if product_product_id else False
+        product_template = request.env['product.template'].browse(
+            int(product_template_id)) if product_template_id else False
 
         if product_product and not product_template:
             product_template = product_product.product_tmpl_id
@@ -504,8 +514,10 @@ class WebsiteSale(http.Controller):
         if not request.env.user.has_group('website.group_website_restricted_editor'):
             raise NotFound()
 
-        product_product = request.env['product.product'].browse(int(product_product_id)) if product_product_id else False
-        product_template = request.env['product.template'].browse(int(product_template_id)) if product_template_id else False
+        product_product = request.env['product.product'].browse(
+            int(product_product_id)) if product_product_id else False
+        product_template = request.env['product.template'].browse(
+            int(product_template_id)) if product_template_id else False
 
         if product_product and not product_template:
             product_template = product_product.product_tmpl_id
@@ -522,8 +534,8 @@ class WebsiteSale(http.Controller):
         Delete or clear the product's image.
         """
         if (
-            not request.env.user.has_group('website.group_website_restricted_editor')
-            or image_res_model not in ['product.product', 'product.template', 'product.image']
+                not request.env.user.has_group('website.group_website_restricted_editor')
+                or image_res_model not in ['product.product', 'product.template', 'product.image']
         ):
             raise NotFound()
 
@@ -538,9 +550,9 @@ class WebsiteSale(http.Controller):
     @http.route(['/shop/product/resequence-image'], type='json', auth='user', website=True)
     def resequence_product_image(self, image_res_model, image_res_id, move):
         if (
-            not request.env.user.has_group('website.group_website_restricted_editor')
-            or image_res_model not in ['product.product', 'product.template', 'product.image']
-            or move not in ['first', 'left', 'right', 'last']
+                not request.env.user.has_group('website.group_website_restricted_editor')
+                or image_res_model not in ['product.product', 'product.template', 'product.image']
+                or move not in ['first', 'left', 'right', 'last']
         ):
             raise NotFound()
 
@@ -578,12 +590,14 @@ class WebsiteSale(http.Controller):
         if new_image_idx == image_idx:
             return
         # We can not move an embedded image to the first position (main product image)
-        if image_res_model == 'product.image' and image_to_resequence.video_url and product_images[new_image_idx]._name != 'product.image':
+        if image_res_model == 'product.image' and image_to_resequence.video_url and product_images[
+            new_image_idx]._name != 'product.image':
             raise ValidationError(_("Can not resequence embedded image/video with a non compatible image."))
 
         # Swap images
         other_image = product_images[new_image_idx]
-        source_field = hasattr(image_to_resequence, 'video_url') and image_to_resequence.video_url and 'video_url' or 'image_1920'
+        source_field = hasattr(image_to_resequence,
+                               'video_url') and image_to_resequence.video_url and 'video_url' or 'image_1920'
         target_field = hasattr(other_image, 'video_url') and other_image.video_url and 'video_url' or 'image_1920'
         if target_field == 'video_url' and image_res_model == 'product.product':
             raise ValidationError(_("Can not resequence a video at first position."))
@@ -650,7 +664,8 @@ class WebsiteSale(http.Controller):
             'view_track': view_track,
         }
 
-    @http.route(['/shop/change_pricelist/<model("product.pricelist"):pricelist>'], type='http', auth="public", website=True, sitemap=False)
+    @http.route(['/shop/change_pricelist/<model("product.pricelist"):pricelist>'], type='http', auth="public",
+                website=True, sitemap=False)
     def pricelist_change(self, pricelist, **post):
         website = request.env['website'].get_current_website()
         redirect_url = request.httprequest.referrer
@@ -666,14 +681,18 @@ class WebsiteSale(http.Controller):
                     try:
                         min_price = float(min_price)
                         args['min_price'] = min_price and str(
-                            previous_price_list.currency_id._convert(min_price, pricelist.currency_id, request.website.company_id, fields.Date.today(), round=False)
+                            previous_price_list.currency_id._convert(min_price, pricelist.currency_id,
+                                                                     request.website.company_id, fields.Date.today(),
+                                                                     round=False)
                         )
                     except (ValueError, TypeError):
                         pass
                     try:
                         max_price = float(max_price)
                         args['max_price'] = max_price and str(
-                            previous_price_list.currency_id._convert(max_price, pricelist.currency_id, request.website.company_id, fields.Date.today(), round=False)
+                            previous_price_list.currency_id._convert(max_price, pricelist.currency_id,
+                                                                     request.website.company_id, fields.Date.today(),
+                                                                     round=False)
                         )
                     except (ValueError, TypeError):
                         pass
@@ -723,13 +742,15 @@ class WebsiteSale(http.Controller):
                 raise NotFound()
             if abandoned_order.state != 'draft':  # abandoned cart already finished
                 values.update({'abandoned_proceed': True})
-            elif revive == 'squash' or (revive == 'merge' and not request.session.get('sale_order_id')):  # restore old cart or merge with unexistant
+            elif revive == 'squash' or (revive == 'merge' and not request.session.get(
+                    'sale_order_id')):  # restore old cart or merge with unexistant
                 request.session['sale_order_id'] = abandoned_order.id
                 return request.redirect('/shop/cart')
             elif revive == 'merge':
                 abandoned_order.order_line.write({'order_id': request.session['sale_order_id']})
                 abandoned_order.action_cancel()
-            elif abandoned_order.id != request.session.get('sale_order_id'):  # abandoned cart found, user have to choose what to do
+            elif abandoned_order.id != request.session.get(
+                    'sale_order_id'):  # abandoned cart found, user have to choose what to do
                 values.update({'access_token': abandoned_order.access_token})
 
         values.update({
@@ -751,9 +772,9 @@ class WebsiteSale(http.Controller):
 
     @http.route(['/shop/cart/update'], type='http', auth="public", methods=['POST'], website=True)
     def cart_update(
-        self, product_id, add_qty=1, set_qty=0,
-        product_custom_attribute_values=None, no_variant_attribute_values=None,
-        express=False, **kwargs
+            self, product_id, add_qty=1, set_qty=0,
+            product_custom_attribute_values=None, no_variant_attribute_values=None,
+            express=False, **kwargs
     ):
         """This route is called when adding a product to cart (no options)."""
         sale_order = request.website.sale_get_order(force_create=True)
@@ -785,8 +806,8 @@ class WebsiteSale(http.Controller):
 
     @http.route(['/shop/cart/update_json'], type='json', auth="public", methods=['POST'], website=True, csrf=False)
     def cart_update_json(
-        self, product_id, line_id=None, add_qty=None, set_qty=None, display=True,
-        product_custom_attribute_values=None, no_variant_attribute_values=None, **kw
+            self, product_id, line_id=None, add_qty=None, set_qty=None, display=True,
+            product_custom_attribute_values=None, no_variant_attribute_values=None, **kw
     ):
         """
         This route is called :
@@ -977,7 +998,8 @@ class WebsiteSale(http.Controller):
 
         # Required fields from mandatory field function
         country_id = int(data.get('country_id', False))
-        required_fields += mode[1] == 'shipping' and self._get_mandatory_fields_shipping(country_id) or self._get_mandatory_fields_billing(country_id)
+        required_fields += mode[1] == 'shipping' and self._get_mandatory_fields_shipping(
+            country_id) or self._get_mandatory_fields_billing(country_id)
 
         # error message for empty required fields
         for field_name in required_fields:
@@ -1055,7 +1077,7 @@ class WebsiteSale(http.Controller):
             if k in authorized_fields and v is not None:
                 new_values[k] = v
             else:  # DEBUG ONLY
-                if k not in ('field_required', 'partner_id', 'callback', 'submitted'): # classic case
+                if k not in ('field_required', 'partner_id', 'callback', 'submitted'):  # classic case
                     _logger.debug("website_sale postprocess: %s value has been dropped (empty or not writable)" % k)
 
         if request.website.specific_user_account:
@@ -1115,7 +1137,7 @@ class WebsiteSale(http.Controller):
                     values = Partner.browse(partner_id)
             elif partner_id == -1:
                 mode = ('new', 'shipping')
-            else: # no mode - refresh without post?
+            else:  # no mode - refresh without post?
                 return request.redirect('/shop/checkout')
 
         # IF POSTED
@@ -1140,7 +1162,8 @@ class WebsiteSale(http.Controller):
                     order.partner_invoice_id = partner_id
                     if not kw.get('use_same'):
                         kw['callback'] = kw.get('callback') or \
-                            (not order.only_services and (mode[0] == 'edit' and '/shop/checkout' or '/shop/address'))
+                                         (not order.only_services and (
+                                                     mode[0] == 'edit' and '/shop/checkout' or '/shop/address'))
                     # We need to update the pricelist(by the one selected by the customer), because onchange_partner reset it
                     # We only need to update the pricelist when it is not redirected to /confirm_order
                     if kw.get('callback', False) != '/shop/confirm_order':
@@ -1328,7 +1351,8 @@ class WebsiteSale(http.Controller):
             else:
                 def_country_id = request.website.user_id.sudo().country_id
 
-        country = 'country_id' in values and values['country_id'] != '' and request.env['res.country'].browse(int(values['country_id']))
+        country = 'country_id' in values and values['country_id'] != '' and request.env['res.country'].browse(
+            int(values['country_id']))
         country = country and country.exists() or def_country_id
 
         res = {
@@ -1436,7 +1460,7 @@ class WebsiteSale(http.Controller):
             'fees_by_provider': fees_by_provider,
             'amount': order.amount_total,
             'minor_amount': payment_utils.to_minor_currency_units(
-               order.amount_total, order.currency_id
+                order.amount_total, order.currency_id
             ),
             'merchant_name': request.website.name,
             'currency': order.currency_id,
@@ -1593,7 +1617,8 @@ class WebsiteSale(http.Controller):
     def print_saleorder(self, **kwargs):
         sale_order_id = request.session.get('sale_last_order_id')
         if sale_order_id:
-            pdf, _ = request.env['ir.actions.report'].sudo()._render_qweb_pdf('sale.action_report_saleorder', [sale_order_id])
+            pdf, _ = request.env['ir.actions.report'].sudo()._render_qweb_pdf('sale.action_report_saleorder',
+                                                                              [sale_order_id])
             pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', u'%s' % len(pdf))]
             return request.make_response(pdf, headers=pdfhttpheaders)
         else:
@@ -1679,7 +1704,8 @@ class WebsiteSale(http.Controller):
             'items': self.order_lines_2_google_api(order.order_line),
         }
 
-    @http.route(['/shop/country_infos/<model("res.country"):country>'], type='json', auth="public", methods=['POST'], website=True)
+    @http.route(['/shop/country_infos/<model("res.country"):country>'], type='json', auth="public", methods=['POST'],
+                website=True)
     def country_infos(self, country, mode, **kw):
         return dict(
             fields=country.get_address_fields(),
@@ -1703,7 +1729,8 @@ class WebsiteSale(http.Controller):
     def products_recently_viewed_delete(self, product_id, **kwargs):
         visitor_sudo = request.env['website.visitor']._get_visitor_from_request()
         if visitor_sudo:
-            request.env['website.track'].sudo().search([('visitor_id', '=', visitor_sudo.id), ('product_id', '=', product_id)]).unlink()
+            request.env['website.track'].sudo().search(
+                [('visitor_id', '=', visitor_sudo.id), ('product_id', '=', product_id)]).unlink()
         return {}
 
 
@@ -1749,7 +1776,8 @@ class PaymentPortal(payment_portal.PaymentPortal):
         if not kwargs.get('amount'):
             kwargs['amount'] = order_sudo.amount_total
 
-        if tools.float_compare(kwargs['amount'], order_sudo.amount_total, precision_rounding=order_sudo.currency_id.rounding):
+        if tools.float_compare(kwargs['amount'], order_sudo.amount_total,
+                               precision_rounding=order_sudo.currency_id.rounding):
             raise ValidationError(_("The cart has been updated. Please refresh the page."))
 
         tx_sudo = self._create_transaction(
@@ -1801,12 +1829,12 @@ class CustomerPortal(portal.CustomerPortal):
                 'product_id': line.product_id.id,
                 'combination': combination.ids,
                 'no_variant_attribute_values': [
-                    { # Same input format as provided by product configurator
+                    {  # Same input format as provided by product configurator
                         'value': ptav.id,
                     } for ptav in line.product_no_variant_attribute_value_ids
                 ],
                 'product_custom_attribute_values': [
-                    { # Same input format as provided by product configurator
+                    {  # Same input format as provided by product configurator
                         'custom_product_template_attribute_value_id': pcav.custom_product_template_attribute_value_id.id,
                         'custom_value': pcav.custom_value,
                     } for pcav in line.product_custom_attribute_value_ids
@@ -1819,7 +1847,8 @@ class CustomerPortal(portal.CustomerPortal):
                 'has_image': bool(line.product_id.image_128),
             }
             if res['add_to_cart_allowed']:
-                res['combinationInfo'] = line.product_id.product_tmpl_id.with_context(**self._sale_reorder_get_line_context())\
+                res['combinationInfo'] = line.product_id.product_tmpl_id.with_context(
+                    **self._sale_reorder_get_line_context()) \
                     ._get_combination_info(combination, res['product_id'], res['qty'], pricelist)
             else:
                 res['combinationInfo'] = {}
