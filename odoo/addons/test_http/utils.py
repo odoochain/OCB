@@ -1,7 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from html.parser import HTMLParser
-from odoo.http import FilesystemSessionStore
+from odoo.http import FilesystemSessionStore, SESSION_LIFETIME
 from odoo.tools._vendor.sessions import SessionStore
 
 
@@ -30,7 +30,7 @@ class MemorySessionStore(SessionStore):
     def rotate(self, session, env):
         FilesystemSessionStore.rotate(self, session, env)
 
-    def vacuum(self):
+    def vacuum(self, max_lifetime=SESSION_LIFETIME):
         return
 
 
