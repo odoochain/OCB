@@ -126,6 +126,7 @@ import re
 import threading
 import time
 import traceback
+import urllib
 import warnings
 import zlib
 from abc import ABC, abstractmethod
@@ -145,9 +146,10 @@ import werkzeug.routing
 import werkzeug.security
 import werkzeug.wrappers
 import werkzeug.wsgi
-from werkzeug.urls import URL, url_parse, url_encode, url_quote
+from werkzeug.urls import url_parse, url_encode, url_quote
 from werkzeug.exceptions import (HTTPException, BadRequest, Forbidden,
                                  NotFound, InternalServerError)
+
 try:
     from werkzeug.middleware.proxy_fix import ProxyFix as ProxyFix_
     ProxyFix = functools.partial(ProxyFix_, x_for=1, x_proto=1, x_host=1)
@@ -164,7 +166,7 @@ from .exceptions import UserError, AccessError, AccessDenied
 from .modules.module import get_manifest
 from .modules.registry import Registry
 from .service import security, model as service_model
-from .tools import (config, consteq, date_utils, file_path, parse_version,
+from .tools import (config, AbsoluteURL, consteq, date_utils, file_path, parse_version,
                     profiler, submap, unique, ustr,)
 from .tools.geoipresolver import GeoIPResolver
 from .tools.func import filter_kwargs, lazy_property
@@ -1458,8 +1460,8 @@ class Request:
 
     def redirect(self, location, code=303, local=True):
         # compatibility, Werkzeug support URL as location
-        if isinstance(location, URL):
-            location = location.to_url()
+        if isinstance(location, AbsoluteURL):
+            location = urllib.parse.urlunsplit(location)
         if local:
             location = '/' + url_parse(location).replace(scheme='', netloc='').to_url().lstrip('/')
         if self.db:

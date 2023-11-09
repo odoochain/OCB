@@ -9,6 +9,7 @@ from . import pycompat
 from . import win32
 from .barcode import *
 from .config import config
+from .config import AbsoluteURL
 from .date_utils import *
 from .float_utils import *
 from .func import *
