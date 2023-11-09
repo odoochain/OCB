@@ -2,9 +2,11 @@ import base64
 import hashlib
 import hmac
 import json
+
 import requests
 import time
-import werkzeug.urls
+from urllib.parse import parse_qs,urlsplit
+from werkzeug.urls import uri_to_iri
 
 
 class OdooEdiProxyAuth(requests.auth.AuthBase):
@@ -25,7 +27,7 @@ class OdooEdiProxyAuth(requests.auth.AuthBase):
             return request
         # craft the message (timestamp|url path|id_client|query params|body content)
         msg_timestamp = int(time.time())
-        parsed_url = werkzeug.urls.url_parse(request.path_url)
+        parsed_url = urlsplit(uri_to_iri(request.path_url))
 
         body = request.body
         if isinstance(body, bytes):
@@ -36,7 +38,7 @@ class OdooEdiProxyAuth(requests.auth.AuthBase):
             msg_timestamp,  # timestamp
             parsed_url.path,  # url path
             self.id_client,
-            json.dumps(werkzeug.urls.url_decode(parsed_url.query), sort_keys=True),  # url query params sorted by key
+            json.dumps(parse_qs(parsed_url.query), sort_keys=True),  # url query params sorted by key
             json.dumps(body, sort_keys=True))  # http request body
         h = hmac.new(base64.b64decode(self.refresh_token), message.encode(), digestmod=hashlib.sha256)
 
