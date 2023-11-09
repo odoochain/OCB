@@ -1,8 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import logging
-
-from werkzeug import urls
+from urllib.parse import urljoin
 
 from odoo import _, api, models
 from odoo.exceptions import ValidationError
@@ -39,10 +38,10 @@ class PaymentTransaction(models.Model):
             total_fee = self.amount
         rendering_values = {
             '_input_charset': 'utf-8',
-            'notify_url': urls.url_join(base_url, AlipayController._webhook_url),
+            'notify_url': urljoin(base_url, AlipayController._webhook_url),
             'out_trade_no': self.reference,
             'partner': self.provider_id.alipay_merchant_partner_id,
-            'return_url': urls.url_join(base_url, AlipayController._return_url),
+            'return_url': urljoin(base_url, AlipayController._return_url),
             'subject': self.reference,
             'total_fee': f'{total_fee:.2f}',
         }

@@ -3,9 +3,10 @@
 
 from ast import literal_eval
 from collections import defaultdict
+from urllib.parse import urlencode
+
 from dateutil.relativedelta import relativedelta
 import json
-import werkzeug.urls
 
 from pytz import utc, timezone
 
@@ -428,7 +429,7 @@ class Event(models.Model):
         }
         if self.address_id:
             params.update(location=self.address_inline)
-        encoded_params = werkzeug.urls.url_encode(params)
+        encoded_params = urlencode(params)
         google_url = GOOGLE_CALENDAR_URL + encoded_params
         iCal_url = '/event/%d/ics?%s' % (self.id, encoded_params)
         return {'google_url': google_url, 'iCal_url': iCal_url}

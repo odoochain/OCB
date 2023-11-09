@@ -3,7 +3,7 @@
 
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
-from werkzeug.urls import url_encode
+from urllib.parse import urlencode
 
 from odoo import api, fields, models
 from odoo.osv import expression

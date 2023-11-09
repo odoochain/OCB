@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+from urllib.parse import urlparse, parse_qs
+
 from odoo.tests.common import HttpCase
-from werkzeug.urls import url_parse
 
 
 class TestResetPassword(HttpCase):
@@ -18,10 +19,10 @@ class TestResetPassword(HttpCase):
             'email': 'noop@example.com',
         })
 
-        self.assertEqual(test_user.email, url_parse(test_user.with_context(create_user=True).signup_url).decode_query()["signup_email"], "query must contain 'signup_email'")
+        self.assertEqual(test_user.email, parse_qs(urlparse(test_user.with_context(create_user=True).signup_url).query)["signup_email"], "query must contain 'signup_email'")
 
         # Invalidate signup_url to skip signup process
         self.env.invalidate_all()
         test_user.action_reset_password()
 
-        self.assertNotIn("signup_email", url_parse(test_user.signup_url).decode_query(), "query should not contain 'signup_email'")
+        self.assertNotIn("signup_email", parse_qs(urlparse(test_user.signup_url).query), "query should not contain 'signup_email'")

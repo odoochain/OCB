@@ -4,7 +4,7 @@ import json
 import logging
 import operator
 
-from werkzeug.urls import url_encode
+from urllib.parse import urlencode
 
 import odoo
 import odoo.modules.registry
@@ -75,7 +75,7 @@ class Session(http.Controller):
             'state': json.dumps({'d': request.db, 'u': ICP.get_param('web.base.url')}),
             'scope': 'userinfo',
         }
-        return 'https://accounts.odoo.com/oauth2/auth?' + url_encode(params)
+        return 'https://accounts.odoo.com/oauth2/auth?' + urlencode(params)
 
     @http.route('/web/session/destroy', type='json', auth="user")
     def destroy(self):

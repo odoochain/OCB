@@ -36,7 +36,7 @@ class PaymentTransaction(models.Model):
 
         base_url = self.provider_id.get_base_url()
         partner_first_name, partner_last_name = payment_utils.split_partner_name(self.partner_name)
-        webhook_url = urls.url_join(base_url, PaypalController._webhook_url)
+        webhook_url = urljoin(base_url, PaypalController._webhook_url)
         return {
             'address1': self.partner_address,
             'amount': self.amount,
@@ -52,7 +52,7 @@ class PaymentTransaction(models.Model):
             'last_name': partner_last_name,
             'lc': self.partner_lang,
             'notify_url': webhook_url if self.provider_id.paypal_use_ipn else None,
-            'return_url': urls.url_join(base_url, PaypalController._return_url),
+            'return_url': urljoin(base_url, PaypalController._return_url),
             'state': self.partner_state_id.name,
             'zip_code': self.partner_zip,
             'api_url': self.provider_id._paypal_get_api_url(),

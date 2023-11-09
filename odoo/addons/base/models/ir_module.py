@@ -2,6 +2,8 @@
 
 import base64
 from collections import defaultdict, OrderedDict
+from urllib.parse import urlparse
+
 from decorator import decorator
 from operator import attrgetter
 import io
@@ -13,7 +15,6 @@ import threading
 import zipfile
 
 import requests
-import werkzeug.urls
 
 from docutils import nodes
 from docutils.core import publish_string
@@ -805,7 +806,7 @@ class Module(models.Model):
             _logger.warning(msg)
             raise UserError(msg)
 
-        apps_server = werkzeug.urls.url_parse(self.get_apps_server())
+        apps_server = urlparse(self.get_apps_server())
 
         OPENERP = odoo.release.product_name.lower()
         tmp = tempfile.mkdtemp()
@@ -816,7 +817,7 @@ class Module(models.Model):
                 if not url:
                     continue    # nothing to download, local version is already the last one
 
-                up = werkzeug.urls.url_parse(url)
+                up = urlparse(url)
                 if up.scheme != apps_server.scheme or up.netloc != apps_server.netloc:
                     raise AccessDenied()
 

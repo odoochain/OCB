@@ -7,6 +7,7 @@ as well as render a few fields differently.
 
 Also, adds methods to convert values back to Odoo models.
 """
+from urllib.parse import urlparse
 
 import babel
 import base64
@@ -21,7 +22,6 @@ import requests
 from datetime import datetime
 from lxml import etree, html
 from PIL import Image as I
-from werkzeug import urls
 
 import odoo.modules
 
@@ -438,7 +438,7 @@ class Image(models.AbstractModel):
             return False
         url = element.find('img').get('src')
 
-        url_object = urls.url_parse(url)
+        url_object = urlparse(url)
         if url_object.path.startswith('/web/image'):
             fragments = url_object.path.split('/')
             query = url_object.decode_query()
@@ -462,7 +462,7 @@ class Image(models.AbstractModel):
         return self.load_remote_url(url)
 
     def load_local_url(self, url):
-        match = self.local_url_re.match(urls.url_parse(url).path)
+        match = self.local_url_re.match(urlparse(url).path)
 
         rest = match.group('rest')
         for sep in os.sep, os.altsep:

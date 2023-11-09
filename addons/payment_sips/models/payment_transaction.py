@@ -65,8 +65,8 @@ class PaymentTransaction(models.Model):
             'amount': payment_utils.to_minor_currency_units(self.amount, self.currency_id),
             'currencyCode': SUPPORTED_CURRENCIES[self.currency_id.name],  # The ISO 4217 code
             'merchantId': self.provider_id.sips_merchant_id,
-            'normalReturnUrl': urls.url_join(base_url, SipsController._return_url),
-            'automaticResponseUrl': urls.url_join(base_url, SipsController._webhook_url),
+            'normalReturnUrl': urljoin(base_url, SipsController._return_url),
+            'automaticResponseUrl': urljoin(base_url, SipsController._webhook_url),
             'transactionReference': self.reference,
             'statementReference': self.reference,
             'keyVersion': self.provider_id.sips_key_version,

@@ -4,6 +4,8 @@
 import ast
 import base64
 import datetime
+from urllib.parse import urlencode
+
 import dateutil
 import email
 import email.policy
@@ -21,7 +23,6 @@ from collections import namedtuple
 from email.message import EmailMessage
 from email import message_from_string
 from lxml import etree
-from werkzeug import urls
 from xmlrpc import client as xmlrpclib
 from markupsafe import Markup
 
@@ -2995,7 +2996,7 @@ class MailThread(models.AbstractModel):
             token = self._notify_encode_link(base_link, params)
             params['token'] = token
 
-        link = '%s?%s' % (base_link, urls.url_encode(params))
+        link = '%s?%s' % (base_link, urlencode(params))
         if self:
             link = self[0].get_base_url() + link
 

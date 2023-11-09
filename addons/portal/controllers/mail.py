@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
-from werkzeug import urls
+from urllib.parse import urlparse, urlencode, parse_qs, urlunsplit
 from werkzeug.exceptions import NotFound, Forbidden
 
 from odoo import http
@@ -249,9 +248,9 @@ class MailController(mail.MailController):
                         hash = kwargs.get('hash')
                         url = record_action['url']
                         if pid and hash:
-                            url = urls.url_parse(url)
-                            url_params = url.decode_query()
+                            url = urlparse(url)
+                            url_params = parse_qs(url.query)
                             url_params.update([("pid", pid), ("hash", hash)])
-                            url = url.replace(query=urls.url_encode(url_params)).to_url()
+                            url = urlunsplit(url._replace(query=urlencode(url_params)))
                         return request.redirect(url)
         return super(MailController, cls)._redirect_to_record(model, res_id, access_token=access_token, **kwargs)

@@ -6,7 +6,7 @@ import os
 import re
 import traceback
 import threading
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin, urlsplit, unquote_plus
 
 import unicodedata
 import werkzeug.exceptions
@@ -147,7 +147,7 @@ def url_lang(path_or_uri, lang_code=None):
     try:
         url = urlsplit(location)
     except ValueError:
-        # e.g. Invalid IPv6 URL, `werkzeug.urls.url_parse('http://]')`
+        # e.g. Invalid IPv6 URL, `urlparse('http://]')`
         url = False
     # relative URL with either a path or a force_lang
     if url and not url.netloc and not url.scheme and (url.path or force_lang):
@@ -562,8 +562,8 @@ class IrHttp(models.AbstractModel):
                 except odoo.exceptions.MissingError:
                     raise werkzeug.exceptions.NotFound()
                 assert path is not None
-                generated_path = werkzeug.urls.url_unquote_plus(path)
-                current_path = werkzeug.urls.url_unquote_plus(request.httprequest.path)
+                generated_path = unquote_plus(path)
+                current_path = unquote_plus(request.httprequest.path)
                 if generated_path != current_path:
                     if request.lang != cls._get_default_lang():
                         path = f'/{request.lang.url_code}{path}'

@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
-import werkzeug
+from urllib.parse import urlencode
 from werkzeug.exceptions import Forbidden, NotFound
 
 from odoo import exceptions, http, tools
@@ -36,7 +36,7 @@ class WebsiteEventBoothController(WebsiteEventController):
         # checkbox, we re-parse the form using getlist to get them all
         event_booth_ids = request.httprequest.form.getlist('event_booth_ids')
 
-        return request.redirect(('/event/%s/booth/register_form?' % event.id) + werkzeug.urls.url_encode({
+        return request.redirect(('/event/%s/booth/register_form?' % event.id) + urlencode({
             'booth_ids': ','.join(event_booth_ids),
             'booth_category_id': int(booth_category_id),
         }))

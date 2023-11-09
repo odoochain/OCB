@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from urllib.parse import urlencode
 
 import babel.dates
 import pytz
@@ -311,7 +312,7 @@ class WebsiteEventController(http.Controller):
         registrations = self._process_attendees_form(event, post)
         attendees_sudo = self._create_attendees_from_registration_post(event, registrations)
 
-        return request.redirect(('/event/%s/registration/success?' % event.id) + werkzeug.urls.url_encode({'registration_ids': ",".join([str(id) for id in attendees_sudo.ids])}))
+        return request.redirect(('/event/%s/registration/success?' % event.id) + urlencode({'registration_ids': ",".join([str(id) for id in attendees_sudo.ids])}))
 
     @http.route(['/event/<model("event.event"):event>/registration/success'], type='http', auth="public", methods=['GET'], website=True, sitemap=False)
     def event_registration_success(self, event, registration_ids):

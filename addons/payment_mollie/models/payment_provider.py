@@ -1,9 +1,9 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import logging
+from urllib.parse import urljoin
 
 import requests
-from werkzeug import urls
 
 from odoo import _, api, fields, models, service
 from odoo.exceptions import ValidationError
@@ -52,7 +52,7 @@ class PaymentProvider(models.Model):
         """
         self.ensure_one()
         endpoint = f'/v2/{endpoint.strip("/")}'
-        url = urls.url_join('https://api.mollie.com/', endpoint)
+        url = urljoin('https://api.mollie.com/', endpoint)
 
         odoo_version = service.common.exp_version()['server_version']
         module_version = self.env.ref('base.module_payment_mollie').installed_version

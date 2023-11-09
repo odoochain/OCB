@@ -2,9 +2,9 @@
 
 import logging
 import pprint
+from urllib.parse import urljoin
 
 import requests
-from werkzeug.urls import url_join
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
@@ -76,7 +76,7 @@ class PaymentProvider(models.Model):
         """
         self.ensure_one()
 
-        url = url_join('https://api.flutterwave.com/v3/', endpoint)
+        url = urljoin('https://api.flutterwave.com/v3/', endpoint)
         headers = {'Authorization': f'Bearer {self.flutterwave_secret_key}'}
         try:
             if method == 'GET':

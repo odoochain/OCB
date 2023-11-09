@@ -3,7 +3,7 @@
 
 import json
 
-from werkzeug.urls import url_encode
+from urllib.parse import urlencode
 
 from odoo import tests
 from odoo.tools import mute_logger, submap
@@ -65,7 +65,7 @@ class TestControllers(tests.HttpCase):
         self.authenticate("admin", "admin")
         for url in urls:
             resp = self.url_open(f'/@{url}')
-            backend_params = url_encode(dict(action='website.website_preview', path=url))
+            backend_params = urlencode(dict(action='website.website_preview', path=url))
             self.assertEqual(
                 resp.url, f'{base_url}/web#{backend_params}',
                 "Internal user should have landed in the backend")

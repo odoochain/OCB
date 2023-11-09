@@ -53,7 +53,7 @@ class TestMailingControllers(MassMailCommon, HttpCase):
         self.assertFalse(mailing_trace.open_datetime)
         self.assertEqual(mailing_trace.trace_status, 'sent')
 
-        short_link_url = werkzeug.urls.url_join(
+        short_link_url = werkzeug.urljoin(
             mail.get_base_url(),
             f'r/{link_tracker_code.code}/m/{mailing_trace.id}'
         )
@@ -86,7 +86,7 @@ class TestMailingControllers(MassMailCommon, HttpCase):
         self.assertEqual(mailing_trace.open_datetime, self._reference_now)
         self.assertEqual(mailing_trace.trace_status, 'open')
 
-        track_url = werkzeug.urls.url_join(
+        track_url = werkzeug.urljoin(
             mail.get_base_url(),
             'mail/track/%s/fake_token/blank.gif' % mail.id
         )

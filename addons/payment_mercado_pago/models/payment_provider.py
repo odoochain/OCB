@@ -2,9 +2,9 @@
 
 import logging
 import pprint
+from urllib.parse import urljoin
 
 import requests
-from werkzeug import urls
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
@@ -54,7 +54,7 @@ class Paymentprovider(models.Model):
         """
         self.ensure_one()
 
-        url = urls.url_join('https://api.mercadopago.com', endpoint)
+        url = urljoin('https://api.mercadopago.com', endpoint)
         headers = {'Authorization': f'Bearer {self.mercado_pago_access_token}'}
         try:
             if method == 'GET':

@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import re
-import werkzeug.urls
+from urllib.parse import urljoin, urlparse
 
 from odoo import api, fields, models, tools
 
@@ -26,7 +26,7 @@ class MailMail(models.Model):
 
     def _get_tracking_url(self):
         token = tools.hmac(self.env(su=True), 'mass_mailing-mail_mail-open', self.id)
-        return werkzeug.urls.url_join(self.get_base_url(), 'mail/track/%s/%s/blank.gif' % (self.id, token))
+        return urljoin(self.get_base_url(), 'mail/track/%s/%s/blank.gif' % (self.id, token))
 
     def _send_prepare_body(self):
         """ Override to add the tracking URL to the body and to add
@@ -40,7 +40,7 @@ class MailMail(models.Model):
                 href = match[0]
                 url = match[1]
 
-                parsed = werkzeug.urls.url_parse(url, scheme='http')
+                parsed = urlparse(url, scheme='http')
 
                 if parsed.scheme.startswith('http') and parsed.path.startswith('/r/'):
                     new_href = href.replace(url, url + '/m/' + str(self.mailing_trace_ids[0].id))

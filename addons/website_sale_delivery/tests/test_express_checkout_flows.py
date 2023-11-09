@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
+from urllib.parse import urljoin
 from uuid import uuid4
 from unittest.mock import Mock, patch
 from werkzeug import urls
@@ -144,7 +145,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             return_value=self.rate_shipment_result
         ):
             self._make_json_rpc_request(
-                urls.url_join(
+                urljoin(
                     self.base_url(), WebsiteSaleDeliveryController._express_checkout_shipping_route
                 ), data={
                     'partial_shipping_address': dict(self.express_checkout_anonymized_shipping_values)
@@ -176,7 +177,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             return_value=self.rate_shipment_result
         ):
             self._make_json_rpc_request(
-                urls.url_join(
+                urljoin(
                     self.base_url(), WebsiteSaleDeliveryController._express_checkout_shipping_route
                 ), data={
                     'partial_shipping_address': dict(self.express_checkout_anonymized_shipping_values)
@@ -184,7 +185,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             )
             new_partner = self.sale_order.partner_shipping_id
             self._make_json_rpc_request(
-                urls.url_join(
+                urljoin(
                     self.base_url(), WebsiteSaleDeliveryController._express_checkout_shipping_route
                 ), data={
                     'partial_shipping_address': dict(self.express_checkout_anonymized_shipping_values_2)
@@ -214,7 +215,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             return_value=self.rate_shipment_result
         ):
             self._make_json_rpc_request(
-                urls.url_join(
+                urljoin(
                     self.base_url(), WebsiteSaleDeliveryController._express_checkout_shipping_route
                 ), data={
                     'partial_shipping_address': dict(self.express_checkout_anonymized_shipping_values)
@@ -236,7 +237,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             return_value=self.rate_shipment_result
         ):
             self._make_json_rpc_request(
-                urls.url_join(
+                urljoin(
                     self.base_url(), WebsiteSaleDeliveryController._express_checkout_shipping_route
                 ), data={
                     'partial_shipping_address': dict(self.express_checkout_anonymized_shipping_values)
@@ -270,7 +271,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             return_value=self.rate_shipment_result
         ):
             self._make_json_rpc_request(
-                urls.url_join(
+                urljoin(
                     self.base_url(), WebsiteSaleDeliveryController._express_checkout_shipping_route
                 ), data={
                     'partial_shipping_address': dict(self.express_checkout_anonymized_shipping_values)
@@ -278,7 +279,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             )
             new_partner = self.sale_order.partner_shipping_id
             self._make_json_rpc_request(
-                urls.url_join(
+                urljoin(
                     self.base_url(), WebsiteSaleDeliveryController._express_checkout_shipping_route
                 ), data={
                     'partial_shipping_address': dict(self.express_checkout_anonymized_shipping_values_2)
@@ -326,7 +327,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             return_value=self.rate_shipment_result
         ):
             shipping_options = self._make_json_rpc_request(
-                urls.url_join(
+                urljoin(
                     self.base_url(), WebsiteSaleDeliveryController._express_checkout_shipping_route
                 ), data={
                     'partial_shipping_address': dict(self.express_checkout_anonymized_demo_shipping_values)
@@ -334,7 +335,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             )
             self.assertEqual(self.sale_order.partner_id.id, self.user_demo.partner_id.id)
 
-            self._make_json_rpc_request(urls.url_join(self.base_url(), '/shop/express'), data={
+            self._make_json_rpc_request(urljoin(self.base_url(), '/shop/express'), data={
                 'billing_address': dict(self.express_checkout_billing_values),
                 'shipping_address': dict(self.express_checkout_demo_shipping_values),
                 'shipping_option': shipping_options[0],
@@ -356,7 +357,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             # Won't create a new partner because the partial information are the same the an
             # exisiting partner linked to the SO
             shipping_options = self._make_json_rpc_request(
-                urls.url_join(
+                urljoin(
                     self.base_url(), WebsiteSaleDeliveryController._express_checkout_shipping_route
                 ), data={
                     'partial_shipping_address': dict(self.express_checkout_anonymized_demo_shipping_values)
@@ -367,7 +368,7 @@ class TestWebsiteSaleDeliveryExpressCheckoutFlows(HttpCaseWithUserDemo):
             # Will create a new partner because the complete shipping information are different than
             # the partner actually selected.
             self._make_json_rpc_request(
-                urls.url_join(
+                urljoin(
                     self.base_url(),
                     WebsiteSaleDeliveryController._express_checkout_route
                 ), data={

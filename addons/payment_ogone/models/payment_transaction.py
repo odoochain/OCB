@@ -62,7 +62,7 @@ class PaymentTransaction(models.Model):
         if self.provider_code != 'ogone':
             return res
 
-        return_url = urls.url_join(self.provider_id.get_base_url(), OgoneController._return_url)
+        return_url = urljoin(self.provider_id.get_base_url(), OgoneController._return_url)
         rendering_values = {
             'PSPID': self.provider_id.ogone_pspid,
             'ORDERID': self.reference,

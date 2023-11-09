@@ -6,8 +6,9 @@ import datetime
 import hmac
 import json
 import logging
+from urllib.parse import urlparse, urlencode, urlunsplit, parse_qs
+
 import odoo
-import werkzeug
 
 from odoo import http
 from odoo.http import request
@@ -40,8 +41,8 @@ class Authenticate(http.Controller):
         old route name "/mail_client_extension/auth/confirm is deprecated as of saas-14.3,it is not needed for newer
         versions of the mail plugin but necessary for supporting older versions
         """
-        parsed_redirect = werkzeug.urls.url_parse(redirect)
-        params = parsed_redirect.decode_query()
+        parsed_redirect = urlparse(redirect)
+        params = parse_qs(parsed_redirect.query)
         if do:
             name = friendlyname if not info else f'{friendlyname}: {info}'
             auth_code = self._generate_auth_code(scope, name)
@@ -50,8 +51,8 @@ class Authenticate(http.Controller):
             params.update({'success': 1, 'auth_code': auth_code, 'state': kw.get('state', '')})
         else:
             params.update({'success': 0, 'state': kw.get('state', '')})
-        updated_redirect = parsed_redirect.replace(query=werkzeug.urls.url_encode(params))
-        return request.redirect(updated_redirect.to_url(), local=False)
+        updated_redirect = parsed_redirect._replace(query=urlencode(params))
+        return request.redirect(urlunsplit(updated_redirect), local=False)
 
     # In this case, an exception will be thrown in case of preflight request if only POST is allowed.
     @http.route(['/mail_client_extension/auth/access_token', '/mail_plugin/auth/access_token'], type='json', auth="none", cors="*",

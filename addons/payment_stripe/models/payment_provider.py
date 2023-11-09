@@ -2,9 +2,9 @@
 
 import logging
 import uuid
+from urllib.parse import urlparse, urljoin, urlencode
 
 import requests
-from werkzeug.urls import url_encode, url_join, url_parse
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -216,7 +216,7 @@ class PaymentProvider(models.Model):
         """
         self.ensure_one()
 
-        web_domain = url_parse(self.get_base_url()).netloc
+        web_domain = urlparse(self.get_base_url()).netloc
         response_content = self._stripe_make_request('apple_pay/domains', payload={
             'domain_name': web_domain
         })
@@ -235,7 +235,7 @@ class PaymentProvider(models.Model):
         }
 
     def _get_stripe_webhook_url(self):
-        return url_join(self.get_base_url(), StripeController._webhook_url)
+        return urljoin(self.get_base_url(), StripeController._webhook_url)
 
     # === BUSINESS METHODS - PAYMENT FLOW === #
 
@@ -257,7 +257,7 @@ class PaymentProvider(models.Model):
         """
         self.ensure_one()
 
-        url = url_join('https://api.stripe.com/v1/', endpoint)
+        url = urljoin('https://api.stripe.com/v1/', endpoint)
         headers = {
             'AUTHORIZATION': f'Bearer {stripe_utils.get_secret_key(self)}',
             'Stripe-Version': const.API_VERSION,  # SetupIntent requires a specific version.
@@ -373,8 +373,8 @@ class PaymentProvider(models.Model):
 
         account_link = self._stripe_make_proxy_request('account_links', payload={
             'account': connected_account_id,
-            'return_url': f'{url_join(base_url, return_url)}?{url_encode(return_params)}',
-            'refresh_url': f'{url_join(base_url, refresh_url)}?{url_encode(refresh_params)}',
+            'return_url': f'{urljoin(base_url, return_url)}?{urlencode(return_params)}',
+            'refresh_url': f'{urljoin(base_url, refresh_url)}?{urlencode(refresh_params)}',
             'type': 'account_onboarding',
         })
         return account_link['url']
@@ -398,7 +398,7 @@ class PaymentProvider(models.Model):
                 'proxy_data': self._stripe_prepare_proxy_data(stripe_payload=payload),
             },
         }
-        url = url_join(const.PROXY_URL, f'{version}/{endpoint}')
+        url = urljoin(const.PROXY_URL, f'{version}/{endpoint}')
         try:
             response = requests.post(url=url, json=proxy_payload, timeout=60)
             response.raise_for_status()

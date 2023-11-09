@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
+from urllib.parse import urljoin
 from odoo import models, _
-
-from werkzeug import urls
 
 
 class LinkTracker(models.Model):
@@ -20,4 +18,4 @@ class LinkTracker(models.Model):
     def _compute_short_url_host(self):
         for tracker in self:
             base_url = self.env['website'].get_current_website().get_base_url()
-            tracker.short_url_host = urls.url_join(base_url, '/r/')
+            tracker.short_url_host = urljoin(base_url, '/r/')

@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from lxml import html
-from werkzeug.urls import url_encode
+from urllib.parse import urlencode
 
 from odoo.tests import HttpCase, tagged
 from odoo.addons.website.tools import MockRequest
@@ -29,8 +29,8 @@ class TestSnippets(HttpCase):
             's_map',  # avoid call to maps.google.com
         ]
         snippets_names = ','.join(set(el.attrib['data-snippet'] for el in data_snippet_els if el.attrib['data-snippet'] not in blacklist))
-        snippets_names_encoded = url_encode({'snippets_names': snippets_names})
-        path = url_encode({
+        snippets_names_encoded = urlencode({'snippets_names': snippets_names})
+        path = urlencode({
             'path': '/?' + snippets_names_encoded
         })
         self.start_tour("/web#action=website.website_preview&%s" % path, "snippets_all_drag_and_drop", login='admin', timeout=300)

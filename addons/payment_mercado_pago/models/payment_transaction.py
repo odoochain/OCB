@@ -2,8 +2,7 @@
 
 import logging
 import pprint
-
-from werkzeug import urls
+from urllib.parse import urljoin
 
 from odoo import _, models
 from odoo.exceptions import UserError, ValidationError
@@ -54,8 +53,8 @@ class PaymentTransaction(models.Model):
         :rtype: dict
         """
         base_url = self.provider_id.get_base_url()
-        return_url = urls.url_join(base_url, MercadoPagoController._return_url)
-        webhook_url = urls.url_join(
+        return_url = urljoin(base_url, MercadoPagoController._return_url)
+        webhook_url = urljoin(
             base_url, f'{MercadoPagoController._webhook_url}/{self.reference}'
         )  # Append the reference to identify the transaction from the webhook notification data.
 

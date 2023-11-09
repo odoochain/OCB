@@ -19,7 +19,7 @@ class SMSComposer(models.TransientModel):
     # ------------------------------------------------------------
 
     def _get_unsubscribe_url(self, res_id, trace_code, number):
-        return werkzeug.urls.url_join(
+        return werkzeug.urljoin(
             self.get_base_url(),
             '/sms/%s/%s' % (self.mailing_id.id, trace_code)
         )

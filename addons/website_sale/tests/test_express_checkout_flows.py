@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
+from urllib.parse import urljoin
 from uuid import uuid4
 from werkzeug import urls
 
@@ -79,7 +80,7 @@ class TestWebsiteSaleExpressCheckoutFlows(HttpCaseWithUserDemo):
         root.session_store.save(session)
 
         self._make_json_rpc_request(
-            urls.url_join(
+            urljoin(
                 self.base_url(), WebsiteSaleController._express_checkout_route
             ), data={
                 'billing_address': dict(self.express_checkout_billing_values)
@@ -106,7 +107,7 @@ class TestWebsiteSaleExpressCheckoutFlows(HttpCaseWithUserDemo):
         root.session_store.save(session)
 
         self._make_json_rpc_request(
-            urls.url_join(
+            urljoin(
                 self.base_url(), WebsiteSaleController._express_checkout_route
             ), data={
                 'billing_address': {
@@ -153,7 +154,7 @@ class TestWebsiteSaleExpressCheckoutFlows(HttpCaseWithUserDemo):
         root.session_store.save(session)
 
         self._make_json_rpc_request(
-            urls.url_join(
+            urljoin(
                 self.base_url(), WebsiteSaleController._express_checkout_route
             ), data={
                 'billing_address': dict(self.express_checkout_billing_values)
@@ -174,7 +175,7 @@ class TestWebsiteSaleExpressCheckoutFlows(HttpCaseWithUserDemo):
         root.session_store.save(session)
 
         self._make_json_rpc_request(
-            urls.url_join(
+            urljoin(
                 self.base_url(), WebsiteSaleController._express_checkout_route
             ), data={
                 'billing_address': dict(self.express_checkout_billing_values)

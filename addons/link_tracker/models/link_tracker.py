@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import random
-from urllib.parse import urljoin, urlsplit, urlencode, urlunsplit
+from urllib.parse import urljoin, urlsplit, urlencode, urlunsplit, parse_qs
 
 import requests
 import string
@@ -109,7 +109,7 @@ class LinkTracker(models.Model):
                     attr = attr.name
                 if attr:
                     utms[key] = attr
-            utms.update(parsed.decode_query())
+            utms.update(parse_qs(parsed.query))
             tracker.redirected_url = urlunsplit(parsed._replace(query=urlencode(utms)))
 
     @api.model

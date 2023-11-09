@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import logging
+from urllib.parse import urljoin
 
 from werkzeug import urls
 
@@ -90,7 +91,7 @@ class PaymentTransaction(models.Model):
             'reference': self.reference,
             'currency_code': const.CURRENCY_MAPPING[self.provider_id.asiapay_currency_id.name],
             'mps_mode': 'SCP',
-            'return_url': urls.url_join(base_url, AsiaPayController._return_url),
+            'return_url': urljoin(base_url, AsiaPayController._return_url),
             'payment_type': 'N',
             'language': get_language_code(lang),
             'payment_method': 'ALL',

@@ -2,6 +2,8 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import datetime
+from urllib.parse import urlencode
+
 import werkzeug.urls
 
 from collections import OrderedDict
@@ -105,7 +107,8 @@ class WebsiteAccount(CustomerPortal):
             'all': {'label': _('Active'), 'domain': []},
             'today': {'label': _('Today Activities'), 'domain': [('activity_date_deadline', '=', today)]},
             'week': {'label': _('This Week Activities'),
-                     'domain': [('activity_date_deadline', '>=', today), ('activity_date_deadline', '<=', this_week_end_date)]},
+                     'domain': [('activity_date_deadline', '>=', today),
+                                ('activity_date_deadline', '<=', this_week_end_date)]},
             'overdue': {'label': _('Overdue Activities'), 'domain': [('activity_date_deadline', '<', today)]},
             'won': {'label': _('Won'), 'domain': [('stage_id.is_won', '=', True)]},
             'lost': {'label': _('Lost'), 'domain': [('active', '=', False), ('probability', '=', 0)]},
@@ -157,13 +160,15 @@ class WebsiteAccount(CustomerPortal):
         })
         return request.render("website_crm_partner_assign.portal_my_opportunities", values)
 
-    @http.route(['''/my/lead/<model('crm.lead', "[('type','=', 'lead')]"):lead>'''], type='http', auth="user", website=True)
+    @http.route(['''/my/lead/<model('crm.lead', "[('type','=', 'lead')]"):lead>'''], type='http', auth="user",
+                website=True)
     def portal_my_lead(self, lead, **kw):
         if lead.type != 'lead':
             raise NotFound()
         return request.render("website_crm_partner_assign.portal_my_lead", {'lead': lead})
 
-    @http.route(['''/my/opportunity/<model('crm.lead', "[('type','=', 'opportunity')]"):opp>'''], type='http', auth="user", website=True)
+    @http.route(['''/my/opportunity/<model('crm.lead', "[('type','=', 'opportunity')]"):opp>'''], type='http',
+                auth="user", website=True)
     def portal_my_opportunity(self, opp, **kw):
         if opp.type != 'opportunity':
             raise NotFound()
@@ -171,11 +176,13 @@ class WebsiteAccount(CustomerPortal):
         return request.render(
             "website_crm_partner_assign.portal_my_opportunity", {
                 'opportunity': opp,
-                'user_activity': opp.sudo().activity_ids.filtered(lambda activity: activity.user_id == request.env.user)[:1],
+                'user_activity': opp.sudo().activity_ids.filtered(
+                    lambda activity: activity.user_id == request.env.user)[:1],
                 'stages': request.env['crm.stage'].search([
                     ('is_won', '!=', True), '|', ('team_id', '=', False), ('team_id', '=', opp.team_id.id)
                 ], order='sequence desc, name desc, id desc'),
-                'activity_types': request.env['mail.activity.type'].sudo().search(['|', ('res_model', '=', opp._name), ('res_model', '=', False)]),
+                'activity_types': request.env['mail.activity.type'].sudo().search(
+                    ['|', ('res_model', '=', opp._name), ('res_model', '=', False)]),
                 'states': request.env['res.country.state'].sudo().search([]),
                 'countries': request.env['res.country'].sudo().search([]),
             })
@@ -199,7 +206,8 @@ class WebsiteCrmPartnerAssign(WebsitePartnerPage):
         partners_dom = [('is_company', '=', True), ('grade_id', '!=', False), ('website_published', '=', True),
                         ('grade_id.website_published', '=', True), ('country_id', '!=', False)]
         dom += sitemap_qs2dom(qs=qs, route='/partners/country/')
-        countries = env['res.partner'].sudo().read_group(partners_dom, fields=['id', 'country_id'], groupby='country_id')
+        countries = env['res.partner'].sudo().read_group(partners_dom, fields=['id', 'country_id'],
+                                                         groupby='country_id')
         for country in countries:
             loc = '/partners/country/%s' % slug(country['country_id'])
             if not qs or qs.lower() in loc:
@@ -261,7 +269,8 @@ class WebsiteCrmPartnerAssign(WebsitePartnerPage):
         countries_partners = partner_obj.sudo().search_count(country_domain)
         # flag active country
         for country_dict in countries:
-            country_dict['active'] = country and country_dict['country_id'] and country_dict['country_id'][0] == country.id
+            country_dict['active'] = country and country_dict['country_id'] and country_dict['country_id'][
+                0] == country.id
         countries.insert(0, {
             'country_id_count': countries_partners,
             'country_id': (0, _("All Countries")),
@@ -313,11 +322,10 @@ class WebsiteCrmPartnerAssign(WebsitePartnerPage):
             'google_map_partner_ids': google_map_partner_ids,
             'pager': pager,
             'searches': post,
-            'search_path': "%s" % werkzeug.urls.url_encode(post),
+            'search_path': "%s" % urlencode(post),
             'google_maps_api_key': google_maps_api_key,
         }
         return request.render("website_crm_partner_assign.index", values, status=partners and 200 or 404)
-
 
     # Do not use semantic controller due to sudo()
     @http.route(['/partners/<partner_id>'], type='http', auth="public", website=True)

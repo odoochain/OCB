@@ -4,6 +4,8 @@
 import base64
 import functools
 import io
+from urllib.parse import urlencode
+
 import qrcode
 import re
 import werkzeug.urls
@@ -39,7 +41,7 @@ class TOTPWizard(models.TransientModel):
             w.url = url = werkzeug.urls.url_unparse((
                 'otpauth', 'totp',
                 werkzeug.urls.url_quote(f'{issuer}:{w.user_id.login}', safe=':'),
-                werkzeug.urls.url_encode({
+                urlencode({
                     'secret': compress(w.secret),
                     'issuer': issuer,
                     # apparently a lowercase hash name is anathema to google

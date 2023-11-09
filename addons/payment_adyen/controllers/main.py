@@ -6,8 +6,8 @@ import hashlib
 import hmac
 import logging
 import pprint
+from urllib.parse import urljoin
 
-from werkzeug import urls
 from werkzeug.exceptions import Forbidden
 
 from odoo import _, http
@@ -135,7 +135,7 @@ class AdyenController(http.Controller):
             'channel': 'web',  # Required to support 3DS
             'origin': provider_sudo.get_base_url(),  # Required to support 3DS
             'browserInfo': browser_info,  # Required to support 3DS
-            'returnUrl': urls.url_join(
+            'returnUrl': urljoin(
                 provider_sudo.get_base_url(),
                 # Include the reference in the return url to be able to match it after redirection.
                 # The key 'merchantReference' is chosen on purpose to be the same as that returned

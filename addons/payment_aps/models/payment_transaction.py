@@ -1,8 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import logging
-
-from werkzeug import urls
+from urllib.parse import urljoin
 
 from odoo import _, api, models
 from odoo.exceptions import ValidationError
@@ -63,7 +62,7 @@ class PaymentTransaction(models.Model):
             'currency': self.currency_id.name,
             'language': self.partner_lang[:2],
             'customer_email': self.partner_id.email_normalized,
-            'return_url': urls.url_join(base_url, APSController._return_url),
+            'return_url': urljoin(base_url, APSController._return_url),
         }
         rendering_values.update({
             'signature': self.provider_id._aps_calculate_signature(

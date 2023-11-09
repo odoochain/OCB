@@ -169,7 +169,7 @@ class AccountMove(models.Model):
         return tbai_id_no_crc + self._l10n_es_edi_tbai_crc8(tbai_id_no_crc)
 
     def _get_l10n_es_tbai_qr(self):
-        """Returns the URL for the invoice's QR code.  We can not use url_encode because it escapes / e.g."""
+        """Returns the URL for the invoice's QR code.  We can not use urlencode because it escapes / e.g."""
         self.ensure_one()
         if not self._l10n_es_tbai_is_in_chain():
             return ''

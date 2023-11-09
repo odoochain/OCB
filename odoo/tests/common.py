@@ -29,6 +29,10 @@ import tempfile
 import threading
 import time
 import unittest
+from urllib.parse import urljoin, urlparse, parse_qs, urlencode, urlsplit, urlunsplit
+
+from werkzeug.urls import uri_to_iri
+
 from . import case
 import warnings
 from collections import defaultdict
@@ -45,7 +49,6 @@ from unittest.mock import patch, Mock
 from xmlrpc import client as xmlrpclib
 
 import requests
-import werkzeug.urls
 from lxml import etree, html
 
 import odoo
@@ -1042,7 +1045,7 @@ class ChromeBrowser:
             get the full protocol
         """
         command = '/'.join(['json', command]).strip('/')
-        url = werkzeug.urls.url_join('http://%s:%s/' % (HOST, self.devtools_port), command)
+        url = urljoin('http://%s:%s/' % (HOST, self.devtools_port), command)
         self._logger.info("Issuing json command %s", url)
         delay = 0.1
         tries = 0
@@ -1727,12 +1730,12 @@ class HttpCase(TransactionCase):
             # test cursors, which uses different caches than this transaction.
             self.cr.flush()
             self.cr.clear()
-            url = werkzeug.urls.url_join(self.base_url(), url_path)
+            url = urljoin(self.base_url(), url_path)
             if watch:
-                parsed = werkzeug.urls.url_parse(url)
-                qs = parsed.decode_query()
-                qs['watch'] = '1'
-                url = parsed.replace(query=werkzeug.urls.url_encode(qs)).to_url()
+                parsed = urlparse(url)
+                qs = parse_qs(parsed.query)
+                qs['watch'] = "1"
+                url = urlunsplit(parsed._replace(query=urlencode(qs)))
             self._logger.info('Open "%s" in browser', url)
 
             if self.browser.screencasts_dir:

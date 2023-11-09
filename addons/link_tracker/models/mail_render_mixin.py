@@ -2,10 +2,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import re
+from urllib.parse import urlparse
 
 import markupsafe
 from html import unescape
-from werkzeug import urls
 
 from odoo import api, models, tools
 
@@ -72,7 +72,7 @@ class MailRenderMixin(models.AbstractModel):
             if original_url.startswith(shortened_schema) or original_url.startswith(unsubscribe_schema):
                 continue
             # support blacklist items in path, like /u/
-            parsed = urls.url_parse(original_url, scheme='http')
+            parsed = urlparse(original_url, scheme='http')
             if blacklist and any(item in parsed.path for item in blacklist):
                 continue
 

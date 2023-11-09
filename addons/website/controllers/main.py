@@ -6,7 +6,7 @@ import json
 import os
 import logging
 import re
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlencode
 
 import requests
 import werkzeug.utils
@@ -59,9 +59,9 @@ class QueryURL(object):
                     paths[key] = u"%s" % value
             elif value:
                 if isinstance(value, list) or isinstance(value, set):
-                    fragments.append(werkzeug.urls.url_encode([(key, item) for item in value]))
+                    fragments.append(urlencode([(key, item) for item in value]))
                 else:
-                    fragments.append(werkzeug.urls.url_encode([(key, value)]))
+                    fragments.append(urlencode([(key, value)]))
         for key in path_args:
             value = paths.get(key)
             if value is not None:
@@ -158,7 +158,7 @@ class Website(Home):
         path = '/' + path
         mode_edit = bool(kw.pop('enable_editor', False))
         if kw:
-            path += '?' + werkzeug.urls.url_encode(kw)
+            path += '?' + urlencode(kw)
 
         if request.env.user._is_internal():
             path = request.website.get_client_action_url(path, mode_edit)

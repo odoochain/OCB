@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+from urllib.parse import urlparse, parse_qs
 
 import werkzeug
 
@@ -77,8 +78,8 @@ class TestMassMailing(TestMailFullCommon):
                     '%s/mail/mailing/%s/unsubscribe' % (mailing.get_base_url(), mailing.id),
                     email['body'])
                 unsubscribe_href = self._get_href_from_anchor_id(email['body'], "url6")
-                unsubscribe_url = werkzeug.urls.url_parse(unsubscribe_href)
-                unsubscribe_params = unsubscribe_url.decode_query().to_dict(flat=True)
+                unsubscribe_url = urlparse(unsubscribe_href)
+                unsubscribe_params = parse_qs(unsubscribe_url.query).to_dict(flat=True)
                 self.assertEqual(int(unsubscribe_params['res_id']), recipient.id)
                 self.assertEqual(unsubscribe_params['email'], recipient.email_normalized)
                 self.assertEqual(
@@ -90,7 +91,7 @@ class TestMassMailing(TestMailFullCommon):
                     '%s/mailing/%s/view' % (mailing.get_base_url(), mailing.id),
                     email['body'])
                 view_href = self._get_href_from_anchor_id(email['body'], "url6")
-                view_url = werkzeug.urls.url_parse(view_href)
+                view_url = urlparse(view_href)
                 view_params = view_url.decode_query().to_dict(flat=True)
                 self.assertEqual(int(view_params['res_id']), recipient.id)
                 self.assertEqual(view_params['email'], recipient.email_normalized)

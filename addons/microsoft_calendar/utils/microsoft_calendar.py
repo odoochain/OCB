@@ -87,7 +87,7 @@ class MicrosoftCalendarService():
             events += data.get('value', [])
 
         token_url = data.get('@odata.deltaLink')
-        next_sync_token = parse.parse_qs(parse.urlparse(token_url).query).get('$deltatoken', False) if token_url else None
+        next_sync_token = parse.parse_qs(parse.urlsplit(token_url).query).get('$deltatoken', False) if token_url else None
         return events, next_sync_token
 
     @requires_auth_token

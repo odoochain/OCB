@@ -3,6 +3,8 @@
 
 import logging
 import uuid
+from urllib.parse import urlencode
+
 import werkzeug.urls
 
 from odoo import api, fields, models
@@ -94,7 +96,7 @@ class IapAccount(models.Model):
         }
         if trial:
             d.update({'trial': trial})
-        return '%s?%s' % (base_url, werkzeug.urls.url_encode(d))
+        return '%s?%s' % (base_url, urlencode(d))
 
     @api.model
     def get_account_url(self):
@@ -121,7 +123,7 @@ class IapAccount(models.Model):
 
         parameters = {'tokens': list(account_per_service.values())}
 
-        return '%s?%s' % (endpoint + route, werkzeug.urls.url_encode(parameters))
+        return '%s?%s' % (endpoint + route, urlencode(parameters))
 
     @api.model
     def get_config_account_url(self):

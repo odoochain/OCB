@@ -5,8 +5,7 @@ import base64
 import json
 import math
 import re
-
-from werkzeug import urls
+from urllib.parse import parse_qs, urlparse, urlunsplit, urlencode, quote
 
 from odoo import http, tools, _, SUPERUSER_ID
 from odoo.exceptions import AccessDenied, AccessError, MissingError, UserError, ValidationError
@@ -45,7 +44,7 @@ def pager(url, total, page=1, step=30, scope=5, url_args=None):
     def get_url(page):
         _url = "%s/page/%s" % (url, page) if page > 1 else url
         if url_args:
-            _url = "%s?%s" % (_url, urls.url_encode(url_args))
+            _url = "%s?%s" % (_url, urlencode(url_args))
         return _url
 
     return {
@@ -123,12 +122,12 @@ def _build_url_w_params(url_string, query_params, remove_duplicates=True):
      * if remove duplicates: result = '/my?foo=bar2&error=pay&alice=bob'
      * else: result = '/my?foo=bar&foo=bar2&error=pay&alice=bob'
     """
-    url = urls.url_parse(url_string)
-    url_params = url.decode_query()
+    url = urlparse(url_string)
+    url_params = parse_qs(url.query)
     if remove_duplicates:  # convert to standard dict instead of werkzeug multidict to remove duplicates automatically
-        url_params = url_params.to_dict()
+        url_params = dict(url_params)
     url_params.update(query_params)
-    return url.replace(query=urls.url_encode(url_params)).to_url()
+    return urlunsplit(url._replace(query=urlencode(url_params)))
 
 
 class CustomerPortal(Controller):
@@ -277,7 +276,7 @@ class CustomerPortal(Controller):
                 request.env['res.users']._check_credentials(password, {'interactive': True})
                 request.env.user.sudo()._deactivate_portal_user(**post)
                 request.session.logout()
-                return request.redirect('/web/login?message=%s' % urls.url_quote(_('Account deleted!')))
+                return request.redirect('/web/login?message=%s' % quote(_('Account deleted!')))
             except AccessDenied:
                 values['errors'] = {'deactivate': 'password'}
             except UserError as e:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+from urllib.parse import urlencode
 
 import werkzeug.urls
 
@@ -154,7 +155,7 @@ class WebsiteMembership(http.Controller):
             'google_map_partner_ids': google_map_partner_ids,
             'pager': pager,
             'post': post,
-            'search': "?%s" % werkzeug.urls.url_encode(post),
+            'search': "?%s" % urlencode(post),
             'search_count': count_members,
             'google_maps_api_key': google_maps_api_key,
         }

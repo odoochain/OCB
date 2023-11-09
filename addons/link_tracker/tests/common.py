@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+from urllib.parse import urlparse, parse_qs
 
 import werkzeug
 
@@ -82,11 +83,11 @@ class MockLinkTracker(common.BaseCase):
         )
         """
         # check UTMS are correctly set on redirect URL
-        original_url = werkzeug.urls.url_parse(url)
-        redirect_url = werkzeug.urls.url_parse(link_tracker.redirected_url)
-        redirect_params = redirect_url.decode_query().to_dict(flat=True)
+        original_url = urlparse(url)
+        redirect_url = urlparse(link_tracker.redirected_url)
+        redirect_params = parse_qs(redirect_url.query).to_dict(flat=True)
         self.assertEqual(redirect_url.scheme, original_url.scheme)
-        self.assertEqual(redirect_url.decode_netloc(), original_url.decode_netloc())
+        self.assertEqual(parse_qs(redirect_url.netloc), parse_qs(original_url.netloc))
         self.assertEqual(redirect_url.path, original_url.path)
         if link_params:
             self.assertEqual(redirect_params, link_params)

@@ -2,6 +2,7 @@
 
 import logging
 import pprint
+from urllib.parse import urljoin
 
 from werkzeug import urls
 
@@ -38,7 +39,7 @@ class PaymentTransaction(models.Model):
             'tx_ref': self.reference,
             'amount': self.amount,
             'currency': self.currency_id.name,
-            'redirect_url': urls.url_join(base_url, FlutterwaveController._return_url),
+            'redirect_url': urljoin(base_url, FlutterwaveController._return_url),
             'customer': {
                 'email': self.partner_email,
                 'name': self.partner_name,
@@ -46,7 +47,7 @@ class PaymentTransaction(models.Model):
             },
             'customizations': {
                 'title': self.company_id.name,
-                'logo': urls.url_join(base_url, f'web/image/res.company/{self.company_id.id}/logo'),
+                'logo': urljoin(base_url, f'web/image/res.company/{self.company_id.id}/logo'),
             },
         }
         payment_link_data = self.provider_id._flutterwave_make_request('payments', payload=payload)

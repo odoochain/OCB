@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
-import werkzeug.urls
+from urllib.parse import urlencode
 
 from odoo import http
 from odoo.addons.http_routing.models.ir_http import unslug, slug
@@ -132,7 +131,7 @@ class WebsiteCustomer(http.Controller):
             'google_map_partner_ids': google_map_partner_ids,
             'pager': pager,
             'post': post,
-            'search_path': "?%s" % werkzeug.urls.url_encode(post),
+            'search_path': "?%s" % urlencode(post),
             'tag': tag,
             'tags': tags,
             'google_maps_api_key': google_maps_api_key,

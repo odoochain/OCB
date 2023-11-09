@@ -2,6 +2,7 @@
 
 import logging
 import pprint
+from urllib.parse import unquote_plus
 
 import requests
 from werkzeug import urls
@@ -134,7 +135,7 @@ class PaypalController(http.Controller):
             notification_data = {}
             for notification_data_param in response_items[1:]:
                 key, raw_value = notification_data_param.split('=', 1)
-                notification_data[key] = urls.url_unquote_plus(raw_value)
+                notification_data[key] = unquote_plus(raw_value)
             return notification_data
         return None
 

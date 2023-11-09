@@ -1,6 +1,8 @@
 # coding: utf-8
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import logging
+from urllib.parse import urlencode
+
 import requests
 import werkzeug
 
@@ -90,7 +92,7 @@ class PosPaymentMethod(models.Model):
             params.append(("payment_method_types[]", "interac_present"))
 
         try:
-            data = werkzeug.urls.url_encode(params)
+            data = urlencode(params)
             resp = requests.post(endpoint, data=data, auth=(self.sudo()._get_stripe_secret_key(), ''), timeout=TIMEOUT)
         except requests.exceptions.RequestException:
             _logger.exception("Failed to call stripe_payment_intent endpoint")

@@ -6,16 +6,16 @@ import hashlib
 import hmac
 import io
 import logging
+from urllib.parse import urljoin, urlencode
+
 import lxml
 import random
 import re
 import requests
 import threading
-import werkzeug.urls
 from ast import literal_eval
 from dateutil.relativedelta import relativedelta
 from markupsafe import Markup
-from werkzeug.urls import url_join
 from PIL import Image, UnidentifiedImageError
 
 from odoo import api, fields, models, tools, _
@@ -997,10 +997,10 @@ class MassMailing(models.Model):
         return [rid for rid in res_ids if rid not in done_res_ids]
 
     def _get_unsubscribe_url(self, email_to, res_id):
-        url = werkzeug.urls.url_join(
+        url = urljoin(
             self.get_base_url(), 'mail/mailing/%(mailing_id)s/unsubscribe?%(params)s' % {
                 'mailing_id': self.id,
-                'params': werkzeug.urls.url_encode({
+                'params': urlencode({
                     'res_id': res_id,
                     'email': email_to,
                     'token': self._unsubscribe_token(res_id, email_to),
@@ -1010,10 +1010,10 @@ class MassMailing(models.Model):
         return url
 
     def _get_view_url(self, email_to, res_id):
-        url = werkzeug.urls.url_join(
+        url = urljoin(
             self.get_base_url(), 'mailing/%(mailing_id)s/view?%(params)s' % {
                 'mailing_id': self.id,
-                'params': werkzeug.urls.url_encode({
+                'params': urlencode({
                     'res_id': res_id,
                     'email': email_to,
                     'token': self._unsubscribe_token(res_id, email_to),
@@ -1226,7 +1226,7 @@ class MassMailing(models.Model):
                        mailing_name=self.subject
                        ),
             'top_button_label': _('More Info'),
-            'top_button_url': url_join(web_base_url, f'/web#id={self.id}&model=mailing.mailing&view_type=form'),
+            'top_button_url': urljoin(web_base_url, f'/web#id={self.id}&model=mailing.mailing&view_type=form'),
             'kpi_data': [
                 kpi,
                 {

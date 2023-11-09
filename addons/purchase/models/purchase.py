@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 from markupsafe import escape, Markup
 from pytz import timezone, UTC
-from werkzeug.urls import url_encode
+from urllib.parse import urlencode
 
 from odoo import api, fields, models, _
 from odoo.osv import expression
@@ -834,7 +834,7 @@ class PurchaseOrder(models.Model):
         """Create url for confirm reminder or purchase reception email for sending
         in mail."""
         if confirm_type in ['reminder', 'reception']:
-            param = url_encode({
+            param = urlencode({
                 'confirm': confirm_type,
                 'confirmed_date': self.date_planned and self.date_planned.date(),
             })
@@ -844,7 +844,7 @@ class PurchaseOrder(models.Model):
     def get_update_url(self):
         """Create portal url for user to update the scheduled date on purchase
         order lines."""
-        update_param = url_encode({'update': 'True'})
+        update_param = urlencode({'update': 'True'})
         return self.get_portal_url(query_string='&%s' % update_param)
 
     def confirm_reminder_mail(self, confirmed_date=False):

@@ -1,10 +1,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
+from urllib.parse import urljoin
 from uuid import uuid4
 
 from lxml import etree, objectify
-from werkzeug import urls
 
 from odoo.tests import HttpCase
 
@@ -22,7 +22,7 @@ class PaymentHttpCommon(PaymentCommon, HttpCase):
     ###########
 
     def _build_url(self, route):
-        return urls.url_join(self.base_url(), route)
+        return urljoin(self.base_url(), route)
 
     def _make_http_get_request(self, url, params=None):
         """ Make an HTTP GET request to the provided URL.

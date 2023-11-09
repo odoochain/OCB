@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import json
+from urllib.parse import unquote_plus
+
 import lxml
 import requests
 import logging
@@ -88,7 +90,7 @@ class WebsiteForum(WebsiteProfile):
             # check that sorting is valid
             # retro-compatibily for V8 and google links
             try:
-                sorting = werkzeug.urls.url_unquote_plus(sorting)
+                sorting = unquote_plus(sorting)
                 Post._generate_order_by(sorting, None)
             except (UserError, ValueError):
                 sorting = False

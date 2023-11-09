@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import logging
+from urllib.parse import urljoin
 
 from werkzeug import urls
 
@@ -29,7 +30,7 @@ class PaymentTransaction(models.Model):
         if self.provider_code != 'buckaroo':
             return res
 
-        return_url = urls.url_join(self.provider_id.get_base_url(), BuckarooController._return_url)
+        return_url = urljoin(self.provider_id.get_base_url(), BuckarooController._return_url)
         rendering_values = {
             'api_url': self.provider_id._buckaroo_get_api_url(),
             'Brq_websitekey': self.provider_id.buckaroo_website_key,

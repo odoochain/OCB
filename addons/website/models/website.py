@@ -996,7 +996,7 @@ class Website(models.Model):
         False depending on the `fallback` parameter.
 
         :param domain_name: the domain for which we want the website.
-            In regard to the `url_parse` method, only the `netloc` part should
+            In regard to the `urlparse` method, only the `netloc` part should
             be given here, no `scheme`.
         :type domain_name: string
 
@@ -1015,7 +1015,7 @@ class Website(models.Model):
 
         def _filter_domain(website, domain_name, ignore_port=False):
             """Ignore `scheme` from the `domain`, just match the `netloc` which
-            is host:port in the version of `url_parse` we use."""
+            is host:port in the version of `urlparse` we use."""
             website_domain = get_base_domain(website.domain)
             if ignore_port:
                 website_domain = _remove_port(website_domain)
@@ -1326,7 +1326,7 @@ class Website(models.Model):
 
         If it is not possible to rebuild a path, use the current one instead.
 
-        `url_quote_plus` is applied on the returned path.
+        `quote_plus` is applied on the returned path.
         """
         self.ensure_one()
         try:

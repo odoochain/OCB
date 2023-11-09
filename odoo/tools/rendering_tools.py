@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+from urllib.parse import urlencode, quote
 
 import dateutil.relativedelta as relativedelta
 import functools
 import re
 
 from markupsafe import Markup
-from werkzeug import urls
-
 from odoo.tools import safe_eval
 
 INLINE_TEMPLATE_REGEX = re.compile(r"\{\{(.+?)\}\}")
@@ -20,8 +19,8 @@ def relativedelta_proxy(*args, **kwargs):
 
 template_env_globals = {
     'str': str,
-    'quote': urls.url_quote,
-    'urlencode': urls.url_encode,
+    'quote': quote,
+    'urlencode': urlencode,
     'datetime': safe_eval.datetime,
     'len': len,
     'abs': abs,

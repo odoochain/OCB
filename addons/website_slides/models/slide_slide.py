@@ -6,12 +6,13 @@ import datetime
 import io
 import logging
 import re
+from urllib.parse import urlparse, urlencode
+
 import requests
 import PyPDF2
 
 from dateutil.relativedelta import relativedelta
 from markupsafe import Markup
-from werkzeug import urls
 
 from odoo import api, fields, models, _
 from odoo.addons.http_routing.models.ir_http import slug, url_for
@@ -463,7 +464,7 @@ class Slide(models.Model):
             embed_code_external = False
             if slide.slide_category == 'video':
                 if slide.video_source_type == 'youtube':
-                    query_params = urls.url_parse(slide.video_url).query
+                    query_params = urlparse(slide.video_url).query
                     query_params = query_params + '&theme=light' if query_params else 'theme=light'
                     embed_code = Markup('<iframe src="//www.youtube-nocookie.com/embed/%s?%s" allowFullScreen="true" frameborder="0"></iframe>') % (slide.youtube_id, query_params)
                 elif slide.video_source_type == 'google_drive':
@@ -751,7 +752,7 @@ class Slide(models.Model):
         self.ensure_one()
 
         url_entry = url
-        if not urls.url_parse(url).netloc:
+        if not urlparse(url).netloc:
             url_entry = False
 
         embed_entry = self.env['slide.embed'].search([
@@ -1254,7 +1255,7 @@ class Slide(models.Model):
         error_message = False
         try:
             response = requests.get(
-                'https://vimeo.com/api/oembed.json?%s' % urls.url_encode({'url': self.video_url}),
+                'https://vimeo.com/api/oembed.json?%s' % urlencode({'url': self.video_url}),
                 timeout=3
             )
             response.raise_for_status()

@@ -77,8 +77,8 @@ class PaymentTransaction(models.Model):
             'accountId': self.provider_id.payulatam_account_id,
             'buyerFullName': self.partner_name,
             'buyerEmail': self.partner_email,
-            'responseUrl': urls.url_join(base_url, PayuLatamController._return_url),
-            'confirmationUrl': urls.url_join(base_url, PayuLatamController._webhook_url),
+            'responseUrl': urljoin(base_url, PayuLatamController._return_url),
+            'confirmationUrl': urljoin(base_url, PayuLatamController._webhook_url),
             'api_url': api_url,
         }
         if self.provider_id.state != 'enabled':

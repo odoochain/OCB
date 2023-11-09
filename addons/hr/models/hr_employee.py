@@ -6,7 +6,7 @@ from pytz import UTC
 from datetime import datetime, time
 from random import choice
 from string import digits
-from werkzeug.urls import url_encode
+from urllib.parse import urlencode
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models, _
@@ -349,7 +349,7 @@ class HrEmployeePrivate(models.Model):
         for employee in employees:
             employee._message_subscribe(employee.address_home_id.ids)
             # Launch onboarding plans
-            url = '/web#%s' % url_encode({
+            url = '/web#%s' % urlencode({
                 'action': 'hr.plan_wizard_action',
                 'active_id': employee.id,
                 'active_model': 'hr.employee',

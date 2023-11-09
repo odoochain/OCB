@@ -133,7 +133,7 @@ from datetime import datetime
 from io import BytesIO
 from os.path import join as opj
 from pathlib import Path
-from urllib.parse import urlparse, urlencode, urlsplit
+from urllib.parse import urlparse, urlencode, urlsplit, quote
 from zlib import adler32
 
 import babel.core
@@ -146,7 +146,6 @@ import werkzeug.security
 import werkzeug.wrappers
 import werkzeug.wsgi
 from werkzeug.urls import uri_to_iri
-from urllib.parse import quote as url_quote
 
 from werkzeug.exceptions import (HTTPException, BadRequest, Forbidden,
                                  NotFound, InternalServerError)
@@ -286,7 +285,7 @@ class SessionExpiredException(Exception):
 
 def content_disposition(filename):
     return "attachment; filename*=UTF-8''{}".format(
-        url_quote(filename, safe='', unsafe='()<>@,;:"/[]?={}\\*\'%') # RFC6266
+        quote(filename, safe='', unsafe='()<>@,;:"/[]?={}\\*\'%') # RFC6266
     )
 
 def db_list(force=False, host=None):
@@ -1900,7 +1899,7 @@ class Application:
         the given ``host``.
         """
 
-        netloc, path = urlparse(url)[1:3]
+        netloc, path = urlsplit(url)[1:3]
         try:
             path_netloc, module, static, resource = path.split('/', 3)
         except ValueError:

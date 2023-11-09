@@ -5,6 +5,8 @@ import base64
 import collections
 import datetime
 import hashlib
+from urllib.parse import urlparse, urlunsplit
+
 import pytz
 import threading
 import re
@@ -13,7 +15,6 @@ import requests
 from collections import defaultdict
 from lxml import etree
 from random import randint
-from werkzeug import urls
 
 from odoo import api, fields, models, tools, SUPERUSER_ID, _, Command
 from odoo.osv.expression import get_unaccent_wrapper
@@ -22,14 +23,15 @@ from odoo.exceptions import RedirectWarning, UserError, ValidationError
 # Global variables used for the warning fields declared on the res.partner
 # in the following modules : sale, purchase, account, stock
 WARNING_MESSAGE = [
-                   ('no-message','No Message'),
-                   ('warning','Warning'),
-                   ('block','Blocking Message')
+                   ('no-message', 'No Message'),
+                   ('warning', 'Warning'),
+                   ('block', 'Blocking Message')
                    ]
 WARNING_HELP = 'Selecting the "Warning" option will notify user with the message, Selecting "Blocking Message" will throw an exception with the message and block the flow. The Message has to be written in the next field.'
 
 
 ADDRESS_FIELDS = ('street', 'street2', 'zip', 'city', 'state_id', 'country_id')
+
 @api.model
 def _lang_get(self):
     return self.env['res.lang'].get_installed()
@@ -657,11 +659,11 @@ class Partner(models.Model):
             parent.update_address(addr_vals)
 
     def _clean_website(self, website):
-        url = urls.url_parse(website)
+        url = urlparse(website)
         if not url.scheme:
             if not url.netloc:
-                url = url.replace(netloc=url.path, path='')
-            website = url.replace(scheme='http').to_url()
+                url = url._replace(netloc=url.path, path='')
+            website = urlunsplit(url._replace(scheme='http'))
         return website
 
     def _compute_is_public(self):

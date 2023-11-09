@@ -2,9 +2,9 @@
 
 import json
 import logging
+from urllib.parse import urlparse, parse_qsl
 
 import werkzeug.exceptions
-from werkzeug.urls import url_parse
 
 from odoo import http
 from odoo.http import content_disposition, request
@@ -113,7 +113,7 @@ class ReportController(http.Controller):
                     response = self.report_routes(reportname, docids=docids, converter=converter, context=context)
                 else:
                     # Particular report:
-                    data = url_parse(url).decode_query(cls=dict)  # decoding the args represented in JSON
+                    data = dict(parse_qsl(urlparse(url).query, keep_blank_values=False))  # decoding the args represented in JSON
                     if 'context' in data:
                         context, data_context = json.loads(context or '{}'), json.loads(data.pop('context'))
                         context = json.dumps({**context, **data_context})

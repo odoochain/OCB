@@ -6,7 +6,7 @@ import logging
 import pprint
 
 import requests
-from werkzeug.urls import url_join
+from urllib.parse import urljoin
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
@@ -76,7 +76,7 @@ class PaymentProvider(models.Model):
         """
         self.ensure_one()
 
-        url = url_join('https://api.razorpay.com/v1/', endpoint)
+        url = urljoin('https://api.razorpay.com/v1/', endpoint)
         auth = (self.razorpay_key_id, self.razorpay_key_secret)
         try:
             if method == 'GET':

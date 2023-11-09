@@ -4,9 +4,9 @@
 import json
 import logging
 import time
-import requests
+from urllib.parse import urljoin, urlencode
 
-from werkzeug.urls import url_encode, url_join
+import requests
 
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError
@@ -50,10 +50,10 @@ class MicrosoftOutlookMixin(models.AbstractModel):
                 record.microsoft_outlook_uri = False
                 continue
 
-            record.microsoft_outlook_uri = url_join(self._get_microsoft_endpoint(), 'authorize?%s' % url_encode({
+            record.microsoft_outlook_uri = urljoin(self._get_microsoft_endpoint(), 'authorize?%s' % urlencode({
                 'client_id': microsoft_outlook_client_id,
                 'response_type': 'code',
-                'redirect_uri': url_join(base_url, '/microsoft_outlook/confirm'),
+                'redirect_uri': urljoin(base_url, '/microsoft_outlook/confirm'),
                 'response_mode': 'query',
                 # offline_access is needed to have the refresh_token
                 'scope': 'offline_access %s' % self._OUTLOOK_SCOPE,
@@ -124,12 +124,12 @@ class MicrosoftOutlookMixin(models.AbstractModel):
         microsoft_outlook_client_secret = Config.get_param('microsoft_outlook_client_secret')
 
         response = requests.post(
-            url_join(self._get_microsoft_endpoint(), 'token'),
+            urljoin(self._get_microsoft_endpoint(), 'token'),
             data={
                 'client_id': microsoft_outlook_client_id,
                 'client_secret': microsoft_outlook_client_secret,
                 'scope': 'offline_access %s' % self._OUTLOOK_SCOPE,
-                'redirect_uri': url_join(base_url, '/microsoft_outlook/confirm'),
+                'redirect_uri': urljoin(base_url, '/microsoft_outlook/confirm'),
                 'grant_type': grant_type,
                 **values,
             },

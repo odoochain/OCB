@@ -6,11 +6,10 @@ import io
 import logging
 import re
 from collections import OrderedDict, defaultdict
+from urllib.parse import urlparse, urlunsplit, parse_qs, urlencode
 
 import babel.messages.pofile
-import werkzeug
 import werkzeug.exceptions
-import werkzeug.utils
 import werkzeug.wrappers
 import werkzeug.wsgi
 from lxml import etree
@@ -75,13 +74,13 @@ def ensure_db(redirect='/web/database/selector', db=None):
         # Thus, we redirect the user to the same page but with the session cookie set.
         # This will force using the database route dispatcher...
         r = request.httprequest
-        url_redirect = werkzeug.urls.url_parse(r.base_url)
+        url_redirect = urlparse(r.base_url)
         if r.query_string:
             # in P3, request.query_string is bytes, the rest is text, can't mix them
             query_string = iri_to_uri(r.query_string)
-            url_redirect = url_redirect.replace(query=query_string)
+            url_redirect = url_redirect._replace(query=query_string)
         request.session.db = db
-        werkzeug.exceptions.abort(request.redirect(url_redirect.to_url(), 302))
+        werkzeug.exceptions.abort(request.redirect(urlunsplit(url_redirect), 302))
 
     # if db not provided, use the session one
     if not db and request.session.db and http.db_filter([request.session.db]):
@@ -194,10 +193,10 @@ def _get_login_redirect_url(uid, redirect=None):
     if not redirect:
         return url
 
-    parsed = werkzeug.urls.url_parse(url)
-    qs = parsed.decode_query()
+    parsed = urlparse(url)
+    qs = parse_qs(parsed.query)
     qs['redirect'] = redirect
-    return parsed.replace(query=werkzeug.urls.url_encode(qs)).to_url()
+    return urlunsplit(parsed._replace(query=urlencode(qs)))
 
 
 def is_user_internal(uid):

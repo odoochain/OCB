@@ -5,9 +5,10 @@ import json
 import logging
 import re
 import time
+from urllib.parse import urlencode
+
 import requests
 import werkzeug.exceptions
-import werkzeug.urls
 from PIL import Image, ImageFont, ImageDraw
 from lxml import etree
 from base64 import b64decode, b64encode
@@ -31,14 +32,20 @@ DEFAULT_LIBRARY_ENDPOINT = 'https://media-api.odoo.com'
 
 diverging_history_regex = 'data-last-history-steps="([0-9,]+)"'
 
+
 def ensure_no_history_divergence(record, html_field_name, incoming_history_ids):
     server_history_matches = re.search(diverging_history_regex, record[html_field_name] or '')
     # Do not check old documents without data-last-history-steps.
     if server_history_matches:
         server_last_history_id = server_history_matches[1].split(',')[-1]
         if server_last_history_id not in incoming_history_ids:
-            logger.warning('The document was already saved from someone with a different history for model %r, field %r with id %r.', record._name, html_field_name, record.id)
-            raise ValidationError(_('The document was already saved from someone with a different history for model %r, field %r with id %r.', record._name, html_field_name, record.id))
+            logger.warning(
+                'The document was already saved from someone with a different history for model %r, field %r with id %r.',
+                record._name, html_field_name, record.id)
+            raise ValidationError(
+                _('The document was already saved from someone with a different history for model %r, field %r with id %r.',
+                  record._name, html_field_name, record.id))
+
 
 # This method must be called in a context that has write access to the record as
 # it will write to the bus.
@@ -82,12 +89,15 @@ def handle_history_divergence(record, html_field_name, vals):
         ensure_no_history_divergence(record, html_field_name, incoming_history_ids)
 
     # Save only the latest id.
-    vals[html_field_name] = incoming_html[0:incoming_history_matches.start(1)] + last_step_id + incoming_html[incoming_history_matches.end(1):]
+    vals[html_field_name] = incoming_html[0:incoming_history_matches.start(1)] + last_step_id + incoming_html[
+                                                                                                incoming_history_matches.end(
+                                                                                                    1):]
+
 
 class Web_Editor(http.Controller):
-    #------------------------------------------------------
+    # ------------------------------------------------------
     # convert font into picture
-    #------------------------------------------------------
+    # ------------------------------------------------------
     @http.route([
         '/web_editor/font_to_img/<icon>',
         '/web_editor/font_to_img/<icon>/<color>',
@@ -99,8 +109,10 @@ class Web_Editor(http.Controller):
         '/web_editor/font_to_img/<icon>/<color>/<bg>/<int:size>',
         '/web_editor/font_to_img/<icon>/<color>/<bg>/<int:width>x<int:height>',
         '/web_editor/font_to_img/<icon>/<color>/<bg>/<int:width>x<int:height>/<int:alpha>',
-        ], type='http', auth="none")
-    def export_icon_to_png(self, icon, color='#000', bg=None, size=100, alpha=255, font='/web/static/src/libs/fontawesome/fonts/fontawesome-webfont.ttf', width=None, height=None):
+    ], type='http', auth="none")
+    def export_icon_to_png(self, icon, color='#000', bg=None, size=100, alpha=255,
+                           font='/web/static/src/libs/fontawesome/fonts/fontawesome-webfont.ttf', width=None,
+                           height=None):
         """ This method converts an unicode character to an image (using Font
             Awesome font by default) and is used only for mass mailing because
             custom fonts are not supported in mail.
@@ -132,7 +144,7 @@ class Web_Editor(http.Controller):
         # Background standardization
         if bg is not None and bg.startswith('rgba'):
             bg = bg.replace('rgba', 'rgb')
-            bg = ','.join(bg.split(',')[:-1])+')'
+            bg = ','.join(bg.split(',')[:-1]) + ')'
 
         # Convert the opacity value compatible with PIL Image color (0 to 255)
         # when color specifier is 'rgba'
@@ -157,7 +169,7 @@ class Web_Editor(http.Controller):
         # Create a solid color image and apply the mask
         if color.startswith('rgba'):
             color = color.replace('rgba', 'rgb')
-            color = ','.join(color.split(',')[:-1])+')'
+            color = ','.join(color.split(',')[:-1]) + ')'
         iconimage = Image.new("RGBA", (boxw, boxh), color)
         iconimage.putalpha(imagemask)
 
@@ -176,13 +188,13 @@ class Web_Editor(http.Controller):
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST'
         response.headers['Connection'] = 'close'
         response.headers['Date'] = time.strftime("%a, %d-%b-%Y %T GMT", time.gmtime())
-        response.headers['Expires'] = time.strftime("%a, %d-%b-%Y %T GMT", time.gmtime(time.time()+604800*60))
+        response.headers['Expires'] = time.strftime("%a, %d-%b-%Y %T GMT", time.gmtime(time.time() + 604800 * 60))
 
         return response
 
-    #------------------------------------------------------
+    # ------------------------------------------------------
     # Update a checklist in the editor on check/uncheck
-    #------------------------------------------------------
+    # ------------------------------------------------------
     @http.route('/web_editor/checklist', type='json', auth='user')
     def update_checklist(self, res_model, res_id, filename, checklistId, checked, **kwargs):
         record = request.env[res_model].browse(res_id)
@@ -210,9 +222,9 @@ class Web_Editor(http.Controller):
 
         return value
 
-    #------------------------------------------------------
+    # ------------------------------------------------------
     # Update a stars rating in the editor on check/uncheck
-    #------------------------------------------------------
+    # ------------------------------------------------------
     @http.route('/web_editor/stars', type='json', auth='user')
     def update_stars(self, res_model, res_id, filename, starsId, rating):
         record = request.env[res_model].browse(res_id)
@@ -261,10 +273,12 @@ class Web_Editor(http.Controller):
         )
 
     @http.route('/web_editor/attachment/add_data', type='json', auth='user', methods=['POST'], website=True)
-    def add_data(self, name, data, is_image, quality=0, width=0, height=0, res_id=False, res_model='ir.ui.view', **kwargs):
+    def add_data(self, name, data, is_image, quality=0, width=0, height=0, res_id=False, res_model='ir.ui.view',
+                 **kwargs):
         data = b64decode(data)
         if is_image:
-            format_error_msg = _("Uploaded image's format is not supported. Try with: %s", ', '.join(SUPPORTED_IMAGE_EXTENSIONS))
+            format_error_msg = _("Uploaded image's format is not supported. Try with: %s",
+                                 ', '.join(SUPPORTED_IMAGE_EXTENSIONS))
             try:
                 data = tools.image_process(data, size=(width, height), quality=quality, verify_resolution=True)
                 mimetype = guess_mimetype(data)
@@ -390,8 +404,8 @@ class Web_Editor(http.Controller):
         # Despite the user having no right to create an attachment, he can still
         # create an image attachment through some flows
         if (
-            not request.env.is_admin()
-            and IrAttachment._can_bypass_rights_on_media_dialog(**attachment_data)
+                not request.env.is_admin()
+                and IrAttachment._can_bypass_rights_on_media_dialog(**attachment_data)
         ):
             attachment = IrAttachment.sudo().create(attachment_data)
             # When portal users upload an attachment with the wysiwyg widget,
@@ -412,7 +426,8 @@ class Web_Editor(http.Controller):
         request.update_env(context=context)
 
     @http.route("/web_editor/get_assets_editor_resources", type="json", auth="user", website=True)
-    def get_assets_editor_resources(self, key, get_views=True, get_scss=True, get_js=True, bundles=False, bundles_restriction=[], only_user_custom_files=True):
+    def get_assets_editor_resources(self, key, get_views=True, get_scss=True, get_js=True, bundles=False,
+                                    bundles_restriction=[], only_user_custom_files=True):
         """
         Transmit the resources the assets editor needs to work.
 
@@ -442,7 +457,9 @@ class Web_Editor(http.Controller):
             dict: views, scss, js
         """
         # Related views must be fetched if the user wants the views and/or the style
-        views = request.env["ir.ui.view"].with_context(no_primary_children=True, __views_get_original_hierarchy=[]).get_related_views(key, bundles=bundles)
+        views = request.env["ir.ui.view"].with_context(no_primary_children=True,
+                                                       __views_get_original_hierarchy=[]).get_related_views(key,
+                                                                                                            bundles=bundles)
         views = views.read(['name', 'id', 'key', 'xml_id', 'arch', 'active', 'inherit_id'])
 
         scss_files_data_by_bundle = []
@@ -557,7 +574,8 @@ class Web_Editor(http.Controller):
         return files_data_by_bundle
 
     @http.route('/web_editor/modify_image/<model("ir.attachment"):attachment>', type="json", auth="user", website=True)
-    def modify_image(self, attachment, res_model=None, res_id=None, name=None, data=None, original_id=None, mimetype=None):
+    def modify_image(self, attachment, res_model=None, res_id=None, name=None, data=None, original_id=None,
+                     mimetype=None):
         """
         Creates a modified copy of an attachment and returns its image_src to be
         inserted into the DOM.
@@ -625,7 +643,8 @@ class Web_Editor(http.Controller):
                             files, _ = request.env["ir.qweb"]._get_asset_content(bundle)
                             asset = AssetsBundle(bundle, files)
                             bundle_css = asset.css().index_content
-                        color_search = re.search(r'(?i)--%s:\s+(%s|%s)' % (css_color_value, regex_hex, regex_rgba), bundle_css)
+                        color_search = re.search(r'(?i)--%s:\s+(%s|%s)' % (css_color_value, regex_hex, regex_rgba),
+                                                 bundle_css)
                         if not color_search:
                             raise werkzeug.exceptions.BadRequest()
                         css_color_value = color_search.group(1)
@@ -642,6 +661,7 @@ class Web_Editor(http.Controller):
         def subber(match):
             key = match.group().upper()
             return color_mapping[key] if key in color_mapping else key
+
         return re.sub(regex, subber, svg), svg_options
 
     @http.route(['/web_editor/shape/<module>/<path:filename>'], type='http', auth="public", website=True)
@@ -683,7 +703,8 @@ class Web_Editor(http.Controller):
             ('Cache-control', 'max-age=%s' % http.STATIC_CACHE_LONG),
         ])
 
-    @http.route(['/web_editor/image_shape/<string:img_key>/<module>/<path:filename>'], type='http', auth="public", website=True)
+    @http.route(['/web_editor/image_shape/<string:img_key>/<module>/<path:filename>'], type='http', auth="public",
+                website=True)
     def image_shape(self, module, filename, img_key, **kwargs):
         svg = self._get_shape_svg(module, 'image_shapes', filename)
 
@@ -760,7 +781,7 @@ class Web_Editor(http.Controller):
                 'res_id': 0,
             })
             if media[id]['is_dynamic_svg']:
-                colorParams = werkzeug.urls.url_encode(media[id]['dynamic_colors'])
+                colorParams = urlencode(media[id]['dynamic_colors'])
                 attachment['url'] = '/web_editor/shape/illustration/%s?%s' % (slug(attachment), colorParams)
             attachments.append(attachment._get_media_info())
 

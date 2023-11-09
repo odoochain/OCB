@@ -4,7 +4,7 @@ from odoo.addons.website_sale.controllers import main
 from odoo.exceptions import UserError
 from odoo.http import request
 
-from werkzeug.urls import url_encode, url_parse
+from urllib.parse import urlencode, urlparse, urlunsplit
 
 
 class WebsiteSale(main.WebsiteSale):
@@ -58,7 +58,7 @@ class WebsiteSale(main.WebsiteSale):
 
     @http.route(['/coupon/<string:code>'], type='http', auth='public', website=True, sitemap=False)
     def activate_coupon(self, code, r='/shop', **kw):
-        url_parts = url_parse(r)
+        url_parts = urlparse(r)
         url_query = url_parts.decode_query()
         url_query.pop('coupon_error', False)  # trust only Odoo error message
         url_query.pop('coupon_error_type', False)
@@ -75,8 +75,8 @@ class WebsiteSale(main.WebsiteSale):
         else:
             url_query['coupon_error'] = _("The coupon will be automatically applied when you add something in your cart.")
             url_query['coupon_error_type'] = 'warning'
-        redirect = url_parts.replace(query=url_encode(url_query))
-        return request.redirect(redirect.to_url())
+        redirect = url_parts._replace(query=urlencode(url_query))
+        return request.redirect(urlunsplit(redirect))
 
     @http.route(['/shop/claimreward'], type='http', auth='public', website=True, sitemap=False)
     def claim_reward(self, reward, **post):

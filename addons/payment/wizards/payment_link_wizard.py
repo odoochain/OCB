@@ -1,4 +1,5 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+from urllib.parse import urlencode
 
 from werkzeug import urls
 
@@ -142,7 +143,7 @@ class PaymentLinkWizard(models.TransientModel):
             }
             if payment_link.payment_provider_selection != 'all':
                 url_params['provider_id'] = str(payment_link.payment_provider_selection)
-            payment_link.link = f'{base_url}/payment/pay?{urls.url_encode(url_params)}'
+            payment_link.link = f'{base_url}/payment/pay?{urlencode(url_params)}'
 
     def _get_additional_link_values(self):
         """ Return the additional values to append to the payment link.

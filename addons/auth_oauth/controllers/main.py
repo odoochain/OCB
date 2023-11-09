@@ -5,7 +5,7 @@ import functools
 import json
 import logging
 import os
-from urllib.parse import quote_plus, unquote_plus, urlsplit
+from urllib.parse import quote_plus, unquote_plus, urlsplit, urlencode
 
 import werkzeug.utils
 from werkzeug.exceptions import BadRequest
@@ -68,7 +68,7 @@ class OAuthLogin(Home):
                 state=json.dumps(state),
                 # nonce=base64.urlsafe_b64encode(os.urandom(16)),
             )
-            provider['auth_link'] = "%s?%s" % (provider['auth_endpoint'], werkzeug.urls.url_encode(params))
+            provider['auth_link'] = "%s?%s" % (provider['auth_endpoint'], urlencode(params))
         return providers
 
     def get_state(self, provider):

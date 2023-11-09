@@ -37,7 +37,7 @@ class PaymentTransaction(models.Model):
             'lastname': last_name,
             'email': self.partner_email,
             'phone': self.partner_phone,
-            'return_url': urls.url_join(self.get_base_url(), PayUMoneyController._return_url),
+            'return_url': urljoin(self.get_base_url(), PayUMoneyController._return_url),
             'api_url': api_url,
         }
         payumoney_values['hash'] = self.provider_id._payumoney_generate_sign(

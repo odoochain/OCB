@@ -3,7 +3,7 @@
 import os
 from glob import glob
 from logging import getLogger
-from werkzeug import urls
+from urllib.parse import urlparse
 
 import odoo
 import odoo.modules.module  # get_manifest, don't from-import it
@@ -36,9 +36,11 @@ def fs2web(path):
         return path
     return '/'.join(path.split(os.path.sep))
 
+
 def can_aggregate(url):
-    parsed = urls.url_parse(url)
+    parsed = urlparse(url)
     return not parsed.scheme and not parsed.netloc and not url.startswith('/web/content')
+
 
 def is_wildcard_glob(path):
     """Determine whether a path is a wildcarded glob eg: "/web/file[14].*"
@@ -281,7 +283,8 @@ class IrAsset(models.Model):
         # Main source: the current registry list
         # Second source of modules: server wide modules
         # Third source: the currently loading module from the context (similar to ir_ui_view)
-        return self.env.registry._init_modules.union(odoo.conf.server_wide_modules or []).union(self.env.context.get('install_module', []))
+        return self.env.registry._init_modules.union(odoo.conf.server_wide_modules or []).union(
+            self.env.context.get('install_module', []))
 
     def _get_paths(self, path_def, installed, extensions=None):
         """
@@ -378,6 +381,7 @@ class IrAsset(models.Model):
 
 class AssetPaths:
     """ A list of asset paths (path, addon, bundle) with efficient operations. """
+
     def __init__(self):
         self.list = []
         self.memo = set()

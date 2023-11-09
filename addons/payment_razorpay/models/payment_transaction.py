@@ -3,7 +3,7 @@
 import logging
 import pprint
 
-from werkzeug.urls import url_encode, url_join
+from urllib.parse import urlencode, urljoin
 
 from odoo import _, models
 from odoo.exceptions import UserError, ValidationError
@@ -67,15 +67,15 @@ class PaymentTransaction(models.Model):
             'key_id': self.provider_id.razorpay_key_id,
             'name': self.company_id.name,
             'description': self.reference,
-            'company_logo': url_join(base_url, f'web/image/res.company/{self.company_id.id}/logo'),
+            'company_logo': urljoin(base_url, f'web/image/res.company/{self.company_id.id}/logo'),
             'order_id': order_data['id'],
             'amount': converted_amount,
             'currency': self.currency_id.name,
             'partner_name': self.partner_name,
             'partner_email': self.partner_email,
             'partner_phone': phone,
-            'return_url': url_join(
-                base_url, f'{RazorpayController._return_url}?{url_encode(return_url_params)}'
+            'return_url': urljoin(
+                base_url, f'{RazorpayController._return_url}?{urlencode(return_url_params)}'
             ),
         }
         return rendering_values

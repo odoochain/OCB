@@ -3,7 +3,7 @@
 
 import logging
 
-from werkzeug.urls import url_encode
+from urllib.parse import urlencode
 
 from odoo import http
 from odoo.exceptions import AccessError
@@ -18,7 +18,7 @@ class MailController(http.Controller):
 
     @classmethod
     def _redirect_to_messaging(cls):
-        url = '/web#%s' % url_encode({'action': 'mail.action_discuss'})
+        url = '/web#%s' % urlencode({'action': 'mail.action_discuss'})
         return request.redirect(url)
 
     @classmethod
@@ -106,7 +106,7 @@ class MailController(http.Controller):
                 view_id = record_sudo.get_formview_id()
                 if view_id:
                     url_params['view_id'] = view_id
-                url = '/web/login?redirect=#%s' % url_encode(url_params)
+                url = '/web/login?redirect=#%s' % urlencode(url_params)
                 return request.redirect(url)
 
         record_action.pop('target_type', None)
@@ -129,7 +129,7 @@ class MailController(http.Controller):
 
         if cids:
             url_params['cids'] = ','.join([str(cid) for cid in cids])
-        url = '/web?#%s' % url_encode(url_params)
+        url = '/web?#%s' % urlencode(url_params)
         return request.redirect(url)
 
     @http.route('/mail/view', type='http', auth='public')
