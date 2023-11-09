@@ -6,6 +6,8 @@ import os
 import re
 import traceback
 import threading
+import urllib
+
 import unicodedata
 import werkzeug.exceptions
 import werkzeug.routing
@@ -143,7 +145,7 @@ def url_lang(path_or_uri, lang_code=None):
     location = pycompat.to_text(path_or_uri).strip()
     force_lang = lang_code is not None
     try:
-        url = werkzeug.urls.url_parse(location)
+        url = urllib.parse.urlsplit(location)
     except ValueError:
         # e.g. Invalid IPv6 URL, `werkzeug.urls.url_parse('http://]')`
         url = False

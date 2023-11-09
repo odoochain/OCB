@@ -6,7 +6,7 @@ import json
 import logging
 
 import requests
-from werkzeug import urls
+from urllib import parse
 
 from odoo import api, fields, models, _
 
@@ -83,7 +83,7 @@ class MicrosoftService(models.AbstractModel):
         base_url = get_param('web.base.url', default='http://www.odoo.com?NoBaseUrl')
         client_id = get_param('microsoft_%s_client_id' % (service,), default=False)
 
-        encoded_params = urls.url_encode({
+        encoded_params = parse.urlencode({
             'response_type': 'code',
             'client_id': client_id,
             'state': json.dumps(state),
@@ -137,8 +137,8 @@ class MicrosoftService(models.AbstractModel):
         if headers is None:
             headers = {}
 
-        assert urls.url_parse(preuri + uri).host in [
-            urls.url_parse(url).host for url in (DEFAULT_MICROSOFT_TOKEN_ENDPOINT, DEFAULT_MICROSOFT_GRAPH_ENDPOINT)
+        assert parse.parse_qs(parse.urlparse(preuri + uri).hostname) in [
+            parse.parse_qs(parse.urlparse(url).hostname) for url in (DEFAULT_MICROSOFT_TOKEN_ENDPOINT, DEFAULT_MICROSOFT_GRAPH_ENDPOINT)
         ]
 
         _logger.debug("Uri: %s - Type : %s - Headers: %s - Params : %s !" % (uri, method, headers, params))
