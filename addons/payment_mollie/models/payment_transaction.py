@@ -2,8 +2,7 @@
 
 import logging
 import pprint
-
-from werkzeug import urls
+from urllib.parse import urlparse, parse_qs, urljoin
 
 from odoo import _, models
 from odoo.exceptions import ValidationError
@@ -43,8 +42,8 @@ class PaymentTransaction(models.Model):
         # from being stripped off when redirecting the user to the checkout URL, which can happen
         # when only one payment method is enabled on Mollie and query parameters are provided.
         checkout_url = payment_data['_links']['checkout']['href']
-        parsed_url = urls.url_parse(checkout_url)
-        url_params = urls.url_decode(parsed_url.query)
+        parsed_url = urlparse(checkout_url)
+        url_params = parse_qs(parsed_url.query)
         return {'api_url': checkout_url, 'url_params': url_params}
 
     def _mollie_prepare_payment_request_payload(self):
@@ -55,8 +54,8 @@ class PaymentTransaction(models.Model):
         """
         user_lang = self.env.context.get('lang')
         base_url = self.provider_id.get_base_url()
-        redirect_url = urls.url_join(base_url, MollieController._return_url)
-        webhook_url = urls.url_join(base_url, MollieController._webhook_url)
+        redirect_url = urljoin(base_url, MollieController._return_url)
+        webhook_url = urljoin(base_url, MollieController._webhook_url)
 
         return {
             'description': self.reference,

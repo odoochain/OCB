@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import random
-import werkzeug.urls
+from urllib.parse import urljoin, urlencode
 
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -94,11 +94,11 @@ class ResPartner(models.Model):
                     fragment['res_id'] = res_id
 
                 if fragment:
-                    query['redirect'] = base + werkzeug.urls.url_encode(fragment)
+                    query['redirect'] = base + urlencode(fragment)
 
-            signup_url = "/web/%s?%s" % (route, werkzeug.urls.url_encode(query))
+            signup_url = "/web/%s?%s" % (route, urlencode(query))
             if not self.env.context.get('relative_url'):
-                signup_url = werkzeug.urls.url_join(base_url, signup_url)
+                signup_url = urljoin(base_url, signup_url)
             res[partner.id] = signup_url
 
         return res

@@ -3,8 +3,7 @@
 
 import logging
 import re
-
-from werkzeug.urls import url_join
+from urllib.parse import urljoin
 
 from odoo import api, fields, models, _
 from odoo.addons.http_routing.models.ir_http import url_for
@@ -56,7 +55,7 @@ class SeoMetadata(models.AbstractModel):
             'og:type': 'website',
             'og:title': title,
             'og:site_name': company.name,
-            'og:url': url_join(request.httprequest.url_root, url_for(request.httprequest.path)),
+            'og:url': urljoin(request.httprequest.url_root, url_for(request.httprequest.path)),
             'og:image': request.website.image_url(request.website, img_field),
         }
         # Default meta for Twitter
@@ -91,8 +90,8 @@ class SeoMetadata(models.AbstractModel):
         if self.website_meta_description:
             opengraph_meta['og:description'] = self.website_meta_description
             twitter_meta['twitter:description'] = self.website_meta_description
-        opengraph_meta['og:image'] = url_join(root_url, url_for(self.website_meta_og_img or opengraph_meta['og:image']))
-        twitter_meta['twitter:image'] = url_join(root_url, url_for(self.website_meta_og_img or twitter_meta['twitter:image']))
+        opengraph_meta['og:image'] = urljoin(root_url, url_for(self.website_meta_og_img or opengraph_meta['og:image']))
+        twitter_meta['twitter:image'] = urljoin(root_url, url_for(self.website_meta_og_img or twitter_meta['twitter:image']))
         return {
             'opengraph_meta': opengraph_meta,
             'twitter_meta': twitter_meta,
@@ -286,7 +285,7 @@ class WebsitePublishedMultiMixin(WebsitePublishedMixin):
                 client_action_url = f'{client_action_url}&website_id={website_id}'
                 return {
                     'type': 'ir.actions.act_url',
-                    'url': url_join(self.website_id.domain, client_action_url),
+                    'url': urljoin(self.website_id.domain, client_action_url),
                     'target': 'self',
                 }
         return self.env['website'].get_client_action(self.website_url, False, website_id)

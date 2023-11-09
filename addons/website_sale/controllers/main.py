@@ -4,8 +4,9 @@
 import json
 import logging
 from datetime import datetime
+from urllib.parse import parse_qs, urlparse, urlencode, urlunsplit
+
 from werkzeug.exceptions import Forbidden, NotFound
-from werkzeug.urls import url_decode, url_encode, url_parse
 
 from odoo import fields, http, SUPERUSER_ID, tools, _
 from odoo.fields import Command
@@ -672,8 +673,8 @@ class WebsiteSale(http.Controller):
         if (pricelist.selectable or pricelist == request.env.user.partner_id.property_product_pricelist) \
                 and website.is_pricelist_available(pricelist.id):
             if redirect_url and request.website.is_view_active('website_sale.filter_products_price'):
-                decoded_url = url_parse(redirect_url)
-                args = url_decode(decoded_url.query)
+                decoded_url = urlparse(redirect_url)
+                args = parse_qs(decoded_url.query)
                 min_price = args.get('min_price')
                 max_price = args.get('max_price')
                 if min_price or max_price:
@@ -696,7 +697,7 @@ class WebsiteSale(http.Controller):
                         )
                     except (ValueError, TypeError):
                         pass
-                    redirect_url = decoded_url.replace(query=url_encode(args)).to_url()
+                    redirect_url = urlunsplit(decoded_url._replace(query=urlencode(args)))
             request.session['website_sale_current_pl'] = pricelist.id
             request.website.sale_get_order(update_pricelist=True)
         return request.redirect(redirect_url or '/shop')

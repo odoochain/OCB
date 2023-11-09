@@ -4,9 +4,9 @@
 import json
 import logging
 import time
-import requests
+from urllib.parse import urljoin, urlencode
 
-from werkzeug.urls import url_encode, url_join
+import requests
 
 from odoo import _, api, fields, models, tools
 from odoo.exceptions import AccessError, UserError
@@ -34,13 +34,13 @@ class GoogleGmailMixin(models.AbstractModel):
         google_gmail_client_secret = Config.get_param('google_gmail_client_secret')
         base_url = self.get_base_url()
 
-        redirect_uri = url_join(base_url, '/google_gmail/confirm')
+        redirect_uri = urljoin(base_url, '/google_gmail/confirm')
 
         if not google_gmail_client_id or not google_gmail_client_secret:
             self.google_gmail_uri = False
         else:
             for record in self:
-                google_gmail_uri = 'https://accounts.google.com/o/oauth2/v2/auth?%s' % url_encode({
+                google_gmail_uri = 'https://accounts.google.com/o/oauth2/v2/auth?%s' % urlencode({
                     'client_id': google_gmail_client_id,
                     'redirect_uri': redirect_uri,
                     'response_type': 'code',
@@ -115,7 +115,7 @@ class GoogleGmailMixin(models.AbstractModel):
         google_gmail_client_id = Config.get_param('google_gmail_client_id')
         google_gmail_client_secret = Config.get_param('google_gmail_client_secret')
         base_url = self.get_base_url()
-        redirect_uri = url_join(base_url, '/google_gmail/confirm')
+        redirect_uri = urljoin(base_url, '/google_gmail/confirm')
 
         response = requests.post(
             'https://oauth2.googleapis.com/token',

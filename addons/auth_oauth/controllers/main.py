@@ -5,8 +5,8 @@ import functools
 import json
 import logging
 import os
+from urllib.parse import quote_plus, unquote_plus, urlsplit
 
-import werkzeug.urls
 import werkzeug.utils
 from werkzeug.exceptions import BadRequest
 
@@ -78,7 +78,7 @@ class OAuthLogin(Home):
         state = dict(
             d=request.session.db,
             p=provider['id'],
-            r=werkzeug.urls.url_quote_plus(redirect),
+            r=quote_plus(redirect, safe="()"),
         )
         token = request.params.get('token')
         if token:
@@ -141,7 +141,7 @@ class OAuthController(http.Controller):
 
             action = state.get('a')
             menu = state.get('m')
-            redirect = werkzeug.urls.url_unquote_plus(state['r']) if state.get('r') else False
+            redirect = unquote_plus(state['r']) if state.get('r') else False
             url = '/web'
             if redirect:
                 url = redirect
@@ -155,7 +155,7 @@ class OAuthController(http.Controller):
             resp.autocorrect_location_header = False
 
             # Since /web is hardcoded, verify user has right to land on it
-            if werkzeug.urls.url_parse(resp.location).path == '/web' and not request.env.user._is_internal():
+            if urlsplit(resp.location).path == '/web' and not request.env.user._is_internal():
                 resp.location = '/'
             return resp
         except AttributeError:  # TODO juc master: useless since ensure_db()

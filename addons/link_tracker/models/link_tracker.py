@@ -2,12 +2,12 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import random
+from urllib.parse import urljoin, urlsplit, urlencode, urlunsplit
+
 import requests
 import string
 
 from lxml import html
-from werkzeug import urls
-
 from odoo import tools, models, fields, api, _
 from odoo.exceptions import UserError
 from odoo.osv import expression
@@ -50,7 +50,7 @@ class LinkTracker(models.Model):
     @api.depends("url")
     def _compute_absolute_url(self):
         for tracker in self:
-            url = urls.url_parse(tracker.url)
+            url = urlsplit(tracker.url)
             if url.scheme:
                 tracker.absolute_url = tracker.url
             else:
@@ -73,7 +73,7 @@ class LinkTracker(models.Model):
     @api.depends('code')
     def _compute_short_url(self):
         for tracker in self:
-            tracker.short_url = urls.url_join(tracker.short_url_host, '%(code)s' % {'code': tracker.code})
+            tracker.short_url = urljoin(tracker.short_url_host, '%(code)s' % {'code': tracker.code})
 
     def _compute_short_url_host(self):
         for tracker in self:
@@ -95,10 +95,10 @@ class LinkTracker(models.Model):
         no_external_tracking = self.env['ir.config_parameter'].sudo().get_param('link_tracker.no_external_tracking')
 
         for tracker in self:
-            base_domain = urls.url_parse(tracker.get_base_url()).netloc
-            parsed = urls.url_parse(tracker.url)
+            base_domain = urlsplit(tracker.get_base_url()).netloc
+            parsed = urlsplit(tracker.url)
             if no_external_tracking and parsed.netloc and parsed.netloc != base_domain:
-                tracker.redirected_url = parsed.to_url()
+                tracker.redirected_url = urlunsplit(parsed)
                 continue
 
             utms = {}
@@ -110,7 +110,7 @@ class LinkTracker(models.Model):
                 if attr:
                     utms[key] = attr
             utms.update(parsed.decode_query())
-            tracker.redirected_url = parsed.replace(query=urls.url_encode(utms)).to_url()
+            tracker.redirected_url = urlunsplit(parsed._replace(query=urlencode(utms)))
 
     @api.model
     @api.depends('url')

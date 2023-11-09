@@ -128,13 +128,12 @@ import time
 import traceback
 import urllib
 import warnings
-import zlib
 from abc import ABC, abstractmethod
 from datetime import datetime
 from io import BytesIO
 from os.path import join as opj
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode, urlsplit
 from zlib import adler32
 
 import babel.core
@@ -146,7 +145,9 @@ import werkzeug.routing
 import werkzeug.security
 import werkzeug.wrappers
 import werkzeug.wsgi
-from werkzeug.urls import url_parse, url_encode, url_quote
+from werkzeug.urls import uri_to_iri
+from urllib.parse import quote as url_quote
+
 from werkzeug.exceptions import (HTTPException, BadRequest, Forbidden,
                                  NotFound, InternalServerError)
 
@@ -1463,14 +1464,14 @@ class Request:
         if isinstance(location, AbsoluteURL):
             location = urllib.parse.urlunsplit(location)
         if local:
-            location = '/' + url_parse(location).replace(scheme='', netloc='').to_url().lstrip('/')
+            location = '/' + urlsplit(uri_to_iri(location)).replace(scheme='', netloc='').to_url().lstrip('/')
         if self.db:
             return self.env['ir.http']._redirect(location, code)
         return werkzeug.utils.redirect(location, code, Response=Response)
 
     def redirect_query(self, location, query=None, code=303, local=True):
         if query:
-            location += '?' + url_encode(query)
+            location += '?' + urlencode(query)
         return self.redirect(location, code=code, local=local)
 
     def render(self, template, qcontext=None, lazy=True, **kw):

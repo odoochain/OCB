@@ -5,7 +5,7 @@ import json
 
 import requests
 import time
-from urllib.parse import parse_qs,urlsplit
+from urllib.parse import urlencode, urlsplit, parse_qs
 from werkzeug.urls import uri_to_iri
 
 

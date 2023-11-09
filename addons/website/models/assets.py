@@ -3,9 +3,9 @@
 
 import base64
 import re
-import requests
+from urllib.parse import urlparse
 
-from werkzeug.urls import url_parse
+import requests
 
 from odoo import api, models
 
@@ -84,7 +84,7 @@ class Assets(models.AbstractModel):
                         req = requests.get(url, timeout=5, headers=headers_woff2)
                         # https://gapis.geekzu.org/g-fonts/s/modak/v18/EJRYQgs1XtIEskMB-hRp7w.woff2
                         # -> s-modak-v18-EJRYQgs1XtIEskMB-hRp7w.woff2
-                        name = url_parse(url).path.lstrip('/').replace('/', '-')
+                        name = urlparse(url).path.lstrip('/').replace('/', '-')
                         attachment = IrAttachment.create({
                             'name': f'google-font-{name}',
                             'type': 'binary',

@@ -7,13 +7,14 @@ import json
 import logging
 import operator
 import re
+from urllib.parse import urljoin, urlencode, quote_plus
+
 import requests
 
 from collections import defaultdict
 from functools import reduce
 from lxml import etree, html
 from psycopg2 import sql
-from werkzeug import urls
 from werkzeug.datastructures import OrderedMultiDict
 from werkzeug.exceptions import NotFound
 from markupsafe import Markup
@@ -801,7 +802,7 @@ class Website(models.Model):
 
     def _get_plausible_share_url(self):
         embed_url = f'/share/{self.plausible_site}?auth={self.plausible_shared_key}&embed=true&theme=system'
-        return self.plausible_shared_key and urls.url_join(self._get_plausible_server(), embed_url) or ''
+        return self.plausible_shared_key and urljoin(self._get_plausible_server(), embed_url) or ''
 
     def get_unique_key(self, string, template_module=False):
         """ Given a string, return an unique key including module prefix.
@@ -1282,7 +1283,7 @@ class Website(models.Model):
         cdn_filters = (self.cdn_filters or '').splitlines()
         for flt in cdn_filters:
             if flt and re.match(flt, uri):
-                return urls.url_join(cdn_url, uri)
+                return urljoin(cdn_url, uri)
         return uri
 
     @api.model
@@ -1298,7 +1299,7 @@ class Website(models.Model):
         }
         if mode_edit:
             action_params["enable_editor"] = 1
-        return "/web#" + urls.url_encode(action_params)
+        return "/web#" + urlencode(action_params)
 
     def get_client_action(self, url, mode_edit=False, website_id=False):
         action = self.env["ir.actions.actions"]._for_xml_id("website.website_preview")
@@ -1342,10 +1343,10 @@ class Website(models.Model):
             path = router.build(rule.endpoint, args)
         except (NotFound, AccessError, MissingError):
             # The build method returns a quoted URL so convert in this case for consistency.
-            path = urls.url_quote_plus(request.httprequest.path, safe='/')
+            path = quote_plus(request.httprequest.path, safe='/')
         if lang != self.default_lang_id:
             path = f'/{lang.url_code}{path if path != "/" else ""}'
-        canonical_query_string = f'?{urls.url_encode(canonical_params)}' if canonical_params else ''
+        canonical_query_string = f'?{urlencode(canonical_params)}' if canonical_params else ''
         return self.get_base_url() + path + canonical_query_string
 
     def _get_canonical_url(self, canonical_params):

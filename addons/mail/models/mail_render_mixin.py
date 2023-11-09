@@ -9,7 +9,7 @@ import traceback
 
 from lxml import html
 from markupsafe import Markup
-from werkzeug import urls
+from urllib.parse import urljoin
 
 from odoo import _, api, fields, models, tools
 from odoo.addons.base.models.ir_qweb import QWebException
@@ -144,7 +144,7 @@ class MailRenderMixin(models.AbstractModel):
             # if not base_url
             if not _sub_relative2absolute.base_url:
                 _sub_relative2absolute.base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
-            return match.group(1) + urls.url_join(_sub_relative2absolute.base_url, match.group(2))
+            return match.group(1) + urljoin(_sub_relative2absolute.base_url, match.group(2))
 
         _sub_relative2absolute.base_url = base_url
         html = re.sub(r"""(<(?:img|v:fill|v:image)(?=\s)[^>]*\ssrc=")(/[^/][^"]+)""", _sub_relative2absolute, html)

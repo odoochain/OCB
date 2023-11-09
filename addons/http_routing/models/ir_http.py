@@ -6,12 +6,12 @@ import os
 import re
 import traceback
 import threading
-import urllib
+from urllib.parse import urljoin, urlsplit
 
 import unicodedata
 import werkzeug.exceptions
 import werkzeug.routing
-import werkzeug.urls
+
 from werkzeug.exceptions import HTTPException, NotFound
 
 # optional python-slugify import (https://github.com/un33k/python-slugify)
@@ -145,13 +145,13 @@ def url_lang(path_or_uri, lang_code=None):
     location = pycompat.to_text(path_or_uri).strip()
     force_lang = lang_code is not None
     try:
-        url = urllib.parse.urlsplit(location)
+        url = urlsplit(location)
     except ValueError:
         # e.g. Invalid IPv6 URL, `werkzeug.urls.url_parse('http://]')`
         url = False
     # relative URL with either a path or a force_lang
     if url and not url.netloc and not url.scheme and (url.path or force_lang):
-        location = werkzeug.urls.url_join(request.httprequest.path, location)
+        location = urljoin(request.httprequest.path, location)
         lang_url_codes = [url_code for _, url_code, *_ in Lang.get_available()]
         lang_code = pycompat.to_text(lang_code or request.context['lang'])
         lang_url_code = Lang._lang_code_to_urlcode(lang_code)

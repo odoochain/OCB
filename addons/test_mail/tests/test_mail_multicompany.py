@@ -6,7 +6,7 @@ import socket
 
 from itertools import product
 from unittest.mock import patch
-from werkzeug.urls import url_parse, url_decode
+from urllib.parse import urlparse, parse_qs
 
 from odoo.addons.mail.models.mail_message import Message
 from odoo.addons.test_mail.tests.common import TestMailCommon, TestRecipients
@@ -333,7 +333,7 @@ class TestMultiCompanyRedirect(TestMailCommon, HttpCase):
                 self.assertEqual(response.status_code, 200)
 
                 if not login:
-                    path = url_parse(response.url).path
+                    path = urlparse(response.url).path
                     self.assertEqual(path, '/web/login')
                 else:
                     user = self.env['res.users'].browse(self.session.uid)
@@ -343,15 +343,15 @@ class TestMultiCompanyRedirect(TestMailCommon, HttpCase):
                         # Logged into company main, try accessing record in other
                         # company -> _redirect_to_record should redirect to
                         # messaging as the user doesn't have any access
-                        fragment = url_parse(response.url).fragment
-                        action = url_decode(fragment)['action']
+                        fragment = urlparse(response.url).fragment
+                        action = parse_qs(fragment)['action']
                         self.assertEqual(action, 'mail.action_discuss')
                     else:
                         # Logged into company main, try accessing record in same
                         # company -> _redirect_to_record should add company in
                         # allowed_company_ids
-                        fragment = url_parse(response.url).fragment
-                        cids = url_decode(fragment)['cids']
+                        fragment = urlparse(response.url).fragment
+                        cids = parse_qs(fragment)['cids']
                         if mc_record.company_id == user.company_id:
                             self.assertEqual(cids, f'{mc_record.company_id.id}')
                         else:

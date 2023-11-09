@@ -6,8 +6,9 @@ import json
 import os
 import logging
 import re
+from urllib.parse import urljoin
+
 import requests
-import werkzeug.urls
 import werkzeug.utils
 import werkzeug.wrappers
 
@@ -142,7 +143,7 @@ class Website(Home):
             domain_to = get_base_domain(website.domain)
             if domain_from != domain_to:
                 # redirect to correct domain for a correct routing map
-                url_to = werkzeug.urls.url_join(website.domain, '/website/force/%s?isredir=1&path=%s' % (website.id, path))
+                url_to = urljoin(website.domain, '/website/force/%s?isredir=1&path=%s' % (website.id, path))
                 return request.redirect(url_to)
         website._force()
         return request.redirect(path)

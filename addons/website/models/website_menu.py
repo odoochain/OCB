@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+from urllib.parse import urlparse
 
 import werkzeug.exceptions
 import werkzeug.urls
@@ -197,7 +198,7 @@ class Menu(models.Model):
                     menu_id.page_id = None
                 if request and menu['url'] and menu['url'].startswith('#') and len(menu['url']) > 1:
                     # Working on case 2.: prefix anchor with referer URL
-                    referer_url = werkzeug.urls.url_parse(request.httprequest.headers.get('Referer', '')).path
+                    referer_url = urlparse(request.httprequest.headers.get('Referer', '')).path
                     menu['url'] = referer_url + menu['url']
             else:
                 domain = self.env["website"].website_domain(website_id) + [

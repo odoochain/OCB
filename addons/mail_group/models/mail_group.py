@@ -3,12 +3,13 @@
 
 import json
 import logging
+from urllib.parse import urljoin, urlencode
+from urllib.parse import quote as url_quote
 import lxml
 
 from ast import literal_eval
 from datetime import datetime
 from dateutil import relativedelta
-from werkzeug import urls
 
 from odoo import _, api, fields, models, tools
 from odoo.addons.http_routing.models.ir_http import slug
@@ -424,7 +425,7 @@ class MailGroup(models.Model):
                     continue
 
                 # SMTP headers related to the subscription
-                email_url_encoded = urls.url_quote(email_member)
+                email_url_encoded = url_quote(email_member)
                 headers = {
                     ** self._notify_by_email_get_headers(),
                     'List-Archive': f'<{base_url}/groups/{slug(self)}>',
@@ -637,14 +638,14 @@ class MailGroup(models.Model):
 
         confirm_action_url = '/group/%s-confirm?%s' % (
             action,
-            urls.url_encode({
+            urlencode({
                 'group_id': self.id,
                 'email': email,
                 'token': self._generate_action_token(email, action),
             })
         )
         base_url = self.get_base_url()
-        confirm_action_url = urls.url_join(base_url, confirm_action_url)
+        confirm_action_url = urljoin(base_url, confirm_action_url)
         return confirm_action_url
 
     def _generate_action_token(self, email, action):

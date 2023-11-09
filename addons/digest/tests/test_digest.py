@@ -3,10 +3,10 @@
 
 import itertools
 import random
+from urllib.parse import urljoin, urlencode
 
 from dateutil.relativedelta import relativedelta
 from lxml import html
-from werkzeug.urls import url_encode, url_join
 
 from odoo import fields, SUPERUSER_ID
 from odoo.addons.base.tests.common import HttpCaseWithUserDemo
@@ -291,7 +291,7 @@ class TestUnsubscribe(HttpCaseWithUserDemo):
         if one_click is not None:
             url_params['one_click'] = one_click
 
-        url = url_join(self.base_url, f'digest/{self.test_digest.id}/unsubscribe?{url_encode(url_params)}')
+        url = urljoin(self.base_url, f'digest/{self.test_digest.id}/unsubscribe?{urlencode(url_params)}')
         if method == 'GET':
             return self.opener.get(url, timeout=10, allow_redirects=True)
         if method == 'POST':

@@ -9,6 +9,7 @@ import requests
 from urllib import parse
 
 from odoo import api, fields, models, _
+from odoo.tools import AbsoluteURL
 
 _logger = logging.getLogger(__name__)
 
@@ -171,4 +172,4 @@ class MicrosoftService(models.AbstractModel):
             else:
                 _logger.exception("Bad microsoft request : %s !", error.response.content)
                 raise error
-        return (status, response, ask_time)
+        return status, response, ask_time

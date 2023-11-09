@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from werkzeug.urls import url_parse, url_decode
-
 import json
+from urllib.parse import urlparse, parse_qs
 
 from odoo import http
 from odoo.addons.test_mail_full.tests.common import TestMailFullCommon
@@ -36,7 +35,7 @@ class TestPortalControllers(TestPortal):
             self.record_portal._name,
             self.record_portal.id), timeout=15)
 
-        path = url_parse(response.url).path
+        path = urlparse(response.url).path
         self.assertEqual(path, '/web/login')
 
         # Test Case 1: as admin, can access record
@@ -47,8 +46,8 @@ class TestPortalControllers(TestPortal):
 
         self.assertEqual(response.status_code, 200)
 
-        fragment = url_parse(response.url).fragment
-        params = url_decode(fragment)
+        fragment = urlparse(response.url).fragment
+        params = parse_qs(fragment)
         self.assertEqual(params['cids'], '%s' % self.user_admin.company_id.id)
         self.assertEqual(params['id'], '%s' % self.record_portal.id)
         self.assertEqual(params['model'], self.record_portal._name)
@@ -69,7 +68,7 @@ class TestPortalControllers(TestPortal):
                 '/mail/view?model=%s&res_id=%s' % (model, res_id),
                 timeout=15
             )
-            path = url_parse(response.url).path
+            path = urlparse(response.url).path
             self.assertEqual(
                 path, '/web/login',
                 'Failed with %s - %s' % (model, res_id)

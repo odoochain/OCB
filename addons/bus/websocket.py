@@ -15,7 +15,7 @@ from collections import defaultdict, deque
 from contextlib import closing, suppress
 from enum import IntEnum
 from psycopg2.pool import PoolError
-from urllib.parse import urlparse
+from urllib.parse import urlsplit
 from weakref import WeakSet
 
 from werkzeug.local import LocalStack
@@ -861,7 +861,7 @@ class WebsocketConnectionHandler:
         if not os.getenv('ODOO_BUS_PUBLIC_SAMESITE_WS'):
             return
         headers = request.httprequest.headers
-        origin_url = urlparse(headers.get('origin'))
+        origin_url = urlsplit(headers.get('origin'))
         if origin_url.netloc != headers.get('host') or origin_url.scheme != request.httprequest.scheme:
             request.session = root.session_store.new()
             request.session.update(get_default_session(), db=request.session.db)
