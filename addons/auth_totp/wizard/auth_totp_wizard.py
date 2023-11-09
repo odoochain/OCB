@@ -4,11 +4,10 @@
 import base64
 import functools
 import io
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote, urlunparse
 
 import qrcode
 import re
-import werkzeug.urls
 
 from odoo import _, api, fields, models
 from odoo.addons.base.models.res_users import check_identity
@@ -38,9 +37,9 @@ class TOTPWizard(models.TransientModel):
         global_issuer = request and request.httprequest.host.split(':', 1)[0]
         for w in self:
             issuer = global_issuer or w.user_id.company_id.display_name
-            w.url = url = werkzeug.urls.url_unparse((
+            w.url = url = urlunparse((
                 'otpauth', 'totp',
-                werkzeug.urls.url_quote(f'{issuer}:{w.user_id.login}', safe=':'),
+                quote(f'{issuer}:{w.user_id.login}', safe=':'),
                 urlencode({
                     'secret': compress(w.secret),
                     'issuer': issuer,

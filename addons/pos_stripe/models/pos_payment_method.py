@@ -1,11 +1,9 @@
 # coding: utf-8
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import logging
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote
 
 import requests
-import werkzeug
-
 from odoo import fields, models, api, _
 from odoo.exceptions import ValidationError, UserError, AccessError
 
@@ -112,7 +110,7 @@ class PosPaymentMethod(models.Model):
         if not self.env.user.has_group('point_of_sale.group_pos_user'):
             raise AccessError(_("Do not have access to fetch token from Stripe"))
 
-        endpoint = ('payment_intents/%s/capture') % (werkzeug.urls.url_quote(paymentIntentId))
+        endpoint = ('payment_intents/%s/capture') % (quote(paymentIntentId))
 
         data = None
         if amount is not None:

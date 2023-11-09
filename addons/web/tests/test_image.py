@@ -3,9 +3,9 @@
 
 import io
 import base64
+from urllib.parse import quote
 
 from PIL import Image
-from werkzeug.urls import url_quote
 
 from odoo.tests.common import HttpCase, tagged
 
@@ -103,7 +103,7 @@ class TestImage(HttpCase):
         })
 
         res = self.url_open(f'/web/image/{att.id}')
-        expected_ufilename = url_quote(att.name.replace('\n', '_').replace('\r', '_'))
+        expected_ufilename = quote(att.name.replace('\n', '_').replace('\r', '_'))
         self.assertEqual(res.headers['Content-Disposition'], r"""inline; filename="foo-l'eb _ a\"!r\".gif"; filename*=UTF-8''""" + expected_ufilename)
         res.raise_for_status()
 

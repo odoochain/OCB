@@ -15,6 +15,8 @@ import logging
 import mimetypes
 import os
 import typing as t
+from urllib.parse import quote
+
 import unicodedata
 from datetime import datetime
 from time import time
@@ -22,7 +24,6 @@ from zlib import adler32
 
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import RequestedRangeNotSatisfiable
-from werkzeug.urls import url_quote
 from werkzeug.wrappers import Response
 from werkzeug.wsgi import wrap_file
 
@@ -147,7 +148,7 @@ def send_file(
         except UnicodeEncodeError:
             simple = unicodedata.normalize("NFKD", download_name)
             simple = simple.encode("ascii", "ignore").decode("ascii")
-            quoted = url_quote(download_name, safe="")
+            quoted = quote(download_name, safe="")
             names = {"filename": simple, "filename*": f"UTF-8''{quoted}"}
         else:
             names = {"filename": download_name}

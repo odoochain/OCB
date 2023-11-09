@@ -3,8 +3,7 @@
 
 import json
 import logging
-from urllib.parse import urljoin, urlencode
-from urllib.parse import quote as url_quote
+from urllib.parse import urljoin, urlencode, quote
 import lxml
 
 from ast import literal_eval
@@ -425,7 +424,7 @@ class MailGroup(models.Model):
                     continue
 
                 # SMTP headers related to the subscription
-                email_url_encoded = url_quote(email_member)
+                email_url_encoded = quote(email_member)
                 headers = {
                     ** self._notify_by_email_get_headers(),
                     'List-Archive': f'<{base_url}/groups/{slug(self)}>',

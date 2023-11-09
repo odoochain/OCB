@@ -3,7 +3,8 @@
 
 import hashlib
 from collections import OrderedDict
-from werkzeug.urls import url_quote
+from urllib.parse import quote
+
 from markupsafe import Markup
 
 from odoo import api, models
@@ -47,11 +48,11 @@ class Image(models.AbstractModel):
             filename = record.display_name
         filename = (filename or 'name').replace('/', '-').replace('\\', '-').replace('..', '--')
 
-        src = '/web/image/%s/%s/%s%s/%s?unique=%s' % (record._name, record.id, options.get('preview_image', field_name), max_size, url_quote(filename), sha)
+        src = '/web/image/%s/%s/%s%s/%s?unique=%s' % (record._name, record.id, options.get('preview_image', field_name), max_size, quote(filename), sha)
 
         src_zoom = None
         if options.get('zoom') and getattr(record, options['zoom'], None):
-            src_zoom = '/web/image/%s/%s/%s%s/%s?unique=%s' % (record._name, record.id, options['zoom'], max_size, url_quote(filename), sha)
+            src_zoom = '/web/image/%s/%s/%s%s/%s?unique=%s' % (record._name, record.id, options['zoom'], max_size, quote(filename), sha)
         elif options.get('zoom'):
             src_zoom = options['zoom']
 
