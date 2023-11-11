@@ -3,7 +3,7 @@
 
 import logging
 import math
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
 from werkzeug.urls import uri_to_iri
 from collections import defaultdict
 from datetime import timedelta
@@ -383,12 +383,12 @@ class Meeting(models.Model):
         for vals in vals_list:
             if not vals.get('videocall_location'):
                 continue
-            url = urlsplit(uri_to_iri(vals['videocall_location']))
+            url = urlsplit(vals['videocall_location'])
             if url.scheme in ('http', 'https'):
                 continue
             # relative url to convert to absolute
-            base = urlsplit(uri_to_iri(self.get_base_url()))
-            vals['videocall_location'] = url.replace(scheme=base.scheme, netloc=base.netloc).to_url()
+            base = urlsplit(self.get_base_url())
+            vals['videocall_location'] = urlunsplit(url._replace(scheme=base.scheme, netloc=base.netloc))
 
     @api.depends('videocall_location')
     def _compute_videocall_source(self):
