@@ -5,8 +5,7 @@ import json
 
 import requests
 import time
-from urllib.parse import urlencode, urlsplit, parse_qs
-from werkzeug.urls import uri_to_iri
+from urllib.parse import urlsplit, parse_qs
 
 
 class OdooEdiProxyAuth(requests.auth.AuthBase):
@@ -27,7 +26,7 @@ class OdooEdiProxyAuth(requests.auth.AuthBase):
             return request
         # craft the message (timestamp|url path|id_client|query params|body content)
         msg_timestamp = int(time.time())
-        parsed_url = urlsplit(uri_to_iri(request.path_url))
+        parsed_url = urlsplit(request.path_url)
 
         body = request.body
         if isinstance(body, bytes):

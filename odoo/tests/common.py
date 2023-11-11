@@ -31,7 +31,6 @@ import time
 import unittest
 from urllib.parse import urljoin, urlparse, parse_qs, urlencode, urlsplit, urlunsplit
 
-from werkzeug.urls import uri_to_iri
 
 from . import case
 import warnings
@@ -1732,7 +1731,7 @@ class HttpCase(TransactionCase):
             self.cr.clear()
             url = urljoin(self.base_url(), url_path)
             if watch:
-                parsed = urlparse(url)
+                parsed = urlsplit(url)
                 qs = parse_qs(parsed.query)
                 qs['watch'] = "1"
                 url = urlunsplit(parsed._replace(query=urlencode(qs)))

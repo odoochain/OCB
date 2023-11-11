@@ -6,14 +6,14 @@ import io
 import logging
 import re
 from collections import OrderedDict, defaultdict
-from urllib.parse import urlparse, urlunsplit, parse_qs, urlencode
+from urllib.parse import urlparse, urlunsplit, parse_qs, urlencode, urlsplit
 
 import babel.messages.pofile
 import werkzeug.exceptions
 import werkzeug.wrappers
 import werkzeug.wsgi
 from lxml import etree
-from werkzeug.urls import iri_to_uri
+from werkzeug.urls import iri_to_uri, uri_to_iri
 
 from odoo.tools.translate import JAVASCRIPT_TRANSLATION_COMMENT, WEB_TRANSLATION_COMMENT
 from odoo.tools.misc import file_open
@@ -74,7 +74,7 @@ def ensure_db(redirect='/web/database/selector', db=None):
         # Thus, we redirect the user to the same page but with the session cookie set.
         # This will force using the database route dispatcher...
         r = request.httprequest
-        url_redirect = urlparse(r.base_url)
+        url_redirect = urlsplit(r.base_url)
         if r.query_string:
             # in P3, request.query_string is bytes, the rest is text, can't mix them
             query_string = iri_to_uri(r.query_string)

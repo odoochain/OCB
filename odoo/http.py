@@ -126,14 +126,14 @@ import re
 import threading
 import time
 import traceback
-import urllib
 import warnings
 from abc import ABC, abstractmethod
 from datetime import datetime
 from io import BytesIO
 from os.path import join as opj
 from pathlib import Path
-from urllib.parse import urlparse, urlencode, urlsplit, quote
+from typing import Any, Set
+from urllib.parse import urlencode, urlsplit, quote, urlunsplit, SplitResult, unquote
 from zlib import adler32
 
 import babel.core
@@ -145,13 +145,15 @@ import werkzeug.routing
 import werkzeug.security
 import werkzeug.wrappers
 import werkzeug.wsgi
-from werkzeug.urls import uri_to_iri
 
 from werkzeug.exceptions import (HTTPException, BadRequest, Forbidden,
                                  NotFound, InternalServerError)
 
+from .compat import werkzeug_urls_URL
+
 try:
     from werkzeug.middleware.proxy_fix import ProxyFix as ProxyFix_
+
     ProxyFix = functools.partial(ProxyFix_, x_for=1, x_proto=1, x_host=1)
 except ImportError:
     from werkzeug.contrib.fixers import ProxyFix
@@ -166,8 +168,8 @@ from .exceptions import UserError, AccessError, AccessDenied
 from .modules.module import get_manifest
 from .modules.registry import Registry
 from .service import security, model as service_model
-from .tools import (config, AbsoluteURL, consteq, date_utils, file_path, parse_version,
-                    profiler, submap, unique, ustr,)
+from .tools import (config, consteq, date_utils, file_path, parse_version,
+                    profiler, submap, unique, ustr, )
 from .tools.geoipresolver import GeoIPResolver
 from .tools.func import filter_kwargs, lazy_property
 from .tools.mimetypes import guess_mimetype
@@ -175,9 +177,7 @@ from .tools.misc import pickle
 from .tools._vendor import sessions
 from .tools._vendor.useragents import UserAgent
 
-
 _logger = logging.getLogger(__name__)
-
 
 # =========================================================
 # Lib fixes
@@ -192,7 +192,6 @@ mimetypes.add_type('image/svg+xml', '.svg')
 
 # To remove when corrected in Babel
 babel.core.LOCALE_ALIASES['nb'] = 'nb_NO'
-
 
 # =========================================================
 # Const
@@ -210,6 +209,7 @@ CSRF_TOKEN_SALT = 60 * 60 * 24 * 365
 # The default lang to use when the browser doesn't specify it
 DEFAULT_LANG = 'en_US'
 
+
 # The dictionary to initialise a new session with.
 def get_default_session():
     return {
@@ -220,6 +220,7 @@ def get_default_session():
         'uid': None,
         'session_token': None,
     }
+
 
 # The request mimetypes that transport JSON in their body.
 JSON_MIMETYPES = ('application/json', 'application/json-rpc')
@@ -283,10 +284,12 @@ STATIC_CACHE_LONG = 60 * 60 * 24 * 365
 class SessionExpiredException(Exception):
     pass
 
+
 def content_disposition(filename):
     return "attachment; filename*=UTF-8''{}".format(
-        quote(filename, safe='', unsafe='()<>@,;:"/[]?={}\\*\'%') # RFC6266
+        quote(filename, safe='', unsafe='()<>@,;:"/[]?={}\\*\'%')  # RFC6266
     )
+
 
 def db_list(force=False, host=None):
     """
@@ -303,6 +306,7 @@ def db_list(force=False, host=None):
     except psycopg2.OperationalError:
         return []
     return db_filter(dbs, host)
+
 
 def db_filter(dbs, host=None):
     """
@@ -332,7 +336,7 @@ def db_filter(dbs, host=None):
 
         dbfilter_re = re.compile(
             config["dbfilter"].replace("%h", re.escape(host))
-                              .replace("%d", re.escape(domain)))
+            .replace("%d", re.escape(domain)))
         return [db for db in dbs if dbfilter_re.match(db)]
 
     if config['db_name']:
@@ -391,7 +395,8 @@ def serialize_exception(exception):
 
 def send_file(filepath_or_fp, mimetype=None, as_attachment=False, filename=None, mtime=None,
               add_etags=True, cache_timeout=STATIC_CACHE, conditional=True):
-    warnings.warn('odoo.http.send_file is deprecated, please use odoo.http.Stream instead.', DeprecationWarning, stacklevel=2)
+    warnings.warn('odoo.http.send_file is deprecated, please use odoo.http.Stream instead.', DeprecationWarning,
+                  stacklevel=2)
     return _send_file(
         filepath_or_fp,
         request.httprequest.environ,
@@ -677,6 +682,7 @@ def route(route=None, **routing):
         route. Enabled by default for ``'http'``-type requests, disabled
         by default for ``'json'``-type requests.
     """
+
     def decorator(endpoint):
         fname = f"<function {endpoint.__module__}.{endpoint.__name__}>"
 
@@ -704,7 +710,9 @@ def route(route=None, **routing):
         route_wrapper.original_routing = routing
         route_wrapper.original_endpoint = endpoint
         return route_wrapper
+
     return decorator
+
 
 def _generate_routing_rules(modules, nodb_only, converters=None):
     """
@@ -714,6 +722,7 @@ def _generate_routing_rules(modules, nodb_only, converters=None):
     arguments of said method with the @route arguments of the method it
     overrides.
     """
+
     def is_valid(cls):
         """ Determine if the class is defined in an addon. """
         path = cls.__module__.split('.')
@@ -753,7 +762,7 @@ def _generate_routing_rules(modules, nodb_only, converters=None):
 
             name = top_ctrl.__name__
             if leaf_controllers != [top_ctrl]:
-                name += ' (extended by %s)' %  ', '.join(
+                name += ' (extended by %s)' % ', '.join(
                     bot_ctrl.__name__
                     for bot_ctrl in leaf_controllers
                     if bot_ctrl is not top_ctrl
@@ -769,6 +778,7 @@ def _generate_routing_rules(modules, nodb_only, converters=None):
             # the hierarchy
             def is_method_a_route(cls):
                 return getattr(getattr(cls, method_name, None), 'original_routing', None) is not None
+
             if not any(map(is_method_a_route, type(ctrl).mro())):
                 continue
 
@@ -786,7 +796,8 @@ def _generate_routing_rules(modules, nodb_only, converters=None):
                 submethod = getattr(cls, method_name)
 
                 if not hasattr(submethod, 'original_routing'):
-                    _logger.warning("The endpoint %s is not decorated by @route(), decorating it myself.", f'{cls.__module__}.{cls.__name__}.{method_name}')
+                    _logger.warning("The endpoint %s is not decorated by @route(), decorating it myself.",
+                                    f'{cls.__module__}.{cls.__name__}.{method_name}')
                     submethod = route()(submethod)
 
                 # Ensure "type" is defined on each method's own routing,
@@ -794,13 +805,15 @@ def _generate_routing_rules(modules, nodb_only, converters=None):
                 default_type = submethod.original_routing.get('type', 'http')
                 routing_type = merged_routing.setdefault('type', default_type)
                 if submethod.original_routing.get('type') not in (None, routing_type):
-                    _logger.warning("The endpoint %s changes the route type, using the original type: %r.", f'{cls.__module__}.{cls.__name__}.{method_name}', routing_type)
+                    _logger.warning("The endpoint %s changes the route type, using the original type: %r.",
+                                    f'{cls.__module__}.{cls.__name__}.{method_name}', routing_type)
                 submethod.original_routing['type'] = routing_type
 
                 merged_routing.update(submethod.original_routing)
 
             if not merged_routing['routes']:
-                _logger.warning("%s is a controller endpoint without any route, skipping.", f'{cls.__module__}.{cls.__name__}.{method_name}')
+                _logger.warning("%s is a controller endpoint without any route, skipping.",
+                                f'{cls.__module__}.{cls.__name__}.{method_name}')
                 continue
 
             if nodb_only and merged_routing['auth'] != "none":
@@ -825,6 +838,7 @@ def _generate_routing_rules(modules, nodb_only, converters=None):
 
 class FilesystemSessionStore(sessions.FilesystemSessionStore):
     """ Place where to load and save session objects. """
+
     def get_session_filename(self, sid):
         # scatter sessions across 256 directories
         sha_dir = sid[:2]
@@ -1009,6 +1023,7 @@ class Session(collections.abc.MutableMapping):
 _request_stack = werkzeug.local.LocalStack()
 request = _request_stack()
 
+
 @contextlib.contextmanager
 def borrow_request():
     """ Get the current request and unexpose it from the local stack. """
@@ -1102,11 +1117,13 @@ class Response(werkzeug.wrappers.Response):
             self.response.append(self.render())
             self.template = None
 
-    def set_cookie(self, key, value='', max_age=None, expires=None, path='/', domain=None, secure=False, httponly=False, samesite=None, cookie_type='required'):
+    def set_cookie(self, key, value='', max_age=None, expires=None, path='/', domain=None, secure=False, httponly=False,
+                   samesite=None, cookie_type='required'):
         if request.db and not request.env['ir.http']._is_allowed_cookie(cookie_type):
             expires = 0
             max_age = 0
-        super().set_cookie(key, value=value, max_age=max_age, expires=expires, path=path, domain=domain, secure=secure, httponly=httponly, samesite=samesite)
+        super().set_cookie(key, value=value, max_age=max_age, expires=expires, path=path, domain=domain, secure=secure,
+                           httponly=httponly, samesite=samesite)
 
 
 class FutureResponse:
@@ -1126,11 +1143,13 @@ class FutureResponse:
         return self.charset
 
     @functools.wraps(werkzeug.Response.set_cookie)
-    def set_cookie(self, key, value='', max_age=None, expires=None, path='/', domain=None, secure=False, httponly=False, samesite=None, cookie_type='required'):
+    def set_cookie(self, key, value='', max_age=None, expires=None, path='/', domain=None, secure=False, httponly=False,
+                   samesite=None, cookie_type='required'):
         if request.db and not request.env['ir.http']._is_allowed_cookie(cookie_type):
             expires = 0
             max_age = 0
-        werkzeug.Response.set_cookie(self, key, value=value, max_age=max_age, expires=expires, path=path, domain=domain, secure=secure, httponly=httponly, samesite=samesite)
+        werkzeug.Response.set_cookie(self, key, value=value, max_age=max_age, expires=expires, path=path, domain=domain,
+                                     secure=secure, httponly=httponly, samesite=samesite)
 
 
 class Request:
@@ -1143,7 +1162,7 @@ class Request:
         self.httprequest = httprequest
         self.future_response = FutureResponse()
         self.dispatcher = _dispatchers['http'](self)  # until we match
-        #self.params = {}  # set by the Dispatcher
+        # self.params = {}  # set by the Dispatcher
 
         self.registry = None
         self.env = None
@@ -1158,7 +1177,7 @@ class Request:
         # used in this request only, it should not be saved on the
         # response cookie.
         sid = (self.httprequest.args.get('session_id')
-            or self.httprequest.headers.get("X-Openerp-Session-Id"))
+               or self.httprequest.headers.get("X-Openerp-Session-Id"))
         if sid:
             is_explicit = True
         else:
@@ -1460,10 +1479,10 @@ class Request:
 
     def redirect(self, location, code=303, local=True):
         # compatibility, Werkzeug support URL as location
-        if isinstance(location, AbsoluteURL):
-            location = urllib.parse.urlunsplit(location)
+        if isinstance(location, _CompatURLStr):
+            location = urlunsplit(location)
         if local:
-            location = '/' + urlsplit(uri_to_iri(location)).replace(scheme='', netloc='').to_url().lstrip('/')
+            location = '/' + urlunsplit(urlsplit(location)._replace(scheme='', netloc='')).lstrip('/')
         if self.db:
             return self.env['ir.http']._redirect(location, code)
         return werkzeug.utils.redirect(location, code, Response=Response)
@@ -1522,13 +1541,14 @@ class Request:
         routing = rule.endpoint.routing
         dispatcher_cls = _dispatchers[routing['type']]
         if (not is_cors_preflight(self, rule.endpoint)
-            and not dispatcher_cls.is_compatible_with(self)):
+                and not dispatcher_cls.is_compatible_with(self)):
             compatible_dispatchers = [
                 disp.routing_type
                 for disp in _dispatchers.values()
                 if disp.is_compatible_with(self)
             ]
-            raise BadRequest(f"Request inferred type is compatible with {compatible_dispatchers} but {routing['routes'][0]!r} is type={routing['type']!r}.")
+            raise BadRequest(
+                f"Request inferred type is compatible with {compatible_dispatchers} but {routing['routes'][0]!r} is type={routing['type']!r}.")
         self.dispatcher = dispatcher_cls(self)
 
     # =====================================================
@@ -1626,6 +1646,7 @@ class Request:
 # =========================================================
 
 _dispatchers = {}
+
 
 class Dispatcher(ABC):
     routing_type: str
@@ -1755,10 +1776,10 @@ class HttpDispatcher(Dispatcher):
             return response
 
         return (exc if isinstance(exc, HTTPException)
-           else Forbidden(exc.args[0]) if isinstance(exc, (AccessDenied, AccessError))
-           else BadRequest(exc.args[0]) if isinstance(exc, UserError)
-           else InternalServerError()  # hide the real error
-        )
+                else Forbidden(exc.args[0]) if isinstance(exc, (AccessDenied, AccessError))
+        else BadRequest(exc.args[0]) if isinstance(exc, UserError)
+        else InternalServerError()  # hide the real error
+                )
 
 
 class JsonRPCDispatcher(Dispatcher):
@@ -1836,9 +1857,9 @@ class JsonRPCDispatcher(Dispatcher):
         """
         error = {
             'code': 200,  # this code is the JSON-RPC level code, it is
-                          # distinct from the HTTP status code. This
-                          # code is ignored and the value 200 (while
-                          # misleading) is totally arbitrary.
+            # distinct from the HTTP status code. This
+            # code is ignored and the value 200 (while
+            # misleading) is totally arbitrary.
             'message': "Odoo Server Error",
             'data': serialize_exception(exc),
         }
@@ -1867,6 +1888,7 @@ class JsonRPCDispatcher(Dispatcher):
 
 class Application:
     """ Odoo WSGI application """
+
     # See also: https://www.python.org/dev/peps/pep-3333
 
     @lazy_property
@@ -1984,8 +2006,10 @@ class Application:
             # environ, see https://github.com/pallets/werkzeug/pull/2184
             def fake_app(environ, start_response):
                 return []
+
             def fake_start_response(status, headers):
                 return
+
             ProxyFix(fake_app)(environ, fake_start_response)
 
         httprequest = werkzeug.wrappers.Request(environ)
@@ -2034,6 +2058,51 @@ class Application:
 
         finally:
             _request_stack.pop()
+
+
+class _CompatURLStr(str):
+    """A string that provides some features of the werkzeug.urls.URL split URL class.
+
+    We used to pass a ``werkzeug.urls.URL`` instance as the ``target_url`` argument to
+    the ``Publisher.publish`` method.  Werkzeug has deprecated the ``URL`` class, so
+    now we've changed our API to just pass a ``str`` for ``target_url``.
+
+    There are however, Lektor plugins out in the wild that provide their own custom
+    Publisher classes, and they expect a ``URL`` instance for ``target_url``.
+
+    Here we provide most of the methods and attributes of ``URL`` that might be of use
+    to a publisher, so as to try not to break all those existing plugins.
+
+    .. tip::
+       New plugins may preserve compatibility with older versions of Lektor by
+       first coercing their ``target_url`` parameter to a ``str`` before use.
+       (This works because ``werkzeug.urls.URL.__str__`` returns the reassembled URL.)
+       E.g. using ``urllib.parse.urlsplit`` to parse the URL:
+
+       .. code:: python
+         from urllib.parse import urlsplit
+
+         class CustomPublisher(Publisher):
+             def publish(self, target_url, credentials=None, **extra):
+                 url = urlsplit(str(target_url))
+                 host = url.hostname
+                 ...
+    """
+
+    def __getattr__(self, name: str):
+        if name.startswith("_"):
+            raise AttributeError(name)
+        url = werkzeug_urls_URL(*urlsplit(self))
+        rv = getattr(url, name)
+        _logger.warning(
+            "Since Lektor version 3.4, the 'target_url' parameter to the "
+            "'Publisher.publish' method is now a string rather than a "
+            "werkzeug.urls.URL instance.  To ease the transition, some "
+            "methods and attributes of werkzeugs.urls.URL are being emulated, "
+            "however that will not last forever. The plugin should be updated "
+            "to treat 'target_url' as a string."
+        )
+        return rv
 
 
 root = Application()
