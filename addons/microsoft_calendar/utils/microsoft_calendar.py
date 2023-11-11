@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from urllib import parse
+from urllib.parse import parse_qs, urlsplit
 
 import requests
 import json
@@ -87,7 +87,7 @@ class MicrosoftCalendarService():
             events += data.get('value', [])
 
         token_url = data.get('@odata.deltaLink')
-        next_sync_token = parse.parse_qs(parse.urlsplit(token_url).query).get('$deltatoken', False) if token_url else None
+        next_sync_token = parse_qs(urlsplit(token_url).query).get('$deltatoken')[0] if token_url else None
         return events, next_sync_token
 
     @requires_auth_token

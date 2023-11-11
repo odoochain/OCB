@@ -4,12 +4,11 @@
 from datetime import datetime
 import json
 import logging
+from urllib.parse import parse_qs, urlsplit, urlencode
 
 import requests
-from urllib import parse
 
 from odoo import api, fields, models, _
-from odoo.tools import AbsoluteURL
 
 _logger = logging.getLogger(__name__)
 
@@ -84,7 +83,7 @@ class MicrosoftService(models.AbstractModel):
         base_url = get_param('web.base.url', default='http://www.odoo.com?NoBaseUrl')
         client_id = get_param('microsoft_%s_client_id' % (service,), default=False)
 
-        encoded_params = parse.urlencode({
+        encoded_params = urlencode({
             'response_type': 'code',
             'client_id': client_id,
             'state': json.dumps(state),
@@ -138,8 +137,8 @@ class MicrosoftService(models.AbstractModel):
         if headers is None:
             headers = {}
 
-        assert parse.parse_qs(parse.urlparse(preuri + uri).hostname) in [
-            parse.parse_qs(parse.urlparse(url).hostname) for url in (DEFAULT_MICROSOFT_TOKEN_ENDPOINT, DEFAULT_MICROSOFT_GRAPH_ENDPOINT)
+        assert parse_qs(urlsplit(preuri + uri).hostname) in [
+            parse_qs(urlsplit(url).hostname) for url in (DEFAULT_MICROSOFT_TOKEN_ENDPOINT, DEFAULT_MICROSOFT_GRAPH_ENDPOINT)
         ]
 
         _logger.debug("Uri: %s - Type : %s - Headers: %s - Params : %s !" % (uri, method, headers, params))
