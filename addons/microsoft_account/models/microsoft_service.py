@@ -14,9 +14,9 @@ _logger = logging.getLogger(__name__)
 
 TIMEOUT = 20
 
-DEFAULT_MICROSOFT_AUTH_ENDPOINT = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
-DEFAULT_MICROSOFT_TOKEN_ENDPOINT = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
-DEFAULT_MICROSOFT_GRAPH_ENDPOINT = 'https://graph.microsoft.com'
+DEFAULT_MICROSOFT_AUTH_ENDPOINT = f'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
+DEFAULT_MICROSOFT_TOKEN_ENDPOINT = f'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+DEFAULT_MICROSOFT_GRAPH_ENDPOINT = f'https://graph.microsoft.com'
 
 RESOURCE_NOT_FOUND_STATUSES = (204, 404)
 
@@ -124,7 +124,8 @@ class MicrosoftService(models.AbstractModel):
             raise self.env['res.config.settings'].get_config_warning(error_msg)
 
     @api.model
-    def _do_request(self, uri, params=None, headers=None, method='POST', preuri=DEFAULT_MICROSOFT_GRAPH_ENDPOINT, timeout=TIMEOUT):
+    def _do_request(self, uri, params=None, headers=None, method='POST', preuri=DEFAULT_MICROSOFT_GRAPH_ENDPOINT,
+                    timeout=TIMEOUT):
         """ Execute the request to Microsoft API. Return a tuple ('HTTP_CODE', 'HTTP_RESPONSE')
             :param uri : the url to contact
             :param params : dict or already encoded parameters for the request to make
@@ -140,7 +141,7 @@ class MicrosoftService(models.AbstractModel):
         assert parse_qs(urlsplit(preuri + uri).hostname) in [
             parse_qs(urlsplit(url).hostname) for url in (DEFAULT_MICROSOFT_TOKEN_ENDPOINT, DEFAULT_MICROSOFT_GRAPH_ENDPOINT)
         ]
-
+        print("Preuri: %s - MyUri: %s - Type : %s - Headers: %s - Params : %s !" % (preuri, uri, method, headers, params))
         _logger.debug("Uri: %s - Type : %s - Headers: %s - Params : %s !" % (uri, method, headers, params))
 
         ask_time = fields.Datetime.now()

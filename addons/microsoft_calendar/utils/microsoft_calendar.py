@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from urllib.parse import parse_qs, urlsplit
+from typing import Callable
+from urllib.parse import parse_qs, urlsplit, urlparse
 
 import requests
 import json
@@ -12,15 +13,19 @@ from odoo.addons.microsoft_account.models.microsoft_service import TIMEOUT, RESO
 
 _logger = logging.getLogger(__name__)
 
-def requires_auth_token(func):
+
+def requires_auth_token(func) -> Callable:
     def wrapped(self, *args, **kwargs):
         if not kwargs.get('token'):
             raise AttributeError("An authentication token is required")
         return func(self, *args, **kwargs)
+
     return wrapped
+
 
 class InvalidSyncToken(Exception):
     pass
+
 
 # In Outlook, an event can be:
 # - a 'singleInstance' event,
@@ -52,7 +57,7 @@ class MicrosoftCalendarService():
         headers = {
             'Content-type': 'application/json',
             'Authorization': 'Bearer %s' % token,
-            'Prefer': 'outlook.body-content-type="html", odata.maxpagesize=50'
+            'Prefer': 'outlook.body-content-type="html", odata.maxpagesize=20'
         }
         if not params:
             # Get context keys limiting query range for reducing requests and then increase performance.
@@ -64,13 +69,14 @@ class MicrosoftCalendarService():
             else:
                 ICP = self.microsoft_service.env['ir.config_parameter'].sudo()
                 day_range = int(ICP.get_param('microsoft_calendar.sync.range_days', default=365))
-                start_date = fields.Datetime.subtract(fields.Datetime.now(), days=day_range).strftime("%Y-%m-%dT00:00:00Z")
+                start_date = fields.Datetime.subtract(fields.Datetime.now(), days=day_range).strftime(
+                    "%Y-%m-%dT00:00:00Z")
                 end_date = fields.Datetime.add(fields.Datetime.now(), days=day_range).strftime("%Y-%m-%dT00:00:00Z")
             params = {
                 'startDateTime': start_date,
                 'endDateTime': end_date,
             }
-
+        print(f"The Params:", params)
         # get the first page of events
         _, data, _ = self.microsoft_service._do_request(
             url, params, headers, method='GET', timeout=timeout
@@ -79,15 +85,27 @@ class MicrosoftCalendarService():
         # and then, loop on other pages to get all the events
         events = data.get('value', [])
         next_page_token = data.get('@odata.nextLink')
+        delta_token = ''
+        delta_link = ''
+
         while next_page_token:
             _, data, _ = self.microsoft_service._do_request(
                 next_page_token, {}, headers, preuri='', method='GET', timeout=timeout
             )
             next_page_token = data.get('@odata.nextLink')
+            delta_link = data.get('@odata.deltaLink', '')
+            delta_link_qs = parse_qs(urlparse(delta_link).query)
             events += data.get('value', [])
+            if not next_page_token and (delta_link_qs.get('$deltaToken') or delta_link_qs.get('$deltatoken')):
+                delta_token_qs = delta_link_qs.get('$deltaToken') or delta_link_qs.get('$deltatoken')
+                delta_token = delta_token_qs[0] if delta_token_qs else ''
 
         token_url = data.get('@odata.deltaLink')
         next_sync_token = parse_qs(urlsplit(token_url).query).get('$deltatoken')[0] if token_url else None
+        print(f"token_url: {token_url}")
+        print(f"delta_link: {delta_link}")
+        print(f"delta_token: {delta_token}")
+        print(f"next_sync_token: {next_sync_token}")
         return events, next_sync_token
 
     @requires_auth_token
@@ -96,9 +114,9 @@ class MicrosoftCalendarService():
         Get a set of events that have been added, deleted or updated in a time range.
         See: https://docs.microsoft.com/en-us/graph/api/event-delta?view=graph-rest-1.0&tabs=http
         """
-        url = "/v1.0/me/calendarView/delta"
-        params = {'$deltatoken': sync_token} if sync_token else None
-
+        url = f"/v1.0/me/calendarView/delta"
+        params = {f'$deltatoken': sync_token} if sync_token else None
+        print(f"params: {params}")
         try:
             events, next_sync_token = self._get_events_from_paginated_url(
                 url, params=params, token=token, timeout=timeout)
@@ -133,6 +151,8 @@ class MicrosoftCalendarService():
         1) get main changed events (so single events and serie masters)
         2) get occurrences linked to a serie masters (to retrieve all needed details such as iCalUId)
         """
+        print(f"sync_token: {sync_token}")
+        print(f"token: {token}")
         events, next_sync_token = self._get_events_delta(sync_token=sync_token, token=token, timeout=timeout)
 
         # get occurences details for all serie masters
@@ -145,7 +165,8 @@ class MicrosoftCalendarService():
     def insert(self, values, token=None, timeout=TIMEOUT):
         url = "/v1.0/me/calendar/events"
         headers = {'Content-type': 'application/json', 'Authorization': 'Bearer %s' % token}
-        _dummy, data, _dummy = self.microsoft_service._do_request(url, json.dumps(values), headers, method='POST', timeout=timeout)
+        _dummy, data, _dummy = self.microsoft_service._do_request(url, json.dumps(values), headers, method='POST',
+                                                                  timeout=timeout)
 
         return data['id'], data['iCalUId']
 
@@ -154,7 +175,8 @@ class MicrosoftCalendarService():
         url = "/v1.0/me/calendar/events/%s" % event_id
         headers = {'Content-type': 'application/json', 'Authorization': 'Bearer %s' % token}
         try:
-            status, _dummy, _dummy = self.microsoft_service._do_request(url, json.dumps(values), headers, method='PATCH', timeout=timeout)
+            status, _dummy, _dummy = self.microsoft_service._do_request(url, json.dumps(values), headers,
+                                                                        method='PATCH', timeout=timeout)
         except requests.HTTPError:
             _logger.info("Microsoft event %s has not been updated", event_id)
             return False
@@ -167,7 +189,8 @@ class MicrosoftCalendarService():
         headers = {'Authorization': 'Bearer %s' % token}
         params = {}
         try:
-            status, _dummy, _dummy = self.microsoft_service._do_request(url, params, headers=headers, method='DELETE', timeout=timeout)
+            status, _dummy, _dummy = self.microsoft_service._do_request(url, params, headers=headers, method='DELETE',
+                                                                        timeout=timeout)
         except requests.HTTPError as e:
             # For some unknown reason Microsoft can also return a 403 response when the event is already cancelled.
             status = e.response.status_code
@@ -182,10 +205,10 @@ class MicrosoftCalendarService():
     def answer(self, event_id, answer, values, token=None, timeout=TIMEOUT):
         url = "/v1.0/me/calendar/events/%s/%s" % (event_id, answer)
         headers = {'Content-type': 'application/json', 'Authorization': 'Bearer %s' % token}
-        status, _dummy, _dummy = self.microsoft_service._do_request(url, json.dumps(values), headers, method='POST', timeout=timeout)
+        status, _dummy, _dummy = self.microsoft_service._do_request(url, json.dumps(values), headers, method='POST',
+                                                                    timeout=timeout)
 
         return status not in RESOURCE_NOT_FOUND_STATUSES
-
 
     #####################################
     ##  MANAGE CONNEXION TO MICROSOFT  ##
