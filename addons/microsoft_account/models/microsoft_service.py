@@ -142,7 +142,7 @@ class MicrosoftService(models.AbstractModel):
         assert parse_qs(urlsplit(preuri + uri).hostname) in [
             parse_qs(urlsplit(url).hostname) for url in (DEFAULT_MICROSOFT_TOKEN_ENDPOINT, DEFAULT_MICROSOFT_GRAPH_ENDPOINT)
         ]
-        print("Preuri: %s - MyUri: %s - Type : %s - Headers: %s - Params : %s !" % (preuri, uri, method, headers, params))
+        # print("Preuri: %s - MyUri: %s - Type : %s - Headers: %s - Params : %s !" % (preuri, uri, method, headers, params))
         _logger.debug("Uri: %s - Type : %s - Headers: %s - Params : %s !" % (uri, method, headers, params))
 
         ask_time = fields.Datetime.now()

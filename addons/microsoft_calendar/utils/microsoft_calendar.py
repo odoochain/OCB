@@ -57,7 +57,7 @@ class MicrosoftCalendarService():
         headers = {
             'Content-type': 'application/json',
             'Authorization': 'Bearer %s' % token,
-            'Prefer': 'outlook.body-content-type="html", odata.maxpagesize=20'
+            'Prefer': 'outlook.body-content-type="html", odata.maxpagesize=60'
         }
         if not params:
             # Get context keys limiting query range for reducing requests and then increase performance.
@@ -76,7 +76,7 @@ class MicrosoftCalendarService():
                 'startDateTime': start_date,
                 'endDateTime': end_date,
             }
-        print(f"The Params:", params)
+        # print(f"The Params:", params)
         # get the first page of events
         _, data, _ = self.microsoft_service._do_request(
             url, params, headers, method='GET', timeout=timeout
@@ -85,27 +85,23 @@ class MicrosoftCalendarService():
         # and then, loop on other pages to get all the events
         events = data.get('value', [])
         next_page_token = data.get('@odata.nextLink')
-        delta_token = ''
-        delta_link = ''
+        # delta_token = ''
+        # delta_link = ''
 
         while next_page_token:
             _, data, _ = self.microsoft_service._do_request(
                 next_page_token, {}, headers, preuri='', method='GET', timeout=timeout
             )
             next_page_token = data.get('@odata.nextLink')
-            delta_link = data.get('@odata.deltaLink', '')
-            delta_link_qs = parse_qs(urlparse(delta_link).query)
+            # delta_link = data.get('@odata.deltaLink', '')
+            # delta_link_qs = parse_qs(urlparse(delta_link).query)
             events += data.get('value', [])
-            if not next_page_token and (delta_link_qs.get('$deltaToken') or delta_link_qs.get('$deltatoken')):
-                delta_token_qs = delta_link_qs.get('$deltaToken') or delta_link_qs.get('$deltatoken')
-                delta_token = delta_token_qs[0] if delta_token_qs else ''
+            # if not next_page_token and (delta_link_qs.get('$deltaToken') or delta_link_qs.get('$deltatoken')):
+            #     delta_token_qs = delta_link_qs.get('$deltaToken') or delta_link_qs.get('$deltatoken')
+            #     delta_token = delta_token_qs[0] if delta_token_qs else ''
 
         token_url = data.get('@odata.deltaLink')
-        next_sync_token = parse_qs(urlsplit(token_url).query).get('$deltatoken', False)[0] if token_url else None
-        print(f"token_url: {token_url}")
-        print(f"delta_link: {delta_link}")
-        print(f"delta_token: {delta_token}")
-        print(f"next_sync_token: {next_sync_token}")
+        next_sync_token = parse_qs(urlsplit(token_url).query).get('$deltatoken')[0] if token_url else None
         return events, next_sync_token
 
     @requires_auth_token
@@ -165,8 +161,8 @@ class MicrosoftCalendarService():
         1) get main changed events (so single events and serie masters)
         2) get occurrences linked to a serie masters (to retrieve all needed details such as iCalUId)
         """
-        print(f"sync_token: {sync_token}")
-        print(f"token: {token}")
+        # print(f"sync_token: {sync_token}")
+        # print(f"token: {token}")
         events, next_sync_token = self._get_events_delta(sync_token=sync_token, token=token, timeout=timeout)
 
         # get occurences details for all serie masters
