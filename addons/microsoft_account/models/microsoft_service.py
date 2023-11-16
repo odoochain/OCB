@@ -7,6 +7,7 @@ import logging
 from urllib.parse import parse_qs, urlsplit, urlencode
 
 import requests
+from werkzeug.urls import uri_to_iri
 
 from odoo import api, fields, models, _
 
@@ -147,7 +148,7 @@ class MicrosoftService(models.AbstractModel):
         ask_time = fields.Datetime.now()
         try:
             if method.upper() in ('GET', 'DELETE'):
-                res = requests.request(method.lower(), preuri + uri, headers=headers, params=params, timeout=timeout)
+                res = requests.request(method=method.lower(), url=str(preuri + uri), headers=headers, params=params, timeout=timeout)
             elif method.upper() in ('POST', 'PATCH', 'PUT'):
                 res = requests.request(method.lower(), preuri + uri, data=params, headers=headers, timeout=timeout)
             else:

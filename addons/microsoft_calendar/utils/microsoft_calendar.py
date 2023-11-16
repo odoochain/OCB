@@ -101,7 +101,7 @@ class MicrosoftCalendarService():
                 delta_token = delta_token_qs[0] if delta_token_qs else ''
 
         token_url = data.get('@odata.deltaLink')
-        next_sync_token = parse_qs(urlsplit(token_url).query).get('$deltatoken')[0] if token_url else None
+        next_sync_token = parse_qs(urlsplit(token_url).query).get('$deltatoken', False)[0] if token_url else None
         print(f"token_url: {token_url}")
         print(f"delta_link: {delta_link}")
         print(f"delta_token: {delta_token}")
@@ -114,9 +114,9 @@ class MicrosoftCalendarService():
         Get a set of events that have been added, deleted or updated in a time range.
         See: https://docs.microsoft.com/en-us/graph/api/event-delta?view=graph-rest-1.0&tabs=http
         """
-        url = f"/v1.0/me/calendarView/delta"
-        params = {f'$deltatoken': sync_token} if sync_token else None
-        print(f"params: {params}")
+        url = r"/v1.0/me/calendarView/delta"
+        params = {r'$deltatoken': sync_token} if sync_token else None
+        # print(f"params: {params}")
         try:
             events, next_sync_token = self._get_events_from_paginated_url(
                 url, params=params, token=token, timeout=timeout)

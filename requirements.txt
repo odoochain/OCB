@@ -2,9 +2,9 @@
 # python3-* equivalent distributed in Ubuntu 22.04 and Debian 11
 Babel==2.9.1  # min version = 2.6.0 (Focal with security backports)
 chardet==4.0.0
-cryptography==3.4.8
+cryptography==36.0.2  # https://github.com/paramiko/paramiko/issues/2038
 decorator==4.4.2
-docutils==0.16
+docutils==0.20.1
 ebaysdk
 freezegun==0.3.11; python_version < '3.8'
 freezegun==0.3.15; python_version >= '3.8'
@@ -38,7 +38,7 @@ psycopg2==2.8.6 ; sys_platform != 'win32' and python_version >= '3.8'and python_
 psycopg2==2.8.6 ; sys_platform == 'win32' and python_version < '3.10'
 psycopg2==2.9.5 ; python_version > '3.10' or ( sys_platform == 'win32' and python_version == '3.10')
 pydot==1.4.2
-pyopenssl==23.2.0
+pyopenssl==23.3.0
 PyPDF2==1.26.0 ; python_version <= '3.10'
 PyPDF2>=2.12.1 ; python_version > '3.10'
 pypiwin32 ; sys_platform == 'win32'

@@ -8,7 +8,6 @@ import functools
 import importlib
 import logging
 import os
-import pkg_resources
 import re
 import sys
 import warnings
@@ -17,15 +16,17 @@ from os.path import join as opj, normpath
 import odoo
 import odoo.tools as tools
 import odoo.release as release
-from odoo.tools import pycompat
-from odoo.tools.misc import file_path
 
+if sys.version_info >= (3, 10):  # pragma: no cover
+    from importlib.metadata import version, Distribution, PackageNotFoundError
+else:
+    from importlib_metadata import version, Distribution, PackageNotFoundError
 
 MANIFEST_NAMES = ('__manifest__.py', '__openerp__.py')
 README = ['README.rst', 'README.md', 'README.txt']
 
 _DEFAULT_MANIFEST = {
-    #addons_path: f'/path/to/the/addons/path/of/{module}',  # automatic
+    # addons_path: f'/path/to/the/addons/path/of/{module}',  # automatic
     'application': False,
     'bootstrap': False,  # web
     'assets': {},
@@ -38,14 +39,14 @@ _DEFAULT_MANIFEST = {
     'depends': [],
     'description': '',
     'external_dependencies': [],
-    #icon: f'/{module}/static/description/icon.png',  # automatic
+    # icon: f'/{module}/static/description/icon.png',  # automatic
     'init_xml': [],
     'installable': True,
     'images': [],  # website
     'images_preview_theme': {},  # website themes
-    #license, mandatory
+    # license, mandatory
     'live_test_url': '',  # website themes
-    #name, mandatory
+    # name, mandatory
     'post_init_hook': '',
     'post_load': None,
     'pre_init_hook': '',
@@ -62,6 +63,7 @@ _DEFAULT_MANIFEST = {
 
 _logger = logging.getLogger(__name__)
 
+
 # addons path as a list
 # ad_paths is a deprecated alias, please use odoo.addons.__path__
 @tools.lazy
@@ -71,8 +73,10 @@ def ad_paths():
         '"odoo.addons.__path__".', DeprecationWarning, stacklevel=2)
     return odoo.addons.__path__
 
+
 # Modules already loaded
 loaded = []
+
 
 class AddonsHook(object):
     """ Makes modules accessible through openerp.addons.* """
@@ -103,6 +107,7 @@ class AddonsHook(object):
         sys.modules[name] = odoo_module
 
         return odoo_module
+
 
 class OdooHook(object):
     """ Makes odoo package also available as openerp """
@@ -215,7 +220,7 @@ def initialize_sys_path():
     sys.modules["odoo.addons.base.maintenance.migrations"] = upgrade
 
     # hook deprecated module alias from openerp to odoo and "crm"-like to odoo.addons
-    if not getattr(initialize_sys_path, 'called', False): # only initialize once
+    if not getattr(initialize_sys_path, 'called', False):  # only initialize once
         sys.meta_path.insert(0, UpgradeHook())
         sys.meta_path.insert(0, OdooHook())
         sys.meta_path.insert(0, AddonsHook())
@@ -233,7 +238,7 @@ def get_module_path(module, downloaded=False, display_warning=True):
     if re.search(r"[\/\\]", module):
         return False
     for adp in odoo.addons.__path__:
-        files = [opj(adp, module, manifest) for manifest in MANIFEST_NAMES] +\
+        files = [opj(adp, module, manifest) for manifest in MANIFEST_NAMES] + \
                 [opj(adp, module + '.zip')]
         if any(os.path.exists(f) for f in files):
             return opj(adp, module)
@@ -243,6 +248,7 @@ def get_module_path(module, downloaded=False, display_warning=True):
     if display_warning:
         _logger.warning('module %s: module not found', module)
     return False
+
 
 def get_module_filetree(module, dir='.'):
     warnings.warn(
@@ -268,7 +274,7 @@ def get_module_filetree(module, dir='.'):
             continue
 
         if dir:
-            f = f[len(dir)+int(not dir.endswith('/')):]
+            f = f[len(dir) + int(not dir.endswith('/')):]
         lst = f.split(os.sep)
         current = tree
         while len(lst) != 1:
@@ -276,6 +282,7 @@ def get_module_filetree(module, dir='.'):
         current[lst.pop(0)] = None
 
     return tree
+
 
 def get_resource_path(module, *args):
     """Return the full path of a resource of the given module.
@@ -288,19 +295,22 @@ def get_resource_path(module, *args):
     """
     resource_path = opj(module, *args)
     try:
-        return file_path(resource_path)
+        return tools.file_path(resource_path)
     except (FileNotFoundError, ValueError):
         return False
+
 
 def check_resource_path(mod_path, *args):
     resource_path = opj(mod_path, *args)
     try:
-        return file_path(resource_path)
+        return tools.file_path(resource_path)
     except (FileNotFoundError, ValueError):
         return False
 
+
 # backwards compatibility
 get_module_resource = get_resource_path
+
 
 def get_resource_from_path(path):
     """Tries to extract the module name and the resource's relative path
@@ -334,11 +344,13 @@ def get_resource_from_path(path):
         return (module, '/'.join(relative), os.path.sep.join(relative))
     return None
 
+
 def get_module_icon(module):
     iconpath = ['static', 'description', 'icon.png']
     if get_module_resource(module, *iconpath):
         return ('/' + module + '/') + '/'.join(iconpath)
-    return '/base/'  + '/'.join(iconpath)
+    return '/base/' + '/'.join(iconpath)
+
 
 def get_module_icon_path(module):
     iconpath = ['static', 'description', 'icon.png']
@@ -347,6 +359,7 @@ def get_module_icon_path(module):
         path = get_module_resource('base', *iconpath)
     return path
 
+
 def module_manifest(path):
     """Returns path to module manifest if one can be found under `path`, else `None`."""
     if not path:
@@ -354,6 +367,7 @@ def module_manifest(path):
     for manifest_name in MANIFEST_NAMES:
         if os.path.isfile(opj(path, manifest_name)):
             return opj(path, manifest_name)
+
 
 def get_module_root(path):
     """
@@ -381,6 +395,7 @@ def get_module_root(path):
             return None
         path = new_path
     return path
+
 
 def load_manifest(module, mod_path=None):
     """ Load the module manifest from the file system. """
@@ -418,7 +433,7 @@ def load_manifest(module, mod_path=None):
     if isinstance(manifest['auto_install'], collections.abc.Iterable):
         manifest['auto_install'] = set(manifest['auto_install'])
         non_dependencies = manifest['auto_install'].difference(manifest['depends'])
-        assert not non_dependencies,\
+        assert not non_dependencies, \
             "auto_install triggers must be dependencies, found " \
             "non-dependencies [%s] for module %s" % (
                 ', '.join(non_dependencies), module
@@ -430,6 +445,7 @@ def load_manifest(module, mod_path=None):
     manifest['addons_path'] = normpath(opj(mod_path, os.pardir))
 
     return manifest
+
 
 @functools.lru_cache(maxsize=None)
 def get_manifest(module, mod_path=None):
@@ -446,11 +462,13 @@ def get_manifest(module, mod_path=None):
     """
     return load_manifest(module, mod_path)
 
+
 def load_information_from_description_file(module, mod_path=None):
     warnings.warn(
         'load_information_from_description_file() is a deprecated '
         'alias to get_manifest()', DeprecationWarning, stacklevel=2)
     return get_manifest(module, mod_path)
+
 
 def load_openerp_module(module_name):
     """ Load an OpenERP module, if not already loaded.
@@ -482,9 +500,11 @@ def load_openerp_module(module_name):
     else:
         loaded.append(module_name)
 
+
 def get_modules():
     """Returns the list of module names
     """
+
     def listdir(dir):
         def clean(name):
             name = os.path.basename(name)
@@ -496,6 +516,7 @@ def get_modules():
             for mname in MANIFEST_NAMES:
                 if os.path.isfile(opj(dir, name, mname)):
                     return True
+
         return [
             clean(it)
             for it in os.listdir(dir)
@@ -510,6 +531,7 @@ def get_modules():
         plist.extend(listdir(ad))
     return list(set(plist))
 
+
 def get_modules_with_version():
     modules = get_modules()
     res = dict.fromkeys(modules, adapt_version('1.0'))
@@ -521,29 +543,33 @@ def get_modules_with_version():
             continue
     return res
 
+
 def adapt_version(version):
     serie = release.major_version
     if version == serie or not version.startswith(serie + '.'):
         version = '%s.%s' % (serie, version)
     return version
 
+
 current_test = None
 
 
+# https://github.com/AnalogJ/lexicon/pull/1252/files
 def check_python_external_dependency(pydep):
     try:
-        pkg_resources.get_distribution(pydep)
-    except pkg_resources.DistributionNotFound as e:
+        Distribution.from_name(pydep)
+    except PackageNotFoundError:
         try:
             importlib.import_module(pydep)
-            _logger.info("python external dependency on '%s' does not appear to be a valid PyPI package. Using a PyPI package name is recommended.", pydep)
+            _logger.info(
+                "python external dependency on '%s' does not appear to be a valid PyPI package. Using a PyPI package name is recommended.",
+                pydep)
         except ImportError:
             # backward compatibility attempt failed
-            _logger.warning("DistributionNotFound: %s", e)
             raise Exception('Python library not installed: %s' % (pydep,))
-    except pkg_resources.VersionConflict as e:
-        _logger.warning("VersionConflict: %s", e)
-        raise Exception('Python library version conflict: %s' % (pydep,))
+    # except VersionConflict as e:
+    #     _logger.warning("VersionConflict: %s", e)
+    #     raise Exception('Python library version conflict: %s' % (pydep,))
     except Exception as e:
         _logger.warning("get_distribution(%s) failed: %s", pydep, e)
         raise Exception('Error finding python library %s' % (pydep,))
