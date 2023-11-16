@@ -137,6 +137,7 @@ def load_module_graph(cr, graph, status=None, perform_checks=True,
        :param set models_to_check:
        :return: list of modules that were installed or updated
     """
+    global module
     if models_to_check is None:
         models_to_check = set()
 
