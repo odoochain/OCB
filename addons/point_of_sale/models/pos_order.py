@@ -916,8 +916,12 @@ class PosOrder(models.Model):
         received_payments = [(p[2]['amount'], p[2]['payment_method_id']) for p in data['statement_ids']]
         existing_payments = [(p.amount, p.payment_method_id.id) for p in existing_order.payment_ids]
 
-        if not all(received_payment in existing_payments for received_payment in received_payments):
-            return False
+        for amount, payment_method in received_payments:
+            if not any(
+                float_is_zero(amount - ex_amount, precision_rounding=existing_order.currency_id.rounding) and payment_method == ex_payment_method
+                for ex_amount, ex_payment_method in existing_payments
+            ):
+                return False
 
         if len(data['lines']) != len(existing_order.lines):
             return False
@@ -1438,7 +1442,7 @@ class ReportSaleDetails(models.AbstractModel):
                 # start by default today 00:00:00
                 user_tz = pytz.timezone(self.env.context.get('tz') or self.env.user.tz or 'UTC')
                 today = user_tz.localize(fields.Datetime.from_string(fields.Date.context_today(self)))
-                date_start = today.astimezone(pytz.timezone('UTC'))
+                date_start = today.astimezone(pytz.timezone('UTC')).replace(tzinfo=None)
 
             if date_stop:
                 date_stop = fields.Datetime.from_string(date_stop)
@@ -1525,7 +1529,8 @@ class ReportSaleDetails(models.AbstractModel):
         data = dict(data or {})
         # initialize data keys with their value if provided, else None
         data.update({
-            'session_ids': data.get('session_ids'),
+            #If no data is provided it means that the report is called from the PoS, and docids represent the session_id
+            'session_ids': data.get('session_ids') or (docids if not data.get('config_ids') and not data.get('date_start') and not data.get('date_stop') else None),
             'config_ids': data.get('config_ids'),
             'date_start': data.get('date_start'),
             'date_stop': data.get('date_stop')

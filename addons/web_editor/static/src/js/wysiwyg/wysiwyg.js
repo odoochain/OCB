@@ -440,7 +440,10 @@ const Wysiwyg = Widget.extend({
                         $target.data('popover-widget-initialized', this.linkPopover);
                     })();
                 }
-                $target.focus();
+                // Setting the focus on the closest contenteditable element
+                // resets the selection inside that element if no selection
+                // exists.
+                $target.closest('[contenteditable=true]').focus();
                 if ($target.closest('#wrapwrap').length && this.snippetsMenu) {
                     this.toggleLinkTools({
                         forceOpen: true,
@@ -1175,7 +1178,6 @@ const Wysiwyg = Widget.extend({
                 this.odooEditor.historyUnpauseSteps();
                 this.odooEditor.historyStep();
                 link = linkWidget.$link[0];
-                this.odooEditor.setContenteditableLink(linkWidget.$link[0]);
                 setSelection(link, 0, link, link.childNodes.length, false);
                 // Focus the link after the dialog element is removed because
                 // if the dialog element is still in the DOM at the time of
@@ -2540,14 +2542,14 @@ const Wysiwyg = Widget.extend({
                             const remoteClient = { id: fromClientId, startTime: remoteStartTime };
                             if (isClientFirst(localClient, remoteClient)) {
                                 this._historySyncAtLeastOnce = true;
+                                this._historySyncFinished = true;
                             } else {
                                 this._resetCollabRequests();
                                 const response = await this._resetFromClient(fromClientId, this._lastCollaborationResetId);
-                                if (response !== REQUEST_ERROR) {
+                                if (response === REQUEST_ERROR) {
                                     return;
                                 }
                             }
-                            this._historySyncFinished = true;
                         } else {
                             // Make both send their last step to each other to
                             // ensure they are in sync.
@@ -2555,17 +2557,21 @@ const Wysiwyg = Widget.extend({
                             this._setCollaborativeSelection(fromClientId);
                         }
 
-                        this.requestClient(fromClientId, 'get_client_name', undefined, { transport: 'rtc' }).then((clientName) => {
+                        const getClientNamePromise = this.requestClient(
+                            fromClientId, 'get_client_name', undefined, { transport: 'rtc' }
+                        ).then((clientName) => {
                             if (clientName === REQUEST_ERROR) return;
                             this.ptp.clientsInfos[fromClientId].clientName = clientName;
                             this.odooEditor.multiselectionRefresh();
                         });
-                        this.requestClient(fromClientId, 'get_client_avatar', undefined, { transport: 'rtc' }).then(clientAvatarUrl => {
+                        const getClientAvatar = this.requestClient(
+                            fromClientId, 'get_client_avatar', undefined, { transport: 'rtc' }
+                        ).then(clientAvatarUrl => {
                             if (clientAvatarUrl === REQUEST_ERROR) return;
                             this.ptp.clientsInfos[fromClientId].clientAvatarUrl = clientAvatarUrl;
                             this.odooEditor.multiselectionRefresh();
                         });
-
+                        await Promise.all([getClientAvatar, getClientNamePromise]);
                         break;
                     }
                     case 'oe_history_step':
