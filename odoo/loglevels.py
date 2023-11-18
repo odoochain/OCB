@@ -10,6 +10,7 @@ LOG_WARNING = 'warn'
 LOG_ERROR = 'error'
 LOG_CRITICAL = 'critical'
 
+
 # TODO get_encodings, ustr and exception_to_unicode were originally from tools.misc.
 # There are here until we refactor tools so that this module doesn't depends on tools.
 
@@ -26,7 +27,7 @@ def get_encodings(hint_encoding='utf-8'):
             yield fallbacks[hint_encoding.lower()]
 
     # some defaults (also taking care of pure ASCII)
-    for charset in ['utf8','latin1']:
+    for charset in ['utf8', 'latin1']:
         if not hint_encoding or (charset.lower() != hint_encoding.lower()):
             yield charset
 
@@ -38,9 +39,12 @@ def get_encodings(hint_encoding='utf-8'):
         if prefenc:
             yield prefenc
 
+
 # not using pycompat to avoid circular import: pycompat is in tools much of
 # which comes back to import loglevels
 text_type = type(u'')
+
+
 def ustr(value, hint_encoding='utf-8', errors='strict'):
     """This method is similar to the builtin `unicode`, except
     that it may try multiple encodings to find one that works
