@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from urllib.parse import urlencode, quote
+
+from werkzeug import urls
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
@@ -134,14 +135,14 @@ class PaymentLinkWizard(models.TransientModel):
             related_document = self.env[payment_link.res_model].browse(payment_link.res_id)
             base_url = related_document.get_base_url()  # Don't generate links for the wrong website
             url_params = {
-                'reference': quote(payment_link.description),
+                'reference': payment_link.description,
                 'amount': self.amount,
                 'access_token': self._get_access_token(),
                 **self._get_additional_link_values(),
             }
             if payment_link.payment_provider_selection != 'all':
                 url_params['provider_id'] = str(payment_link.payment_provider_selection)
-            payment_link.link = f'{base_url}/payment/pay?{urlencode(url_params)}'
+            payment_link.link = f'{base_url}/payment/pay?{urls.url_encode(url_params)}'
 
     def _get_additional_link_values(self):
         """ Return the additional values to append to the payment link.
