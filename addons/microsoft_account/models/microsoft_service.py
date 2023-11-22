@@ -18,7 +18,6 @@ TIMEOUT = 20
 DEFAULT_MICROSOFT_AUTH_ENDPOINT = f'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
 DEFAULT_MICROSOFT_TOKEN_ENDPOINT = f'https://login.microsoftonline.com/common/oauth2/v2.0/token'
 DEFAULT_MICROSOFT_GRAPH_ENDPOINT = f'https://graph.microsoft.com'
-
 RESOURCE_NOT_FOUND_STATUSES = (204, 404)
 
 class MicrosoftService(models.AbstractModel):
