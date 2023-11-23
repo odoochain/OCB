@@ -13,7 +13,7 @@ import werkzeug.exceptions
 import werkzeug.wrappers
 import werkzeug.wsgi
 from lxml import etree
-from werkzeug.urls import iri_to_uri, uri_to_iri
+from werkzeug.urls import iri_to_uri
 
 from odoo.tools.translate import JAVASCRIPT_TRANSLATION_COMMENT, WEB_TRANSLATION_COMMENT
 from odoo.tools.misc import file_open
