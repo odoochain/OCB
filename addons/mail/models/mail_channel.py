@@ -257,7 +257,9 @@ class Channel(models.Model):
         if 'channel_type' in vals:
             failing_channels = self.sudo().filtered(lambda channel: channel.channel_type != vals.get('channel_type'))
             if failing_channels:
-                raise UserError(_('Cannot change the channel type of: %(channel_names)s'), channel_names=', '.join(failing_channels.mapped('name')))
+                raise UserError(_('Cannot change the channel type of: %(channel_names)s'),
+                                channel_names=', '.join(failing_channels.mapped('name'))
+                                )
         result = super(Channel, self).write(vals)
         if vals.get('group_ids'):
             self._subscribe_users_automatically()

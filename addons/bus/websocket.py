@@ -15,7 +15,7 @@ from collections import defaultdict, deque
 from contextlib import closing, suppress
 from enum import IntEnum
 from psycopg2.pool import PoolError
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlparse
 from weakref import WeakSet
 
 from werkzeug.local import LocalStack
@@ -32,7 +32,6 @@ from odoo.service.security import check_session
 from odoo.tools import config
 
 _logger = logging.getLogger(__name__)
-
 
 MAX_TRY_ON_POOL_ERROR = 10
 DELAY_ON_POOL_ERROR = 0.03
@@ -182,13 +181,13 @@ _XOR_TABLE = [bytes(a ^ b for a in range(256)) for b in range(256)]
 
 class Frame:
     def __init__(
-        self,
-        opcode,
-        payload=b'',
-        fin=True,
-        rsv1=False,
-        rsv2=False,
-        rsv3=False
+            self,
+            opcode,
+            payload=b'',
+            fin=True,
+            rsv1=False,
+            rsv2=False,
+            rsv3=False
     ):
         self.opcode = opcode
         self.payload = payload
@@ -473,11 +472,11 @@ class Websocket:
 
         output = bytearray()
         first_byte = (
-              (0b10000000 if frame.fin else 0)
-            | (0b01000000 if frame.rsv1 else 0)
-            | (0b00100000 if frame.rsv2 else 0)
-            | (0b00010000 if frame.rsv3 else 0)
-            | frame.opcode
+                (0b10000000 if frame.fin else 0)
+                | (0b01000000 if frame.rsv1 else 0)
+                | (0b00100000 if frame.rsv2 else 0)
+                | (0b00010000 if frame.rsv3 else 0)
+                | frame.opcode
         )
         payload_length = len(frame.payload)
         if payload_length < 126:
@@ -667,7 +666,7 @@ class TimeoutManager:
         # Custom keep alive timeout for each TimeoutManager to avoid multiple
         # connections timing out at the same time.
         self._keep_alive_timeout = (
-            type(self).KEEP_ALIVE_TIMEOUT + random.uniform(0, type(self).KEEP_ALIVE_TIMEOUT / 2)
+                type(self).KEEP_ALIVE_TIMEOUT + random.uniform(0, type(self).KEEP_ALIVE_TIMEOUT / 2)
         )
         self.timeout_reason = None
         # Start time recorded when we started awaiting an answer to a
@@ -718,6 +717,7 @@ class TimeoutManager:
 _wsrequest_stack = LocalStack()
 wsrequest = _wsrequest_stack()
 
+
 class WebsocketRequest:
     def __init__(self, db, httprequest, websocket):
         self.db = db
@@ -751,7 +751,7 @@ class WebsocketRequest:
             self.registry = Registry(self.db)
             self.registry.check_signaling()
         except (
-            AttributeError, psycopg2.OperationalError, psycopg2.ProgrammingError
+                AttributeError, psycopg2.OperationalError, psycopg2.ProgrammingError
         ) as exc:
             raise InvalidDatabaseException() from exc
 
@@ -834,8 +834,6 @@ class WebsocketConnectionHandler:
             _logger.error(exc)
             raise
 
-
-
     @classmethod
     def _get_handshake_response(cls, headers):
         """
@@ -861,7 +859,7 @@ class WebsocketConnectionHandler:
         if not os.getenv('ODOO_BUS_PUBLIC_SAMESITE_WS'):
             return
         headers = request.httprequest.headers
-        origin_url = urlsplit(headers.get('origin'))
+        origin_url = urlparse(headers.get('origin'))
         if origin_url.netloc != headers.get('host') or origin_url.scheme != request.httprequest.scheme:
             request.session = root.session_store.new()
             request.session.update(get_default_session(), db=request.session.db)

@@ -12,8 +12,8 @@
 
 	define(['jquery'], function ($) {
 
-		var $scrollTo = $.scrollTo = function( target, duration, settings ) {
-			return $(window).scrollTo( target, duration, settings );
+		const $scrollTo = $.scrollTo = function (target, duration, settings) {
+			return $(window).scrollTo(target, duration, settings);
 		};
 
 		$scrollTo.defaults = {
@@ -32,15 +32,15 @@
 		// Returns the real elements to scroll (supports window/iframes, documents and regular nodes)
 		$.fn._scrollable = function() {
 			return this.map(function() {
-				var elem = this,
-					isWin = !elem.nodeName || $.inArray( elem.nodeName.toLowerCase(), ['iframe','#document','html','body'] ) != -1;
+				const elem = this,
+					isWin = !elem.nodeName || $.inArray(elem.nodeName.toLowerCase(), ['iframe', '#document', 'html', 'body']) !== -1;
 
-					if (!isWin)
+				if (!isWin)
 						return elem;
 
-				var doc = (elem.contentWindow || elem).document || elem.ownerDocument || elem;
+				const doc = (elem.contentWindow || elem).document || elem.ownerDocument || elem;
 
-				return /webkit/i.test(navigator.userAgent) || doc.compatMode == 'BackCompat' ?
+				return /webkit/i.test(navigator.userAgent) || doc.compatMode === 'BackCompat' ?
 					doc.body :
 					doc.documentElement;
 			});
@@ -54,7 +54,7 @@
 			if (typeof settings == 'function')
 				settings = { onAfter:settings };
 
-			if (target == 'max')
+			if (target === 'max')
 				target = 9e9;
 
 			settings = $.extend( {}, $scrollTo.defaults, settings );
@@ -73,7 +73,7 @@
 				// Null target yields nothing, just like jQuery does
 				if (target == null) return;
 
-				var elem = this,
+				let elem = this,
 					$elem = $(elem),
 					targ = target, toff, attr = {},
 					win = $elem.is('html,body');
@@ -97,10 +97,10 @@
 							toff = (targ = $(targ)).offset();
 				}
 
-				var offset = $.isFunction(settings.offset) && settings.offset(elem, targ) || settings.offset;
+				const offset = $.isFunction(settings.offset) && settings.offset(elem, targ) || settings.offset;
 
 				$.each( settings.axis.split(''), function( i, axis ) {
-					var Pos	= axis == 'x' ? 'Left' : 'Top',
+					const Pos = axis === 'x' ? 'Left' : 'Top',
 						pos = Pos.toLowerCase(),
 						key = 'scroll' + Pos,
 						old = elem[key],
@@ -119,11 +119,11 @@
 
 						if(settings.over[pos])
 							// Scroll to a fraction of its width/height
-							attr[key] += targ[axis=='x'?'width':'height']() * settings.over[pos];
+							attr[key] += targ[axis==='x'?'width':'height']() * settings.over[pos];
 					} else {
-						var val = targ[pos];
+						const val = targ[pos];
 						// Handle percentage values
-						attr[key] = val.slice && val.slice(-1) == '%' ?
+						attr[key] = val.slice && val.slice(-1) === '%' ?
 							parseFloat(val) / 100 * max
 							: val;
 					}
@@ -136,7 +136,7 @@
 					// Queueing axes
 					if (!i && settings.queue) {
 						// Don't waste time animating, if there's no need.
-						if (old != attr[key])
+						if (old !== attr[key])
 							// Intermediate animation
 							animate( settings.onAfterFirst );
 						// Don't animate this axis again in the next iteration.
@@ -157,13 +157,13 @@
 		// Max scrolling position, works on quirks mode
 		// It only fails (not too badly) on IE, quirks mode.
 		$scrollTo.max = function( elem, axis ) {
-			var Dim = axis == 'x' ? 'Width' : 'Height',
-				scroll = 'scroll'+Dim;
+			const Dim = axis === 'x' ? 'Width' : 'Height',
+				scroll = 'scroll' + Dim;
 
 			if (!$(elem).is('html,body'))
 				return elem[scroll] - $(elem)[Dim.toLowerCase()]();
 
-			var size = 'client' + Dim,
+			const size = 'client' + Dim,
 				html = elem.ownerDocument.documentElement,
 				body = elem.ownerDocument.body;
 
