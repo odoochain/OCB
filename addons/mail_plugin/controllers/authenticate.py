@@ -6,7 +6,7 @@ import datetime
 import hmac
 import json
 import logging
-from urllib.parse import urlparse, urlencode, urlunsplit, parse_qs
+from urllib.parse import urlparse, urlencode, urlunsplit, parse_qs, urlsplit
 
 import odoo
 
@@ -41,7 +41,7 @@ class Authenticate(http.Controller):
         old route name "/mail_client_extension/auth/confirm is deprecated as of saas-14.3,it is not needed for newer
         versions of the mail plugin but necessary for supporting older versions
         """
-        parsed_redirect = urlparse(redirect)
+        parsed_redirect = urlsplit(redirect)
         params = parse_qs(parsed_redirect.query)
         if do:
             name = friendlyname if not info else f'{friendlyname}: {info}'
