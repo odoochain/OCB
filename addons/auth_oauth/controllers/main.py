@@ -78,7 +78,7 @@ class OAuthLogin(Home):
         state = dict(
             d=request.session.db,
             p=provider['id'],
-            r=quote_plus(redirect, safe="()"),
+            r=quote_plus(redirect),
         )
         token = request.params.get('token')
         if token:
