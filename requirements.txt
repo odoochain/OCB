@@ -2,7 +2,7 @@
 # python3-* equivalent distributed in Ubuntu 22.04 and Debian 11
 Babel==2.9.1  # min version = 2.6.0 (Focal with security backports)
 chardet==4.0.0
-cryptography==36.0.2  # https://github.com/paramiko/paramiko/issues/2038
+cryptography==41.0.5  # https://github.com/paramiko/paramiko/issues/2038
 decorator==4.4.2
 docutils==0.20.1
 ebaysdk
@@ -11,7 +11,7 @@ freezegun==0.3.15; python_version >= '3.8'
 gevent==1.5.0 ; python_version == '3.7'
 gevent==20.9.0 ; python_version > '3.7' and python_version <= '3.9'
 gevent==21.8.0 ; python_version > '3.9' and python_version <= '3.10'  # (Jammy)
-gevent==22.10.2; python_version > '3.10'
+gevent>=22.10.2; python_version > '3.10'
 greenlet==0.4.15 ; python_version == '3.7'
 greenlet==0.4.17 ; python_version > '3.7' and python_version <= '3.9'
 greenlet==1.1.2 ; python_version  > '3.9' and python_version <= '3.10'  # (Jammy)
@@ -36,7 +36,7 @@ psutil==5.9.4 ; python_version > '3.10'
 psycopg2==2.7.7 ; sys_platform != 'win32' and python_version < '3.8'
 psycopg2==2.8.6 ; sys_platform != 'win32' and python_version >= '3.8'and python_version <= '3.10'
 psycopg2==2.8.6 ; sys_platform == 'win32' and python_version < '3.10'
-psycopg2==2.9.5 ; python_version > '3.10' or ( sys_platform == 'win32' and python_version == '3.10')
+psycopg2>=2.9.5 ; python_version > '3.10' or ( sys_platform == 'win32' and python_version == '3.10')
 pydot==1.4.2
 pyopenssl==23.3.0
 PyPDF2==1.26.0 ; python_version <= '3.10'
@@ -90,3 +90,4 @@ docker
 erppeek
 phonenumbers
 redis
+inotify

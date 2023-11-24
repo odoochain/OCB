@@ -132,7 +132,7 @@ class RequestHandler(werkzeug.serving.WSGIRequestHandler):
         # Add the TCP socket to environ in order for the websocket
         # connections to use it.
         environ['socket'] = self.connection
-        if self.headers.get('Upgrade') == 'websocket':
+        if self.headers.get('Upgrade') == 'Websocket':
             # Since the upgrade header is introduced in version 1.1, Firefox
             # won't accept a websocket connection if the version is set to
             # 1.0.
@@ -142,11 +142,45 @@ class RequestHandler(werkzeug.serving.WSGIRequestHandler):
     def send_header(self, keyword, value):
         # Prevent `WSGIRequestHandler` from sending the connection close header (compatibility with werkzeug >= 2.1.1 )
         # since it is incompatible with websocket.
-        if self.headers.get('Upgrade') == 'websocket' and keyword == 'Connection' and value == 'close':
-            # Do not keep processing requests.
-            self.close_connection = True
-            return
+        # if self.environ.get('REQUEST_METHOD', '') != 'GET':
+            # This is not a websocket request, so we must not handle it
+            # self.logger.debug('Can only upgrade connection if using GET method.')
+            # return
+
+        if keyword == 'Connection' and value == 'close' and self.environ:
+            connection = self.environ.get('HTTP_CONNECTION', '')
+            upgrade = self.environ.get('HTTP_UPGRADE', '')
+            requestmethod = self.environ.get('REQUEST_METHOD', '')
+            if 'Upgrade' in connection and upgrade.lower() == 'websocket' and 'GET' in requestmethod:
+                # This is not a websocket request, so we must not handle it
+                # self.logger.warning("Client didn't ask for a connection "
+                #                     "upgrade")
+                self.close_connection = True
+                return
+            # This is not a websocket request, so we must not handle it
+            # if self.headers.get('Upgrade') == 'Websocket' and keyword == 'Connection' and value == 'close':
         super().send_header(keyword, value)
+
+    def _parse_headers(self):
+        headers = {}
+        if 'CONTENT_TYPE' in self.env and self.env['CONTENT_TYPE']:
+            headers['Content-Type'] = self.env['CONTENT_TYPE']
+        if 'CONTENT_LENGTH' in self.env and self.env['CONTENT_LENGTH']:
+            headers['Content-Length'] = self.env['CONTENT_LENGTH']
+        for k, v in self.env.items():
+            if k.startswith("HTTP_"):
+                header_name = k.replace("HTTP_", "")
+                header_name = "-".join([p[0].upper() + p[1:].lower()
+                                       for p in header_name.split("_")])
+                headers[header_name] = v
+        return headers
+    # def run_wsgi(self):
+    #     old_wfile = self.wfile
+    #     self.wfile = BufferedIO(self.wfile)
+    #     result = super(ThorRequestHandler, self).run_wsgi()
+    #     self.wfile = old_wfile
+    #     return result
+
 
 class ThreadedWSGIServerReloadable(LoggingBaseWSGIServerMixIn, werkzeug.serving.ThreadedWSGIServer):
     """ werkzeug Threaded WSGI Server patched to allow reusing a listen socket
@@ -157,6 +191,10 @@ class ThreadedWSGIServerReloadable(LoggingBaseWSGIServerMixIn, werkzeug.serving.
         # The ODOO_MAX_HTTP_THREADS environment variable allows to limit the amount of concurrent
         # socket connections accepted by a threaded server, implicitly limiting the amount of
         # concurrent threads running for http requests handling.
+        # if os.environ.get("ODOO_MAX_HTTP_THREADS"):
+        #     self.max_http_threads = os.environ.get("ODOO_MAX_HTTP_THREADS")
+        # else:
+        #     self.max_http_threads = config['ODOO_MAX_HTTP_THREADS']
         self.max_http_threads = os.environ.get("ODOO_MAX_HTTP_THREADS")
         if self.max_http_threads:
             try:
@@ -167,8 +205,7 @@ class ThreadedWSGIServerReloadable(LoggingBaseWSGIServerMixIn, werkzeug.serving.
                 # there are some exceptions where some controllers might allocate two or more cursors.
                 self.max_http_threads = config['db_maxconn'] // 2
             self.http_threads_sem = threading.Semaphore(self.max_http_threads)
-        super(ThreadedWSGIServerReloadable, self).__init__(host, port, app,
-                                                           handler=RequestHandler)
+        super(ThreadedWSGIServerReloadable, self).__init__(host, port, app,handler=RequestHandler)
 
         # See https://github.com/pallets/werkzeug/pull/770
         # This allow the request threads to not be set as daemon
@@ -629,6 +666,7 @@ class ThreadedServer(CommonServer):
     def reload(self):
         os.kill(self.pid, signal.SIGHUP)
 
+
 class GeventServer(CommonServer):
     def __init__(self, app):
         super(GeventServer, self).__init__(app)
@@ -733,7 +771,8 @@ class GeventServer(CommonServer):
         import gevent
         self.httpd.stop()
         super().stop()
-        gevent.shutdown()
+        gevent.kill(gevent.get_hub())
+        # gevent.kill(self)  # shutdown
 
     def run(self, preload, stop):
         self.start()
