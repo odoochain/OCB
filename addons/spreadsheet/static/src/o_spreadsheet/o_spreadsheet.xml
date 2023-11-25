@@ -1625,7 +1625,7 @@
       </div>
       <div class="o-section o-sidepanel-error" t-if="errorMessages">
         <div t-foreach="errorMessages" t-as="error" t-key="error">
-          <t t-esc="error"/>
+          <t t-out="error"/>
         </div>
       </div>
     </div>
@@ -1701,7 +1701,7 @@
       </div>
       <div class="o-section o-sidepanel-error" t-if="configurationErrorMessages">
         <div t-foreach="configurationErrorMessages" t-as="error" t-key="error">
-          <t t-esc="error"/>
+          <t t-out="error"/>
         </div>
       </div>
     </div>
@@ -1770,7 +1770,7 @@
 
       <div class="o-section o-sidepanel-error" t-if="designErrorMessages.length">
         <div t-foreach="designErrorMessages" t-as="error" t-key="error">
-          <t t-esc="error"/>
+          <t t-out="error"/>
         </div>
       </div>
     </div>
@@ -1907,7 +1907,7 @@
       </div>
       <div class="o-section o-sidepanel-error" t-if="errorMessages">
         <div t-foreach="errorMessages" t-as="error" t-key="error">
-          <t t-esc="error"/>
+          <t t-out="error"/>
         </div>
       </div>
     </div>
@@ -2028,7 +2028,7 @@
       </div>
       <div class="o-section o-sidepanel-error" t-if="errorMessages">
         <div t-foreach="errorMessages" t-as="error" t-key="error">
-          <t t-esc="error"/>
+          <t t-out="error"/>
         </div>
       </div>
     </div>
@@ -2181,7 +2181,7 @@
       </div>
       <div class="o-section o-sidepanel-error" t-if="errorMessages">
         <div t-foreach="errorMessages" t-as="error" t-key="error">
-          <t t-esc="error"/>
+          <t t-out="error"/>
         </div>
       </div>
     </div>

@@ -112,7 +112,7 @@
 
     <t t-name="ImportView.preview.error">
         <div class="oe_import_report alert alert-danger">
-            <p>Import preview failed due to: <t t-esc="error"/>.</p>
+            <p>Import preview failed due to: <t t-out="error"/>.</p>
             <p>For CSV files, you may need to select the correct separator.</p>
             <p t-if="preview">Here is the start of the file we could not import:</p>
         </div>
@@ -122,7 +122,7 @@
     <t t-name="ImportView.error">
         <div t-foreach="errors" t-as="error" t-attf-class="oe_import_report alert alert-#{error.type}">
             <span class="oe_import_report_message">
-                <b><t t-esc="error.message"/></b>
+                <b><t t-out="error.message"/></b>
                 <t t-if="error.rows" t-call="ImportView.error.at">
                     <t t-set="rows" t-value="error.rows"/>
                 </t>
@@ -142,9 +142,9 @@
     <t t-name="ImportView.fieldError.single">
         <span class="oe_import_report_message">
             <t t-if="error.value &amp;&amp; !error.error_message">
-                No matching records found for <t t-esc="error.field_type"/> <b>'<t t-esc="error.value"/>'</b> in field <b t-esc="error.field_name"/>
+                No matching records found for <t t-out="error.field_type"/> <b>'<t t-out="error.value"/>'</b> in field <b t-out="error.field_name"/>
             </t>
-            <b t-else="" t-esc="error.message"/>
+            <b t-else="" t-out="error.message"/>
         </span>
         <t t-if="error.rows" t-call="ImportView.error.at">
             <t t-set="rows" t-value="error.rows"/>

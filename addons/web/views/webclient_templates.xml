@@ -149,10 +149,10 @@
                 </div>
 
                 <p class="alert alert-danger" t-if="error" role="alert">
-                    <t t-esc="error"/>
+                    <t t-out="error"/>
                 </p>
                 <p class="alert alert-success" t-if="message" role="status">
-                    <t t-esc="message"/>
+                    <t t-out="message"/>
                 </p>
 
                 <div t-attf-class="clearfix oe_login_buttons text-center gap-1 d-grid mb-1 {{'pt-2' if form_small else 'pt-3'}}">

@@ -486,7 +486,7 @@
             <t t-set="additional_title">Security</t>
             <t t-set="no_breadcrumbs" t-value="1"/>
             <div class="alert alert-danger" role="alert" t-if="get_error(errors)">
-                <t t-esc="errors"/>
+                <t t-out="errors"/>
             </div>
             <section name="portal_change_password">
                 <h3>Change Password</h3>
@@ -495,7 +495,7 @@
                     Password Updated!
                 </div>
                 <div class="alert alert-danger" role="alert" t-if="get_error(errors, 'password')">
-                    <t t-esc="errors['password']"/>
+                    <t t-out="errors['password']"/>
                 </div>
                 <form action="/my/security" method="post" class="oe_reset_password_form">
                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>

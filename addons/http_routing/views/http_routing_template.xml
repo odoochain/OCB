@@ -16,7 +16,7 @@
     <template id="error_message">
         <p t-if="error_message">
             <strong>Error message:</strong>
-            <pre t-esc="error_message"/>
+            <pre t-out="error_message"/>
         </p>
     </template>
 

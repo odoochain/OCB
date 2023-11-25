@@ -1423,7 +1423,7 @@ class TestTemplating(ViewCase):
             'name': "Base View",
             'type': 'qweb',
             'arch': """<root>
-                <item><span t-esc="foo"/></item>
+                <item><span t-out="foo"/></item>
             </root>""",
         })
 
@@ -1439,7 +1439,7 @@ class TestTemplating(ViewCase):
             'type': 'qweb',
             'arch': """<root>
                 <item order="1" t-ignore="true">
-                    <t t-esc="foo"/>
+                    <t t-out="foo"/>
                 </item>
             </root>"""
         })

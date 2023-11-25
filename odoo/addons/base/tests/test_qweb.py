@@ -76,7 +76,7 @@ class TestQWebTField(TransactionCase):
             'name': "dummy",
             'type': 'qweb',
             'arch': """
-                <t t-name="base.dummy"><root><span t-esc="5" t-options="{'widget': 'char'}" t-options-widget="'float'" t-options-precision="4"/></root></t>
+                <t t-name="base.dummy"><root><span t-out="5" t-options="{'widget': 'char'}" t-options-widget="'float'" t-options-precision="4"/></root></t>
             """
         })
         text = etree.fromstring(self.env['ir.qweb']._render(view1.id)).find('span').text
@@ -89,7 +89,7 @@ class TestQWebTField(TransactionCase):
                 <t t-name="base.dummy">
                     <root>
                         <script type="application/javascript">
-                            var s = <t t-esc="json.dumps({'key': malicious})"/>;
+                            var s = <t t-out="json.dumps({'key': malicious})"/>;
                         </script>
                     </root>
                 </t>
@@ -368,7 +368,7 @@ class TestQWebNS(TransactionCase):
             'type': 'qweb',
             'arch': """
                 <t t-name="base.dummy">
-                    <Invoice xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" t-esc="'test'"/>
+                    <Invoice xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" t-out="'test'"/>
                 </t>
             """
         })

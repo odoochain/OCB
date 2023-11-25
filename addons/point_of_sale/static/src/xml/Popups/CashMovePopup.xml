@@ -24,7 +24,7 @@
                             </div>
                             <textarea name="reason" t-model="state.inputReason" placeholder="Reason"></textarea>
                             <span t-if="state.inputHasError" class="error-message">
-                                <t t-esc="errorMessage" />
+                                <t t-out="errorMessage" />
                             </span>
                         </div>
                     </main>

@@ -3,7 +3,7 @@
 
     <t t-name="CustomerFacingDisplayButton" owl="1">
         <div class="oe_status" t-on-click="onClick">
-            <span class="message"><t t-esc="message" /></span>
+            <span class="message"><t t-out="message" /></span>
             <div t-if="state.status === 'warning'" class="js_warning oe_icon oe_orange">
                 <i class="fa fa-fw fa-desktop" role="img" aria-label="Customer Screen Warning" title="Customer Screen Warning"></i>
             </div>

@@ -41,7 +41,7 @@
         <t t-if="move.move_id.production_id">
             <t t-set="message">Produced</t>
         </t>
-        <strong><t t-esc="message"/> quantity has been updated.</strong>
+        <strong><t t-out="message"/> quantity has been updated.</strong>
     </template>
 
     <template id="track_production_move_template">

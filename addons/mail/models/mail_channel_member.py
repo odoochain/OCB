@@ -122,7 +122,8 @@ class ChannelMember(models.Model):
             return self.env['mail.channel.member'].sudo().search([('channel_id', '=', channel_id), ('partner_id', '=', self.env.user.partner_id.id)], limit=1)
         guest = self.env['mail.guest']._get_guest_from_request(request)
         if guest:
-            return guest.env['mail.channel.member'].sudo().search([('channel_id', '=', channel_id), ('guest_id', '=', guest.id)], limit=1)
+            return guest.env['mail.channel.member'].sudo().search([('channel_id', '=', channel_id),
+                                                                   ('guest_id', '=', guest.id)], limit=1)
         return self.env['mail.channel.member'].sudo()
 
     def _notify_typing(self, is_typing):
@@ -138,6 +139,7 @@ class ChannelMember(models.Model):
         self.env['bus.bus']._sendmany(notifications)
 
     def _mail_channel_member_format(self, fields=None):
+        global persona
         if not fields:
             fields = {'id': True, 'channel': {}, 'persona': {}}
         members_formatted_data = {}
@@ -236,7 +238,10 @@ class ChannelMember(models.Model):
             }))
         self.env['bus.bus']._sendmany(invitation_notifications)
         if members:
-            channel_data = {'id': self.channel_id.id, 'model': 'mail.channel'}
-            channel_data['invitedMembers'] = [('insert', list(members._mail_channel_member_format(fields={'id': True, 'channel': {}, 'persona': {'partner': {'id', 'name', 'im_status'}, 'guest': {'id', 'name', 'im_status'}}}).values()))]
+            channel_data = {'id': self.channel_id.id, 'model': 'mail.channel', 'invitedMembers': [('insert', list(
+                members._mail_channel_member_format(fields={'id': True, 'channel': {},
+                                                            'persona': {'partner': {'id', 'name', 'im_status'},
+                                                                        'guest': {'id', 'name',
+                                                                                  'im_status'}}}).values()))]}
             self.env['bus.bus']._sendone(self.channel_id, 'mail.thread/insert', channel_data)
         return members
