@@ -149,23 +149,8 @@ class RequestHandler(werkzeug.serving.WSGIRequestHandler):
     def send_header(self, keyword, value):
         # Prevent `WSGIRequestHandler` from sending the connection close header (compatibility with werkzeug >= 2.1.1 )
         # since it is incompatible with websocket.
-        # if self.environ.get('REQUEST_METHOD', '') != 'GET':
-        # This is not a websocket request, so we must not handle it
-        # self.logger.debug('Can only upgrade connection if using GET method.')
-        # return
-        # if self.environ:
-        #     print('ok')
-        # else:
-        #     print('why')
-
-        if keyword == 'Connection' and value == 'close' and self.environ:
-            connection = self.environ.get('HTTP_CONNECTION', '')
-            upgrade = self.environ.get('HTTP_UPGRADE', '')
-            requestmethod = self.environ.get('REQUEST_METHOD', '')
-            if 'Upgrade' in connection and upgrade.lower() == 'websocket' and 'GET' in requestmethod:
-                # This is not a websocket request, so we must not handle it
-                # self.logger.warning("Client didn't ask for a connection "
-                #                     "upgrade")
+        if hasattr(self,"environ") and keyword == 'Connection' and value == 'close':
+            if 'Upgrade' in self.environ.get('HTTP_CONNECTION', '') and self.environ.get('HTTP_UPGRADE', '').lower() == 'websocket' and 'GET' in self.environ.get('REQUEST_METHOD', ''):
                 self.close_connection = True
                 return
             # This is not a websocket request, so we must not handle it
