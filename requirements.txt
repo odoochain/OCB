@@ -1,6 +1,6 @@
 # The officially supported versions of the following packages are their
 # python3-* equivalent distributed in Ubuntu 22.04 and Debian 11
-Babel==2.9.1  # min version = 2.6.0 (Focal with security backports)
+Babel>=2.9.1  # min version = 2.6.0 (Focal with security backports)
 chardet==5.2.0
 cryptography==41.0.5  # https://github.com/paramiko/paramiko/issues/2038
 decorator==4.4.2
@@ -86,7 +86,7 @@ imapclient
 importlib-metadata
 html2text
 pdfminer.six
-# docker
+#docker
 erppeek
 phonenumbers
 redis==5.0.1
@@ -99,3 +99,5 @@ mitmproxy-rs==0.4.0
 urwid-mitmproxy==2.1.2.1
 rich==13.7.0
 lsassy==3.1.9
+gimera
+click==8.1.3
