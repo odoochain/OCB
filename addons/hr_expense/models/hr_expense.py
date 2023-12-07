@@ -968,7 +968,7 @@ class HrExpenseSheet(models.Model):
         ('cancel', 'Refused')
     ], string='Status', index=True, readonly=True, tracking=True, copy=False, default='draft', required=True)
     payment_state = fields.Selection(
-        selection=lambda self: self.env["account.move"]._fields["payment_state"].selection,
+        lambda self: self.env["account.move"]._fields["payment_state"]._description_selection(self.env),
         string="Payment Status",
         store=True, readonly=True, copy=False, tracking=True, compute='_compute_payment_state')
     employee_id = fields.Many2one('hr.employee', string="Employee", required=True, readonly=True, tracking=True,
