@@ -3075,7 +3075,8 @@ const SnippetOptionWidget = Widget.extend({
      */
     isTopFirstOption: false,
     /**
-     * Forces the target to not be possible to remove.
+     * Forces the target to not be possible to remove. It will also hide the
+     * clone button.
      *
      * @type {boolean}
      */
@@ -3891,8 +3892,13 @@ const SnippetOptionWidget = Widget.extend({
             if (this.$target[0].classList.contains('o_grid_item') && !isMobileView) {
                 return false;
             }
-            const firstOrLastChild = moveUpOrLeft ? ':first-child' : ':last-child';
-            return !this.$target.is(firstOrLastChild);
+            // Consider only visible elements.
+            const direction = moveUpOrLeft ? "previousElementSibling" : "nextElementSibling";
+            let siblingEl = this.$target[0][direction];
+            while (siblingEl && window.getComputedStyle(siblingEl).display === "none") {
+                siblingEl = siblingEl[direction];
+            }
+            return !!siblingEl;
         }
         return true;
     },
@@ -4337,7 +4343,6 @@ registry.sizing = SnippetOptionWidget.extend({
         let resizeValues = this._getSize();
         this.$handles.on('mousedown', function (ev) {
             ev.preventDefault();
-            self.options.wysiwyg.odooEditor.automaticStepUnactive('resizing');
 
             // If the handle has the class 'readonly', don't allow to resize.
             // (For the grid handles when we are in mobile view).
@@ -4404,8 +4409,8 @@ registry.sizing = SnippetOptionWidget.extend({
             if (rowEl.classList.contains('o_grid_mode')) {
                 self.options.wysiwyg.odooEditor.observerUnactive('displayBackgroundGrid');
                 backgroundGridEl = gridUtils._addBackgroundGrid(rowEl, 0);
-                self.options.wysiwyg.odooEditor.observerActive('displayBackgroundGrid');
                 gridUtils._setElementToMaxZindex(backgroundGridEl, rowEl);
+                self.options.wysiwyg.odooEditor.observerActive('displayBackgroundGrid');
             }
 
             // For loop to handle the cases where it is ne, nw, se or sw. Since
@@ -4436,6 +4441,8 @@ registry.sizing = SnippetOptionWidget.extend({
 
                 directions.push(props);
             }
+
+            self.options.wysiwyg.odooEditor.automaticStepUnactive('resizing');
 
             const cursor = $handle.css('cursor') + '-important';
             const $body = $(this.ownerDocument.body);
@@ -4510,6 +4517,8 @@ registry.sizing = SnippetOptionWidget.extend({
                     $handlers.removeClass('o_active').dequeue();
                 });
 
+                self.options.wysiwyg.odooEditor.automaticStepActive('resizing');
+
                 if (directions.every(dir => dir.begin === dir.current)) {
                     return;
                 }
@@ -4517,8 +4526,6 @@ registry.sizing = SnippetOptionWidget.extend({
                 setTimeout(function () {
                     self.options.wysiwyg.odooEditor.historyStep();
                 }, 0);
-
-                self.options.wysiwyg.odooEditor.automaticStepActive('resizing');
             };
             $body.on('mousemove', bodyMouseMove);
             $body.on('mouseup', bodyMouseUp);
@@ -5362,18 +5369,30 @@ registry.SnippetMove = SnippetOptionWidget.extend({
         const isNavItem = this.$target[0].classList.contains('nav-item');
         const $tabPane = isNavItem ? $(this.$target.find('.nav-link')[0].hash) : null;
         switch (widgetValue) {
-            case 'prev':
-                this.$target.prev().before(this.$target);
+            case 'prev': {
+                // Consider only visible elements.
+                let prevEl = this.$target[0].previousElementSibling;
+                while (prevEl && window.getComputedStyle(prevEl).display === "none") {
+                    prevEl = prevEl.previousElementSibling;
+                }
+                prevEl && prevEl.insertAdjacentElement("beforebegin", this.$target[0]);
                 if (isNavItem) {
                     $tabPane.prev().before($tabPane);
                 }
                 break;
-            case 'next':
-                this.$target.next().after(this.$target);
+            }
+            case 'next': {
+                // Consider only visible elements.
+                let nextEl = this.$target[0].nextElementSibling;
+                while (nextEl && window.getComputedStyle(nextEl).display === "none") {
+                    nextEl = nextEl.nextElementSibling;
+                }
+                nextEl && nextEl.insertAdjacentElement("afterend", this.$target[0]);
                 if (isNavItem) {
                     $tabPane.next().after($tabPane);
                 }
                 break;
+            }
         }
         if (!this.$target.is(this.data.noScroll)
                 && (params.name === 'move_up_opt' || params.name === 'move_down_opt')) {

@@ -13,10 +13,10 @@
 # Matjaz Mozetic <m.mozetic@matmoz.si>, 2022
 # Nejc G <nejc@luxim.si>, 2022
 # Martin Trigaux, 2022
-# Tomaž Jug <tomaz@editor.si>, 2023
 # Grega Vavtar <grega@hbs.si>, 2023
 # Jasmina Macur <jasmina@hbs.si>, 2023
 # Neun Pro, 2023
+# Tomaž Jug <tomaz@editor.si>, 2023
 # Katja Deržič, 2023
 # 
 msgid ""
@@ -2287,7 +2287,7 @@ msgstr "Izgleda super!"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order_cancel__template_id
 msgid "Mail Template"
-msgstr ""
+msgstr "Predloga za e-pošto"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__message_main_attachment_id
@@ -3176,7 +3176,7 @@ msgstr "Prefakturianje stroškov"
 #: model:ir.model.fields,field_description:sale.field_product_product__visible_expense_policy
 #: model:ir.model.fields,field_description:sale.field_product_template__visible_expense_policy
 msgid "Re-Invoice Policy visible"
-msgstr ""
+msgstr "Vidna politika prefakturiranja"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order_cancel__recipient_ids
@@ -3858,6 +3858,11 @@ msgid "Tax Country"
 msgstr ""
 
 #. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
+msgid "Tax ID"
+msgstr "ID za DDV"
+
+#. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.view_order_tree
 #: model_terms:ir.ui.view,arch_db:sale.view_quotation_tree
 msgid "Tax Total"
@@ -3866,7 +3871,7 @@ msgstr "Skupaj davek"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__tax_totals
 msgid "Tax Totals"
-msgstr ""
+msgstr "Skupni znesek davkov"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__amount_tax

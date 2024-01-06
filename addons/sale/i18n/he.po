@@ -20,9 +20,9 @@
 # Lilach Gilliam <lilach.gilliam@gmail.com>, 2022
 # Ha Ketem <haketem@gmail.com>, 2022
 # NoaFarkash, 2022
-# hed shefer <hed@laylinetech.com>, 2023
 # ZVI BLONDER <ZVIBLONDER@gmail.com>, 2023
 # MichaelHadar, 2023
+# hed shefer <hed@laylinetech.com>, 2023
 # yael terner, 2023
 # 
 msgid ""
@@ -1450,7 +1450,7 @@ msgstr "שיטות משלוח"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order_line__qty_delivered
 msgid "Delivery Quantity"
-msgstr ""
+msgstr "כמות שנשלחה"
 
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__expected_date
@@ -3025,7 +3025,7 @@ msgstr "כמות"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order_line__qty_to_invoice
 msgid "Quantity To Invoice"
-msgstr ""
+msgstr "כמות לחיוב"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_product_product__visible_qty_configurator
@@ -3356,7 +3356,7 @@ msgstr "הזמנת לקוח"
 #. module: sale
 #: model:ir.model,name:sale.model_sale_order_cancel
 msgid "Sales Order Cancel"
-msgstr ""
+msgstr "הזמנת לקוח בוטלה"
 
 #. module: sale
 #: model:mail.message.subtype,name:sale.mt_order_confirmed
@@ -3834,6 +3834,11 @@ msgstr "תגיות"
 #: model:ir.model.fields,field_description:sale.field_sale_order__tax_country_id
 msgid "Tax Country"
 msgstr "מס לפי ארץ"
+
+#. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
+msgid "Tax ID"
+msgstr "ח.פ / ע.מ"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.view_order_tree

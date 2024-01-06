@@ -3703,7 +3703,7 @@ options.registry.MegaMenuLayout = options.registry.SelectTemplate.extend({
 });
 
 /**
- * Hides delete button for Mega Menu block.
+ * Hides delete and clone buttons for Mega Menu block.
  */
 options.registry.MegaMenuNoDelete = options.Class.extend({
     forceNoDeleteButton: true,
@@ -3827,7 +3827,11 @@ options.registry.GridImage = options.Class.extend({
      * @returns {?HTMLElement}
      */
     _getImageGridItem() {
-        const parentEl = this.$target[0].parentNode;
+        let parentEl = this.$target[0].parentNode;
+        if (parentEl.matches("a")) {
+            // Case of an image link.
+            parentEl = parentEl.parentNode;
+        }
         if (parentEl && parentEl.classList.contains('o_grid_item_image')) {
             return parentEl;
         }

@@ -63,7 +63,6 @@
 
                 display: table-cell;
                 @include text-truncate();
-                vertical-align: middle;
 
                 &.o_list_text {
                     white-space: pre-wrap;
@@ -256,6 +255,7 @@
 
         .o_list_actions_header {
             width: 32px;
+            background-color: var(--ListRenderer-thead-bg-color);
         }
 
         .o_data_row.o_list_no_open {

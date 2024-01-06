@@ -431,6 +431,14 @@ class TestSaleOrder(SaleCommon):
         })
         self.assertEqual(sale_order.amount_total, 15.41, "")
 
+    def test_order_auto_lock_with_public_user(self):
+        public_user = self.env.ref('base.public_user')
+        self.sale_order.create_uid.groups_id += self.env.ref('sale.group_auto_done_setting')
+        self.sale_order.with_user(public_user.id).sudo().action_confirm()
+
+        self.assertFalse(public_user.has_group('sale.group_auto_done_setting'))
+        self.assertEqual(self.sale_order.state, 'done')
+
 
 @tagged('post_install', '-at_install')
 class TestSaleOrderInvoicing(AccountTestInvoicingCommon, SaleCommon):
@@ -606,3 +614,32 @@ class TestSalesTeam(SaleCommon):
 
         with self.assertRaises(UserError):
             sol.tax_id = tax_b
+
+    def test_sales_team_defined_on_partner_user_no_team(self):
+        """ Test that sale order picks up a team from res.partner on change if user has no team specified """
+
+        crm_team0 = self.env['crm.team'].create({
+            'name':"Test Team A"
+        })
+
+        crm_team1 = self.env['crm.team'].create({
+            'name':"Test Team B"
+        })
+
+        partner_a = self.env['res.partner'].create({
+            'name': 'Partner A',
+            'team_id': crm_team0.id,
+        })
+
+        partner_b = self.env['res.partner'].create({
+            'name': 'Partner B',
+            'team_id': crm_team1.id,
+        })
+
+        sale_order = self.env['sale.order'].with_user(self.user_not_in_team).create({
+            'partner_id': partner_a.id,
+        })
+
+        self.assertEqual(sale_order.team_id, crm_team0, "Sales team should change to partner's")
+        sale_order.with_user(self.user_not_in_team).write({'partner_id': partner_b.id})
+        self.assertEqual(sale_order.team_id, crm_team1, "Sales team should change to partner's")

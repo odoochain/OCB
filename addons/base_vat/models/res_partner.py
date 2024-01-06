@@ -6,8 +6,9 @@ import string
 import re
 import stdnum
 from stdnum.eu.vat import check_vies
-from stdnum.exceptions import InvalidComponent
+from stdnum.exceptions import InvalidComponent, InvalidChecksum, InvalidFormat
 from stdnum.util import clean
+from stdnum import luhn
 
 import logging
 
@@ -114,10 +115,6 @@ class ResPartner(models.Model):
         check_func = getattr(self, check_func_name, None) or getattr(stdnum.util.get_cc_module(country_code, 'vat'), 'is_valid', None)
         if not check_func:
             # No VAT validation available, default to check that the country code exists
-            if country_code.upper() == 'EU':
-                # Foreign companies that trade with non-enterprises in the EU
-                # may have a VATIN starting with "EU" instead of a country code.
-                return True
             country_code = _eu_country_vat_inverse.get(country_code, country_code)
             return bool(self.env['res.country'].search([('code', '=ilike', country_code)]))
         return check_func(vat_number)
@@ -207,6 +204,12 @@ class ResPartner(models.Model):
 
         # First check with country code as prefix of the TIN
         vat_country_code, vat_number_split = self._split_vat(vat_number)
+
+        if vat_country_code == 'eu' and default_country not in self.env.ref('base.europe').country_ids:
+            # Foreign companies that trade with non-enterprises in the EU
+            # may have a VATIN starting with "EU" instead of a country code.
+            return True
+
         vat_has_legit_country_code = self.env['res.country'].search([('code', '=', vat_country_code.upper())], limit=1)
         if not vat_has_legit_country_code:
             vat_has_legit_country_code = vat_country_code.lower() in _region_specific_vat_codes
@@ -798,6 +801,22 @@ class ResPartner(models.Model):
     def format_vat_ch(self, vat):
         stdnum_vat_format = getattr(stdnum.util.get_cc_module('ch', 'vat'), 'format', None)
         return stdnum_vat_format('CH' + vat)[2:] if stdnum_vat_format else vat
+
+    def check_vat_id(self, vat):
+        """ Temporary Indonesian VAT validation to support the new format
+        introduced in January 2024."""
+        vat = clean(vat, ' -.').strip()
+
+        if len(vat) not in (15, 16) or not vat[0:15].isdecimal() or not vat[-1].isdecimal():
+            return False
+
+        # VAT is only digits and of the right length, check the Luhn checksum.
+        try:
+            luhn.validate(vat[0:9])
+        except (InvalidFormat, InvalidChecksum):
+            return False
+
+        return True
 
     def format_vat_sm(self, vat):
         stdnum_vat_format = stdnum.util.get_cc_module('sm', 'vat').compact

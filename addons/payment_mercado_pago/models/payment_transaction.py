@@ -2,7 +2,9 @@
 
 import logging
 import pprint
-from urllib.parse import urljoin
+from urllib.parse import quote as url_quote
+
+from werkzeug import urls
 
 from odoo import _, models
 from odoo.exceptions import UserError, ValidationError
@@ -53,9 +55,10 @@ class PaymentTransaction(models.Model):
         :rtype: dict
         """
         base_url = self.provider_id.get_base_url()
-        return_url = urljoin(base_url, MercadoPagoController._return_url)
-        webhook_url = urljoin(
-            base_url, f'{MercadoPagoController._webhook_url}/{self.reference}'
+        return_url = urls.url_join(base_url, MercadoPagoController._return_url)
+        sanitized_reference = url_quote(self.reference)
+        webhook_url = urls.url_join(
+            base_url, f'{MercadoPagoController._webhook_url}/{sanitized_reference}'
         )  # Append the reference to identify the transaction from the webhook notification data.
 
         # In the case where we are issuing a preference request in CLP or COP, we must ensure that

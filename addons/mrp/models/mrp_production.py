@@ -721,7 +721,7 @@ class MrpProduction(models.Model):
             else:
                 production.move_raw_ids = [Command.delete(move.id) for move in production.move_raw_ids.filtered(lambda m: m.bom_line_id)]
 
-    @api.depends('product_id', 'bom_id', 'product_qty', 'product_uom_id', 'location_dest_id', 'date_planned_finished')
+    @api.depends('product_id', 'bom_id', 'product_qty', 'product_uom_id', 'location_dest_id', 'date_planned_finished', 'move_dest_ids')
     def _compute_move_finished_ids(self):
         for production in self:
             if production.state != 'draft':
@@ -1796,7 +1796,7 @@ class MrpProduction(models.Model):
                 # Unreserve the quantity removed from initial `stock.move.line` and
                 # not assigned to a move anymore. In case of a split smaller than initial
                 # quantity and fully reserved
-                if quantity:
+                if quantity and move_line.product_id.type == 'product':
                     self.env['stock.quant']._update_reserved_quantity(
                         move_line.product_id, move_line.location_id, -quantity,
                         lot_id=move_line.lot_id, package_id=move_line.package_id,

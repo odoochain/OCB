@@ -195,7 +195,7 @@ odoo.define('pos_sale.SaleOrderManagementScreen', function (require) {
                         pos: this.env.pos,
                         order: this.env.pos.get_order(),
                         product: this.env.pos.db.get_product_by_id(line.product_id[0]),
-                        description: line.name,
+                        description: line.product_id[1],
                         price: line.price_unit,
                         tax_ids: orderFiscalPos ? undefined : line.tax_id,
                         price_manually_set: false,
@@ -240,7 +240,7 @@ odoo.define('pos_sale.SaleOrderManagementScreen', function (require) {
                         let remaining_quantity  = new_line.quantity;
                         while (!utils.float_is_zero(remaining_quantity, 6)) {
                             let splitted_line = Orderline.create({}, line_values);
-                            splitted_line.set_quantity(Math.min(remaining_quantity, 1.0));
+                            splitted_line.set_quantity(Math.min(remaining_quantity, 1.0), true);
                             remaining_quantity -= splitted_line.quantity;
                             this.env.pos.get_order().add_orderline(splitted_line);
                         }

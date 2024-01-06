@@ -7,7 +7,7 @@ from freezegun import freeze_time
 from unittest.mock import patch
 
 import odoo
-from odoo import fields
+from odoo import fields, exceptions, Command
 from odoo.tests import Form
 from odoo.tests.common import TransactionCase, tagged
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
@@ -867,9 +867,9 @@ class TestStockValuationWithCOA(AccountTestInvoicingCommon):
         ]
         tax = self.env['account.tax'].create({
             "name": "Tax with no account",
-            "amount_type": "fixed",
+            "amount_type": "percent",
             "amount": 5,
-            "price_include": 5,
+            "price_include": True,
             "invoice_repartition_line_ids": repartition_line_vals,
             "refund_repartition_line_ids": repartition_line_vals,
         })
@@ -884,7 +884,7 @@ class TestStockValuationWithCOA(AccountTestInvoicingCommon):
                     'product_id': self.product1.id,
                     'product_qty': 1.0,
                     'product_uom': self.product1.uom_po_id.id,
-                    'price_unit': 100.0,  # 50$
+                    'price_unit': 105.0,  # 50$
                     'taxes_id': [(4, tax.id)],
                     'date_planned': date_po,
                 }),
@@ -898,6 +898,14 @@ class TestStockValuationWithCOA(AccountTestInvoicingCommon):
         receipt.move_line_ids.qty_done = 1
         receipt.button_validate()
 
+        # empty stock to generate the AML values for the already out quantities
+        inventory_quant = self.env['stock.quant'].sudo().search([
+            ('location_id', '=', receipt.location_dest_id.id),
+            ('product_id', '=', self.product1.id),
+        ])
+        inventory_quant.inventory_quantity = 0
+        inventory_quant.action_apply_inventory()
+
         # Create a vendor bill
         inv = self.env['account.move'].with_context(default_move_type='in_invoice').create({
             'move_type': 'in_invoice',
@@ -907,9 +915,10 @@ class TestStockValuationWithCOA(AccountTestInvoicingCommon):
             'partner_id': self.partner_id.id,
             'invoice_line_ids': [(0, 0, {
                 'name': 'Test',
-                'price_unit': 100.0,
+                'price_unit': 105.0,
                 'product_id': self.product1.id,
                 'purchase_line_id': po.order_line.id,
+                'tax_ids': [(4, tax.id)],
                 'quantity': 1.0,
                 'account_id': self.stock_input_account.id,
             })]
@@ -918,12 +927,13 @@ class TestStockValuationWithCOA(AccountTestInvoicingCommon):
         inv.action_post()
 
         invoice_aml = inv.invoice_line_ids
+        self.assertEqual(len(inv.line_ids), 3)
         picking_am = receipt.move_ids.stock_valuation_layer_ids.account_move_id.ensure_one()
         picking_aml = picking_am.line_ids.filtered(lambda line: line.account_id.id == self.stock_valuation_account.id)
 
         # check EUR
         self.assertAlmostEqual(invoice_aml.amount_currency, 100, msg="Total debit value should be equal to the original PO price of the product.")
-        self.assertAlmostEqual(picking_aml.amount_currency, 95, msg="credit value for stock should be equal to the untaxed price of the product.")
+        self.assertAlmostEqual(picking_aml.amount_currency, 100, msg="credit value for stock should be equal to the untaxed price of the product.")
 
     def test_valuation_multicurrency_with_tax_without_account(self):
         """ Similar test as test_valuation_multicurrency_with_tax, but without the accounts in the tax.
@@ -2765,3 +2775,130 @@ class TestStockValuationWithCOA(AccountTestInvoicingCommon):
         move2.quantity_done = 2
         picking2.button_validate()
         self.assertAlmostEqual(move2.stock_valuation_layer_ids.unit_cost, price_unit_USD)
+
+    def test_pdiff_date_usererror(self):
+        """
+        Test pdiff operations complete without errors in case we don't have
+        the bill date. A UserError is raised as usual.
+        """
+        self.product1.product_tmpl_id.categ_id.property_cost_method = 'average'
+
+        po = self.env['purchase.order'].create({
+            'partner_id': self.partner_id.id,
+            'order_line': [
+                (0, 0, {
+                    'name': self.product1.name,
+                    'product_id': self.product1.id,
+                    'product_qty': 1.0,
+                    'product_uom': self.product1.uom_po_id.id,
+                    'price_unit': 100.0,
+                    'taxes_id': False,
+                }),
+            ],
+        })
+        po.button_confirm()
+
+        receipt = po.picking_ids
+        receipt.move_ids.move_line_ids.qty_done = 1.0
+        receipt.button_validate()
+
+        action = po.action_create_invoice()
+        bill = self.env["account.move"].browse(action["res_id"])
+        with self.assertRaises(exceptions.UserError):
+            bill.action_post()
+
+    def test_bill_date_exchange_rate_for_price_diff_amls(self):
+        """Ensure sure that the amls for price difference uses the bill date exchange rate. They originally used today's rate
+        which meant that their value depended on the day the bill was posted (as it is when the price diff amls are created).
+        """
+        company = self.env.user.company_id
+        company.anglo_saxon_accounting = True
+        company.currency_id = self.usd_currency
+
+        self.product1.categ_id.property_cost_method = 'fifo'
+        self.product1.categ_id.property_valuation = 'real_time'
+
+        po_date = '2023-10-01'
+        bill_date = '2023-11-01'
+        today = fields.Date.today()
+
+        po_rate = 2.0
+        bill_rate = 3.0
+        today_rate = 4.0
+
+        self.env['res.currency.rate'].search([]).unlink()
+        self.env['res.currency.rate'].create([
+            {
+                'name': po_date,
+                'rate': po_rate,
+                'currency_id': self.eur_currency.id,
+                'company_id': company.id,
+            },
+            {
+                'name': bill_date,
+                'rate': bill_rate,
+                'currency_id': self.eur_currency.id,
+                'company_id': company.id,
+            },
+            {
+                'name': today,
+                'rate': today_rate,
+                'currency_id': self.eur_currency.id,
+                'company_id': company.id,
+            },
+        ])
+
+        with freeze_time(po_date):
+            purchase_price = 90
+            po = self.env['purchase.order'].create({
+                'partner_id': self.partner_id.id,
+                'currency_id': self.eur_currency.id,
+                'order_line': [
+                    Command.create({
+                        'product_id': self.product1.id,
+                        'product_qty': 1.0,
+                        'price_unit': purchase_price,
+                        'taxes_id': False,
+                    }),
+                ]
+            })
+            po.button_confirm()
+
+            receipt = po.picking_ids
+            receipt.move_line_ids.qty_done = 1
+            receipt.button_validate()
+
+        warehouse = self.env['stock.warehouse'].search([('company_id', '=', company.id)], limit=1)
+        stock_location = warehouse.lot_stock_id
+        customer_location = self.env.ref('stock.stock_location_customers')
+        delivery = self.env['stock.picking'].create({
+            'location_id': stock_location.id,
+            'location_dest_id': customer_location.id,
+            'picking_type_id': warehouse.out_type_id.id,
+            'move_ids': [
+                Command.create({
+                    'name': self.product1.name,
+                    'product_id': self.product1.id,
+                    'product_uom_qty': 1.0,
+                    'location_id': stock_location.id,
+                    'location_dest_id': customer_location.id,
+                })
+            ]
+        })
+        delivery.action_confirm()
+        delivery.move_ids.quantity_done = 1.0
+        delivery.button_validate()
+
+        po.action_create_invoice()
+        bill = po.invoice_ids
+        bill.invoice_date = bill_date
+        bill.action_post()
+
+        # Check that we have price difference amls
+        self.assertEqual(len(bill.line_ids), 4)
+
+        # Check that all the amls use the bill date exchange rate
+        self.assertEqual(
+            [self.eur_currency._convert(line.amount_currency, company.currency_id, company, bill_date) for line in bill.line_ids],
+            [line.balance for line in bill.line_ids]
+        )
