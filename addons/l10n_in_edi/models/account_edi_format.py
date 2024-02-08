@@ -197,6 +197,7 @@ class AccountEdiFormat(models.Model):
                         error_codes = [e.get("code") for e in error]
             if "9999" in error_codes:
                 response = {}
+                error = []
                 odoobot = self.env.ref("base.partner_root")
                 invoice.message_post(author_id=odoobot.id, body=_(
                     "Somehow this invoice had been cancelled to government before." \
@@ -210,7 +211,7 @@ class AccountEdiFormat(models.Model):
                     "error": self._l10n_in_edi_get_iap_buy_credits_message(invoice.company_id),
                     "blocking_level": "error",
                 }}
-            else:
+            if error:
                 error_message = "<br/>".join(["[%s] %s" % (e.get("code"), html_escape(e.get("message"))) for e in error])
                 return {invoice: {
                     "success": False,
@@ -220,13 +221,15 @@ class AccountEdiFormat(models.Model):
         if not response.get("error"):
             json_dump = json.dumps(response.get("data", {}))
             json_name = "%s_cancel_einvoice.json" % (invoice.name.replace("/", "_"))
-            attachment = self.env["ir.attachment"].create({
-                "name": json_name,
-                "raw": json_dump.encode(),
-                "res_model": "account.move",
-                "res_id": invoice.id,
-                "mimetype": "application/json",
-            })
+            attachment = False
+            if json_dump:
+                attachment = self.env["ir.attachment"].create({
+                    "name": json_name,
+                    "raw": json_dump.encode(),
+                    "res_model": "account.move",
+                    "res_id": invoice.id,
+                    "mimetype": "application/json",
+                })
             return {invoice: {"success": True, "attachment": attachment}}
 
     def _l10n_in_validate_partner(self, partner, is_company=False):
@@ -621,8 +624,7 @@ class AccountEdiFormat(models.Model):
         return {'error': [{
             'code': '0',
             'message': _(
-                "Unable to send e-Invoice."
-                "Create an API user in NIC portal, and set it using the top menu: Configuration > Settings."
+                "Ensure GST Number set on company setting and API are Verified."
             )}
         ]}
 

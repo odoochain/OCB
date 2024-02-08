@@ -89,7 +89,7 @@ class HolidaysRequest(models.Model):
 
         if 'state' in fields_list and not defaults.get('state'):
             lt = self.env['hr.leave.type'].browse(defaults.get('holiday_status_id'))
-            defaults['state'] = 'confirm'
+            defaults['state'] = 'confirm' if lt and lt.leave_validation_type != 'no_validation' else 'draft'
 
         if 'date_from' and 'date_to' in fields_list:
             now = fields.Datetime.now()
@@ -637,7 +637,7 @@ class HolidaysRequest(models.Model):
         if self.env.context.get('leave_skip_date_check', False):
             return
 
-        all_employees = self.employee_id | self.employee_ids
+        all_employees = self.all_employee_ids
         all_leaves = self.search([
             ('date_from', '<', max(self.mapped('date_to'))),
             ('date_to', '>', min(self.mapped('date_from'))),

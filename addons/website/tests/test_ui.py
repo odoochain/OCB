@@ -330,6 +330,7 @@ class TestUi(odoo.tests.HttpCase):
         self.start_tour('/web', 'conditional_visibility_2', login='admin')
         self.start_tour(self.env['website'].get_client_action_url('/'), 'conditional_visibility_3', login='admin')
         self.start_tour(self.env['website'].get_client_action_url('/'), 'conditional_visibility_4', login='admin')
+        self.start_tour(self.env['website'].get_client_action_url('/'), 'conditional_visibility_5', login='admin')
 
     def test_11_website_snippet_background_edition(self):
         self.env['ir.attachment'].create({
@@ -459,6 +460,9 @@ class TestUi(odoo.tests.HttpCase):
     def test_28_website_text_edition(self):
         self.start_tour('/@/', 'website_text_edition', login='admin')
 
+    def test_20_website_edit_megamenu_big_icons_subtitles(self):
+        self.start_tour(self.env['website'].get_client_action_url('/'), 'edit_megamenu_big_icons_subtitles', login='admin')
+
     def test_29_website_backend_menus_redirect(self):
         Menu = self.env['ir.ui.menu']
         menu_root = Menu.create({'name': 'Test Root'})
@@ -476,3 +480,54 @@ class TestUi(odoo.tests.HttpCase):
 
     def test_website_media_dialog_image_shape(self):
         self.start_tour("/", 'website_media_dialog_image_shape', login='admin')
+
+    def test_website_extra_items_no_dirty_page(self):
+        """
+        Having enough menus to trigger the "+" folded menus has been known to
+        wrongfully mark the page as dirty. There are 3 cases:
+
+        - the menu is not folded outside of edit mode and when entering edit
+          mode, the "+" appears and some menu are folded
+
+        - the menu is folded outside of edit mode and when entering edit mode
+          the resize actually makes it so different menu items are folded
+
+        - the menu is folded outside of edit mode and when entering edit mode it
+          stays the same (known to have been broken because edit mode tweaks the
+          dropdown behavior)
+
+        Those are fixed. This test makes sure the third case stays fixed.
+        At the moment, the first two cases are not marking the page as dirty but
+        the related "+" menu behavior is kinda broken so it would be difficult
+        to test (TODO).
+        """
+        # Remove all menu items but the first one
+        website = self.env['website'].get_current_website()
+        website.menu_id.child_id[1:].unlink()
+        # Create a new menu item whose text is very long so that we are sure
+        # it is folded into the extra items "+" menu outside of edit mode and
+        # stays the same when entering edit mode.
+        self.env['website.menu'].create({
+            'name': 'Menu %s' % ('a' * 200),  # Very long text
+            'website_id': website.id,
+            'parent_id': website.menu_id.id,
+        })
+
+        self.start_tour('/', 'website_no_action_no_dirty_page', login='admin')
+
+    def test_website_no_dirty_page(self):
+        # Previous tests are testing the dirty behavior when the extra items
+        # "+" menu comes in play. For other "no dirty" tests, we just remove
+        # most menu items first to make sure they pass independently.
+        website = self.env['website'].get_current_website()
+        website.menu_id.child_id[1:].unlink()
+
+        self.start_tour('/', 'website_no_dirty_page', login='admin')
+
+    def test_widget_lifecycle(self):
+        self.env['ir.asset'].create({
+            'name': 'wysiwyg_patch_start_and_destroy',
+            'bundle': 'website.assets_wysiwyg',
+            'path': 'website/static/tests/tour_utils/widget_lifecycle_patch_wysiwyg.js',
+        })
+        self.start_tour(self.env['website'].get_client_action_url('/'), 'widget_lifecycle', login='admin')

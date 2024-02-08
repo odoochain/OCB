@@ -26,7 +26,7 @@ import psycopg2
 import odoo
 from odoo import api, fields, models, modules, tools, _
 from odoo.addons.base.models.ir_model import MODULE_UNINSTALL_FLAG
-from odoo.exceptions import AccessDenied, UserError
+from odoo.exceptions import AccessDenied, UserError, ValidationError
 from odoo.osv import expression
 from odoo.tools.parse_version import parse_version
 from odoo.tools.misc import topological_sort
@@ -79,6 +79,7 @@ class ModuleCategory(models.Model):
     _name = "ir.module.category"
     _description = "Application"
     _order = 'name'
+    _allow_sudo_commands = False
 
     @api.depends('module_ids')
     def _compute_module_nr(self):
@@ -116,6 +117,12 @@ class ModuleCategory(models.Model):
             xml_ids[data['res_id']].append("%s.%s" % (data['module'], data['name']))
         for cat in self:
             cat.xml_id = xml_ids.get(cat.id, [''])[0]
+
+    @api.constrains('parent_id')
+    def _check_parent_not_circular(self):
+        if not self._check_recursion():
+            raise ValidationError(_("Error ! You cannot create recursive categories."))
+
 
 class MyFilterMessages(Transform):
     """
@@ -166,6 +173,7 @@ class Module(models.Model):
     _rec_names_search = ['name', 'shortdesc', 'summary']
     _description = "Module"
     _order = 'application desc,sequence,name'
+    _allow_sudo_commands = False
 
     @api.model
     def get_views(self, views, options=None):
@@ -257,15 +265,14 @@ class Module(models.Model):
 
     @api.depends('icon')
     def _get_icon_image(self):
+        self.icon_image = ''
         for module in self:
-            module.icon_image = ''
+            if not module.id:
+                continue
             if module.icon:
-                path_parts = module.icon.split('/')
-                path = modules.get_module_resource(path_parts[1], *path_parts[2:])
-            elif module.id:
-                path = modules.module.get_module_icon_path(module)
+                path = modules.get_module_resource(*module.icon.split("/")[1:])
             else:
-                path = ''
+                path = modules.module.get_module_icon_path(module)
             if path:
                 with tools.file_open(path, 'rb') as image_file:
                     module.icon_image = base64.b64encode(image_file.read())
@@ -466,7 +473,7 @@ class Module(models.Model):
         # configure the CoA on his own company, which makes no sense.
         if request:
             request.allowed_company_ids = self.env.companies.ids
-        return self._button_immediate_function(type(self).button_install)
+        return self._button_immediate_function(self.env.registry[self._name].button_install)
 
     @assert_log_admin_access
     def button_install_cancel(self):
@@ -619,7 +626,7 @@ class Module(models.Model):
         returns the next res.config action to execute
         """
         _logger.info('User #%d triggered module uninstallation', self.env.uid)
-        return self._button_immediate_function(type(self).button_uninstall)
+        return self._button_immediate_function(self.env.registry[self._name].button_uninstall)
 
     @assert_log_admin_access
     def button_uninstall(self):
@@ -657,7 +664,7 @@ class Module(models.Model):
         Upgrade the selected module(s) immediately and fully,
         return the next res.config action to execute
         """
-        return self._button_immediate_function(type(self).button_upgrade)
+        return self._button_immediate_function(self.env.registry[self._name].button_upgrade)
 
     @assert_log_admin_access
     def button_upgrade(self):
@@ -781,9 +788,7 @@ class Module(models.Model):
                 mod = self.create(dict(name=mod_name, state=state, **values))
                 res[1] += 1
 
-            mod._update_dependencies(terp.get('depends', []), terp.get('auto_install'))
-            mod._update_exclusions(terp.get('excludes', []))
-            mod._update_category(terp.get('category', 'Uncategorized'))
+            mod._update_from_terp(terp)
 
         return res
 
@@ -890,6 +895,11 @@ class Module(models.Model):
     @api.model
     def get_apps_server(self):
         return tools.config.get('apps_server', 'https://apps.odoo.com/apps')
+
+    def _update_from_terp(self, terp):
+        self._update_dependencies(terp.get('depends', []), terp.get('auto_install'))
+        self._update_exclusions(terp.get('excludes', []))
+        self._update_category(terp.get('category', 'Uncategorized'))
 
     def _update_dependencies(self, depends=None, auto_install_requirements=()):
         self.env['ir.module.module.dependency'].flush_model()
@@ -1067,6 +1077,7 @@ class ModuleDependency(models.Model):
     _name = "ir.module.module.dependency"
     _description = "Module dependency"
     _log_access = False  # inserts are done manually, create and write uid, dates are always null
+    _allow_sudo_commands = False
 
     # the dependency name
     name = fields.Char(index=True)
@@ -1109,6 +1120,7 @@ class ModuleDependency(models.Model):
 class ModuleExclusion(models.Model):
     _name = "ir.module.module.exclusion"
     _description = "Module exclusion"
+    _allow_sudo_commands = False
 
     # the exclusion name
     name = fields.Char(index=True)
