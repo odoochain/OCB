@@ -525,13 +525,13 @@ export const editorCommands = {
             } else {
                 // Ensure nav-item lists are excluded from toggling
                 const isNavItemList = node => node.nodeName === 'LI' && node.classList.contains('nav-item');
-                let block = closestBlock(node);
-                block = isNavItemList(block) ? node : block;
-                if (!['OL', 'UL'].includes(block.tagName) && (block.isContentEditable || block.nodeType === Node.TEXT_NODE)) {
-                    const closestLi = closestElement(block, 'li');
-                    block = closestLi && !isNavItemList(closestLi) ? closestLi : block;
-                    const ublock = block.nodeName === 'LI' && block.closest('ol, ul');
-                    ublock && getListMode(ublock) == mode ? li.add(block) : blocks.add(block);
+                let nodeToToggle = closestBlock(node);
+                nodeToToggle = isNavItemList(nodeToToggle) ? node : nodeToToggle;
+                if (!['OL', 'UL'].includes(nodeToToggle.tagName) && (nodeToToggle.isContentEditable || nodeToToggle.nodeType === Node.TEXT_NODE)) {
+                    const closestLi = closestElement(nodeToToggle, 'li');
+                    nodeToToggle = closestLi && !isNavItemList(closestLi) ? closestLi : nodeToToggle;
+                    const ublock = nodeToToggle.nodeName === 'LI' && nodeToToggle.closest('ol, ul');
+                    ublock && getListMode(ublock) == mode ? li.add(nodeToToggle) : blocks.add(nodeToToggle);
                 }
             }
         }
@@ -560,7 +560,7 @@ export const editorCommands = {
             node => closestElement(node).isContentEditable
         );
         let coloredTds = [];
-        if (selectedTds.length) {
+        if (selectedTds.length && mode === "backgroundColor") {
             for (const td of selectedTds) {
                 colorElement(td, color, mode);
             }
@@ -583,7 +583,9 @@ export const editorCommands = {
         if (isEmptyBlock(range.endContainer)) {
             selectionNodes.push(range.endContainer, ...descendants(range.endContainer));
         }
-        const selectedNodes = selectionNodes.filter(node => !closestElement(node, 'table.o_selected_table'))
+        const selectedNodes = mode === "backgroundColor"
+            ? selectionNodes.filter(node => !closestElement(node, 'table.o_selected_table'))
+            : selectionNodes;
         function getFonts(selectedNodes) {
             return selectedNodes.flatMap(node => {
                 let font = closestElement(node, 'font') || closestElement(node, 'span');
@@ -598,7 +600,7 @@ export const editorCommands = {
                     }
                 } else if (
                     (node.nodeType === Node.TEXT_NODE && isVisibleStr(node)) ||
-                    (isEmptyBlock(node.parentNode)) ||
+                    (node.nodeName === 'BR' && isEmptyBlock(node.parentNode)) ||
                     (node.nodeType === Node.ELEMENT_NODE &&
                     node.nodeName !== 'FIGURE' &&
                     ['inline', 'inline-block'].includes(getComputedStyle(node).display) &&
