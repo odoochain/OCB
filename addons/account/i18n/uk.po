@@ -6,6 +6,7 @@
 # Bohdan Lisnenko, 2022
 # Martin Trigaux, 2023
 # Wil Odoo, 2024
+# Леонід Харченко, 2024
 # Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2024
 # 
 msgid ""
@@ -669,7 +670,7 @@ msgid ""
 "<span attrs=\"{'invisible': ['|', '|', '|', ('state', '!=', 'draft'), "
 "('name', '!=', '/'), ('posted_before', '=', True), ('quick_edit_mode', '=', "
 "True)]}\">Draft</span>"
-msgstr ""
+msgstr "Чернетка"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_invoice_send_wizard_form
@@ -7901,7 +7902,7 @@ msgstr "Недійсний \"Zip Range\", будь-ласка, налаштуй�
 #: code:addons/account/models/account_report.py:0
 #, python-format
 msgid "Invalid domain for expression '%s' of line '%s': %s"
-msgstr ""
+msgstr "Неді '%s' of line '%s': %s"
 
 #. module: account
 #. odoo-python
@@ -11204,6 +11205,17 @@ msgstr "Будь ласка, створіть нові облікові запи
 #, python-format
 msgid "Please define a payment method line on your payment."
 msgstr "Визначіть рядок способу оплати у вашому платежі."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_payment.py:0
+#, python-format
+msgid ""
+"The selected payment method is not available for this payment, please select"
+" the payment method again."
+msgstr ""
+"Вибраний спосіб оплати недоступний для цього платежу, будь ласка, виберіть "
+"спосіб оплати ще раз."
 
 #. module: account
 #. odoo-python
@@ -16526,7 +16538,7 @@ msgstr "Ви можете узгодити лише опубліковані з�
 #, python-format
 msgid "You can only register payment for posted journal entries."
 msgstr ""
-"Ви можете зареєструвати платежі лише для опублікованих записів жураналу."
+"Ви можете зареєструвати платежі лише для опублікованих записів журналу."
 
 #. module: account
 #. odoo-python
@@ -16807,6 +16819,13 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_account.py:0
+#, python-format
+msgid "You cannot create recursive groups."
+msgstr "Ви не можете створити рекурсивні групи."
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/account_move_line.py:0
 #, python-format
 msgid ""
@@ -16842,6 +16861,24 @@ msgstr ""
 "Ви не можете видалити цей запис, оскільки він уже використав порядковий "
 "номер і не є останнім у ланцюжку. Натомість вам, ймовірно, слід повернути "
 "його."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/ir_actions_report.py:0
+#, python-format
+msgid ""
+"You cannot delete this report (%s), it is used by the accounting PDF "
+"generation engine."
+msgstr ""
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_account_tag.py:0
+#, python-format
+msgid ""
+"You cannot delete this account tag (%s), it is used on the chart of account "
+"definition."
+msgstr ""
 
 #. module: account
 #. odoo-python

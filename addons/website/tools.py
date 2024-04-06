@@ -18,7 +18,7 @@ from odoo.tools.misc import hmac, DotDict, frozendict
 def MockRequest(
         env, *, path='/mockrequest', routing=True, multilang=True,
         context=frozendict(), cookies=frozendict(), country_code=None,
-        website=None, remote_addr=HOST, environ_base=None,
+        website=None, remote_addr=HOST, environ_base=None, url_root=None,
         # website_sale
         sale_order_id=None, website_sale_current_pl=None,
 ):
@@ -42,6 +42,8 @@ def MockRequest(
             cookies=cookies,
             referrer='',
             remote_addr=remote_addr,
+            url_root=url_root,
+            args=[],
         ),
         type='http',
         future_response=odoo.http.FutureResponse(),
@@ -52,6 +54,7 @@ def MockRequest(
             geoip={'country_code': country_code},
             sale_order_id=sale_order_id,
             website_sale_current_pl=website_sale_current_pl,
+            context={'lang': ''},
         ),
         geoip={},
         db=env.registry.db_name,

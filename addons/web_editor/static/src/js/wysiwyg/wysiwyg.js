@@ -436,7 +436,7 @@ const Wysiwyg = Widget.extend({
                     && !$target[0].closest('.o_extra_menu_items')
                     && $target[0].isContentEditable) {
                 if (ev.ctrlKey || ev.metaKey) {
-                    window.open(ev.target.href, '_blank')
+                    window.open($target[0].href, '_blank');
                 }
                 this.linkPopover = $target.data('popover-widget-initialized');
                 if (!this.linkPopover) {
@@ -2286,6 +2286,9 @@ const Wysiwyg = Widget.extend({
                             placement: 'auto',
                         })
                         .popover('show');
+                    // Error has been handled by showing it near the element.
+                    // Do not display a traceback dialog about it.
+                    response.event.preventDefault();
                 });
             });
         });

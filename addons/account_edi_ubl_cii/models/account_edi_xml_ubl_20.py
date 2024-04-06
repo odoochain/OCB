@@ -5,7 +5,6 @@ from collections import defaultdict
 
 from odoo import models, _
 from odoo.tools import html2plaintext, cleanup_xml_node
-from odoo.tools.float_utils import float_round
 
 
 class AccountEdiXmlUBL20(models.AbstractModel):
@@ -58,33 +57,29 @@ class AccountEdiXmlUBL20(models.AbstractModel):
         }]
 
     def _get_partner_party_legal_entity_vals_list(self, partner):
-        commercial_partner = partner.commercial_partner_id
-
         return [{
-            'commercial_partner': commercial_partner,
-
-            'registration_name': commercial_partner.name,
-            'company_id': commercial_partner.vat,
-            'registration_address_vals': self._get_partner_address_vals(commercial_partner),
+            'commercial_partner': partner,
+            'registration_name': partner.name,
+            'company_id': partner.vat,
+            'registration_address_vals': self._get_partner_address_vals(partner),
         }]
 
     def _get_partner_contact_vals(self, partner):
-        phone = partner.phone or partner.mobile
         return {
             'id': partner.id,
             'name': partner.name,
-            'telephone': phone and phone.strip(),
+            'telephone': partner.phone or partner.mobile,
             'electronic_mail': partner.email,
         }
 
     def _get_partner_party_vals(self, partner, role):
         return {
             'partner': partner,
-            'party_identification_vals': self._get_partner_party_identification_vals_list(partner),
-            'party_name_vals': [{'name': partner.name}],
+            'party_identification_vals': self._get_partner_party_identification_vals_list(partner.commercial_partner_id),
+            'party_name_vals': [{'name': partner.display_name}],
             'postal_address_vals': self._get_partner_address_vals(partner),
-            'party_tax_scheme_vals': self._get_partner_party_tax_scheme_vals_list(partner, role),
-            'party_legal_entity_vals': self._get_partner_party_legal_entity_vals_list(partner),
+            'party_tax_scheme_vals': self._get_partner_party_tax_scheme_vals_list(partner.commercial_partner_id, role),
+            'party_legal_entity_vals': self._get_partner_party_legal_entity_vals_list(partner.commercial_partner_id),
             'contact_vals': self._get_partner_contact_vals(partner),
         }
 
@@ -344,7 +339,7 @@ class AccountEdiXmlUBL20(models.AbstractModel):
             'currency_dp': line.currency_id.decimal_places,
 
             # The price of an item, exclusive of VAT, after subtracting item price discount.
-            'price_amount': float_round(gross_price_unit, 10),
+            'price_amount': round(gross_price_unit, 10),
             'product_price_dp': self.env['decimal.precision'].precision_get('Product Price'),
 
             # The number of item units to which the price applies.
@@ -366,7 +361,7 @@ class AccountEdiXmlUBL20(models.AbstractModel):
         total_fixed_tax_amount = sum(
             vals['amount']
             for vals in allowance_charge_vals_list
-            if vals['allowance_charge_reason_code'] == 'AEO'
+            if vals.get('charge_indicator') == 'true'
         )
         return {
             'currency': line.currency_id,
@@ -467,7 +462,7 @@ class AccountEdiXmlUBL20(models.AbstractModel):
                 charge_total_amount += allowance_charge_vals['amount']
 
         supplier = invoice.company_id.partner_id.commercial_partner_id
-        customer = invoice.commercial_partner_id
+        customer = invoice.partner_id
 
         # OrderReference/SalesOrderID (sales_order_id) is optional
         sales_order_id = 'sale_line_ids' in invoice.invoice_line_ids._fields \

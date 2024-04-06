@@ -10,8 +10,8 @@
 # Muftiara Syuhada <muftiara.syuhada@gmail.com>, 2023
 # Martin Trigaux, 2023
 # Edi Santoso <repopamor@gmail.com>, 2023
-# Abe Manyo, 2024
 # Wil Odoo, 2024
+# Abe Manyo, 2024
 # 
 msgid ""
 msgstr ""
@@ -19,7 +19,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-02-06 13:31+0000\n"
 "PO-Revision-Date: 2022-09-22 05:44+0000\n"
-"Last-Translator: Wil Odoo, 2024\n"
+"Last-Translator: Abe Manyo, 2024\n"
 "Language-Team: Indonesian (https://app.transifex.com/odoo/teams/41243/id/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -7913,7 +7913,7 @@ msgstr "\"Kode Pos\" tidak valid, silakan konfigurasi yang betul."
 #: code:addons/account/models/account_report.py:0
 #, python-format
 msgid "Invalid domain for expression '%s' of line '%s': %s"
-msgstr ""
+msgstr "Domain tidak valid untuk ekspresi '%s' dari baris '%s': %s"
 
 #. module: account
 #. odoo-python
@@ -11208,6 +11208,17 @@ msgstr "Mohon buat akun baru dari menu Bagan Akun."
 #, python-format
 msgid "Please define a payment method line on your payment."
 msgstr "Silakan tetapkan baris metode pembayaran pada pembayaran Anda."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_payment.py:0
+#, python-format
+msgid ""
+"The selected payment method is not available for this payment, please select"
+" the payment method again."
+msgstr ""
+"Metode pembayaran yang dipilih tidak tersedia untuk pembayaran ini, silakan "
+"pilih metode pembayaran yang lain."
 
 #. module: account
 #. odoo-python
@@ -16814,6 +16825,13 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_account.py:0
+#, python-format
+msgid "You cannot create recursive groups."
+msgstr "Anda tidak dapat membuat kelompok rekursif."
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/account_move_line.py:0
 #, python-format
 msgid ""
@@ -16850,6 +16868,26 @@ msgstr ""
 "Anda tidak dapat menghapus entri ini, karena sudah menggunakan nomor "
 "sequence dan bukan merupakan yang terakhir di rantai. Anda sebaiknya "
 "mengembalikkan hal tersebut terlebih dahulu."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/ir_actions_report.py:0
+#, python-format
+msgid ""
+"You cannot delete this report (%s), it is used by the accounting PDF "
+"generation engine."
+msgstr ""
+"Anda tidak dapat menghapus laporan ini (%s), karena digunakan oleh engine "
+"pembuat PDF akuntansi."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_account_tag.py:0
+#, python-format
+msgid ""
+"You cannot delete this account tag (%s), it is used on the chart of account "
+"definition."
+msgstr ""
 
 #. module: account
 #. odoo-python

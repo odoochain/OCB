@@ -3,25 +3,24 @@
 
 """ OpenERP core library."""
 
-# ----------------------------------------------------------
+
+#----------------------------------------------------------
 # odoo must be a namespace package for odoo.addons to become one too
 # https://packaging.python.org/guides/packaging-namespace-packages/
-# ----------------------------------------------------------
+#----------------------------------------------------------
 import pkgutil
 import os.path
-
 __path__ = [
     os.path.abspath(path)
     for path in pkgutil.extend_path(__path__, __name__)
 ]
 
 import sys
-
 assert sys.version_info > (3, 7), "Outdated python version detected, Odoo requires Python >= 3.7 to run."
 
-# ----------------------------------------------------------
+#----------------------------------------------------------
 # Running mode flags (gevent, prefork)
-# ----------------------------------------------------------
+#----------------------------------------------------------
 # Is the server running with gevent.
 evented = False
 if len(sys.argv) > 1 and sys.argv[1] == 'gevent':
@@ -29,9 +28,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'gevent':
     import gevent.monkey
     import psycopg2
     from gevent.socket import wait_read, wait_write
-
     gevent.monkey.patch_all()
-
 
     def gevent_wait_callback(conn, timeout=None):
         """A wait callback useful to allow gevent to work with Psycopg."""
@@ -49,8 +46,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'gevent':
             else:
                 raise psycopg2.OperationalError(
                     "Bad result from poll: %r" % state)
-
-
     psycopg2.extensions.set_wait_callback(gevent_wait_callback)
     evented = True
 
@@ -61,19 +56,17 @@ if len(sys.argv) > 1 and sys.argv[1] == 'gevent':
 # locks between threads.
 multi_process = False
 
-# ----------------------------------------------------------
+#----------------------------------------------------------
 # libc UTC hack
-# ----------------------------------------------------------
+#----------------------------------------------------------
 # Make sure the OpenERP server runs in UTC.
 import os
-
-os.environ['TZ'] = 'UTC'  # Set the timezone
+os.environ['TZ'] = 'UTC' # Set the timezone
 import time
-
 if hasattr(time, 'tzset'):
     time.tzset()
 
-# ----------------------------------------------------------
+#----------------------------------------------------------
 # PyPDF2 hack
 # ensure that zlib does not throw error -5 when decompressing
 # because some pdf won't fit into allocated memory
@@ -84,15 +77,14 @@ import PyPDF2
 try:
     import zlib
 
-
     def _decompress(data):
         zobj = zlib.decompressobj()
         return zobj.decompress(data)
 
-
+    import PyPDF2.filters  # needed after PyPDF2 2.0.0 and before 2.11.0
     PyPDF2.filters.decompress = _decompress
 except ImportError:
-    pass  # no fix required
+    pass # no fix required
 
 
 #----------------------------------------------------------
@@ -108,7 +100,7 @@ codecs.register(lambda charset: iso8859_8 if iso8859_8ie_re.match(charset) else 
 
 #----------------------------------------------------------
 # Shortcuts
-# ----------------------------------------------------------
+#----------------------------------------------------------
 # The hard-coded super-user id (a.k.a. administrator, or root user).
 SUPERUSER_ID = 1
 
@@ -124,10 +116,9 @@ def registry(database_name=None):
         database_name = threading.current_thread().dbname
     return modules.registry.Registry(database_name)
 
-
-# ----------------------------------------------------------
+#----------------------------------------------------------
 # Imports
-# ----------------------------------------------------------
+#----------------------------------------------------------
 from . import upgrade  # this namespace must be imported first
 from . import addons
 from . import conf
@@ -140,17 +131,17 @@ from . import service
 from . import sql_db
 from . import tools
 
-# ----------------------------------------------------------
+#----------------------------------------------------------
 # Model classes, fields, api decorators, and translations
-# ----------------------------------------------------------
+#----------------------------------------------------------
 from . import models
 from . import fields
 from . import api
 from odoo.tools.translate import _, _lt
 from odoo.fields import Command
 
-# ----------------------------------------------------------
+#----------------------------------------------------------
 # Other imports, which may require stuff from above
-# ----------------------------------------------------------
+#----------------------------------------------------------
 from . import cli
 from . import http

@@ -835,6 +835,20 @@ describe('Format', () => {
                 contentAfter: '<table><tbody><tr><td><h1><span style="font-size: 18px;">[]<br></span></h1></td><td><h1><span style="font-size: 18px;"><br></span></h1></td></tr><tr><td><h1><br></h1></td><td><h1><br></h1></td></tr></tbody></table>',
             });
         });
+        it('should apply font size in unbreakable span with class', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: `<h1><span class="oe_unbreakable">some [text]</span></h1>`,
+                stepFunction: setFontSize('18px'),
+                contentAfter: `<h1><span class="oe_unbreakable">some <span style="font-size: 18px;">[text]</span></span></h1>`,
+            });
+        });
+        it('should apply font size in unbreakable span without class', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: `<h1><span t="unbreakable">some [text]</span></h1>`,
+                stepFunction: setFontSize('18px'),
+                contentAfter: `<h1><span t="unbreakable">some <span style="font-size: 18px;">[text]</span></span></h1>`,
+            });
+        });
     });
 
     it('should add style to a span parent of an inline', async () => {
@@ -900,6 +914,34 @@ describe('Format', () => {
                 contentBefore: '<div><p><font class="text-gradient" style="background-image: linear-gradient(135deg, rgb(255, 204, 51) 0%, rgb(226, 51, 255) 100%);">[ab]</font></p></div>',
                 stepFunction: editor => editor.execCommand('removeFormat'),
                 contentAfter: '<div><p>[ab]</p></div>',
+            });
+        });
+        it('should remove all the colors for the text separated by Shift+Enter when using removeFormat button', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: `<div><h1><font style="color: rgb(255, 0, 0);">[abc</font><br><font style="color: rgb(255, 0, 0);">abc</font><br><font style="color: rgb(255, 0, 0);">abc</font><br><font style="color: rgb(255, 0, 0);">abc]</font></h1></div>`,
+                stepFunction: editor => editor.execCommand('removeFormat'),
+                contentAfter: `<div><h1>[abc<br>abc<br>abc<br>abc]</h1></div>`
+
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: `<div><h1><font style="background-color: rgb(255, 0, 0);">[abc</font><br><font style="background-color: rgb(255, 0, 0);">abc</font><br><font style="background-color: rgb(255, 0, 0);">abc]</font></h1></div>`,
+                stepFunction: editor => editor.execCommand('removeFormat'),
+                contentAfter: `<div><h1>[abc<br>abc<br>abc]</h1></div>`
+
+            });
+        })
+        it('should remove all the colors for the text separated by Enter when using removeFormat button' , async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: `<div><h1><font style="background-color: rgb(255, 0, 0);">[abc</font></h1><h1><font style="background-color: rgb(255, 0, 0);">abc</font></h1><h1><font style="background-color: rgb(255, 0, 0);">abc]</font></h1></div>`,
+                stepFunction: editor => editor.execCommand('removeFormat'),
+                contentAfter: `<div><h1>[abc</h1><h1>abc</h1><h1>abc]</h1></div>`
+
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: `<div><h1><font style="color: rgb(255, 0, 0);">[abc</font></h1><h1><font style="color: rgb(255, 0, 0);">abc</font></h1><h1><font style="color: rgb(255, 0, 0);">abc]</font></h1></div>`,
+                stepFunction: editor => editor.execCommand('removeFormat'),
+                contentAfter: `<div><h1>[abc</h1><h1>abc</h1><h1>abc]</h1></div>`
+
             });
         });
     });

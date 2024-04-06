@@ -3,9 +3,9 @@
 
 import base64
 import re
-from urllib.parse import urlparse
-
 import requests
+
+from werkzeug.urls import url_parse
 
 from odoo import api, models
 
@@ -74,7 +74,7 @@ class Assets(models.AbstractModel):
                 else:
                     font_family_attachments = IrAttachment
                     font_content = requests.get(
-                        f'https://fonts.loli.net/css?family={font_name}&display=swap',
+                        f'https://fonts.googleapis.com/css?family={font_name}:300,300i,400,400i,700,700i&display=swap',
                         timeout=5, headers=headers_woff2,
                     ).content.decode()
 
@@ -82,9 +82,9 @@ class Assets(models.AbstractModel):
                         statement = src.group()
                         url, font_format = re.match(r'src: url\(([^\)]+)\) (.+)', statement).groups()
                         req = requests.get(url, timeout=5, headers=headers_woff2)
-                        # https://gapis.geekzu.org/g-fonts/s/modak/v18/EJRYQgs1XtIEskMB-hRp7w.woff2
+                        # https://fonts.gstatic.com/s/modak/v18/EJRYQgs1XtIEskMB-hRp7w.woff2
                         # -> s-modak-v18-EJRYQgs1XtIEskMB-hRp7w.woff2
-                        name = urlparse(url).path.lstrip('/').replace('/', '-')
+                        name = url_parse(url).path.lstrip('/').replace('/', '-')
                         attachment = IrAttachment.create({
                             'name': f'google-font-{name}',
                             'type': 'binary',
