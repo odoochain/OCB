@@ -11,7 +11,6 @@ import zipfile
 
 from os.path import join as opj
 
-
 WINDOWS_RESERVED = re.compile(r'''
     ^
     # forbidden stems: reserved keywords
@@ -20,6 +19,8 @@ WINDOWS_RESERVED = re.compile(r'''
     (:?\..*)?
     $
 ''', flags=re.IGNORECASE | re.VERBOSE)
+
+
 def clean_filename(name, replacement=''):
     """ Strips or replaces possibly problematic or annoying characters our of
     the input string, in order to make it a valid filename in most operating
@@ -51,6 +52,7 @@ def clean_filename(name, replacement=''):
         return "Untitled"
     return re.sub(r'[^\w_.()\[\] -]+', replacement, name).lstrip('.-') or "Untitled"
 
+
 def listdir(dir, recursive=False):
     """Allow to recursively get the file listing following symlinks, returns
     paths relative to the provided `dir` except completely broken if the symlink
@@ -66,7 +68,8 @@ def listdir(dir, recursive=False):
         yield from (opj(r, f) for f in files)
     return res
 
-def zip_dir(path, stream, include_dir=True, fnct_sort=None):      # TODO add ignore list
+
+def zip_dir(path, stream, include_dir=True, fnct_sort=None):  # TODO add ignore list
     """
     : param fnct_sort : Function to be passed to "key" parameter of built-in
                         python sorted() to provide flexibility of sorting files
@@ -97,6 +100,7 @@ else:
 
     from contextlib import contextmanager
     from odoo.release import nt_service_name
+
 
     def is_running_as_nt_service():
         @contextmanager

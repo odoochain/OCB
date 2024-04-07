@@ -15,6 +15,7 @@ import html as htmllib
 
 import idna
 import markupsafe
+from lxml.html import defs
 from lxml import etree, html
 from lxml.html import clean
 from werkzeug import urls
@@ -29,20 +30,26 @@ _logger = logging.getLogger(__name__)
 # HTML Sanitizer
 #----------------------------------------------------------
 
-safe_attrs = clean.defs.safe_attrs | frozenset(
+safe_attrs = defs.safe_attrs | frozenset(
     ['style',
      'data-o-mail-quote', 'data-o-mail-quote-node',  # quote detection
-     'data-oe-model', 'data-oe-id', 'data-oe-field', 'data-oe-type', 'data-oe-expression', 'data-oe-translation-initial-sha', 'data-oe-nodeid',
+     'data-oe-model', 'data-oe-id', 'data-oe-field', 'data-oe-type', 'data-oe-expression',
+     'data-oe-translation-initial-sha', 'data-oe-nodeid',
      'data-last-history-steps',
-     'data-publish', 'data-id', 'data-res_id', 'data-interval', 'data-member_id', 'data-scroll-background-ratio', 'data-view-id',
-     'data-class', 'data-mimetype', 'data-original-src', 'data-original-id', 'data-gl-filter', 'data-quality', 'data-resize-width',
+     'data-publish', 'data-id', 'data-res_id', 'data-interval', 'data-member_id', 'data-scroll-background-ratio',
+     'data-view-id',
+     'data-class', 'data-mimetype', 'data-original-src', 'data-original-id', 'data-gl-filter', 'data-quality',
+     'data-resize-width',
      'data-shape', 'data-shape-colors', 'data-file-name', 'data-original-mimetype',
      'data-oe-protected',  # editor
      'data-behavior-props', 'data-prop-name',  # knowledge commands
      ])
 SANITIZE_TAGS = {
     # allow new semantic HTML5 tags
-    'allow_tags': clean.defs.tags | frozenset('article bdi section header footer hgroup nav aside figure main'.split() + [etree.Comment]),
+    # 'allow_tags': clean.Cleaner.tags | frozenset(
+    #     'article bdi section header footer hgroup nav aside figure main'.split() + [etree.Comment]),
+    'allow_tags': defs.tags | frozenset(
+         'article bdi section header footer hgroup nav aside figure main'.split() + [etree.Comment]),
     'kill_tags': ['base', 'embed', 'frame', 'head', 'iframe', 'link', 'meta',
                   'noscript', 'object', 'script', 'style', 'title'],
     'remove_tags': ['html', 'body'],
@@ -50,7 +57,6 @@ SANITIZE_TAGS = {
 
 
 class _Cleaner(clean.Cleaner):
-
     _style_re = re.compile(r'''([\w-]+)\s*:\s*((?:[^;"']|"[^";]*"|'[^';]*')+)''')
 
     _style_whitelist = [
@@ -68,8 +74,8 @@ class _Cleaner(clean.Cleaner):
 
     _style_whitelist.extend(
         ['border-%s-%s' % (position, attribute)
-            for position in ['top', 'bottom', 'left', 'right']
-            for attribute in ('style', 'color', 'width', 'left-radius', 'right-radius')]
+         for position in ['top', 'bottom', 'left', 'right']
+         for attribute in ('style', 'color', 'width', 'left-radius', 'right-radius')]
     )
 
     strip_classes = False
@@ -150,7 +156,7 @@ def tag_quote(el):
             el.getparent().set('data-o-mail-quote-container', '1')
 
     if (el.tag == 'hr' and ('stopSpelling' in el_class or 'stopSpelling' in el_id)) or \
-       'yahoo_quoted' in el_class:
+            'yahoo_quoted' in el_class:
         # Quote all elements after this one
         el.set('data-o-mail-quote', '1')
         for sibling in el.itersiblings(preceding=False):
@@ -172,7 +178,8 @@ def tag_quote(el):
         # remove single node
         el.set('data-o-mail-quote-node', '1')
         el.set('data-o-mail-quote', '1')
-    if el.getparent() is not None and (el.getparent().get('data-o-mail-quote') or el.getparent().get('data-o-mail-quote-container')) and not el.getparent().get('data-o-mail-quote-node'):
+    if el.getparent() is not None and (el.getparent().get('data-o-mail-quote') or el.getparent().get(
+            'data-o-mail-quote-container')) and not el.getparent().get('data-o-mail-quote-node'):
         el.set('data-o-mail-quote', '1')
 
 
@@ -196,7 +203,8 @@ def html_normalize(src, filter_callback=None):
 
     src = ustr(src, errors='replace')
     # html: remove encoding attribute inside tags
-    doctype = re.compile(r'(<[^>]*\s)(encoding=(["\'][^"\']*?["\']|[^\s\n\r>]+)(\s[^>]*|/)?>)', re.IGNORECASE | re.DOTALL)
+    doctype = re.compile(r'(<[^>]*\s)(encoding=(["\'][^"\']*?["\']|[^\s\n\r>]+)(\s[^>]*|/)?>)',
+                         re.IGNORECASE | re.DOTALL)
     src = doctype.sub(u"", src)
 
     try:
@@ -233,7 +241,8 @@ def html_normalize(src, filter_callback=None):
     return src
 
 
-def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=False, sanitize_style=False, sanitize_form=True, strip_style=False, strip_classes=False):
+def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=False, sanitize_style=False,
+                  sanitize_form=True, strip_style=False, strip_classes=False):
     if not src:
         return src
 
@@ -242,9 +251,9 @@ def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=Fals
     def sanitize_handler(doc):
         kwargs = {
             'page_structure': True,
-            'style': strip_style,              # True = remove style tags/attrs
+            'style': strip_style,  # True = remove style tags/attrs
             'sanitize_style': sanitize_style,  # True = sanitize styling
-            'forms': sanitize_form,            # True = remove form tags
+            'forms': sanitize_form,  # True = remove form tags
             'remove_unknown_tags': False,
             'comments': False,
             'processing_instructions': False
@@ -286,6 +295,7 @@ def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=Fals
 
     return markupsafe.Markup(sanitized)
 
+
 # ----------------------------------------------------------
 # HTML/Text management
 # ----------------------------------------------------------
@@ -318,11 +328,13 @@ def is_html_empty(html_content):
     tag_re = re.compile(r'\<\s*\/?(?:p|div|section|span|br|b|i|font)(?:(?=\s+\w*)[^/>]*|\s*)/?\s*\>')
     return not bool(re.sub(tag_re, '', html_content).strip())
 
+
 def html_keep_url(text):
     """ Transform the url into clickable link with <a/> tag """
     idx = 0
     final = ''
-    link_tags = re.compile(r"""(?<!["'])((ftp|http|https):\/\/(\w+:{0,1}\w*@)?([^\s<"']+)(:[0-9]+)?(\/|\/([^\s<"']))?)(?![^\s<"']*["']|[^\s<"']*</a>)""")
+    link_tags = re.compile(
+        r"""(?<!["'])((ftp|http|https):\/\/(\w+:{0,1}\w*@)?([^\s<"']+)(:[0-9]+)?(\/|\/([^\s<"']))?)(?![^\s<"']*["']|[^\s<"']*</a>)""")
     for item in re.finditer(link_tags, text):
         final += text[idx:item.start()]
         final += '<a href="%s" target="_blank" rel="noreferrer noopener">%s</a>' % (item.group(0), item.group(0))
@@ -411,6 +423,7 @@ def html2plaintext(html, body_id=None, encoding='utf-8'):
 
     return html.strip()
 
+
 def plaintext2html(text, container_tag=None):
     r"""Convert plaintext into html. Content of the text is escaped to manage
     html entities, using :func:`~odoo.tools.misc.html_escape`.
@@ -443,9 +456,10 @@ def plaintext2html(text, container_tag=None):
     final += text[idx:] + '</p>'
 
     # 5. container
-    if container_tag: # FIXME: validate that container_tag is just a simple tag?
+    if container_tag:  # FIXME: validate that container_tag is just a simple tag?
         final = '<%s>%s</%s>' % (container_tag, final, container_tag)
     return markupsafe.Markup(final)
+
 
 def append_content_to_html(html, content, plaintext=True, preserve=False, container_tag=None):
     """ Append extra content at the end of an HTML snippet, trying
@@ -482,7 +496,7 @@ def append_content_to_html(html, content, plaintext=True, preserve=False, contai
         content = u'\n%s\n' % ustr(content)
     # Force all tags to lowercase
     html = re.sub(r'(</?)(\w+)([ >])',
-        lambda m: '%s%s%s' % (m.group(1), m.group(2).lower(), m.group(3)), html)
+                  lambda m: '%s%s%s' % (m.group(1), m.group(2).lower(), m.group(3)), html)
     insert_location = html.find('</body>')
     if insert_location == -1:
         insert_location = html.find('</html>')
@@ -502,6 +516,7 @@ def prepend_html_content(html_body, html_content):
 
     return html_body[:insert_index] + html_content + html_body[insert_index:]
 
+
 #----------------------------------------------------------
 # Emails
 #----------------------------------------------------------
@@ -516,6 +531,7 @@ mail_header_msgid_re = re.compile('<[^<>]+>')
 
 email_addr_escapes_re = re.compile(r'[\\"]')
 
+
 def generate_tracking_message_id(res_id):
     """Returns a string that can be used in the Message-ID RFC822 header field
 
@@ -529,10 +545,12 @@ def generate_tracking_message_id(res_id):
     rndstr = ("%.15f" % rnd)[2:]
     return "<%s.%.15f-openerp-%s@%s>" % (rndstr, time.time(), res_id, socket.gethostname())
 
+
 def email_split_tuples(text):
     """ Return a list of (name, email) address tuples found in ``text`` . Note
     that text should be an email header or a stringified email list as it may
     give broader results than expected on actual text. """
+
     def _parse_based_on_spaces(pair):
         """ With input 'name email@domain.com' (missing quotes for a formatting)
         getaddresses returns ('', 'name email@domain.com). This when having no
@@ -575,11 +593,13 @@ def email_split_tuples(text):
 
     return list(map(_parse_based_on_spaces, valid_pairs))
 
+
 def email_split(text):
     """ Return a list of the email addresses found in ``text`` """
     if not text:
         return []
     return [email for (name, email) in email_split_tuples(text)]
+
 
 def email_split_and_format(text):
     """ Return a list of email addresses found in ``text``, formatted using
@@ -587,6 +607,7 @@ def email_split_and_format(text):
     if not text:
         return []
     return [formataddr((name, email)) for (name, email) in email_split_tuples(text)]
+
 
 def email_normalize(text, strict=True):
     """ Sanitize and standardize email address entries. As of rfc5322 section
@@ -633,6 +654,7 @@ def email_normalize(text, strict=True):
 
     return local_part + at + domain.lower()
 
+
 def email_normalize_all(text):
     """ Tool method allowing to extract email addresses from a text input and returning
     normalized version of all found emails. If no email is found, a void list
@@ -647,6 +669,7 @@ def email_normalize_all(text):
     emails = email_split(text)
     return list(filter(None, [email_normalize(email) for email in emails]))
 
+
 def email_domain_extract(email):
     """ Extract the company domain to be used by IAP services notably. Domain
     is extracted from email information e.g:
@@ -658,12 +681,14 @@ def email_domain_extract(email):
         return normalized_email.split('@')[1]
     return False
 
+
 def email_domain_normalize(domain):
     """Return the domain normalized or False if the domain is invalid."""
     if not domain or '@' in domain:
         return False
 
     return domain.lower()
+
 
 def url_domain_extract(url):
     """ Extract the company domain to be used by IAP services notably. Domain
@@ -677,13 +702,16 @@ def url_domain_extract(url):
         return '.'.join(company_hostname.split('.')[-2:])  # remove subdomains
     return False
 
+
 def email_escape_char(email_address):
     """ Escape problematic characters in the given email address string"""
     return email_address.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
 
+
 # was mail_thread.decode_header()
 def decode_message_header(message, header, separator=' '):
     return separator.join(h for h in message.get_all(header, []) if h)
+
 
 def formataddr(pair, charset='utf-8'):
     """Pretty format a 2-tuple of the form (realname, email_address).

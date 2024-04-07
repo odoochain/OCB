@@ -9,11 +9,14 @@ class AccountAccountTag(models.Model):
     _description = 'Account Tag'
 
     name = fields.Char('Tag Name', required=True)
-    applicability = fields.Selection([('accounts', 'Accounts'), ('taxes', 'Taxes'), ('products', 'Products')], required=True, default='accounts')
+    applicability = fields.Selection([('accounts', 'Accounts'), ('taxes', 'Taxes'), ('products', 'Products')],
+                                     required=True, default='accounts')
     color = fields.Integer('Color Index')
     active = fields.Boolean(default=True, help="Set active to false to hide the Account Tag without removing it.")
-    tax_negate = fields.Boolean(string="Negate Tax Balance", help="Check this box to negate the absolute value of the balance of the lines associated with this tag in tax report computation.")
-    country_id = fields.Many2one(string="Country", comodel_name='res.country', help="Country for which this tag is available, when applied on taxes.")
+    tax_negate = fields.Boolean(string="Negate Tax Balance",
+                                help="Check this box to negate the absolute value of the balance of the lines associated with this tag in tax report computation.")
+    country_id = fields.Many2one(string="Country", comodel_name='res.country',
+                                 help="Country for which this tag is available, when applied on taxes.")
 
     def name_get(self):
         if not self.env.company.multi_vat_foreign_country_ids:
@@ -74,4 +77,6 @@ class AccountAccountTag(models.Model):
         for master_xmlid in master_xmlids:
             master_tag = self.env.ref(f"account.{master_xmlid}", raise_if_not_found=False)
             if master_tag and master_tag in self:
-                raise UserError(_("You cannot delete this account tag (%s), it is used on the chart of account definition.", master_tag.name))
+                raise UserError(
+                    _("You cannot delete this account tag (%s), it is used on the chart of account definition.",
+                      master_tag.name))

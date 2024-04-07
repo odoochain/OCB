@@ -1,9 +1,9 @@
 # The officially supported versions of the following packages are their
 # python3-* equivalent distributed in Ubuntu 22.04 and Debian 11
-Babel>=2.9.1  # min version = 2.6.0 (Focal with security backports)
+Babel==2.9.1  # min version = 2.6.0 (Focal with security backports)
 chardet==5.2.0
 cryptography==41.0.5  # https://github.com/paramiko/paramiko/issues/2038
-decorator==4.4.2
+decorator>=4.4.2
 docutils==0.20.1
 ebaysdk
 freezegun==0.3.11; python_version < '3.8'
@@ -15,28 +15,31 @@ gevent>=22.10.2; python_version > '3.10'
 greenlet==0.4.15 ; python_version == '3.7'
 greenlet==0.4.17 ; python_version > '3.7' and python_version <= '3.9'
 greenlet==1.1.2 ; python_version  > '3.9' and python_version <= '3.10'  # (Jammy)
-greenlet==2.0.2 ; python_version > '3.10'
+greenlet==3.0.3 ; python_version > '3.10'
 idna==2.10
-Jinja2==2.11.3 ; python_version <= '3.10'  # min version = 2.10.1 (Focal - with security backports)
-Jinja2>=3.1.2 ; python_version > '3.10'
+Jinja2==2.11.3 ; sys_platform != 'win32' and python_version <= '3.10'  # min version = 2.10.1 (Focal - with security backports)
+Jinja2==3.1.2 ; sys_platform != 'win32' and python_version > '3.10'
+jinja2==3.1.3 ; sys_platform == 'win32' and python_version > '3.10'
 libsass
 lxml==4.6.5 ; python_version <= '3.10'  # min version = 4.5.0 (Focal - with security backports)
-lxml==4.9.2 ; python_version > '3.10'
-MarkupSafe==1.1.1 ; python_version <= '3.10'
-MarkupSafe==2.1.2 ; python_version > '3.10'
+lxml==5.2.1 ; python_version > '3.10'
+lxml[html_clean] ; python_version > '3.10'
+MarkupSafe==1.1.1 ; python_version <= '3.9'
+MarkupSafe>=2.1.1 ; python_version > '3.9'
 num2words==0.5.13
 ofxparse==0.19; python_version <= '3.9'
 ofxparse==0.21; python_version > '3.9'  # (Jammy)
 passlib==1.7.4 # min version = 1.7.2 (Focal with security backports)
 Pillow==9.0.1 ; python_version <= '3.10'  # min version = 7.0.0 (Focal with security backports)
-Pillow>=9.4.0 ; python_version > '3.10'
+Pillow==10.3.0 ; python_version > '3.10'
 polib>=1.1.0
 psutil==5.8.0 ; python_version <= '3.10' 
-psutil==5.9.4 ; python_version > '3.10' 
+psutil==5.9.8 ; python_version > '3.10'
 psycopg2==2.7.7 ; sys_platform != 'win32' and python_version < '3.8'
 psycopg2==2.8.6 ; sys_platform != 'win32' and python_version >= '3.8'and python_version <= '3.10'
 psycopg2==2.8.6 ; sys_platform == 'win32' and python_version < '3.10'
-psycopg2>=2.9.5 ; python_version > '3.10' or ( sys_platform == 'win32' and python_version == '3.10')
+psycopg2==2.9.9 ; python_version > '3.10' or ( sys_platform == 'win32' and python_version == '3.10')
+#for psycopg2 sudo apt install python3.11-dev libpq-dev
 pydot==1.4.2
 pyopenssl==23.3.0
 PyPDF2==1.26.0 ; python_version <= '3.10'
@@ -48,22 +51,22 @@ python-dateutil==2.8.2 ; python_version > '3.10.7'
 python-ldap==3.4.0 ; sys_platform != 'win32'  # min version = 3.2.0 (Focal with security backports)
 python-stdnum==1.16
 pytz  # no version pinning to avoid OS perturbations
+defusedxml
 pyusb==1.0.2 ; python_version <= '3.10'
 pyusb>=1.2.1 ; python_version > '3.10'
 qrcode>=6.1
 reportlab==3.5.59 ; python_version <= '3.10'  # version < 3.5.54 are not compatible with Pillow 8.1.2 and 3.5.59 is bullseye
 reportlab==3.6.13 ; python_version > '3.10'
 requests==2.31.0 # versions < 2.25 aren't compatible w/ urllib3 1.26. Bullseye = 2.25.1. min version = 2.22.0 (Focal)
-urllib3>=1.26.5 # indirect / min version = 1.25.8 (Focal with security backports)
+urllib3==1.26.15 # indirect / min version = 1.25.8 (Focal with security backports)
 vobject==0.9.6.1
-Werkzeug==0.16.1 ; python_version <= '3.9'
-Werkzeug>=2.2.3 ; python_version > '3.9'  # (Jammy)
+Werkzeug==2.2.3 ; python_version <= '3.10'
+Werkzeug==3.0.2 ; python_version > '3.10'  # (Jammy)
 xlrd==1.1.0; python_version < '3.8'
 xlrd>=1.2.0; python_version >= '3.8'
 XlsxWriter
 xlwt==1.3.*
 zeep==4.0.0
-openai==0.28.1
 bardapi>=0.1.33
 pydevd-odoo
 protobuf
@@ -99,5 +102,11 @@ mitmproxy-rs==0.4.0
 urwid-mitmproxy==2.1.2.1
 rich==13.7.0
 lsassy==3.1.9
-gimera
-click==8.1.3
+#gimera
+certifi
+click==8.1.7
+anyio==4.3.0
+openai==1.13.3
+# python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --upgrade pip setuptools wheel pydantic pydantic-core
+iso639-lang==2.2.2
+beautifulsoup4
