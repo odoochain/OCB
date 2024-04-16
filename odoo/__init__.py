@@ -16,7 +16,7 @@ __path__ = [
 ]
 
 import sys
-assert sys.version_info > (3, 7), "Outdated python version detected, Odoo requires Python >= 3.7 to run."
+assert sys.version_info > (3, 10), "Outdated python version detected, Odoo requires Python >= 3.10 to run."
 
 #----------------------------------------------------------
 # Running mode flags (gevent, prefork)
@@ -81,7 +81,7 @@ try:
         zobj = zlib.decompressobj()
         return zobj.decompress(data)
 
-    import PyPDF2.filters  # needed after PyPDF2 2.0.0 and before 2.11.0
+    # import PyPDF2.filters  # needed after PyPDF2 2.0.0 and before 2.11.0
     PyPDF2.filters.decompress = _decompress
 except ImportError:
     pass # no fix required
