@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# enable gevent support in the debugger
+__import__('os').environ['GEVENT_SUPPORT'] = 'true'
 # set server timezone in UTC before time module imported
 __import__('os').environ['TZ'] = 'UTC'
 import odoo
