@@ -2,8 +2,6 @@
 
 import { cleanTerm } from "@mail/utils/common/format";
 
-import { reactive } from "@odoo/owl";
-
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { Deferred } from "@web/core/utils/concurrency";
@@ -28,8 +26,6 @@ export class Messaging {
         this.imStatusService = services.im_status;
         const user = services.user;
         this.store.Persona.insert({ id: user.partnerId, type: "partner", isAdmin: user.isAdmin });
-        this.registeredImStatusPartners = reactive([], () => this.updateImStatusRegistration());
-        this.store.registeredImStatusPartners = this.registeredImStatusPartners;
         this.store.discuss.inbox = {
             id: "inbox",
             model: "mail.box",
@@ -81,9 +77,16 @@ export class Messaging {
         this.store.internalUserGroupId = data.internalUserGroupId;
         this.store.discuss.starred.counter = data.starred_counter;
         this.store.mt_comment_id = data.mt_comment_id;
-        this.store.discuss.isActive =
-            data.menu_id === this.router.current.hash?.menu_id ||
-            this.router.hash?.action === "mail.action_discuss";
+        if (!this.store.discuss.isActive) {
+            const routerhash = this.router.current.hash;
+            if (routerhash?.action === "mail.action_discuss") {
+                this.store.discuss.isActive = true;
+            } else if (data.action_discuss_id) {
+                this.store.discuss.isActive = data.action_discuss_id === routerhash?.action;
+            } else {
+                this.store.discuss.isActive = data.menu_id && data.menu_id === routerhash?.menu_id;
+            }
+        }
         this.store.CannedResponse.insert(data.shortcodes ?? []);
         this.store.hasLinkPreviewFeature = data.hasLinkPreviewFeature;
         this.store.initBusId = data.initBusId;
@@ -93,16 +96,13 @@ export class Messaging {
         this.store.hasMessageTranslationFeature = data.hasMessageTranslationFeature;
     }
 
-    updateImStatusRegistration() {
-        this.imStatusService.registerToImStatus(
-            "res.partner",
-            /**
-             * Read value from registeredImStatusPartners own reactive rather than
-             * from store reactive to ensure the callback keeps being registered.
-             */
-            [...this.registeredImStatusPartners]
-        );
+    /** @deprecated */
+    get registeredImStatusPartners() {
+        return this.store.registeredImStatusPartners;
     }
+
+    /** @deprecated */
+    updateImStatusRegistration() {}
 
     // -------------------------------------------------------------------------
     // actions that can be performed on the messaging system

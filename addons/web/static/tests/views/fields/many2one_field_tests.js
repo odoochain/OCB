@@ -1117,14 +1117,45 @@ QUnit.module("Fields", (hooks) => {
         assert.containsOnce(
             target.querySelector(".o_field_many2one[name='trululu'] .dropdown-menu"),
             "li.o_m2o_start_typing",
-            "autocomplete should contains start typing option"
+            "autocomplete should contain start typing option"
         );
 
         await click(target, ".o_field_many2one[name='product_id'] input");
         assert.containsNone(
             target.querySelector(".o_field_many2one[name='product_id'] .dropdown-menu"),
             "li.o_m2o_start_typing",
-            "autocomplete should contains start typing option"
+            "autocomplete should not contain start typing option"
+        );
+    });
+
+    QUnit.test("many2one with no_create_edit and no_quick_create options should show no records when no result match", async function (assert) {
+        assert.expect(2);
+
+        await makeView({
+            type: "form",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="product_id" options="{'no_create_edit': 1, 'no_quick_create': 1}" />
+                        </group>
+                    </sheet>
+                </form>`,
+        });
+
+        await click(target, ".o_field_many2one[name='product_id'] input");
+        assert.containsNone(
+            target.querySelector(".o_field_many2one[name='product_id'] .dropdown-menu"),
+            "li.o_m2o_no_result",
+            "autocomplete should not contain the no records option"
+        );
+        await editInput(target, ".o_field_many2one[name='product_id'] input", "aze");
+        assert.containsOnce(
+            target.querySelector(".o_field_many2one[name='product_id'] .dropdown-menu"),
+            "li.o_m2o_no_result",
+            "autocomplete should contain the no records option"
         );
     });
 
@@ -2919,7 +2950,7 @@ QUnit.module("Fields", (hooks) => {
     );
 
     QUnit.test("quick create on a many2one", async function (assert) {
-        assert.expect(2);
+        assert.expect(1);
 
         await makeView({
             type: "form",
@@ -2940,13 +2971,7 @@ QUnit.module("Fields", (hooks) => {
 
         await triggerEvent(target, ".o_field_many2one input", "focus");
         await editInput(target, ".o_field_many2one input", "new partner");
-        await triggerEvent(target, ".o_field_many2one input", "blur");
-
-        assert.strictEqual(
-            target.querySelector(".modal .modal-body").textContent.trim(),
-            "Create new partner as a new Product?"
-        );
-        await click(target, ".modal .modal-footer .btn-primary");
+        await triggerHotkey("tab");
     });
 
     QUnit.test(
@@ -3086,7 +3111,8 @@ QUnit.module("Fields", (hooks) => {
 
         // cancel the many2one creation with Discard button
         await editInput(target, ".o_field_many2one input", "new product");
-        await triggerEvent(target, ".o_field_many2one input", "blur");
+        await triggerHotkey("tab");
+        await nextTick();
 
         assert.containsOnce(target, ".modal", "there should be one opened modal");
 
@@ -3100,7 +3126,8 @@ QUnit.module("Fields", (hooks) => {
 
         // cancel the many2one creation with Close button
         await editInput(target, ".o_field_many2one input", "new product");
-        await triggerEvent(target, ".o_field_many2one input", "blur");
+        await triggerHotkey("tab");
+        await nextTick();
 
         assert.containsOnce(target, ".modal", "there should be one opened modal");
         await click(target, ".modal .modal-header button");
@@ -3114,6 +3141,7 @@ QUnit.module("Fields", (hooks) => {
         // select a new value then cancel the creation of the new one --> restore the previous
         await click(target, ".o_field_widget[name=product_id] input");
         await click(target.querySelector(".ui-menu-item"));
+        await triggerEvent(target, ".o_field_many2one input", "blur");
         assert.strictEqual(
             target.querySelector(".o_field_many2one input").value,
             "xphone",
@@ -3121,7 +3149,8 @@ QUnit.module("Fields", (hooks) => {
         );
 
         await editInput(target, ".o_field_many2one input", "new product");
-        await triggerEvent(target, ".o_field_many2one input", "blur");
+        await triggerHotkey("tab");
+        await nextTick();
         assert.containsOnce(target, ".modal", "there should be one opened modal");
 
         await click(target, ".modal .modal-footer .btn:not(.btn-primary)");
@@ -3133,7 +3162,8 @@ QUnit.module("Fields", (hooks) => {
 
         // confirm the many2one creation
         await editInput(target, ".o_field_many2one input", "new product");
-        await triggerEvent(target, ".o_field_many2one input", "blur");
+        await triggerHotkey("tab");
+        await nextTick();
 
         assert.containsOnce(
             target,
@@ -3153,7 +3183,8 @@ QUnit.module("Fields", (hooks) => {
         });
 
         await editInput(target, ".o_field_many2one input", "xph");
-        await triggerEvent(target, ".o_field_many2one input", "blur");
+        await triggerHotkey("tab");
+        await nextTick();
 
         assert.containsNone(target, ".modal");
         assert.strictEqual(target.querySelector(".o_field_many2one input").value, "xphone");
@@ -3174,7 +3205,8 @@ QUnit.module("Fields", (hooks) => {
         });
 
         await editInput(target, ".o_field_many2one input", "new partner");
-        await triggerEvent(target, ".o_field_many2one input", "blur");
+        await triggerHotkey("tab");
+        await nextTick();
 
         assert.containsNone(target, ".modal", "should not display the create modal");
         assert.strictEqual(
@@ -3198,7 +3230,8 @@ QUnit.module("Fields", (hooks) => {
                 </form>`,
         });
         await editInput(target, ".o_field_many2one input", "new partner");
-        await triggerEvent(target, ".o_field_many2one input", "blur");
+        await triggerHotkey("tab");
+        await nextTick();
 
         assert.containsNone(target, ".modal", "should not display the create modal");
         assert.strictEqual(
@@ -3207,6 +3240,34 @@ QUnit.module("Fields", (hooks) => {
             "many2one value should cleared on focusout if many2one is no_create"
         );
     });
+
+    QUnit.test(
+        "no_quick_create option on a many2one when can_create is absent",
+        async function (assert) {
+            serverData.models.partner.fields.product_id.readonly = true;
+            await makeView({
+                type: "form",
+                resModel: "partner",
+                serverData,
+                arch: `
+                <form>
+                    <sheet>
+                        <field name="product_id" options="{'no_quick_create': 1}" readonly="0" />
+                    </sheet>
+                </form>`,
+            });
+            await editInput(target, ".o_field_many2one input", "new partner");
+            assert.containsOnce(
+                target,
+                ".ui-autocomplete .o_m2o_dropdown_option",
+                "Dropdown should be opened and have only one item"
+            );
+            assert.hasClass(
+                target.querySelector(".ui-autocomplete .o_m2o_dropdown_option"),
+                "o_m2o_dropdown_option_create_edit"
+            );
+        }
+    );
 
     QUnit.test("can_create and can_write option on a many2one", async function (assert) {
         serverData.models.product.options = {
@@ -3394,12 +3455,8 @@ QUnit.module("Fields", (hooks) => {
                 "there should be option for 'No records'"
             );
 
-            await triggerEvent(target, ".o_field_many2one[name=product_id] input", "blur");
-            assert.containsNone(
-                target,
-                ".o_field_many2one[name=product_id] .o_m2o_no_result",
-                "there should be option for 'No records'"
-            );
+            await triggerEvent(target, "", "pointerdown");
+            assert.containsNone(target, ".o_field_many2one[name=product_id] .o_m2o_no_result");
         }
     );
 

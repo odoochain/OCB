@@ -57,28 +57,28 @@ class AccountMove(models.Model):
     )
     l10n_es_edi_facturae_reason_code = fields.Selection(
         selection=[
-            ('01', 'Invoice number'),
-            ('02', 'Invoice series'),
-            ('03', 'Date of issue'),
-            ('04', 'Name and surname/company name - Issuer'),
-            ('05', 'Name and surname/company name - Recipient'),
-            ('06', 'Tax identification Issuer/Oblige'),
-            ('07', 'Tax identification Receiver'),
-            ('08', 'Issuer/Oblige Address'),
-            ('09', 'Receiving Address'),
-            ('10', 'Transaction Details'),
-            ('11', 'Tax rate to be applied'),
-            ('12', 'Tax rate to be applied'),
-            ('13', 'Date/Period to apply'),
-            ('14', 'Invoice type'),
-            ('15', 'Statutory letters'),
-            ('16', 'Taxable amount'),
-            ('80', 'Calculation of output quotas'),
-            ('81', 'Calculation of withholding taxes'),
-            ('82', 'Taxable amount modified by return of containers/packaging'),
-            ('83', 'Taxable income modified by discounts and allowances'),
-            ('84', 'Taxable income modified by final, judicial or administrative ruling'),
-            ('85', 'Taxable income modified by unpaid tax assessments. Order of declaration of bankruptcy'),
+            ('01', "Invoice number"),
+            ('02', "Invoice serial number"),
+            ('03', "Issue date"),
+            ('04', "Name and surnames/Corporate name - Issuer (Sender)"),
+            ('05', "Name and surnames/Corporate name - Receiver"),
+            ('06', "Issuer's Tax Identification Number"),
+            ('07', "Receiver's Tax Identification Number"),
+            ('08', "Issuer's address"),
+            ('09', "Receiver's address"),
+            ('10', "Item line"),
+            ('11', "Applicable Tax Rate"),
+            ('12', "Applicable Tax Amount"),
+            ('13', "Applicable Date/Period"),
+            ('14', "Invoice Class"),
+            ('15', "Legal literals"),
+            ('16', "Taxable Base"),
+            ('80', "Calculation of tax outputs"),
+            ('81', "Calculation of tax inputs"),
+            ('82', "Taxable Base modified due to return of packages and packaging materials"),
+            ('83', "Taxable Base modified due to discounts and rebates"),
+            ('84', "Taxable Base modified due to firm court ruling or administrative decision"),
+            ('85', "Taxable Base modified due to unpaid outputs where there is a judgement opening insolvency proceedings"),
         ], string='Spanish Facturae EDI Reason Code', default='10')
 
     def _l10n_es_edi_facturae_get_default_enable(self):
@@ -106,7 +106,7 @@ class AccountMove(models.Model):
 
     def _l10n_es_edi_facturae_get_refunded_invoices(self):
         self.env['account.partial.reconcile'].flush_model()
-        invoices_refunded_mapping = {invoice.id: invoice.reversed_entry_id for invoice in self}
+        invoices_refunded_mapping = {invoice.id: invoice.reversed_entry_id.id for invoice in self}
 
         queries = []
         for source_field, counterpart_field in (('debit', 'credit'), ('credit', 'debit')):
@@ -137,6 +137,11 @@ class AccountMove(models.Model):
     def _l10n_es_edi_facturae_get_corrective_data(self):
         self.ensure_one()
         if self.move_type.endswith('refund'):
+            if not self.reversed_entry_id:
+                raise UserError(_("The credit note/refund appears to have been issued manually. For the purpose of "
+                                  "generating a Facturae document, it's necessary that the credit note/refund is created "
+                                  "directly from the associated invoice/bill."))
+
             refunded_invoice = self.env['account.move'].browse(self._l10n_es_edi_facturae_get_refunded_invoices()[self.id])
             tax_period = refunded_invoice._l10n_es_edi_facturae_get_tax_period()
 
@@ -170,6 +175,28 @@ class AccountMove(models.Model):
                 "EquivalentInEuros": abs(computed_tax_dict["tax_amount"]),
             },
         }
+
+    def _l10n_es_edi_facturae_convert_payment_terms_to_installments(self):
+        """
+        Convert the payments terms to a list of <Installment> elements to be used in the
+        <PaymentDetails> node of the Facturae XML generation.
+
+        For now we only use the hardcoded '04' value (Credit Transfer).
+        """
+        self.ensure_one()
+        installments = []
+        if self.is_inbound() and self.partner_bank_id:
+            for payment_term in self.line_ids.filtered(lambda l: l.display_type == 'payment_term').sorted('date_maturity'):
+                installments.append({
+                    'InstallmentDueDate': payment_term.date_maturity,
+                    'InstallmentAmount': payment_term.amount_residual_currency,
+                    'PaymentMeans': '04',  # Credit Transfer
+                    'AccountToBeCredited': {
+                        'IBAN': self.partner_bank_id.sanitized_acc_number,
+                        'BIC': self.partner_bank_id.bank_bic,
+                    },
+                })
+        return installments
 
     def _l10n_es_edi_facturae_inv_lines_to_items(self, conversion_rate=None):
         """
@@ -353,7 +380,7 @@ class AccountMove(models.Model):
                 } if totals['amounts_withheld'] else False,
                 'TotalExecutableAmount': total_exec_am_in_currency,
                 'Items': items,
-                'PaymentDetails': [],
+                'PaymentDetails': self._l10n_es_edi_facturae_convert_payment_terms_to_installments(),
                 'LegalLiterals': legal_literals,
             }],
         }

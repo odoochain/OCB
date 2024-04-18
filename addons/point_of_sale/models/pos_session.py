@@ -381,7 +381,8 @@ class PosSession(models.Model):
                           self.cash_journal_id.name))
 
                 st_line_vals['payment_ref'] = _("Cash difference observed during the counting (Loss)") + (_(' - opening') if is_opening else _(' - closing'))
-                st_line_vals['counterpart_account_id'] = self.cash_journal_id.loss_account_id.id
+                if not is_opening:
+                    st_line_vals['counterpart_account_id'] = self.cash_journal_id.loss_account_id.id
             else:
                 # self.cash_register_difference  > 0.0
                 if not self.cash_journal_id.profit_account_id:
@@ -390,7 +391,8 @@ class PosSession(models.Model):
                           self.cash_journal_id.name))
 
                 st_line_vals['payment_ref'] = _("Cash difference observed during the counting (Profit)") + (_(' - opening') if is_opening else _(' - closing'))
-                st_line_vals['counterpart_account_id'] = self.cash_journal_id.profit_account_id.id
+                if not is_opening:
+                    st_line_vals['counterpart_account_id'] = self.cash_journal_id.profit_account_id.id
 
             self.env['account.bank.statement.line'].create(st_line_vals)
 
@@ -797,7 +799,8 @@ class PosSession(models.Model):
                     stock_moves = self.env['stock.move'].sudo().search([
                         ('picking_id', 'in', order.picking_ids.ids),
                         ('company_id.anglo_saxon_accounting', '=', True),
-                        ('product_id.categ_id.property_valuation', '=', 'real_time')
+                        ('product_id.categ_id.property_valuation', '=', 'real_time'),
+                        ('product_id.type', '=', 'product'),
                     ])
                     for move in stock_moves:
                         exp_key = move.product_id._get_product_accounts()['expense']
@@ -827,6 +830,7 @@ class PosSession(models.Model):
                     ('picking_id', 'in', global_session_pickings.ids),
                     ('company_id.anglo_saxon_accounting', '=', True),
                     ('product_id.categ_id.property_valuation', '=', 'real_time'),
+                    ('product_id.type', '=', 'product'),
                 ])
                 for move in stock_moves:
                     exp_key = move.product_id._get_product_accounts()['expense']
@@ -953,6 +957,7 @@ class PosSession(models.Model):
             'ref': _('Combine %s POS payments from %s', payment_method.name, self.name),
             'pos_payment_method_id': payment_method.id,
             'pos_session_id': self.id,
+            'company_id': self.company_id.id,
         })
 
         diff_amount_compare_to_zero = self.currency_id.compare_amounts(diff_amount, 0)
@@ -1604,6 +1609,7 @@ class PosSession(models.Model):
             'pos.order': self.env['pos.order'].search([('session_id', '=', self.id), ('state', '=', 'draft')]).export_for_ui()
         }
 
+
     def _load_model(self, model):
         model_name = model.replace('.', '_')
         loader = getattr(self, '_get_pos_ui_%s' % model_name, None)
@@ -1683,6 +1689,9 @@ class PosSession(models.Model):
         loaded_data['pos_has_valid_product'] = self._pos_has_valid_product()
         loaded_data['pos_special_products_ids'] = self.env['pos.config']._get_special_products().ids
         loaded_data['open_orders'] = self.env['pos.order'].search([('session_id', '=', self.id), ('state', '=', 'draft')]).export_for_ui()
+        loaded_data['partner_commercial_fields'] = self.env['res.partner']._commercial_fields()
+        loaded_data['show_product_images'] = self.env['ir.config_parameter'].sudo().get_param('point_of_sale.show_product_images', 'yes')
+        loaded_data['show_category_images'] = self.env['ir.config_parameter'].sudo().get_param('point_of_sale.show_category_images', 'yes')
 
     @api.model
     def _pos_ui_models_to_load(self):
@@ -1701,10 +1710,10 @@ class PosSession(models.Model):
             'res.partner',
             'stock.picking.type',
             'res.users',
+            'product.product',
             'product.pricelist',
             'res.currency',
             'pos.category',
-            'product.product',
             'pos.combo',
             'pos.combo.line',
             'product.packaging',
@@ -1948,6 +1957,13 @@ class PosSession(models.Model):
                 'min_quantity',
                 ]
 
+    def _product_pricelist_item_domain_by_product(self, product_tmpl_ids, product_ids, pricelists):
+        return [
+            ('pricelist_id', 'in', [p['id'] for p in pricelists]),
+            '|', ('product_tmpl_id', '=', False), ('product_tmpl_id', 'in', product_tmpl_ids),
+            '|', ('product_id', '=', False), ('product_id', 'in', product_ids),
+        ]
+
     def _get_pos_ui_product_pricelist(self, params):
         pricelists = self.env['product.pricelist'].search_read(**params['search_params'])
         for pricelist in pricelists:
@@ -2107,6 +2123,7 @@ class PosSession(models.Model):
         :param custom_search_params: a dictionary containing params of a search_read()
         """
         params = self._loader_params_product_product()
+        self = self.with_context(**params['context'])
         # custom_search_params will take priority
         params['search_params'] = {**params['search_params'], **custom_search_params}
         products = self.env['product.product'].with_context(active_test=False).search_read(**params['search_params'])
@@ -2185,6 +2202,14 @@ class PosSession(models.Model):
     def _prepare_product_pricelists(self, pricelists):
         pricelist_by_id = {pricelist['id']: pricelist for pricelist in pricelists}
         pricelist_item_domain = [('pricelist_id', 'in', [p['id'] for p in pricelists])]
+
+        loaded_data = self._context.get('loaded_data')
+        if loaded_data:
+            pricelist_item_domain = self._product_pricelist_item_domain_by_product(
+                [p['product_tmpl_id'][0] for p in loaded_data['product.product']],
+                [p['id'] for p in loaded_data['product.product']],
+                pricelists)
+
         for item in self.env['product.pricelist.item'].search_read(pricelist_item_domain, self._product_pricelist_item_fields()):
             pricelist_by_id[item['pricelist_id'][0]]['items'].append(item)
 
@@ -2221,13 +2246,17 @@ class PosSession(models.Model):
     def _load_onboarding_data(self):
         convert.convert_file(self.env, 'point_of_sale', 'data/point_of_sale_onboarding.xml', None, mode='init', kind='data')
         shop_config = self.env.ref('point_of_sale.pos_config_main', raise_if_not_found=False)
-        if shop_config:
-            convert.convert_file(self.env, 'point_of_sale', 'data/point_of_sale_onboarding_main_config.xml', None, mode='init', kind='data')
-            if len(shop_config.session_ids.filtered(lambda s: s.state == 'opened')) == 0:
-                self.env['pos.session'].create({
-                    'config_id': shop_config.id,
-                    'user_id': self.env.ref('base.user_admin').id,
-                })
+        if shop_config and shop_config.active:
+            self._load_onboarding_main_config_data(shop_config)
+
+    @api.model
+    def _load_onboarding_main_config_data(self, shop_config):
+        convert.convert_file(self.env, 'point_of_sale', 'data/point_of_sale_onboarding_main_config.xml', None, mode='init', kind='data')
+        if len(shop_config.session_ids.filtered(lambda s: s.state == 'opened')) == 0:
+            self.env['pos.session'].create({
+                'config_id': shop_config.id,
+                'user_id': self.env.ref('base.user_admin').id,
+            })
 
     def _after_load_onboarding_data(self):
         config = self.env.ref('point_of_sale.pos_config_main', raise_if_not_found=False)
@@ -2250,6 +2279,16 @@ class PosSession(models.Model):
 
     def _get_closed_orders(self):
         return self.order_ids.filtered(lambda o: o.state not in ['draft', 'cancel'])
+
+    def get_pos_ui_product_pricelist_item_by_product(self, product_tmpl_ids, product_ids):
+        pricelists = self.env['product.pricelist'].search_read(**self._loader_params_product_pricelist()['search_params'])
+        pricelist_item_domain = [
+            ('pricelist_id', 'in', [p['id'] for p in pricelists]),
+            '|',
+            '&', ('product_id', '=', False), ('product_tmpl_id', 'in', product_tmpl_ids),
+            ('product_id', 'in', product_ids)]
+        return self.env['product.pricelist.item'].search_read(pricelist_item_domain, self._product_pricelist_item_fields())
+
 
 class ProcurementGroup(models.Model):
     _inherit = 'procurement.group'

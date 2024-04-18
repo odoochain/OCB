@@ -8,6 +8,7 @@ from collections import defaultdict
 from odoo import api, fields, models, _
 from odoo.addons.base.models.res_partner import _tz_get
 from odoo.exceptions import UserError
+from odoo.tools.misc import clean_context
 
 _logger = logging.getLogger(__name__)
 
@@ -116,13 +117,17 @@ class Attendee(models.Model):
         ics_files = self.mapped('event_id')._get_ics_file()
 
         for attendee in self:
-            if attendee.email and attendee.partner_id != self.env.user.partner_id:
+            if attendee.email and attendee._should_notify_attendee():
                 event_id = attendee.event_id.id
                 ics_file = ics_files.get(event_id)
 
-                attachment_ids = None
+                attachment_ids = mail_template.attachment_ids.ids
                 if ics_file:
-                    attachment_ids = self.env['ir.attachment'].create({
+                    context = {
+                        **clean_context(self.env.context),
+                        'no_document': True, # An ICS file must not create a document
+                    }
+                    attachment_ids += self.env['ir.attachment'].with_context(context).create({
                         'datas': base64.b64encode(ics_file),
                         'description': 'invitation.ics',
                         'mimetype': 'text/calendar',
@@ -147,6 +152,15 @@ class Attendee(models.Model):
                     attachment_ids=attachment_ids,
                     force_send=force_send,
                 )
+
+    def _should_notify_attendee(self):
+        """ Utility method that determines if the attendee should be notified.
+            By default, we do not want to notify (aka no message and no mail) the current user
+            if he is part of the attendees.
+            (Override in appointment to ignore that rule and notify all attendees if it's an appointment)
+        """
+        self.ensure_one()
+        return self.partner_id != self.env.user.partner_id
 
     def do_tentative(self):
         """ Makes event invitation as Tentative. """

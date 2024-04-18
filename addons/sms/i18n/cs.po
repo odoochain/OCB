@@ -4,11 +4,12 @@
 # 
 # Translators:
 # Jiří Podhorecký, 2023
-# Tomáš Píšek, 2023
 # Aleš Fiala <f.ales1@seznam.cz>, 2023
 # Ivana Bartonkova, 2023
 # Jakub Smolka, 2023
 # Wil Odoo, 2023
+# Tomáš Píšek, 2023
+# Katerina Horylova, 2024
 # 
 msgid ""
 msgstr ""
@@ -16,7 +17,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-10-26 21:55+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Wil Odoo, 2023\n"
+"Last-Translator: Katerina Horylova, 2024\n"
 "Language-Team: Czech (https://app.transifex.com/odoo/teams/41243/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -131,6 +132,8 @@ msgstr ""
 #: model:ir.model.fields,help:sms.field_sms_sms__uuid
 msgid "Alternate way to identify a SMS record, used for delivery reports"
 msgstr ""
+"Alternativní způsob identifikace záznamu SMS, který se používá pro zprávy o "
+"doručení."
 
 #. module: sms
 #. odoo-javascript
@@ -1233,7 +1236,7 @@ msgstr ""
 #. module: sms
 #: model:ir.model.fields,field_description:sms.field_sms_template_preview__sms_template_id
 msgid "Sms Template"
-msgstr ""
+msgstr "Šablona SMS"
 
 #. module: sms
 #: model:ir.model.fields,field_description:sms.field_sms_composer__recipient_single_number
@@ -1355,6 +1358,16 @@ msgid ""
 "- 'Send Webhook Notification': send a POST request to an external system, also known as a Webhook\n"
 "- 'Execute Existing Actions': define an action that triggers several other server actions\n"
 msgstr ""
+"Typ serverové akce. Jsou k dispozici následující hodnoty:\n"
+"- 'Aktualizovat záznam': aktualizuje hodnoty záznamu\n"
+"- 'Vytvořit aktivitu': vytvoří aktivitu (Diskuze)\n"
+"- 'Poslat e-mail': zapíše zprávu, poznámku nebo pošle e-mail (Diskuze)\n"
+"- 'Odeslat SMS': odešle SMS, zapíše je k dokumentům (SMS)\n"
+"- 'Přidat/Odebrat sledující': přidá nebo odebere ze záznamu sledující (Diskuze)\n"
+"- 'Vytvořit záznam': vytvoří nový záznam s novými hodnotami\n"
+"- 'Provést kód': blok Python kódu, který bude spuštěn\n"
+"- 'Poslat Webhook notifikaci': odešle POST požadavek na externí systém, známý také jako Webhook\n"
+"- 'Provést existující akce': definuje akci, která spustí řadu dalších serverových akcí\n"
 
 #. module: sms
 #: model:ir.model.fields,field_description:sms.field_sms_sms__uuid

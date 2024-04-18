@@ -14,7 +14,7 @@ import { busParametersService } from "@bus/bus_parameters_service";
 import { WEBSOCKET_CLOSE_CODES } from "@bus/workers/websocket_worker";
 
 import { makeTestEnv } from "@web/../tests/helpers/mock_env";
-import { makeDeferred, nextTick, patchWithCleanup } from "@web/../tests/helpers/utils";
+import { makeDeferred, patchWithCleanup } from "@web/../tests/helpers/utils";
 import { browser } from "@web/core/browser/browser";
 import { session } from "@web/session";
 
@@ -25,7 +25,7 @@ QUnit.test("notifications received from the channel", async () => {
     const pyEnv = await startServer();
     const env = await makeTestEnv({ activateMockServer: true });
     env.services["bus_service"].addChannel("lambda");
-    await waitForChannels(["lambda"]);
+    await waitUntilSubscribe("lambda");
     pyEnv["bus.bus"]._sendone("lambda", "notifType", "beta");
     pyEnv["bus.bus"]._sendone("lambda", "notifType", "epsilon");
     await waitNotifications([env, "notifType", "beta"], [env, "notifType", "epsilon"]);
@@ -39,7 +39,7 @@ QUnit.test("notifications not received after stoping the service", async () => {
     firstTabEnv.services["bus_service"].start();
     secondTabEnv.services["bus_service"].start();
     firstTabEnv.services["bus_service"].addChannel("lambda");
-    await waitForChannels(["lambda"]);
+    await waitUntilSubscribe("lambda");
     // both tabs should receive the notification
     pyEnv["bus.bus"]._sendone("lambda", "notifType", "beta");
     await waitNotifications(
@@ -76,7 +76,7 @@ QUnit.test("tabs share message from a channel", async () => {
     mainEnv.services["bus_service"].addChannel("lambda");
     const slaveEnv = await makeTestEnv();
     slaveEnv.services["bus_service"].addChannel("lambda");
-    await waitForChannels(["lambda"]);
+    await waitUntilSubscribe("lambda");
     pyEnv["bus.bus"]._sendone("lambda", "notifType", "beta");
     await waitNotifications([mainEnv, "notifType", "beta"], [slaveEnv, "notifType", "beta"]);
 });
@@ -97,7 +97,7 @@ QUnit.test("second tab still receives notifications after main pagehide", async 
     });
     const secondEnv = await makeTestEnv({ activateMockServer: true });
     secondEnv.services["bus_service"].addChannel("lambda");
-    await waitForChannels(["lambda"]);
+    await waitUntilSubscribe("lambda");
     pyEnv["bus.bus"]._sendone("lambda", "notifType", "beta");
     await waitNotifications([mainEnv, "notifType", "beta"], [secondEnv, "notifType", "beta"]);
     // simulate unloading main
@@ -117,7 +117,7 @@ QUnit.test("two tabs adding a different channel", async () => {
     const secondTabEnv = await makeTestEnv({ activateMockServer: true });
     firstTabEnv.services["bus_service"].addChannel("alpha");
     secondTabEnv.services["bus_service"].addChannel("beta");
-    await waitForChannels(["alpha", "beta"]);
+    await waitUntilSubscribe("alpha", "beta");
     pyEnv["bus.bus"]._sendmany([
         ["alpha", "notifType", "alpha"],
         ["beta", "notifType", "beta"],
@@ -131,6 +131,7 @@ QUnit.test("two tabs adding a different channel", async () => {
 });
 
 QUnit.test("channel management from multiple tabs", async (assert) => {
+    await startServer();
     addBusServicesToRegistry();
     patchWebsocketWorkerWithCleanup({
         _sendToServer({ event_name, data }) {
@@ -138,8 +139,8 @@ QUnit.test("channel management from multiple tabs", async (assert) => {
             super._sendToServer(...arguments);
         },
     });
-    const firstTabEnv = await makeTestEnv();
-    const secTabEnv = await makeTestEnv();
+    const firstTabEnv = await makeTestEnv({ activateMockServer: true });
+    const secTabEnv = await makeTestEnv({ activateMockServer: true });
     firstTabEnv.services["bus_service"].addChannel("channel1");
     await waitForChannels(["channel1"]);
     // this should not trigger a subscription since the channel1 was
@@ -154,11 +155,12 @@ QUnit.test("channel management from multiple tabs", async (assert) => {
     // this should trigger a subscription since the channel2 was not
     // known.
     secTabEnv.services["bus_service"].addChannel("channel2");
-    await waitForChannels(["channel2"]);
+    await waitUntilSubscribe("channel2");
     assert.verifySteps(["subscribe - [channel1]", "subscribe - [channel1,channel2]"]);
 });
 
 QUnit.test("channels subscription after disconnection", async (assert) => {
+    await startServer();
     addBusServicesToRegistry();
     const worker = patchWebsocketWorkerWithCleanup();
     const env = await makeTestEnv({ activateMockServer: true });
@@ -188,7 +190,7 @@ QUnit.test("Last notification id is passed to the worker on service start", asyn
     const env1 = await makeTestEnv();
     env1.services["bus_service"].start();
     env1.services["bus_service"].addChannel("lambda");
-    await waitForChannels(["lambda"]);
+    await waitUntilSubscribe("lambda");
     await updateLastNotificationDeferred;
     // First bus service has never received notifications thus the
     // default is 0.
@@ -293,12 +295,7 @@ QUnit.test("Can reconnect after late close event", async (assert) => {
     addBusServicesToRegistry();
     let subscribeSent = 0;
     const closeDeferred = makeDeferred();
-    let openDeferred = makeDeferred();
     const worker = patchWebsocketWorkerWithCleanup({
-        _onWebsocketOpen() {
-            super._onWebsocketOpen();
-            openDeferred.resolve();
-        },
         _sendToServer({ event_name }) {
             if (event_name === "subscribe") {
                 subscribeSent++;
@@ -308,7 +305,7 @@ QUnit.test("Can reconnect after late close event", async (assert) => {
     const pyEnv = await startServer();
     const env = await makeTestEnv();
     env.services["bus_service"].start();
-    await openDeferred;
+    await waitForBusEvent(env, "connect");
     patchWithCleanup(worker.websocket, {
         close(code = WEBSOCKET_CLOSE_CODES.CLEAN, reason) {
             this.readyState = 2;
@@ -322,42 +319,29 @@ QUnit.test("Can reconnect after late close event", async (assert) => {
             }
         },
     });
-    env.services["bus_service"].addEventListener("connect", () => assert.step("connect"));
-    env.services["bus_service"].addEventListener("disconnect", () => assert.step("disconnect"));
-    env.services["bus_service"].addEventListener("reconnecting", () => assert.step("reconnecting"));
-    env.services["bus_service"].addEventListener("reconnect", () => assert.step("reconnect"));
     // Connection will be closed when passing offline. But the close event
     // will be delayed to come after the next open event. The connection
     // will thus be in the closing state in the meantime.
     window.dispatchEvent(new Event("offline"));
-    await nextTick();
-    openDeferred = makeDeferred();
     // Worker reconnects upon the reception of the online event.
     window.dispatchEvent(new Event("online"));
-    await openDeferred;
-    closeDeferred.resolve();
+    await waitForBusEvent(env, "disconnect");
+    await waitForBusEvent(env, "connect");
     // Trigger the close event, it shouldn't have any effect since it is
     // related to an old connection that is no longer in use.
-    await nextTick();
-    openDeferred = makeDeferred();
+    closeDeferred.resolve();
+    await waitForBusEvent(env, "disconnect", { received: false });
     // Server closes the connection, the worker should reconnect.
     pyEnv.simulateConnectionLost(WEBSOCKET_CLOSE_CODES.KEEP_ALIVE_TIMEOUT);
-    await openDeferred;
-    await nextTick();
+    await waitForBusEvent(env, "reconnecting");
+    await waitForBusEvent(env, "reconnect");
     // 3 connections were opened, so 3 subscriptions are expected.
     assert.strictEqual(subscribeSent, 3);
-    assert.verifySteps([
-        "connect",
-        "disconnect",
-        "connect",
-        "disconnect",
-        "reconnecting",
-        "reconnect",
-    ]);
 });
 
 QUnit.test("Fallback on simple worker when shared worker failed to initialize", async (assert) => {
     addBusServicesToRegistry();
+    patchWebsocketWorkerWithCleanup();
     const originalSharedWorker = browser.SharedWorker;
     const originalWorker = browser.Worker;
     patchWithCleanup(browser, {

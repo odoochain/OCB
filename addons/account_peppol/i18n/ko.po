@@ -3,17 +3,17 @@
 # 	* account_peppol
 # 
 # Translators:
-# Sarah Park, 2023
 # Daye Jeong, 2023
 # Wil Odoo, 2023
+# Sarah Park, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-29 10:45+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Wil Odoo, 2023\n"
+"Last-Translator: Sarah Park, 2024\n"
 "Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -66,6 +66,19 @@ msgstr ""
 "<span>\n"
 "                                    Peppol 연결을 Odoo로 마이그레이션합니다 (선택 사항):\n"
 "                                </span>"
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
+msgid ""
+"A participant with these details has already been registered on the network."
+" If you have previously registered to an alternative Peppol service, please "
+"deregister from that service, or request a migration key before trying "
+"again."
+msgstr ""
+"해당 세부 정보가 있는 참가자가 이미 네트워크에 등록되어 있습니다. 이전에 다른 Peppol 서비스에 등록한 경우, 해당 서비스의 등록을"
+" 취소하거나 마이그레이션 키를 요청하여 다시 시도하세요."
 
 #. module: account_peppol
 #. odoo-python
@@ -212,6 +225,13 @@ msgstr "환경 설정"
 #, python-format
 msgid "Confirm"
 msgstr "승인"
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
+msgid "Connection error, please try again later."
+msgstr "접속 오류입니다. 나중에 다시 시도하세요."
 
 #. module: account_peppol
 #: model:ir.model,name:account_peppol.model_res_partner
@@ -612,6 +632,13 @@ msgid "SMS verification code"
 msgstr "SMS 인증 코드"
 
 #. module: account_peppol
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.xml:0
+#, python-format
+msgid "Send again"
+msgstr "다시 보내기"
+
+#. module: account_peppol
 #: model:ir.model.fields,help:account_peppol.field_account_move_send__checkbox_send_peppol
 msgid "Send the invoice via PEPPOL"
 msgstr "PEPPOL을 통해 청구서 전송"
@@ -717,6 +744,14 @@ msgstr "데모에서 라이브로 전환할 때 문서의 peppol 상태가 초�
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
+#: model_terms:ir.ui.view,arch_db:account_peppol.res_partner_form_account_peppol
+msgid ""
+"The recommended EAS code for Belgium is 0208. The Endpoint should be the "
+"Company Registry number."
+msgstr "벨기에 권장 EAS 코드는 0208입니다. 회사 등록 번호를 엔드포인트로 해야 합니다."
+
+#. module: account_peppol
+#: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid "The rejection reason has been sent to you via email."
 msgstr "거절 사유가 이메일로 전송되었습니다."
 
@@ -729,8 +764,29 @@ msgstr "이 사용자를 식별하는 고유 ID로, 보통 VAT"
 #. odoo-python
 #: code:addons/account_peppol/models/res_config_settings.py:0
 #, python-format
+msgid "The verification code is not correct"
+msgstr "인증 코드가 올바르지 않습니다."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
 msgid "The verification code should contain six digits."
 msgstr "인증 코드는 6자리 숫자로 구성되어야 합니다."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
+msgid "This verification code has expired. Please request a new one."
+msgstr "인증 코드가 만료되었습니다. 새로운 코드를 요청하세요."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
+msgid "Too many attempts to request an SMS code. Please try again later."
+msgstr "SMS 코드 요청 시도 횟수가 너무 많습니다. 나중에 다시 시도하세요."
 
 #. module: account_peppol
 #: model:ir.model.fields,help:account_peppol.field_res_company__peppol_endpoint
@@ -807,7 +863,9 @@ msgid "Verify partner's PEPPOL endpoint"
 msgstr "파트너의 PEPPOL 엔드포인트 승인"
 
 #. module: account_peppol
-#: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.xml:0
+#, python-format
 msgid "Verify phone number"
 msgstr "전화번호 확인"
 
@@ -853,3 +911,8 @@ msgstr "확인 코드는"
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid "Your migration key is:"
 msgstr "마이그레이션 키입니다:"
+
+#. module: account_peppol
+#: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
+msgid "Your registration should be activated within a day."
+msgstr "등록하신 내용은 하루 내에 활성화될 것입니다."

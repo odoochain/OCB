@@ -80,7 +80,7 @@ class ResourceCalendar(models.Model):
     active = fields.Boolean("Active", default=True,
                             help="If the active field is set to false, it will allow you to hide the Working Time without removing it.")
     company_id = fields.Many2one(
-        'res.company', 'Company', domain=lambda self: [('id', 'in', [False, self.env.companies.ids])],
+        'res.company', 'Company', domain=lambda self: [('id', 'in', self.env.companies.ids)],
         default=lambda self: self.env.company)
     attendance_ids = fields.One2many(
         'resource.calendar.attendance', 'calendar_id', 'Working Time',
@@ -181,6 +181,9 @@ class ResourceCalendar(models.Model):
             number_of_days += len(set(attendances.filtered(lambda cal: cal.week_type == '0').mapped('dayofweek')))
         else:
             number_of_days = len(set(attendances.mapped('dayofweek')))
+
+        if not number_of_days:
+            return 0
 
         return float_round(hour_count / float(number_of_days), precision_digits=2)
 
@@ -399,9 +402,14 @@ class ResourceCalendar(models.Model):
         # retrieve leave intervals in (start_dt, end_dt)
         result = defaultdict(lambda: [])
         tz_dates = {}
-        for leave in self.env['resource.calendar.leaves'].search(domain):
+        all_leaves = self.env['resource.calendar.leaves'].search(domain)
+        for leave in all_leaves:
+            leave_resource = leave.resource_id
+            leave_company = leave.company_id
+            leave_date_from = leave.date_from
+            leave_date_to = leave.date_to
             for resource in resources_list:
-                if leave.resource_id.id not in [False, resource.id]:
+                if leave_resource.id not in [False, resource.id] or (not leave_resource and resource and resource.company_id != leave_company):
                     continue
                 tz = tz if tz else timezone((resource or self).tz)
                 if (tz, start_dt) in tz_dates:
@@ -414,8 +422,8 @@ class ResourceCalendar(models.Model):
                 else:
                     end = end_dt.astimezone(tz)
                     tz_dates[(tz, end_dt)] = end
-                dt0 = string_to_datetime(leave.date_from).astimezone(tz)
-                dt1 = string_to_datetime(leave.date_to).astimezone(tz)
+                dt0 = string_to_datetime(leave_date_from).astimezone(tz)
+                dt1 = string_to_datetime(leave_date_to).astimezone(tz)
                 result[resource.id].append((max(start, dt0), min(end, dt1), leave))
 
         return {r.id: Intervals(result[r.id]) for r in resources_list}
@@ -428,7 +436,7 @@ class ResourceCalendar(models.Model):
         else:
             resources_list = list(resources) + [self.env['resource.resource']]
 
-        attendance_intervals = self._attendance_intervals_batch(start_dt, end_dt, resources, tz=tz)
+        attendance_intervals = self._attendance_intervals_batch(start_dt, end_dt, resources, tz=tz or self.env.context.get("employee_timezone"))
         if compute_leaves:
             leave_intervals = self._leave_intervals_batch(start_dt, end_dt, resources, domain, tz=tz)
             return {
@@ -488,7 +496,7 @@ class ResourceCalendar(models.Model):
             # take durations in days proportionally to what is left of the interval.
             interval_hours = (stop - start).total_seconds() / 3600
             day_hours[start.date()] += interval_hours
-            day_days[start.date()] += meta.duration_days * interval_hours / meta.duration_hours
+            day_days[start.date()] += sum(meta.mapped('duration_days')) * interval_hours / sum(meta.mapped('duration_hours'))
 
         return {
             # Round the number of days to the closest 16th of a day.

@@ -681,7 +681,7 @@
 
     <!-- Grid mode columns -->
     <div data-js="GridColumns"
-         data-selector=".row > div">
+         data-selector=".row:not(.s_col_no_resize) > div">
         <we-row string="Padding (Y, X)">
             <we-input data-select-style="" data-css-property="--grid-item-padding-y" data-unit="px" data-name="grid_padding_y_opt"/>
             <we-input data-select-style="" data-css-property="--grid-item-padding-x" data-unit="px" data-name="grid_padding_x_opt"/>
@@ -737,6 +737,7 @@
                    data-no-preview="true"/>
     </div>
 
+    <!-- TODO adapt in master to use the top_menu class -->
     <div data-js="menu_data"
          data-selector="#top_menu li > a, [data-content_menu_id] li > a"
          data-exclude=".dropdown-toggle, li.o_header_menu_button a, [data-toggle], .o_offcanvas_logo"
@@ -1018,6 +1019,7 @@
                     data-customize-website-views="website.header_call_to_action"
                     data-reset-view-arch="true"
                     data-reload="/"/>
+            <!-- TODO: this is patched in JS, adapt in master -->
             <we-button title="Show/hide logo" class="flex-grow-1 d-flex justify-content-center"
                     data-img="/website/static/src/img/snippets_options/header_extra_element_logo.svg"
                     data-customize-website-views="website.option_header_brand_logo"
@@ -1110,6 +1112,7 @@
         </we-select>
     </div>
 
+    <!-- TODO this is patched in JS, adapt in master -->
     <div data-selector="#wrapwrap > header nav.navbar .navbar-brand.logo"
          data-no-check="true"
          groups="website.group_website_designer">

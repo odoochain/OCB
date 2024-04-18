@@ -8,10 +8,8 @@
 # Leandro Noijovich <eliel.sorcerer@gmail.com>, 2023
 # Jonathan Spier, 2023
 # hed shefer <hed@laylinetech.com>, 2023
-# Roy Sayag, 2023
 # ExcaliberX <excaliberx@gmail.com>, 2023
 # Amit Spilman <amit@laylinetech.com>, 2023
-# MichaelHadar, 2023
 # NoaFarkash, 2023
 # Yihya Hugirat <hugirat@gmail.com>, 2023
 # Martin Trigaux, 2023
@@ -19,21 +17,25 @@
 # Netta Waizer, 2023
 # Lilach Gilliam <lilach.gilliam@gmail.com>, 2023
 # Ha Ketem <haketem@gmail.com>, 2023
-# ZVI BLONDER <ZVIBLONDER@gmail.com>, 2023
+# MichaelHadar, 2023
+# Roy Sayag, 2024
+# Fishfur A Banter <fishfurbanter@gmail.com>, 2024
+# yael terner, 2024
+# ZVI BLONDER <ZVIBLONDER@gmail.com>, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:56+0000\n"
+"POT-Creation-Date: 2024-01-29 10:46+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: ZVI BLONDER <ZVIBLONDER@gmail.com>, 2023\n"
+"Last-Translator: ZVI BLONDER <ZVIBLONDER@gmail.com>, 2024\n"
 "Language-Team: Hebrew (https://app.transifex.com/odoo/teams/41243/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: he\n"
-"Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: (n % 10 == 0 && n % 1 == 0 && n > 10) ? 2 : 3;\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: 2;\n"
 
 #. module: web
 #. odoo-javascript
@@ -985,7 +987,7 @@ msgstr ""
 #: code:addons/web/static/src/views/form/form_controller.js:0
 #, python-format
 msgid "Add Properties"
-msgstr ""
+msgstr "הוסף מאפיינים"
 
 #. module: web
 #. odoo-javascript
@@ -1054,6 +1056,15 @@ msgstr ""
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#, python-format
+msgid "Add to Favorites"
+msgstr "הוסף למועדפים"
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/x2many/x2many_field.js:0
 #, python-format
 msgid "Add: %s"
@@ -1117,6 +1128,13 @@ msgstr "כל המשתמשים"
 #: code:addons/web/static/src/core/colorlist/colorlist.js:0
 #, python-format
 msgid "Almond"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
+#, python-format
+msgid "Always range"
 msgstr ""
 
 #. module: web
@@ -1476,6 +1494,15 @@ msgstr "כחול"
 #: code:addons/web/static/src/views/fields/boolean_icon/boolean_icon_field.js:0
 #, python-format
 msgid "Boolean Icon"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/statusbar/statusbar_field.js:0
+#, python-format
+msgid ""
+"Boolean field from the model used in the relation, which indicates whether "
+"the state is folded or not."
 msgstr ""
 
 #. module: web
@@ -2273,6 +2300,7 @@ msgstr "מסד נתונים"
 #: model_terms:ir.ui.view,arch_db:web.neutralize_banner
 msgid "Database neutralized for testing: no emails sent, etc."
 msgstr ""
+"שים לב! זוהי סביבת טסטים והיא אינה מחוברת למיילים ולתהליכים בסביבת האמת"
 
 #. module: web
 #. odoo-javascript
@@ -2782,7 +2810,7 @@ msgstr "ערוך דומיין"
 #: code:addons/web/static/src/views/debug_items.js:0
 #, python-format
 msgid "Edit SearchView"
-msgstr ""
+msgstr "ערוך תצוגת חיפוש"
 
 #. module: web
 #. odoo-javascript
@@ -3089,6 +3117,13 @@ msgstr "סוג שדה"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/expression_editor/expression_editor.js:0
+#, python-format
+msgid "Field properties not supported"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/progress_bar/progress_bar_field.js:0
 #, python-format
 msgid ""
@@ -3313,7 +3348,7 @@ msgstr ""
 #: code:addons/web/static/src/views/debug_items.js:0
 #, python-format
 msgid "Get View"
-msgstr ""
+msgstr "צפה בתצוגה סופית"
 
 #. module: web
 #. odoo-javascript
@@ -3381,6 +3416,16 @@ msgstr ""
 #: model:ir.model.fields,help:web.field_base_document_layout__company_details
 msgid "Header text displayed at the top of all reports."
 msgstr "טקסט כותרת מוצג בראש כל הדוחות."
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/model/relational_model/record.js:0
+#, python-format
+msgid ""
+"Heads up! Your recent changes are too large to save automatically. Please "
+"click the <i class=\"fa fa-cloud-upload fa-fw\"></i> button now to ensure "
+"your work is saved before you exit this tab."
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -3485,7 +3530,7 @@ msgstr ""
 #: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
 #: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
 #, python-format
-msgid "ISO-formatted date (e.g. \"2018-12-31\") or \"today\"."
+msgid "ISO-formatted date (e.g. \"2018-12-31\") or \"%s\"."
 msgstr ""
 
 #. module: web
@@ -4976,6 +5021,13 @@ msgstr "מצב לא פעיל, לחץ על מנת לשנות זאת"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/many2many_binary/many2many_binary_field.js:0
+#, python-format
+msgid "Number of files"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 #, python-format
@@ -5384,6 +5436,11 @@ msgid "Password"
 msgstr "סיסמה"
 
 #. module: web
+#: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
+msgid "Payment Communication: <b><span>INV/2023/00003</span></b>"
+msgstr ""
+
+#. module: web
 #. odoo-javascript
 #: code:addons/web/static/src/webclient/settings_form_view/widgets/res_config_invite_users.xml:0
 #, python-format
@@ -5509,13 +5566,6 @@ msgstr "נא לבחור שדות לשמירה ברשימת ייצוא"
 msgid ""
 "Please use the copy button to report the error to your support service."
 msgstr "אנא השתמש בלחצן ההעתקה כדי לדווח על השגיאה לשירות התמיכה שלך."
-
-#. module: web
-#: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
-msgid ""
-"Please use the following communication for your payment : <b><span>\n"
-"                           INV/2023/00003</span></b>"
-msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -5698,6 +5748,13 @@ msgstr "סרגל התקדמות"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/view_components/column_progress.xml:0
+#, python-format
+msgid "Progress bar"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/properties/properties_field.js:0
 #, python-format
 msgid "Properties"
@@ -5830,7 +5887,7 @@ msgstr ""
 #: code:addons/web/static/src/views/debug_items.js:0
 #, python-format
 msgid "Raw Record Data: %s(%s)"
-msgstr ""
+msgstr "נתוני רשומה: %s(%s)"
 
 #. module: web
 #. odoo-javascript
@@ -5846,9 +5903,7 @@ msgstr ""
 #, python-format
 msgid ""
 "Ready to make your record disappear into thin air? Are you sure?\n"
-"\n"
 "It will be gone forever!\n"
-"\n"
 "\n"
 "Think twice before you click that 'Delete' button!"
 msgstr ""
@@ -5978,6 +6033,15 @@ msgstr "מחיקת שדה"
 #, python-format
 msgid "Remove field"
 msgstr "הסר שדה"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#, python-format
+msgid "Remove from Favorites"
+msgstr "הסר מהמועדפים"
 
 #. module: web
 #. odoo-javascript
@@ -6198,6 +6262,13 @@ msgstr "שמור וצור חדש"
 #, python-format
 msgid "Save as:"
 msgstr ""
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/search/custom_favorite_item/custom_favorite_item.xml:0
+#, python-format
+msgid "Save current search"
+msgstr "שמור חיפוש נוכחי"
 
 #. module: web
 #. odoo-javascript
@@ -6511,6 +6582,15 @@ msgstr "הגדרת עדיפות..."
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
+#, python-format
+msgid ""
+"Set to true the full range input has to be display by default, even if "
+"empty."
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/kanban/kanban_header.xml:0
 #: code:addons/web/static/src/views/kanban/kanban_header.xml:0
 #: code:addons/web/static/src/webclient/settings_form_view/settings_form_controller.js:0
@@ -6574,7 +6654,7 @@ msgstr "הצגת תת-שדה"
 #: code:addons/web/static/src/views/view_components/view_scale_selector.xml:0
 #, python-format
 msgid "Show weekends"
-msgstr ""
+msgstr "סופי שבוע"
 
 #. module: web
 #. odoo-javascript
@@ -6954,6 +7034,16 @@ msgstr ""
 #: code:addons/web/static/src/core/utils/files.js:0
 #, python-format
 msgid "The selected file (%sB) is over the maximum allowed file size (%sB)."
+msgstr ""
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/core/errors/scss_error_dialog.js:0
+#, python-format
+msgid ""
+"The style compilation failed. This is an administrator or developer error "
+"that must be fixed for the entire database before continuing working. See "
+"browser console or server logs for details."
 msgstr ""
 
 #. module: web
@@ -7371,27 +7461,6 @@ msgstr "הוצא הכל מהארכיון"
 
 #. module: web
 #. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid "Uncaught CORS Error"
-msgstr ""
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid "Uncaught Javascript Error"
-msgstr ""
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid "Uncaught Promise"
-msgstr ""
-
-#. module: web
-#. odoo-javascript
 #. odoo-python
 #: code:addons/web/controllers/export.py:0
 #: code:addons/web/static/src/views/calendar/calendar_model.js:0
@@ -7408,18 +7477,6 @@ msgstr "לא מוגדר"
 #, python-format
 msgid "Unfold"
 msgstr "פרוס"
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid ""
-"Unknown CORS error\n"
-"\n"
-"An unknown CORS error occured.\n"
-"The error probably originates from a JavaScript file served from a different origin.\n"
-"(Opening your browser console might give you a hint on the error.)"
-msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -7708,7 +7765,7 @@ msgstr "צפה במטא-דאטא"
 #: code:addons/web/static/src/views/debug_items.js:0
 #, python-format
 msgid "View Raw Record Data"
-msgstr ""
+msgstr "צפה בנתוני רשומה"
 
 #. module: web
 #. odoo-javascript

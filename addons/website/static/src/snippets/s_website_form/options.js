@@ -9,6 +9,7 @@ import { unique } from "@web/core/utils/arrays";
 import { _t } from "@web/core/l10n/translation";
 import { renderToElement } from "@web/core/utils/render";
 import { formatDate, formatDateTime } from "@web/core/l10n/dates";
+import wUtils from '@website/js/utils';
 
 let currentActionName;
 
@@ -175,12 +176,10 @@ const FormEditor = options.Class.extend({
         if (field.custom && !field.string) {
             params.field.string = field.name;
         }
-        if (field.type === "description") {
-            if (field.description) {
-                params.default_description = _t("Describe your field here.");
-            } else if (["email_cc", "email_to"].includes(field.name)) {
-                params.default_description = _t("Separate email addresses with a comma.");
-            }
+        if (field.description) {
+            params.default_description = _t("Describe your field here.");
+        } else if (["email_cc", "email_to"].includes(field.name)) {
+            params.default_description = _t("Separate email addresses with a comma.");
         }
         const template = document.createElement('template');
         template.content.append(renderToElement("website.form_field_" + field.type, params));
@@ -417,6 +416,14 @@ options.registry.WebsiteFormEditor = FormEditor.extend({
         if (!this.$target[0].dataset.model_name) {
             proms.push(this._applyFormModel());
         }
+        // Get the email_to value from the data-for attribute if it exists. We
+        // use it if there is no value on the email_to input.
+        const formId = this.$target[0].id;
+        const dataForValues = wUtils.getParsedDataFor(formId, this.$target[0].ownerDocument);
+        if (dataForValues) {
+            this.dataForEmailTo = dataForValues['email_to'];
+        }
+        this.defaultEmailToValue = "info@yourcompany.example.com";
         return Promise.all(proms);
     },
     /**
@@ -603,6 +610,16 @@ options.registry.WebsiteFormEditor = FormEditor.extend({
                 return this.activeForm.id;
             case 'addActionField': {
                 const value = this.$target.find(`.s_website_form_dnone input[name="${params.fieldName}"]`).val();
+                if (params.fieldName === 'email_to') {
+                    // For email_to, we try to find a value in this order:
+                    // 1. The current value of the input
+                    // 2. The data-for value if it exists
+                    // 3. The default value (`defaultEmailToValue`)
+                    if (value && value !== this.defaultEmailToValue) {
+                        return value;
+                    }
+                    return this.dataForEmailTo || this.defaultEmailToValue;
+                }
                 if (value) {
                     return value;
                 } else {
@@ -631,7 +648,7 @@ options.registry.WebsiteFormEditor = FormEditor.extend({
 
         // Add Action related options
         const formKey = this.activeForm.website_form_key;
-        const formInfo = FormEditorRegistry.get(formKey);
+        const formInfo = FormEditorRegistry.get(formKey, null);
         if (!formInfo || !formInfo.fields) {
             return;
         }
@@ -674,7 +691,12 @@ options.registry.WebsiteFormEditor = FormEditor.extend({
      */
     _addHiddenField: function (value, fieldName) {
         this.$target.find(`.s_website_form_dnone:has(input[name="${fieldName}"])`).remove();
-        if (value) {
+        // For the email_to field, we keep the field even if it has no value so
+        // that the email is sent to data-for value or to the default email.
+        if (fieldName === 'email_to' && !value && !this.dataForEmailTo) {
+            value = this.defaultEmailToValue;
+        }
+        if (value || fieldName === 'email_to') {
             const hiddenField = renderToElement('website.form_field_hidden', {
                 field: {
                     name: fieldName,
@@ -763,14 +785,14 @@ options.registry.WebsiteFormEditor = FormEditor.extend({
         if (modelId) {
             const oldFormKey = this.activeForm.website_form_key;
             if (oldFormKey) {
-                oldFormInfo = FormEditorRegistry.get(oldFormKey);
+                oldFormInfo = FormEditorRegistry.get(oldFormKey, null);
             }
             this.$target.find('.s_website_form_field').remove();
             this.activeForm = this.models.find(model => model.id === modelId);
             currentActionName = this.activeForm.website_form_label;
         }
         const formKey = this.activeForm.website_form_key;
-        const formInfo = FormEditorRegistry.get(formKey);
+        const formInfo = FormEditorRegistry.get(formKey, null);
         // Success page
         if (!this.$target[0].dataset.successMode) {
             this.$target[0].dataset.successMode = 'redirect';
@@ -1205,18 +1227,18 @@ options.registry.WebsiteFieldEditor = FieldEditor.extend({
         const dependencyEl = this._getDependencyEl();
         switch (widgetName) {
             case 'hidden_condition_time_comparators_opt':
-                return dependencyEl && dependencyEl.dataset.target;
+                return dependencyEl?.classList.contains("datetimepicker-input");
             case 'hidden_condition_date_between':
-                return dependencyEl && dependencyEl.dataset.target && dependencyEl.dataset.target.includes('#datepicker')
+                return dependencyEl?.closest(".s_website_form_date")
                 && ['between', '!between'].includes(this.$target[0].getAttribute('data-visibility-comparator'));
             case 'hidden_condition_datetime_between':
-                return dependencyEl && dependencyEl.dataset.target && dependencyEl.dataset.target.includes('#datetimepicker')
+                return dependencyEl?.closest(".s_website_form_datetime")
                 && ['between', '!between'].includes(this.$target[0].dataset.visibilityComparator);
             case 'hidden_condition_additional_datetime':
-                return dependencyEl && dependencyEl.dataset.target && dependencyEl.dataset.target.includes('#datetimepicker')
+                return dependencyEl?.closest(".s_website_form_datetime")
                 && !['set', '!set'].includes(this.$target[0].dataset.visibilityComparator);
             case 'hidden_condition_additional_date':
-                return dependencyEl && dependencyEl.dataset.target && dependencyEl.dataset.target.includes('#datepicker')
+                return dependencyEl && dependencyEl?.closest(".s_website_form_date")
                 && !['set', '!set'].includes(this.$target[0].dataset.visibilityComparator);
             case 'hidden_condition_additional_text':
                 if (!this.$target[0].classList.contains('s_website_form_field_hidden_if') ||
@@ -1226,7 +1248,7 @@ options.registry.WebsiteFieldEditor = FieldEditor.extend({
                 if (!dependencyEl) {
                     return true;
                 }
-                if (dependencyEl.dataset.target && dependencyEl.dataset.target.includes('#date')) {
+                if (dependencyEl?.classList.contains("datetimepicker-input")) {
                     return false;
                 }
                 return (['text', 'email', 'tel', 'url', 'search', 'password', 'number'].includes(dependencyEl.type)
@@ -1236,16 +1258,16 @@ options.registry.WebsiteFieldEditor = FieldEditor.extend({
             case 'hidden_condition_num_opt':
                 return dependencyEl && dependencyEl.type === 'number';
             case 'hidden_condition_text_opt':
-                if (!this.$target[0].classList.contains('s_website_form_field_hidden_if') || (dependencyEl &&
-                dependencyEl.dataset.target && dependencyEl.dataset.target.includes('#date'))) {
+                if (!this.$target[0].classList.contains('s_website_form_field_hidden_if') ||
+                (dependencyEl?.classList.contains("datetimepicker-input"))) {
                     return false;
                 }
                 return !dependencyEl || (['text', 'email', 'tel', 'url', 'search', 'password'].includes(dependencyEl.type) ||
                 dependencyEl.nodeName === 'TEXTAREA');
             case 'hidden_condition_date_opt':
-                return dependencyEl && dependencyEl.dataset.target && dependencyEl.dataset.target.includes('#datepicker');
+                return dependencyEl?.closest(".s_website_form_date");
             case 'hidden_condition_datetime_opt':
-                return dependencyEl && dependencyEl.dataset.target && dependencyEl.dataset.target.includes('#datetimepicker');
+                return dependencyEl?.closest(".s_website_form_datetime");
             case 'hidden_condition_file_opt':
                 return dependencyEl && dependencyEl.type === 'file';
             case 'hidden_condition_opt':
@@ -1361,7 +1383,7 @@ options.registry.WebsiteFieldEditor = FieldEditor.extend({
                 if (dependencyEl.nodeName === 'SELECT') {
                     for (const option of dependencyEl.querySelectorAll('option')) {
                         const button = document.createElement('we-button');
-                        button.textContent = option.value || `<${_t("no value")}>`;
+                        button.textContent = option.textContent || `<${_t("no value")}>`;
                         button.dataset.selectDataAttribute = option.value;
                         selectOptEl.append(button);
                     }
@@ -1463,7 +1485,9 @@ options.registry.WebsiteFieldEditor = FieldEditor.extend({
         const inputEl = this.$target[0].querySelector('input');
         const dataFillWith = inputEl ? inputEl.dataset.fillWith : undefined;
         const hasConditionalVisibility = this.$target[0].classList.contains('s_website_form_field_hidden_if');
-        const previousName = this.$target[0].querySelector('.s_website_form_input').name;
+        const previousInputEl = this.$target[0].querySelector('.s_website_form_input');
+        const previousName = previousInputEl.name;
+        const previousType = previousInputEl.type;
         [...this.$target[0].childNodes].forEach(node => node.remove());
         [...fieldEl.childNodes].forEach(node => this.$target[0].appendChild(node));
         [...fieldEl.attributes].forEach(el => this.$target[0].removeAttribute(el.nodeName));
@@ -1472,8 +1496,10 @@ options.registry.WebsiteFieldEditor = FieldEditor.extend({
             this.$target[0].classList.add('s_website_form_field_hidden_if', 'd-none');
         }
         const dependentFieldEls = this.formEl.querySelectorAll(`.s_website_form_field[data-visibility-dependency="${previousName}"]`);
-        const newName = this.$target[0].querySelector('.s_website_form_input').name;
-        if (previousName !== newName && dependentFieldEls) {
+        const newFormInputEl = this.$target[0].querySelector('.s_website_form_input');
+        const newName = newFormInputEl.name;
+        const newType = newFormInputEl.type;
+        if ((previousName !== newName || previousType !== newType) && dependentFieldEls) {
             // In order to keep the visibility conditions consistent,
             // when the name has changed, it means that the type has changed so
             // all fields whose visibility depends on this field must be updated so that
@@ -1495,10 +1521,7 @@ options.registry.WebsiteFieldEditor = FieldEditor.extend({
      _setVisibilityDependency(value) {
         delete this.$target[0].dataset.visibilityCondition;
         delete this.$target[0].dataset.visibilityComparator;
-        const previousDependency = this._getDependencyEl();
-        if (this.formEl.querySelector(`.s_website_form_input[name="${value}"]`).type !== (previousDependency && previousDependency.type)) {
-            this.rerender = true;
-        }
+        this.rerender = true;
         this.$target[0].dataset.visibilityDependency = value;
     },
     /**

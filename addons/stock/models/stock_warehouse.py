@@ -53,7 +53,7 @@ class Warehouse(models.Model):
         'stock.route', 'stock_route_warehouse', 'warehouse_id', 'route_id',
         'Routes',
         domain="[('warehouse_selectable', '=', True), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
-        help='Defaults routes through the warehouse', check_company=True)
+        help='Defaults routes through the warehouse', check_company=True, copy=False)
     reception_steps = fields.Selection([
         ('one_step', 'Receive goods directly (1 step)'),
         ('two_steps', 'Receive goods in input and then stock (2 steps)'),
@@ -70,21 +70,21 @@ class Warehouse(models.Model):
     wh_qc_stock_loc_id = fields.Many2one('stock.location', 'Quality Control Location', check_company=True)
     wh_output_stock_loc_id = fields.Many2one('stock.location', 'Output Location', check_company=True)
     wh_pack_stock_loc_id = fields.Many2one('stock.location', 'Packing Location', check_company=True)
-    mto_pull_id = fields.Many2one('stock.rule', 'MTO rule')
-    pick_type_id = fields.Many2one('stock.picking.type', 'Pick Type', check_company=True)
-    pack_type_id = fields.Many2one('stock.picking.type', 'Pack Type', check_company=True)
-    out_type_id = fields.Many2one('stock.picking.type', 'Out Type', check_company=True)
-    in_type_id = fields.Many2one('stock.picking.type', 'In Type', check_company=True)
-    int_type_id = fields.Many2one('stock.picking.type', 'Internal Type', check_company=True)
-    crossdock_route_id = fields.Many2one('stock.route', 'Crossdock Route', ondelete='restrict')
-    reception_route_id = fields.Many2one('stock.route', 'Receipt Route', ondelete='restrict')
-    delivery_route_id = fields.Many2one('stock.route', 'Delivery Route', ondelete='restrict')
+    mto_pull_id = fields.Many2one('stock.rule', 'MTO rule', copy=False)
+    pick_type_id = fields.Many2one('stock.picking.type', 'Pick Type', check_company=True, copy=False)
+    pack_type_id = fields.Many2one('stock.picking.type', 'Pack Type', check_company=True, copy=False)
+    out_type_id = fields.Many2one('stock.picking.type', 'Out Type', check_company=True, copy=False)
+    in_type_id = fields.Many2one('stock.picking.type', 'In Type', check_company=True, copy=False)
+    int_type_id = fields.Many2one('stock.picking.type', 'Internal Type', check_company=True, copy=False)
+    crossdock_route_id = fields.Many2one('stock.route', 'Crossdock Route', ondelete='restrict', copy=False)
+    reception_route_id = fields.Many2one('stock.route', 'Receipt Route', ondelete='restrict', copy=False)
+    delivery_route_id = fields.Many2one('stock.route', 'Delivery Route', ondelete='restrict', copy=False)
     resupply_wh_ids = fields.Many2many(
         'stock.warehouse', 'stock_wh_resupply_table', 'supplied_wh_id', 'supplier_wh_id',
         'Resupply From', help="Routes will be created automatically to resupply this warehouse from the warehouses ticked")
     resupply_route_ids = fields.One2many(
         'stock.route', 'supplied_wh_id', 'Resupply Routes',
-        help="Routes will be created for these resupply warehouses and you can select them on products and product categories")
+        help="Routes will be created for these resupply warehouses and you can select them on products and product categories", copy=False)
     sequence = fields.Integer(default=10,
         help="Gives the sequence of this line when displaying the warehouses.")
     _sql_constraints = [
@@ -353,7 +353,10 @@ class Warehouse(models.Model):
                 self[picking_type].write(values)
             else:
                 data[picking_type].update(create_data[picking_type])
+                existing_sequence = IrSequenceSudo.search_count([('company_id', '=', sequence_data[picking_type]['company_id']), ('name', '=', sequence_data[picking_type]['name'])], limit=1)
                 sequence = IrSequenceSudo.create(sequence_data[picking_type])
+                if existing_sequence:
+                    sequence.name = _("%(name)s (copy)(%(id)s)", name=sequence.name, id=str(sequence.id))
                 values.update(warehouse_id=self.id, color=color, sequence_id=sequence.id)
                 warehouse_data[picking_type] = PickingType.create(values).id
 
@@ -381,11 +384,16 @@ class Warehouse(models.Model):
 
     def _find_global_route(self, xml_id, route_name, raise_if_not_found=True):
         """ return a route record set from an xml_id or its name. """
-        route = self.env.ref(xml_id, raise_if_not_found=False)
+        data_route = route = self.env.ref(xml_id, raise_if_not_found=False)
+        if not route or (route.company_id and route.company_id != self.company_id):
+            route = self.env['stock.route'].search([
+                ('name', 'like', route_name), ('company_id', 'in', [False, self.company_id.id])
+            ], order='company_id', limit=1)
         if not route:
-            route = self.env['stock.route'].search([('name', 'like', route_name)], limit=1)
-        if not route and raise_if_not_found:
-            raise UserError(_('Can\'t find any generic route %s.', route_name))
+            if not data_route and raise_if_not_found:
+                raise UserError(_('Can\'t find any generic route %s.', route_name))
+            elif data_route:
+                route = data_route.copy({'company_id': self.company_id.id, 'rule_ids': False})
         return route
 
     def _get_global_route_rules_values(self):
@@ -794,7 +802,7 @@ class Warehouse(models.Model):
             'product_categ_selectable': True,
             'supplied_wh_id': self.id,
             'supplier_wh_id': supplier_warehouse.id,
-            'company_id': self.company_id.id,
+            'company_id': (self.company_id & supplier_warehouse.company_id).id,
         }
 
     # Pull / Push tools

@@ -7,6 +7,7 @@ from werkzeug.urls import url_encode
 
 import odoo
 import odoo.tests
+from odoo.addons.base.tests.common import HttpCaseWithUserDemo
 
 
 @odoo.tests.tagged('-at_install', 'post_install')
@@ -61,7 +62,8 @@ class TestUiCustomizeTheme(odoo.tests.HttpCase):
 
 
 @odoo.tests.tagged('-at_install', 'post_install')
-class TestUiHtmlEditor(odoo.tests.HttpCase):
+class TestUiHtmlEditor(HttpCaseWithUserDemo):
+
     def test_html_editor_multiple_templates(self):
         Website = self.env['website']
         View = self.env['ir.ui.view']
@@ -101,7 +103,7 @@ class TestUiHtmlEditor(odoo.tests.HttpCase):
         self.assertEqual(len(specific_page.inherit_children_ids.filtered(lambda v: 'oe_structure' in v.name)), 1, "oe_structure view should have been created on the specific tree")
 
     def test_html_editor_scss(self):
-        self.env.ref('base.user_demo').write({
+        self.user_demo.write({
             'groups_id': [(6, 0, [
                 self.env.ref('base.group_user').id,
                 self.env.ref('website.group_website_designer').id
@@ -303,6 +305,7 @@ class TestUi(odoo.tests.HttpCase):
         self.start_tour('/web', 'conditional_visibility_2', login='admin')
         self.start_tour(self.env['website'].get_client_action_url('/'), 'conditional_visibility_3', login='admin')
         self.start_tour(self.env['website'].get_client_action_url('/'), 'conditional_visibility_4', login='admin')
+        self.start_tour(self.env['website'].get_client_action_url('/'), 'conditional_visibility_5', login='admin')
 
     def test_11_website_snippet_background_edition(self):
         self.env['ir.attachment'].create({
@@ -402,6 +405,12 @@ class TestUi(odoo.tests.HttpCase):
 
     def test_24_snippet_cache_across_websites(self):
         default_website = self.env.ref('website.default_website')
+        if self.env['website'].search_count([]) == 1:
+            self.env['website'].create({
+                'name': 'My Website 2',
+                'domain': '',
+                'sequence': 20,
+            })
         self.env['ir.ui.view'].with_context(website_id=default_website.id).save_snippet(
             name='custom_snippet_test',
             arch="""
@@ -441,6 +450,9 @@ class TestUi(odoo.tests.HttpCase):
     def test_30_website_text_animations(self):
         self.start_tour("/", 'text_animations', login='admin')
 
+    def test_31_website_edit_megamenu_big_icons_subtitles(self):
+        self.start_tour(self.env['website'].get_client_action_url('/'), 'edit_megamenu_big_icons_subtitles', login='admin')
+
     def test_website_media_dialog_image_shape(self):
         self.start_tour("/", 'website_media_dialog_image_shape', login='admin')
 
@@ -452,3 +464,91 @@ class TestUi(odoo.tests.HttpCase):
 
     def test_website_text_highlights(self):
         self.start_tour("/", 'text_highlights', login='admin')
+
+    def test_website_extra_items_no_dirty_page(self):
+        """
+        Having enough menus to trigger the "+" folded menus has been known to
+        wrongfully mark the page as dirty. There are 3 cases:
+
+        - the menu is not folded outside of edit mode and when entering edit
+          mode, the "+" appears and some menu are folded
+
+        - the menu is folded outside of edit mode and when entering edit mode
+          the resize actually makes it so different menu items are folded
+
+        - the menu is folded outside of edit mode and when entering edit mode it
+          stays the same (known to have been broken because edit mode tweaks the
+          dropdown behavior)
+
+        Those are fixed. This test makes sure the third case stays fixed.
+        At the moment, the first two cases are not marking the page as dirty but
+        the related "+" menu behavior is kinda broken so it would be difficult
+        to test (TODO).
+        """
+        # Remove all menu items but the first one
+        website = self.env['website'].get_current_website()
+        website.menu_id.child_id[1:].unlink()
+        # Create a new menu item whose text is very long so that we are sure
+        # it is folded into the extra items "+" menu outside of edit mode and
+        # stays the same when entering edit mode.
+        self.env['website.menu'].create({
+            'name': 'Menu %s' % ('a' * 200),  # Very long text
+            'website_id': website.id,
+            'parent_id': website.menu_id.id,
+        })
+
+        self.start_tour('/', 'website_no_action_no_dirty_page', login='admin')
+
+    def test_website_no_dirty_page(self):
+        # Previous tests are testing the dirty behavior when the extra items
+        # "+" menu comes in play. For other "no dirty" tests, we just remove
+        # most menu items first to make sure they pass independently.
+        website = self.env['website'].get_current_website()
+        website.menu_id.child_id[1:].unlink()
+
+        self.start_tour('/', 'website_no_dirty_page', login='admin')
+
+    def test_widget_lifecycle(self):
+        self.env['ir.asset'].create({
+            'name': 'wysiwyg_patch_start_and_destroy',
+            'bundle': 'website.assets_wysiwyg',
+            'path': 'website/static/tests/tour_utils/widget_lifecycle_patch_wysiwyg.js',
+        })
+        self.start_tour(self.env['website'].get_client_action_url('/'), 'widget_lifecycle', login='admin')
+
+    def test_drop_404_ir_attachment_url(self):
+        website_snippets = self.env.ref('website.snippets')
+        self.env['ir.ui.view'].create([{
+            'name': '404 Snippet',
+            'type': 'qweb',
+            'key': 'website.s_404_snippet',
+            'arch': """
+                <section class="s_404_snippet">
+                    <div class="container">
+                        <img class="img-responsive img-thumbnail" src="/web/image/website.404_ir_attachment"/>
+                    </div>
+                </section>
+            """,
+        }, {
+            'type': 'qweb',
+            'inherit_id': website_snippets.id,
+            'arch': """
+                <xpath expr="//t[@t-snippet='website.s_parallax']" position="after">
+                    <t t-snippet="website.s_404_snippet"
+                       t-thumbnail="/website/static/src/img/snippets_thumbs/s_website_form.svg"/>
+                </xpath>
+            """,
+        }])
+        attachment = self.env['ir.attachment'].create({
+            'name': '404_ir_attachment',
+            'type': 'url',
+            'url': '/web/static/__some__typo__.png',
+            'mimetype': 'image/png',
+        })
+        self.env['ir.model.data'].create({
+            'name': '404_ir_attachment',
+            'module': 'website',
+            'model': 'ir.attachment',
+            'res_id': attachment.id,
+        })
+        self.start_tour(self.env['website'].get_client_action_url('/'), 'drop_404_ir_attachment_url', login='admin')

@@ -6,9 +6,10 @@ from unittest.mock import patch
 
 from odoo import Command
 from odoo.addons.base.models.res_partner import Partner
+from odoo.addons.base.tests.common import TransactionCaseWithUserDemo
 from odoo.exceptions import AccessError, RedirectWarning, UserError, ValidationError
 from odoo.tests import Form
-from odoo.tests.common import TransactionCase, tagged
+from odoo.tests.common import tagged, TransactionCase
 
 # samples use effective TLDs from the Mozilla public suffix
 # list at http://publicsuffix.org
@@ -23,7 +24,7 @@ SAMPLES = [
 
 
 @tagged('res_partner')
-class TestPartner(TransactionCase):
+class TestPartner(TransactionCaseWithUserDemo):
 
     @contextmanager
     def mockPartnerCalls(self):
@@ -66,7 +67,7 @@ class TestPartner(TransactionCase):
         with self.assertRaises(RedirectWarning):
             test_partner.with_user(self.env.ref('base.user_admin')).toggle_active()
         with self.assertRaises(ValidationError):
-            test_partner.with_user(self.env.ref('base.user_demo')).toggle_active()
+            test_partner.with_user(self.user_demo).toggle_active()
 
         # Can archive the user but the partner stays active
         test_user.toggle_active()
@@ -392,6 +393,26 @@ class TestPartner(TransactionCase):
         self.assertEqual([g['title'] for g in groups_data], [(title_sir.id, 'Sir...'), (title_lady.id, 'Lady...')], 'Incorrect ordering of the list')
         self.assertEqual([g['title_count'] for g in groups_data], [2, 4], 'Incorrect number of results')
         self.assertEqual([g['color'] for g in groups_data], [-1, 10], 'Incorrect aggregation of int column')
+
+    def test_display_name_translation(self):
+        self.env['res.lang']._activate_lang('fr_FR')
+        self.env.ref('base.module_base')._update_translations(['fr_FR'])
+
+        res_partner = self.env['res.partner']
+
+        parent_contact = res_partner.create({
+            'name': 'Parent',
+            'type': 'contact',
+        })
+
+        child_contact = res_partner.create({
+            'type': 'other',
+            'parent_id': parent_contact.id,
+        })
+
+        self.assertEqual(child_contact.with_context(lang='en_US').display_name, 'Parent, Other Address')
+
+        self.assertEqual(child_contact.with_context(lang='fr_FR').display_name, 'Parent, Autre adresse')
 
 
 @tagged('res_partner')
@@ -835,3 +856,11 @@ class TestPartnerRecursion(TransactionCase):
         """ multi-write on several partners in same hierarchy must not trigger a false cycle detection """
         ps = self.p1 + self.p2 + self.p3
         self.assertTrue(ps.write({'phone': '123456'}))
+
+    def test_111_res_partner_recursion_infinite_loop(self):
+        """ The recursion check must not loop forever """
+        self.p2.parent_id = False
+        self.p3.parent_id = False
+        self.p1.parent_id = self.p2
+        with self.assertRaises(ValidationError):
+            (self.p3|self.p2).write({'parent_id': self.p1.id})

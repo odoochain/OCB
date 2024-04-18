@@ -19,6 +19,7 @@ class TestSyncOdoo2Google(TestSyncGoogle):
 
     def setUp(self):
         super().setUp()
+        self.env.user.partner_id.tz = "Europe/Brussels"
         self.google_service = GoogleCalendarService(self.env['google.service'])
         # Make sure this test will work for the next 30 years
         self.env['ir.config_parameter'].set_param('google_calendar.sync.range_days', 10000)
@@ -123,7 +124,7 @@ class TestSyncOdoo2Google(TestSyncGoogle):
                 'res_id': partner.id,
             })
 
-        with self.assertQueryCount(__system__=32):
+        with self.assertQueryCount(__system__=37):
             event.unlink()
 
     def test_event_without_user(self):
@@ -763,3 +764,17 @@ class TestSyncOdoo2Google(TestSyncGoogle):
         self.assertFalse(record.active, "Event must be archived in Odoo after unlinking it")
         self.assertTrue(record.need_sync, "Sync variable must be true for updating event in Google when sync re-activates")
         self.assertGoogleEventNotDeleted()
+
+    @patch_api
+    def test_videocall_location_on_location_set(self):
+        partner = self.env['res.partner'].create({'name': 'Jean-Luc', 'email': 'jean-luc@opoo.com'})
+        event = self.env['calendar.event'].create({
+            'name': "Event",
+            'start': datetime(2020, 1, 15, 8, 0),
+            'stop': datetime(2020, 1, 15, 18, 0),
+            'partner_ids': [(4, partner.id)],
+            'need_sync': False,
+            'location' : 'Event Location'
+        })
+        event._sync_odoo2google(self.google_service)
+        self.assertGoogleEventHasNoConferenceData()

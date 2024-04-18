@@ -67,6 +67,10 @@ export const datetimePickerService = {
                         updateValueFromInputs();
                         apply();
                         setFocusClass(null);
+                        if (restoreTargetMargin) {
+                            restoreTargetMargin();
+                            restoreTargetMargin = null;
+                        }
                     },
                 });
                 // Hook methods
@@ -76,8 +80,7 @@ export const datetimePickerService = {
                  * value has changed, and set other internal variables accordingly.
                  */
                 const apply = () => {
-                    const serializedValue = JSON.stringify(pickerProps.value);
-                    if (areDatesEqual(lastInitialProps?.value, serializedValue)) {
+                    if (areDatesEqual(lastInitialProps?.value, deepCopy(pickerProps.value))) {
                         return;
                     }
 
@@ -89,13 +92,13 @@ export const datetimePickerService = {
 
                 const computeBasePickerProps = () => {
                     const nextInitialProps = markValuesRaw(hookParams.pickerProps);
-                    const serializedProps = deepCopy(nextInitialProps);
+                    const propsCopy = deepCopy(nextInitialProps);
 
-                    if (lastInitialProps && arePropsEqual(lastInitialProps, serializedProps)) {
+                    if (lastInitialProps && arePropsEqual(lastInitialProps, propsCopy)) {
                         return;
                     }
 
-                    lastInitialProps = serializedProps;
+                    lastInitialProps = propsCopy;
                     inputsChanged = ensureArray(lastInitialProps.value).map(() => false);
 
                     for (const [key, value] of Object.entries(nextInitialProps)) {
@@ -239,7 +242,14 @@ export const datetimePickerService = {
                     if (!popover.isOpen) {
                         const popoverTarget = getPopoverTarget();
                         if (env.isSmall) {
+                            const { marginBottom } = popoverTarget.style;
+                            // Adds enough space for the popover to be displayed below the target
+                            // even on small screens.
+                            popoverTarget.style.marginBottom = `100vh`;
                             popoverTarget.scrollIntoView(true);
+                            restoreTargetMargin = async () => {
+                                popoverTarget.style.marginBottom = marginBottom;
+                            };
                         }
                         popover.open(popoverTarget, { pickerProps });
                     }
@@ -417,6 +427,8 @@ export const datetimePickerService = {
                 /** @type {DateTimePickerProps | null} */
                 let lastInitialProps = null;
                 let lastIsRange = pickerProps.range;
+                /** @type {(() => void) | null} */
+                let restoreTargetMargin = null;
                 let shouldFocus = false;
 
                 /**

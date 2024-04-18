@@ -85,6 +85,15 @@ msgstr "% Onnellisuudesta"
 
 #. module: im_livechat
 #. odoo-python
+#: code:addons/im_livechat/models/discuss_channel.py:0
+#, python-format
+msgid ""
+"%(new_line)sType %(bold_start)s:shortcut%(bold_end)s to insert a canned "
+"response in your message."
+msgstr ""
+
+#. module: im_livechat
+#. odoo-python
 #: code:addons/im_livechat/models/chatbot_script_step.py:0
 #, python-format
 msgid "%s has joined"
@@ -1881,14 +1890,6 @@ msgid "Treated sessions"
 msgstr "Vastatut istunnot"
 
 #. module: im_livechat
-#. odoo-python
-#: code:addons/im_livechat/models/discuss_channel.py:0
-#, python-format
-msgid "Type <b>:shortcut</b> to insert a canned response in your message.<br>"
-msgstr ""
-"Kirjoita <b>:pikanäppäin</b> lisätäksesi viestiin purkitetun vastauksen.<br>"
-
-#. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_im_livechat_channel_rule__regex_url
 msgid "URL Regex"
 msgstr "URL Regex"
@@ -1952,8 +1953,8 @@ msgid "User's raw answer"
 msgstr "Käyttäjän raaka vastaus"
 
 #. module: im_livechat
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/im_livechat/controllers/main.py:0
 #: code:addons/im_livechat/controllers/main.py:0
 #: code:addons/im_livechat/models/im_livechat_channel.py:0
@@ -2030,7 +2031,7 @@ msgstr "Jättäisitkö sähköpostiosoitteesi jotta voimme ottaa sinuun yhteytt�
 #: code:addons/im_livechat/controllers/attachment.py:0
 #, python-format
 msgid "You are not allowed to upload attachments on this channel."
-msgstr ""
+msgstr "Tällä kanavalla ei saa ladata liitetiedostoja."
 
 #. module: im_livechat
 #: model_terms:ir.actions.act_window,help:im_livechat.chatbot_script_action

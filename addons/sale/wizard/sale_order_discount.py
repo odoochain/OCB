@@ -30,9 +30,9 @@ class SaleOrderDiscount(models.TransientModel):
     @api.constrains('discount_type', 'discount_percentage')
     def _check_discount_amount(self):
         for wizard in self:
-            if wizard.discount_type in ('sol_discount', 'so_discount') and (
-                wizard.discount_percentage <= 0.0
-                or wizard.discount_percentage > 1.0
+            if (
+                wizard.discount_type in ('sol_discount', 'so_discount')
+                and wizard.discount_percentage > 1.0
             ):
                 raise ValidationError(_("Invalid discount amount"))
 
@@ -63,16 +63,21 @@ class SaleOrderDiscount(models.TransientModel):
 
         return vals
 
-    def _create_discount_lines(self):
-        """Create SOline(s) according to wizard configuration"""
+    def _get_discount_product(self):
+        """Return product.product used for discount line"""
         self.ensure_one()
-
         discount_product = self.company_id.sale_discount_product_id
         if not discount_product:
             self.company_id.sale_discount_product_id = self.env['product.product'].create(
                 self._prepare_discount_product_values()
             )
             discount_product = self.company_id.sale_discount_product_id
+        return discount_product
+
+    def _create_discount_lines(self):
+        """Create SOline(s) according to wizard configuration"""
+        self.ensure_one()
+        discount_product = self._get_discount_product()
 
         if self.discount_type == 'amount':
             vals_list = [

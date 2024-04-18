@@ -1,7 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from datetime import datetime, time
 from dateutil.relativedelta import relativedelta
-from pytz import timezone, UTC
+from pytz import UTC
 
 from odoo import api, fields, models, _
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT, get_lang
@@ -30,7 +30,7 @@ class PurchaseOrderLine(models.Model):
         compute='_compute_price_unit_and_date_planned_and_name',
         digits='Discount',
         store=True, readonly=False)
-    taxes_id = fields.Many2many('account.tax', string='Taxes', domain=['|', ('active', '=', False), ('active', '=', True)])
+    taxes_id = fields.Many2many('account.tax', string='Taxes', context={'active_test': False})
     product_uom = fields.Many2one('uom.uom', string='Unit of Measure', domain="[('category_id', '=', product_uom_category_id)]")
     product_uom_category_id = fields.Many2one(related='product_id.uom_id.category_id')
     product_id = fields.Many2one('product.product', string='Product', domain=[('purchase_ok', '=', True)], change_default=True, index='btree_not_null')
@@ -63,7 +63,7 @@ class PurchaseOrderLine(models.Model):
     qty_to_invoice = fields.Float(compute='_compute_qty_invoiced', string='To Invoice Quantity', store=True, readonly=True,
                                   digits='Product Unit of Measure')
 
-    partner_id = fields.Many2one('res.partner', related='order_id.partner_id', string='Partner', readonly=True, store=True)
+    partner_id = fields.Many2one('res.partner', related='order_id.partner_id', string='Partner', readonly=True, store=True, index='btree_not_null')
     currency_id = fields.Many2one(related='order_id.currency_id', store=True, string='Currency', readonly=True)
     date_order = fields.Datetime(related='order_id.date_order', string='Order Date', readonly=True)
     date_approve = fields.Datetime(related="order_id.date_approve", string='Confirmation Date', readonly=True)
@@ -287,7 +287,7 @@ class PurchaseOrderLine(models.Model):
         self.product_uom = self.product_id.uom_po_id or self.product_id.uom_id
         product_lang = self.product_id.with_context(
             lang=get_lang(self.env, self.partner_id.lang).code,
-            partner_id=self.partner_id.id,
+            partner_id=None,
             company_id=self.company_id.id,
         )
         self.name = self._get_product_purchase_description(product_lang)
@@ -364,6 +364,8 @@ class PurchaseOrderLine(models.Model):
             # record product names to avoid resetting custom descriptions
             default_names = []
             vendors = line.product_id._prepare_sellers({})
+            product_ctx = {'seller_id': None, 'partner_id': None, 'lang': get_lang(line.env, line.partner_id.lang).code}
+            default_names.append(line._get_product_purchase_description(line.product_id.with_context(product_ctx)))
             for vendor in vendors:
                 product_ctx = {'seller_id': vendor.id, 'lang': get_lang(line.env, line.partner_id.lang).code}
                 default_names.append(line._get_product_purchase_description(line.product_id.with_context(product_ctx)))
@@ -482,7 +484,8 @@ class PurchaseOrderLine(models.Model):
         the product is read-only or not.
 
         A product is considered read-only if the order is considered read-only (see
-        ``PurchaseOrder._is_readonly`` for more details) or if `self` contains multiple records.
+        ``PurchaseOrder._is_readonly`` for more details) or if `self` contains multiple records
+        or if it has purchase_line_warn == "block".
 
         Note: This method cannot be called with multiple records that have different products linked.
 
@@ -496,6 +499,7 @@ class PurchaseOrderLine(models.Model):
                 'uom': dict,
                 'purchase_uom': dict,
                 'packaging': dict,
+                'warning': String,
             }
         """
         if len(self) == 1:
@@ -592,8 +596,9 @@ class PurchaseOrderLine(models.Model):
         product_taxes = product_id.supplier_taxes_id.filtered(lambda x: x.company_id.id == company_id.id)
         taxes = po.fiscal_position_id.map_tax(product_taxes)
 
+        price_unit = seller.price if seller else product_id.standard_price
         price_unit = self.env['account.tax']._fix_tax_included_price_company(
-            seller.price, product_taxes, taxes, company_id) if seller else 0.0
+            price_unit, product_taxes, taxes, company_id)
         if price_unit and seller and po.currency_id and seller.currency_id != po.currency_id:
             price_unit = seller.currency_id._convert(
                 price_unit, po.currency_id, po.company_id, po.date_order or fields.Date.today())
@@ -607,6 +612,7 @@ class PurchaseOrderLine(models.Model):
             name += '\n' + product_lang.description_purchase
 
         date_planned = self.order_id.date_planned or self._get_date_planned(seller, po=po)
+        discount = seller.discount or 0.0
 
         return {
             'name': name,
@@ -617,13 +623,14 @@ class PurchaseOrderLine(models.Model):
             'date_planned': date_planned,
             'taxes_id': [(6, 0, taxes.ids)],
             'order_id': po.id,
+            'discount': discount,
         }
 
     def _convert_to_middle_of_day(self, date):
         """Return a datetime which is the noon of the input date(time) according
         to order user's time zone, convert to UTC time.
         """
-        return timezone(self.order_id.user_id.tz or self.company_id.partner_id.tz or 'UTC').localize(datetime.combine(date, time(12))).astimezone(UTC).replace(tzinfo=None)
+        return self.order_id.get_order_timezone().localize(datetime.combine(date, time(12))).astimezone(UTC).replace(tzinfo=None)
 
     def _update_date_planned(self, updated_date):
         self.date_planned = updated_date

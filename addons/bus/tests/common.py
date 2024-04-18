@@ -12,12 +12,12 @@ except ImportError:
     websocket = None
 
 import odoo.tools
-from odoo.tests import HOST, common
+from odoo.tests import HOST, HttpCase
 from ..websocket import CloseCode, Websocket, WebsocketConnectionHandler
 from ..models.bus import dispatch, hashable, channel_with_db
 
 
-class WebsocketCase(common.HttpCase):
+class WebsocketCase(HttpCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -25,6 +25,8 @@ class WebsocketCase(common.HttpCase):
             cls._logger.warning("websocket-client module is not installed")
             raise unittest.SkipTest("websocket-client module is not installed")
         cls._WEBSOCKET_URL = f"ws://{HOST}:{odoo.tools.config['http_port']}/websocket"
+        websocket_allowed_patch = patch.object(WebsocketConnectionHandler, "websocket_allowed", return_value=True)
+        cls.startClassPatcher(websocket_allowed_patch)
 
     def setUp(self):
         super().setUp()
@@ -75,6 +77,8 @@ class WebsocketCase(common.HttpCase):
         ws = websocket.create_connection(
             type(self)._WEBSOCKET_URL, *args, **kwargs
         )
+        ws.ping()
+        ws.recv_data_frame(control_frame=True) # pong
         self._websockets.add(ws)
         return ws
 
@@ -110,8 +114,7 @@ class WebsocketCase(common.HttpCase):
         it during tests.
         """
         channels = [
-            hashable(channel_with_db(self.registry.db_name, c))
-            if isinstance(c, str) else c for c in channels
+            hashable(channel_with_db(self.registry.db_name, c)) for c in channels
         ]
         websockets = set()
         for channel in channels:

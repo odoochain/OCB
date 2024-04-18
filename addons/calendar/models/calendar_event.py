@@ -288,7 +288,7 @@ class Meeting(models.Model):
     @api.depends_context('uid')
     def _compute_user_can_edit(self):
         for event in self:
-            event.user_can_edit = self.env.user in event.partner_ids.user_ids + event.user_id or self.env.user.has_group('base.group_partner_manager')
+            event.user_can_edit = self.env.user in event.partner_ids.user_ids + event.user_id
 
     @api.depends('attendee_ids')
     def _compute_invalid_email_partner_ids(self):
@@ -364,6 +364,19 @@ class Meeting(models.Model):
             event.stop = event.start and event.start + timedelta(minutes=round((event.duration or 1.0) * 60))
             if event.allday:
                 event.stop -= timedelta(seconds=1)
+
+    @api.onchange('start_date', 'stop_date')
+    def _onchange_date(self):
+        """ This onchange is required for cases where the stop/start is False and we set an allday event.
+            The inverse method is not called in this case because start_date/stop_date are not used in any
+            compute/related, so we need an onchange to set the start/stop values in the form view
+        """
+        for event in self:
+            if event.stop_date and event.start_date:
+                event.with_context(is_calendar_event_new=True).write({
+                    'start': fields.Datetime.from_string(event.start_date).replace(hour=8),
+                    'stop': fields.Datetime.from_string(event.stop_date).replace(hour=18),
+                })
 
     def _inverse_dates(self):
         """ This method is used to set the start and stop values of all day events.
@@ -681,7 +694,7 @@ class Meeting(models.Model):
             self.recurrence_id._setup_alarms(recurrence_update=True)
             if not self.recurrence_id:
                 self._setup_alarms()
-        attendee_update_events = self.filtered(lambda ev: ev.user_id != self.env.user)
+        attendee_update_events = self.filtered(lambda ev: ev.user_id and ev.user_id != self.env.user)
         if update_time and attendee_update_events:
             # Another user update the event time fields. It should not be auto accepted for the organizer.
             # This prevent weird behavior when a user modified future events time fields and
@@ -746,7 +759,7 @@ class Meeting(models.Model):
         # don't forget to update recurrences if there are some base events in the set to unlink,
         # but after having removed the events ;-)
         recurrences = self.env["calendar.recurrence"].search([
-            ('base_event_id.id', 'in', [e.id for e in self])
+            ('base_event_id', 'in', [e.id for e in self])
         ])
 
         result = super().unlink()
@@ -789,6 +802,11 @@ class Meeting(models.Model):
 
         removed_partner_ids = []
         added_partner_ids = []
+
+        # if commands are just integers, assume they are ids with the intent to `Command.set`
+        if partner_commands and isinstance(partner_commands[0], int):
+            partner_commands = [Command.set(partner_commands)]
+
         for command in partner_commands:
             op = command[0]
             if op in (2, 3, Command.delete, Command.unlink):  # Remove partner
@@ -999,6 +1017,19 @@ class Meeting(models.Model):
         if events_to_notify:
             self.env['calendar.alarm_manager']._notify_next_alarm(events_to_notify.partner_ids.ids)
         return triggers_by_events
+
+    def get_next_alarm_date(self, events_by_alarm):
+        self.ensure_one()
+        now = fields.datetime.now()
+        sorted_alarms = self.alarm_ids.sorted("duration_minutes")
+        triggered_alarms = sorted_alarms.filtered(lambda alarm: alarm.id in events_by_alarm)[0]
+        event_has_future_alarms = sorted_alarms[0] != triggered_alarms
+        next_date = None
+        if self.recurrence_id.trigger_id and self.recurrence_id.trigger_id.call_at <= now:
+            next_date = self.start - timedelta(minutes=sorted_alarms[0].duration_minutes) \
+                if event_has_future_alarms \
+                else self.start
+        return next_date
 
     # ------------------------------------------------------------
     # RECURRENCY

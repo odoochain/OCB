@@ -23,7 +23,13 @@ class TestSalePrices(SaleCommon):
 
         # Needed when run without demo data
         #   s.t. taxes creation doesn't fail
-        cls.env.company.account_fiscal_country_id = cls.env.ref('base.be')
+        belgium = cls.env.ref('base.be')
+        cls.env.company.account_fiscal_country_id = belgium
+        for model in ('account.tax', 'account.tax.group'):
+            cls.env.add_to_compute(
+                cls.env[model]._fields['country_id'],
+                cls.env[model].search([('company_id', '=', cls.env.company.id)]),
+            )
 
     def _create_discount_pricelist_rule(self, **additional_values):
         return self.env['product.pricelist.item'].create({
@@ -402,6 +408,7 @@ class TestSalePrices(SaleCommon):
 
         pricelist = self.env['product.pricelist'].create({
             'name': 'Test multi-currency',
+            'company_id': False,
             'discount_policy': 'without_discount',
             'currency_id': other_curr.id,
             'item_ids': [

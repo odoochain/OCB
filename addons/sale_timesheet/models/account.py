@@ -24,8 +24,15 @@ class AccountAnalyticLine(models.Model):
     timesheet_invoice_type = fields.Selection(TIMESHEET_INVOICE_TYPES, string="Billable Type",
             compute='_compute_timesheet_invoice_type', compute_sudo=True, store=True, readonly=True)
     commercial_partner_id = fields.Many2one('res.partner', compute="_compute_commercial_partner")
-    timesheet_invoice_id = fields.Many2one('account.move', string="Invoice", readonly=True, copy=False, help="Invoice created from the timesheet")
+    timesheet_invoice_id = fields.Many2one('account.move', string="Invoice", readonly=True, copy=False, help="Invoice created from the timesheet", index='btree_not_null')
     so_line = fields.Many2one(compute="_compute_so_line", store=True, readonly=False,
+        domain="""[
+            ('qty_delivered_method', 'in', ['analytic', 'timesheet']),
+            ('order_partner_id.commercial_partner_id', '=', commercial_partner_id),
+            ('is_service', '=', True),
+            ('is_expense', '=', False),
+            ('state', '=', 'sale')
+        ]""",
         help="Sales order item to which the time spent will be added in order to be invoiced to your customer. Remove the sales order item for the timesheet entry to be non-billable.")
     # we needed to store it only in order to be able to groupby in the portal
     order_id = fields.Many2one(related='so_line.order_id', store=True, readonly=True, index=True)
@@ -33,15 +40,16 @@ class AccountAnalyticLine(models.Model):
     allow_billable = fields.Boolean(related="project_id.allow_billable")
 
     def _default_sale_line_domain(self):
+        # [XBO] TODO: remove me in master
         return expression.OR([[
             ('is_service', '=', True),
             ('is_expense', '=', False),
             ('state', '=', 'sale'),
-            ('order_partner_id', 'child_of', self.commercial_partner_id.ids)
+            ('order_partner_id', 'child_of', self.sudo().commercial_partner_id.ids)
         ], super()._default_sale_line_domain()])
 
-    @api.depends('commercial_partner_id')
     def _compute_allowed_so_line_ids(self):
+        # [XBO] TODO: remove me in master
         super()._compute_allowed_so_line_ids()
 
     @api.depends('project_id.partner_id.commercial_partner_id', 'task_id.partner_id.commercial_partner_id')
@@ -126,7 +134,7 @@ class AccountAnalyticLine(models.Model):
             else:  # then pricing_type = 'employee_rate'
                 map_entry = self.project_id.sale_line_employee_ids.filtered(
                     lambda map_entry:
-                        map_entry.employee_id == self.employee_id
+                        map_entry.employee_id == (self.employee_id or self.env.user.employee_id)
                         and map_entry.sale_line_id.order_partner_id.commercial_partner_id == self.task_id.partner_id.commercial_partner_id
                 )
                 if map_entry:
@@ -199,3 +207,7 @@ class AccountAnalyticLine(models.Model):
             'context': {'create': False},
             'res_id': self.timesheet_invoice_id.id,
         }
+
+    def _timesheet_convert_sol_uom(self, sol, to_unit):
+        to_uom = self.env.ref(to_unit)
+        return round(sol.product_uom._compute_quantity(sol.product_uom_qty, to_uom, raise_if_failure=False), 2)

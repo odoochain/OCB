@@ -83,7 +83,7 @@
                 <field name="user_id" widget="many2one_avatar_user" readonly="recurrency" optional="hide"/>
                 <field name="partner_ids" widget="many2many_tags" readonly="recurrency" optional="show"/>
                 <field name="alarm_ids" widget="many2many_tags" optional="hide" readonly="recurrency"/>
-                <field name="categ_ids" widget="many2many_tags" optional="hide" readonly="recurrency"/>
+                <field name="categ_ids" widget="many2many_tags" optional="hide" readonly="recurrency" options="{'color_field': 'color'}"/>
                 <field name="recurrency" optional="hide" readonly="1"/>
                 <field name="privacy" optional="hide" readonly="recurrency"/>
                 <field name="show_as" optional="hide" readonly="recurrency"/>
@@ -108,7 +108,7 @@
                 </div>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button icon="fa-bars" type="object" name="action_open_calendar_event" invisible="not res_id">
+                        <button icon="fa-bars" type="object" name="action_open_calendar_event" invisible="not (res_id and res_model_name)">
                             <field name="res_model_name"/>
                         </button>
                     </div>
@@ -139,7 +139,7 @@
                                 <span invisible="allday" style="white-space: pre;"> or </span>
                                 <div class="d-flex gap-2">
                                     <label for="allday" class=""/>
-                                    <field name="allday" class="oe_inline" widget="boolean_toggle" force_save="1" readonly="not user_can_edit"/>
+                                    <field name="allday" class="oe_inline" widget="boolean_toggle" force_save="1" options="{'autosave': False}" readonly="not user_can_edit"/>
                                 </div>
                             </div>
                             <field name="event_tz" invisible="not recurrency" readonly="not user_can_edit"/>
@@ -232,13 +232,14 @@
                             <div class="d-flex align-items-baseline" colspan="2">
                                 <field name="partner_ids" widget="many2manyattendee"
                                     placeholder="Select attendees..."
-                                    context="{'force_email':True}"
+                                    options="{'no_quick_create': True}"
+                                    context="{'form_view_ref': 'base.view_partner_simple_form'}"
                                     domain="[('type','!=','private')]"
                                     class="oe_inline"
                                     readonly="not user_can_edit"
                                 />
                             </div>
-                            <div class="alert alert-warning o_form_header mt-2" invisible="not invalid_email_partner_ids" role="status">
+                            <div class="alert alert-warning o_form_header mt-2" colspan="2" invisible="not invalid_email_partner_ids" role="status">
                                 <p><strong>The following attendees have invalid email addresses and won't receive any email notifications:</strong></p>
                                 <field name="invalid_email_partner_ids" widget="many2manyattendee" class="oe_inline"/>
                             </div>
@@ -311,7 +312,8 @@
                         <field name="allday"/>
                         <field name="partner_ids" widget="many2manyattendee"
                             placeholder="Add attendees..."
-                            context="{'force_email':True}"
+                            options="{'no_quick_create': True}"
+                            context="{'form_view_ref': 'base.view_partner_simple_form'}"
                             class="oe_inline"
                         />
                         <label for="videocall_location" class="opacity-100"/>
@@ -365,7 +367,7 @@
                 <field name="res_model_name" invisible="not res_model_name"
                        options="{'icon': 'fa fa-link', 'shouldOpenRecord': true}"/>
                 <field name="alarm_ids" invisible="not alarm_ids" options="{'icon': 'fa fa-bell-o'}"/>
-                <field name="categ_ids" invisible="not categ_ids" options="{'icon': 'fa fa-tag'}"/>
+                <field name="categ_ids" invisible="not categ_ids" options="{'icon': 'fa fa-tag', 'color_field': 'color'}"/>
                 <!-- For recurrence update Dialog -->
                 <field name="recurrency" invisible="1"/>
                 <field name="recurrence_update" invisible="1"/>
@@ -487,7 +489,7 @@
     <menuitem
         id="calendar_event_menu"
         name="Calendar"
-        sequence="10"
+        sequence="1"
         action="action_calendar_event"
         parent="mail_menu_calendar"
         groups="base.group_user"/>

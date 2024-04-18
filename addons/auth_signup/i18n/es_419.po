@@ -4,7 +4,8 @@
 # 
 # Translators:
 # Wil Odoo, 2023
-# Fernanda Alvarez, 2023
+# Fernanda Alvarez, 2024
+# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2024
 # 
 msgid ""
 msgstr ""
@@ -12,7 +13,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-10-26 21:55+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Fernanda Alvarez, 2023\n"
+"Last-Translator: Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2024\n"
 "Language-Team: Spanish (Latin America) (https://app.transifex.com/odoo/teams/41243/es_419/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -330,7 +331,7 @@ msgstr ""
 "                        </div>\n"
 "                        <t t-set=\"website_url\" t-value=\"object.get_base_url()\"></t>\n"
 "                        Su dominio de Odoo es: <b><a t-att-href=\"website_url\" t-out=\"website_url or ''\">http://suempresa.odoo.com</a></b><br>\n"
-"                        Su correo electrónico de inicio de sesión es: <b><a t-attf-href=\"/web/login?login={{ object.email }}\" target=\"_blank\" t-out=\"object.email or ''\">mark.brown23@ejemplo.com</a></b><br><br>\n"
+"                        Su correo electrónico para iniciar sesión es: <b><a t-attf-href=\"/web/login?login={{ object.email }}\" target=\"_blank\" t-out=\"object.email or ''\">mark.brown23@ejemplo.com</a></b><br><br>\n"
 "                        ¿Nunca ha escuchado de Odoo? Es un software empresarial todo en uno con una comunidad de más de 7 millones de usuarios. Mejorará considerablemente su experiencia en el trabajo e incrementará su productividad.\n"
 "                        <br><br>\n"
 "                       Haga el <a href=\"https://www.odoo.com/page/tour?utm_source=db&amp;utm_medium=auth\" style=\"color: #875A7B;\">Recorrido de Odoo</a> para descubrir nuestra herramienta...\n"
@@ -658,7 +659,7 @@ msgstr "Apreciable"
 #. module: auth_signup
 #: model_terms:ir.ui.view,arch_db:auth_signup.res_config_settings_view_form
 msgid "Default Access Rights"
-msgstr "Derechos de acceso predeterminados"
+msgstr "Permisos de acceso predeterminados"
 
 #. module: auth_signup
 #: model_terms:ir.ui.view,arch_db:auth_signup.login
@@ -670,7 +671,7 @@ msgstr "¿No tiene una cuenta?"
 #: model_terms:ir.ui.view,arch_db:auth_signup.res_config_settings_view_form
 msgid "Enable password reset from Login page"
 msgstr ""
-"Habilitar restablecimiento de la contraseña desde la página de inicio de "
+"Habilite el restablecimiento de contraseñas desde la página de inicio de "
 "sesión"
 
 #. module: auth_signup
@@ -730,7 +731,7 @@ msgstr "Marc Demo"
 #: code:addons/auth_signup/models/res_users.py:0
 #, python-format
 msgid "Multiple accounts found for this login"
-msgstr ""
+msgstr "Se encontraron varias cuentas para esta sesión"
 
 #. module: auth_signup
 #. odoo-python
@@ -802,7 +803,7 @@ msgstr "Contraseña"
 #. module: auth_signup
 #: model_terms:ir.ui.view,arch_db:auth_signup.res_config_settings_view_form
 msgid "Password Reset"
-msgstr "Se restableció la contraseña"
+msgstr "Restablecimiento de contraseña"
 
 #. module: auth_signup
 #. odoo-python

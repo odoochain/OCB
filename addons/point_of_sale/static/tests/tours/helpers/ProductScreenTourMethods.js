@@ -205,29 +205,6 @@ export function clickCloseSession() {
         },
     ];
 }
-export function scan_barcode(barcode) {
-    return [
-        {
-            content: `PoS model scan barcode '${barcode}'`,
-            trigger: ".pos", // The element here does not really matter as long as it is present
-            run: () => {
-                window.posmodel.env.services.barcode_reader.scan(barcode);
-            },
-        },
-    ];
-}
-export function scan_ean13_barcode(barcode) {
-    return [
-        {
-            content: `PoS model scan EAN13 barcode '${barcode}'`,
-            trigger: ".pos", // The element here does not really matter as long as it is present
-            run: () => {
-                const barcode_reader = window.posmodel.env.services.barcode_reader;
-                barcode_reader.scan(barcode_reader.parser.sanitize_ean(barcode));
-            },
-        },
-    ];
-}
 export function goBackToMainScreen() {
     return [
         {
@@ -417,9 +394,9 @@ export function checkOrderlinesNumber(number) {
     return [
         {
             content: `check orderlines number`,
-            trigger: `.order .orderlines .orderline`,
+            trigger: `.order-container .orderline`,
             run: () => {
-                const orderline_amount = $('.order .orderlines .orderline').length;
+                const orderline_amount = $(".order-container .orderline").length;
                 if (orderline_amount !== number) {
                     throw new Error(`Expected ${number} orderlines, got ${orderline_amount}`);
                 }

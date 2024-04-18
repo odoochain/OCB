@@ -24,7 +24,7 @@ import { standardFieldProps } from "../standard_field_props";
  *  maxDate?: string;
  *  minDate?: string;
  *  placeholder?: string;
- *  required?: string | boolean;
+ *  required?: boolean;
  *  rounding?: number;
  *  startDateField?: string;
  *  warnFuture?: boolean;
@@ -40,8 +40,9 @@ export class DateTimeField extends Component {
         endDateField: { type: String, optional: true },
         maxDate: { type: String, optional: true },
         minDate: { type: String, optional: true },
+        alwaysRange: { type: Boolean, optional: true },
         placeholder: { type: String, optional: true },
-        required: { type: [Boolean, String], optional: true },
+        required: { type: Boolean, optional: true },
         rounding: { type: Number, optional: true },
         startDateField: { type: String, optional: true },
         warnFuture: { type: Boolean, optional: true },
@@ -114,12 +115,25 @@ export class DateTimeField extends Component {
                 } else {
                     toUpdate[this.props.name] = this.state.value;
                 }
-                // Remove values that did not change
-                for (const fieldName in toUpdate) {
-                    if (areDatesEqual(toUpdate[fieldName], this.props.record.data[fieldName])) {
-                        delete toUpdate[fieldName];
+                // when startDateField and endDateField are set, and one of them has changed, we keep
+                // the unchanged one to make sure ORM protects both fields from being recomputed by the
+                // server, ORM team will handle this properly on master, then we can remove unchanged values
+                if (!this.startDateField || !this.endDateField) {
+                    // If startDateField or endDateField are not set, delete unchanged fields
+                    for (const fieldName in toUpdate) {
+                        if (areDatesEqual(toUpdate[fieldName], this.props.record.data[fieldName])) {
+                            delete toUpdate[fieldName];
+                        }
+                    }
+                } else {
+                    // If both startDateField and endDateField are set, check if they haven't changed
+                    if (areDatesEqual(toUpdate[this.startDateField], this.props.record.data[this.startDateField]) &&
+                        areDatesEqual(toUpdate[this.endDateField], this.props.record.data[this.endDateField])) {
+                        delete toUpdate[this.startDateField];
+                        delete toUpdate[this.endDateField];
                     }
                 }
+
                 if (Object.keys(toUpdate).length) {
                     this.props.record.update(toUpdate);
                 }
@@ -192,11 +206,16 @@ export class DateTimeField extends Component {
 
     /**
      * @param {DateTimePickerProps["value"]} value
+     * @returns {boolean}
      */
     isRange(value) {
+        if (!this.relatedField) {
+            return false;
+        }
         return (
-            this.relatedField &&
-            (this.props.required || ensureArray(value).filter(Boolean).length === 2)
+            this.props.alwaysRange ||
+            this.props.required ||
+            ensureArray(value).filter(Boolean).length === 2
         );
     }
 
@@ -210,11 +229,18 @@ export class DateTimeField extends Component {
         return this.field.type === "date" ? deserializeDate(value) : deserializeDateTime(value);
     }
 
+    /**
+     * @return {boolean}
+     */
     shouldShowSeparator() {
         return (
-            this.state.range &&
-            (this.props.required ||
-                (!this.isEmpty(this.startDateField) && !this.isEmpty(this.endDateField)))
+            (this.props.alwaysRange &&
+                (this.props.readonly
+                    ? !this.isEmpty(this.startDateField) || !this.isEmpty(this.endDateField)
+                    : true)) ||
+            (this.state.range &&
+                (this.props.required ||
+                    (!this.isEmpty(this.startDateField) && !this.isEmpty(this.endDateField))))
         );
     }
 
@@ -251,13 +277,13 @@ export const dateField = {
             label: _t("Earliest accepted date"),
             name: "min_date",
             type: "string",
-            help: _t(`ISO-formatted date (e.g. "2018-12-31") or "today".`),
+            help: _t(`ISO-formatted date (e.g. "2018-12-31") or "%s".`, "today"),
         },
         {
             label: _t("Latest accepted date"),
             name: "max_date",
             type: "string",
-            help: _t(`ISO-formatted date (e.g. "2018-12-31") or "today".`),
+            help: _t(`ISO-formatted date (e.g. "2018-12-31") or "%s".`, "today"),
         },
         {
             label: _t("Warning for future dates"),
@@ -271,8 +297,9 @@ export const dateField = {
         endDateField: options[END_DATE_FIELD_OPTION],
         maxDate: options.max_date,
         minDate: options.min_date,
+        alwaysRange: archParseBoolean(options.always_range),
         placeholder: attrs.placeholder,
-        required: "required" in attrs ? attrs.required : dynamicInfo.required,
+        required: dynamicInfo.required,
         rounding: options.rounding && parseInt(options.rounding, 10),
         startDateField: options[START_DATE_FIELD_OPTION],
         warnFuture: archParseBoolean(options.warn_future),
@@ -337,6 +364,15 @@ export const dateRangeField = {
             name: END_DATE_FIELD_OPTION,
             type: "field",
             availableTypes: ["date", "datetime"],
+        },
+        {
+            label: _t("Always range"),
+            name: "always_range",
+            type: "boolean",
+            default: false,
+            help: _t(
+                `Set to true the full range input has to be display by default, even if empty.`
+            ),
         },
     ],
     supportedTypes: ["date", "datetime"],

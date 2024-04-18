@@ -74,17 +74,14 @@ class AccountAnalyticAccount(models.Model):
     balance = fields.Monetary(
         compute='_compute_debit_credit_balance',
         string='Balance',
-        groups='account.group_account_readonly',
     )
     debit = fields.Monetary(
         compute='_compute_debit_credit_balance',
         string='Debit',
-        groups='account.group_account_readonly',
     )
     credit = fields.Monetary(
         compute='_compute_debit_credit_balance',
         string='Credit',
-        groups='account.group_account_readonly',
     )
 
     currency_id = fields.Many2one(
@@ -95,7 +92,7 @@ class AccountAnalyticAccount(models.Model):
     @api.constrains('company_id')
     def _check_company_consistency(self):
         for company, accounts in groupby(self, lambda account: account.company_id):
-            if company and self.env['account.analytic.line'].search([
+            if company and self.env['account.analytic.line'].sudo().search([
                 ('auto_account_id', 'in', [account.id for account in accounts]),
                 '!', ('company_id', 'child_of', company.id),
             ], limit=1):

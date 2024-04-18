@@ -3,16 +3,16 @@
 # 	* website_sale
 # 
 # Translators:
-# Wil Odoo, 2023
-# Thi Huong Nguyen, 2023
+# Wil Odoo, 2024
+# Thi Huong Nguyen, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Thi Huong Nguyen, 2023\n"
+"Last-Translator: Thi Huong Nguyen, 2024\n"
 "Language-Team: Vietnamese (https://app.transifex.com/odoo/teams/41243/vi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -150,6 +150,15 @@ msgstr ""
 "                Giao hàng: Từ 2-3 ngày làm việc"
 
 #. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.extra_info
+msgid ""
+"<i class=\"fa fa-angle-left me-2 fw-light\"/>\n"
+"                                    Return to shipping"
+msgstr ""
+"<i class=\"fa fa-angle-left me-2 fw-light\"/>\n"
+"                                    Quay lại vận chuyển"
+
+#. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.product_buy_now
 msgid ""
 "<i class=\"fa fa-bolt me-2\"/>\n"
@@ -263,7 +272,7 @@ msgid ""
 "contact us directly for this operation.</small>"
 msgstr ""
 "<small class=\"form-text text-muted\">Không được phép đổi tên công ty hoặc "
-"mã số thuế GTGT khi (các) tài liệu đã được xuất cho tài khoản của bạn. Vui "
+"mã số thuế GTGT khi (các) chứng từ đã được xuất cho tài khoản của bạn. Vui "
 "lòng liên hệ trực tiếp với chúng tôi để thực hiện thao tác này.</small>"
 
 #. module: website_sale
@@ -344,6 +353,7 @@ msgstr ""
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.address
+#: model_terms:ir.ui.view,arch_db:website_sale.extra_info
 #: model_terms:ir.ui.view,arch_db:website_sale.navigation_buttons
 msgid "<span class=\"px-3\">or</span>"
 msgstr "<span class=\"px-3\">hoặc</span>"
@@ -1017,17 +1027,8 @@ msgstr "Có thể đăng"
 #. odoo-python
 #: code:addons/website_sale/controllers/main.py:0
 #, python-format
-msgid "Can not resequence a video at first position."
-msgstr "Không thể sắp xếp lại video ở vị trí đầu tiên."
-
-#. module: website_sale
-#. odoo-python
-#: code:addons/website_sale/controllers/main.py:0
-#, python-format
-msgid "Can not resequence embedded image/video with a non compatible image."
-msgstr ""
-"Không thể sắp xếp lại hình ảnh/video được nhúng với hình ảnh không tương "
-"thích."
+msgid "You can't use a video as the product's main image."
+msgstr "Bạn không thể sử dụng video làm hình ảnh chính của sản phẩm."
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options
@@ -1373,9 +1374,19 @@ msgstr "Nội dung"
 #. module: website_sale
 #. odoo-python
 #: code:addons/website_sale/models/website.py:0
+#: model_terms:ir.ui.view,arch_db:website_sale.address
 #, python-format
 msgid "Continue checkout"
 msgstr "Tiếp tục thanh toán"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.extra_info
+msgid ""
+"Continue checkout\n"
+"                                    <i class=\"fa fa-angle-right ms-2 fw-light\"/>"
+msgstr ""
+"Tiếp tục thanh toán\n"
+"                                    <i class=\"fa fa-angle-right ms-2 fw-light\"/>"
 
 #. module: website_sale
 #. odoo-python
@@ -1524,6 +1535,11 @@ msgstr "Kết nối DHL Express"
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "DHL Shipping Methods"
 msgstr "Phương thức vận chuyển DHL"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.product
+msgid "DROP BUILDING BLOCKS HERE TO MAKE THEM AVAILABLE ACROSS ALL PRODUCTS"
+msgstr "THẢ KHỐI DỰNG TẠI ĐÂY ĐỂ CHÚNG KHẢ DỤNG TRÊN TẤT CẢ SẢN PHẨM"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options
@@ -2229,6 +2245,13 @@ msgstr ""
 "phương thức giao hàng"
 
 #. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/js/website_sale_utils.js:0
+#, python-format
+msgid "Item(s) added to your cart"
+msgstr "Mặt hàng đã được thêm vào giỏ hàng của bạn"
+
+#. module: website_sale
 #: model:ir.model,name:website_sale.model_account_move
 msgid "Journal Entry"
 msgstr "Bút toán"
@@ -2479,6 +2502,13 @@ msgid "Name Short"
 msgstr "Tên viết tắt"
 
 #. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/models/product_public_category.py:0
+#, python-format
+msgid "New"
+msgstr "Mới"
+
+#. module: website_sale
 #: model:ir.actions.act_window,name:website_sale.product_product_action_add
 msgid "New Product"
 msgstr "Sản phẩm mới"
@@ -2533,8 +2563,8 @@ msgstr "Không có sản phẩm "
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
-msgid "No product defined in category \""
-msgstr "Không có sản phẩm trong danh mục \""
+msgid "No product defined in this category."
+msgstr "Không có sản phẩm nào được chỉ định trong danh mục này."
 
 #. module: website_sale
 #: model_terms:ir.actions.act_window,help:website_sale.website_sale_visitor_product_action
@@ -3496,6 +3526,11 @@ msgid "Sample"
 msgstr "Mẫu"
 
 #. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.address
+msgid "Save address"
+msgstr "Lưu địa chỉ"
+
+#. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.view_sales_order_filter_ecommerce_abondand
 msgid "Search Abandoned Sales Orders"
 msgstr "Tìm đơn bán hàng bỏ dở"
@@ -4238,7 +4273,7 @@ msgstr "Xem sản phẩm"
 
 #. module: website_sale
 #. odoo-javascript
-#: code:addons/website_sale/static/src/js/notification/cart_notification/cart_notification.xml:0
+#: code:addons/website_sale/static/src/js/notification/add_to_cart_notification/add_to_cart_notification.xml:0
 #, python-format
 msgid "View cart"
 msgstr "Xem giỏ hàng"
@@ -4298,10 +4333,13 @@ msgid "Visitor Product Views History"
 msgstr "Lịch sử lượt xem sản phẩm của khách"
 
 #. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/js/website_sale_utils.js:0
 #: model:ir.model.fields,field_description:website_sale.field_sale_order__shop_warning
 #: model:ir.model.fields,field_description:website_sale.field_sale_order_line__shop_warning
 #: model_terms:ir.ui.view,arch_db:website_sale.cart_lines
 #: model_terms:ir.ui.view,arch_db:website_sale.checkout_layout
+#, python-format
 msgid "Warning"
 msgstr "Cảnh báo"
 
@@ -4573,11 +4611,6 @@ msgid "Zip Prefix"
 msgstr "Tiền tố mã bưu điện"
 
 #. module: website_sale
-#: model_terms:ir.ui.view,arch_db:website_sale.add_grid_or_list_option
-msgid "active"
-msgstr "đang hoạt động"
-
-#. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "bpost"
 msgstr "bpost"
@@ -4633,6 +4666,11 @@ msgstr "Bán hàng thương mại điện tử"
 #: model_terms:ir.ui.view,arch_db:website_sale.product_template_form_view
 msgid "eCommerce Shop"
 msgstr "Cửa hàng eCommerce"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.header_cart_link
+msgid "eCommerce cart"
+msgstr "Giỏ hàng thương mại điện tử"
 
 #. module: website_sale
 #: model:ir.actions.server,name:website_sale.ir_cron_send_availability_email_ir_actions_server

@@ -799,6 +799,7 @@ class StockQuant(TransactionCase):
 
     def test_quant_display_name(self):
         """ Check the display name of a quant. """
+        self.env.user.groups_id += self.env.ref('stock.group_production_lot')
         sn1 = self.env['stock.lot'].create({
             'name': 'sn1',
             'product_id': self.product_serial.id,
@@ -910,6 +911,23 @@ class StockQuant(TransactionCase):
         self.assertEqual(quant_2.with_context(inventory_mode=True).sn_duplicated, True)
         with self.assertRaises(UserError):
             quant_2.with_context(inventory_mode=True).write({'location_id': self.stock_subloc2})
+
+    def test_update_quant_with_forbidden_field_02(self):
+        """
+        Test that updating the package from the quant raise an error
+        but if the package is unpacked, the quant can be updated.
+        """
+        package = self.env['stock.quant.package'].create({
+            'name': 'Package',
+        })
+        self.env['stock.quant']._update_available_quantity(self.product, self.stock_location, 1.0, package_id=package)
+        quant = self.product.stock_quant_ids
+        self.assertEqual(len(self.product.stock_quant_ids), 1)
+        with self.assertRaises(UserError):
+            quant.with_context(inventory_mode=True).write({'package_id': False})
+        package.with_context(inventory_mode=True).unpack()
+        self.assertFalse(quant.exists())
+        self.assertFalse(self.product.stock_quant_ids.package_id)
 
     def test_relocate(self):
         """ Test the relocation wizard. """
@@ -1043,6 +1061,62 @@ class StockQuant(TransactionCase):
         self.assertEqual(destruction_move_line.location_dest_id.id, creation_move_line.location_id.id)
         self.assertEqual(dummy_quant.quantity, 0)
 
+    def test_unpack_and_quants_history(self):
+        """
+        Test that after unpacking the quant history is preserved
+        """
+        product = self.env['product.product'].create({
+            'name': 'Product',
+            'type': 'product',
+            'tracking': 'lot',
+        })
+        lot_a = self.env['stock.lot'].create({
+            'name': 'A',
+            'product_id': product.id,
+            'product_qty': 5,
+        })
+        package = self.env['stock.quant.package'].create({
+            'name': 'Super Package',
+        })
+        stock_location = self.stock_location
+        dst_location = self.stock_subloc2
+        picking_type = self.env.ref('stock.picking_type_internal')
+
+        self.env['stock.quant']._update_available_quantity(product, stock_location, 5.0, lot_id=lot_a, package_id=package)
+
+        picking = self.env['stock.picking'].create({
+            'picking_type_id': picking_type.id,
+            'location_id': dst_location.id,
+            'location_dest_id': stock_location.id,
+            'move_ids': [(0, 0, {
+                'name': 'In 5 x %s' % product.name,
+                'product_id': product.id,
+                'location_id': stock_location.id,
+                'location_dest_id': dst_location.id,
+                'product_uom_qty': 5,
+                'product_uom': product.uom_id.id,
+            })],
+        })
+        picking.action_confirm()
+
+        picking.move_ids.move_line_ids.write({
+            'quantity': 5,
+            'lot_id': lot_a.id,
+            'package_id': package.id,
+            'result_package_id': package.id,
+        })
+        picking.button_validate()
+        package.unpack()
+
+        quant = self.env['stock.quant'].search([
+            ('product_id', '=', product.id),
+            ('location_id', '=', dst_location.id),
+        ])
+        action = quant.action_view_stock_moves()
+        history = self.env['stock.move.line'].search(action['domain'])
+        self.assertTrue(history)
+
+
 class StockQuantRemovalStrategy(TransactionCase):
     def setUp(self):
         super().setUp()
@@ -1152,9 +1226,9 @@ class StockQuantRemovalStrategy(TransactionCase):
         self.assertEqual(len(move.move_line_ids), 12)
         self.assertRecordValues(
             move.move_line_ids,
-            [{'quantity': 1000}] +
-            [{'quantity': 50}] * 5 +
-            [{'quantity': 5}] * 6
+            [{'quantity_product_uom': 1000}] +
+            [{'quantity_product_uom': 50}] * 5 +
+            [{'quantity_product_uom': 5}] * 6
         )
 
     def test_least_package_removal_strategy_not_possible(self):
@@ -1183,7 +1257,7 @@ class StockQuantRemovalStrategy(TransactionCase):
         self.assertEqual(len(move.move_line_ids), 2)
         self.assertRecordValues(
             move.move_line_ids,
-            [{'quantity': 10}] + [{'quantity': 3}]
+            [{'quantity_product_uom': 10}] + [{'quantity_product_uom': 3}]
         )
         # Make sure it selects the smallest possible package as best leaf.
         self.assertEqual(
@@ -1217,9 +1291,9 @@ class StockQuantRemovalStrategy(TransactionCase):
         self.assertEqual(len(move.move_line_ids), 8)
         self.assertRecordValues(
             move.move_line_ids,
-            [{'quantity': 2}] +
-            [{'quantity': 10}] * 5 +
-            [{'quantity': 5}] * 2
+            [{'quantity_product_uom': 2}] +
+            [{'quantity_product_uom': 10}] * 5 +
+            [{'quantity_product_uom': 5}] * 2
         )
 
     def test_clean_quant_after_package_move(self):

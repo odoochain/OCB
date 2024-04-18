@@ -71,6 +71,7 @@
             'point_of_sale/static/src/backend/debug_manager.js',
         ],
         'web.assets_tests': [
+            'barcodes/static/tests/helpers.js',
             'point_of_sale/static/tests/tours/**/*',
         ],
 
@@ -122,9 +123,9 @@
             'barcodes_gs1_nomenclature/static/src/js/barcode_parser.js',
             'barcodes_gs1_nomenclature/static/src/js/barcode_service.js',
             'web/static/src/views/fields/parsers.js',
-            'web/static/src/webclient/barcode/barcode_scanner.js',
+            'web/static/src/webclient/barcode/barcode_scanner.*',
             'web/static/src/webclient/barcode/ZXingBarcodeDetector.js',
-            'web/static/src/webclient/barcode/crop_overlay.js',
+            'web/static/src/webclient/barcode/crop_overlay.*',
             # bus service
             'bus/static/src/services/bus_service.js',
             'bus/static/src/bus_parameters_service.js',

@@ -3678,7 +3678,7 @@ QUnit.module("Views", (hooks) => {
             '["Foo","Foo","Foo"]',
             // origin headers
             '["November 2016","December 2016","Variation","November 2016","December 2016"' +
-                ',"Variation","November 2016","December 2016","Variation"]',
+            ',"Variation","November 2016","December 2016","Variation"]',
             // number of 'measures'
             "1",
             // number of 'origins'
@@ -5273,6 +5273,7 @@ QUnit.module("Views", (hooks) => {
     QUnit.test(
         "comparison with two groupbys: rows from reference period should be displayed",
         async function (assert) {
+            patchDate(2023, 2, 22, 1, 0, 0);
             assert.expect(3);
 
             serverData.models.partner.records = [
@@ -5611,6 +5612,46 @@ QUnit.module("Views", (hooks) => {
         }
     );
 
+    QUnit.test("filter -> sort -> unfilter should not crash", async function (assert) {
+        await makeView({
+            type: "pivot",
+            resModel: "partner",
+            serverData,
+            arch: `
+                    <pivot>
+                        <field name="product_id" type="row"/>
+                        <field name="bar" type="row"/>
+                    </pivot>
+                `,
+            searchViewArch: `
+                <search>
+                    <filter name="xphone" domain="[('product_id', '=', 37)]" />
+                </search>
+            `,
+            context: {
+                search_default_xphone: true,
+            },
+        });
+
+        assert.deepEqual(getFacetTexts(target), ["xphone"]);
+        assert.deepEqual(
+            [...target.querySelectorAll("tbody th")].map((el) => el.innerText),
+            ["Total", "xphone", "Yes"]
+        );
+        assert.strictEqual(getCurrentValues(target), ["1", "1", "1"].join());
+
+        await click(target, ".o_pivot_measure_row");
+        await toggleSearchBarMenu(target);
+        await toggleMenuItem(target, "xphone");
+
+        assert.deepEqual(getFacetTexts(target), []);
+        assert.deepEqual(
+            [...target.querySelectorAll("tbody th")].map((el) => el.innerText),
+            ["Total", "xphone", "Yes", "xpad"]
+        );
+        assert.strictEqual(getCurrentValues(target), ["4", "1", "1", "3"].join());
+    });
+
     QUnit.test(
         "no class 'o_view_sample_data' when real data are presented",
         async function (assert) {
@@ -5712,5 +5753,25 @@ QUnit.module("Views", (hooks) => {
         assert.strictEqual(columns[0].innerText, "None");
         assert.strictEqual(columns[1].innerText, "aaa");
         assert.strictEqual(columns[2].innerText, "bbb");
+    });
+
+    QUnit.test("avoid duplicates in read_group parameter 'groupby'", async function (assert) {
+        await makeView({
+            type: "pivot",
+            resModel: "partner",
+            serverData,
+            arch: `
+                    <pivot sample="1">
+                        <field name="date" type="row"/>
+                        <field name="date" type="col" interval="month"/>
+                    </pivot>
+                `,
+            mockRPC(_, { method, kwargs }) {
+                if (method === "read_group") {
+                    assert.step(JSON.stringify(kwargs.groupby));
+                }
+            },
+        });
+        assert.verifySteps([`[]`, `["date:month"]`, `["date:month"]`, `["date:month"]`]);
     });
 });

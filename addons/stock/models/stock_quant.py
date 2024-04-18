@@ -21,6 +21,7 @@ class StockQuant(models.Model):
     _name = 'stock.quant'
     _description = 'Quants'
     _rec_name = 'product_id'
+    _rec_names_search = ['location_id', 'lot_id', 'package_id', 'owner_id']
 
     def _domain_location_id(self):
         if self.user_has_groups('stock.group_stock_user'):
@@ -73,7 +74,8 @@ class StockQuant(models.Model):
         help='The package containing this quant', ondelete='restrict', check_company=True, index=True)
     owner_id = fields.Many2one(
         'res.partner', 'Owner',
-        help='This is the owner of the quant', check_company=True)
+        help='This is the owner of the quant', check_company=True,
+        index='btree_not_null')
     quantity = fields.Float(
         'Quantity',
         help='Quantity of products in this quant, in the default unit of measure of the product',
@@ -354,10 +356,13 @@ class StockQuant(models.Model):
                 ('location_id', '=', self.location_id.id),
                 ('location_dest_id', '=', self.location_id.id),
             ('lot_id', '=', self.lot_id.id),
-            '|',
-                ('package_id', '=', self.package_id.id),
-                ('result_package_id', '=', self.package_id.id),
         ]
+        if self.package_id:
+            action['domain'] += [
+                '|',
+                    ('package_id', '=', self.package_id.id),
+                    ('result_package_id', '=', self.package_id.id),
+            ]
         action['context'] = literal_eval(action.get('context'))
         action['context']['search_default_product_id'] = self.product_id.id
         return action
@@ -605,11 +610,11 @@ class StockQuant(models.Model):
         product_id = product_id.sudo()
         location_id = location_id.sudo()
         if product_id.categ_id.removal_strategy_id:
-            return product_id.categ_id.removal_strategy_id.method
+            return product_id.categ_id.removal_strategy_id.with_context(lang=None).method
         loc = location_id
         while loc:
             if loc.removal_strategy_id:
-                return loc.removal_strategy_id.method
+                return loc.removal_strategy_id.with_context(lang=None).method
             loc = loc.location_id
         return 'fifo'
 
@@ -917,7 +922,7 @@ class StockQuant(models.Model):
                 self.product_id, self.location_id, lot_id=self.lot_id,
                 package_id=self.package_id, owner_id=self.owner_id, strict=True)
             if quant:
-                self.quantity = quant.filtered(lambda q: q.lot_id == self.lot_id).quantity
+                self.quantity = sum(quant.filtered(lambda q: q.lot_id == self.lot_id).mapped('quantity'))
 
             # Special case: directly set the quantity to one for serial numbers,
             # it'll trigger `inventory_quantity` compute.
@@ -1208,6 +1213,7 @@ class StockQuant(models.Model):
             'state': 'confirmed',
             'location_id': location_id.id,
             'location_dest_id': location_dest_id.id,
+            'restrict_partner_id':  self.owner_id.id,
             'is_inventory': True,
             'picked': True,
             'move_line_ids': [(0, 0, {

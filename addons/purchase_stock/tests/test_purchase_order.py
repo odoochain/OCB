@@ -397,7 +397,7 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         })
 
         purchase_order = self.env['purchase.order'].create({
-            'partner_id': self.env.ref('base.res_partner_3').id,
+            'partner_id': self.env['res.partner'].create({'name': 'Test Partner'}).id,
             'order_line': [(0, 0, {
                 'name': super_product.name,
                 'product_id': super_product.id,
@@ -412,7 +412,7 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         self.assertEqual(purchase_order.state, 'purchase')
         self.assertEqual(len(purchase_order.picking_ids), 1)
         self.assertEqual(len(purchase_order.picking_ids.move_line_ids), 1)
-        self.assertEqual(purchase_order.picking_ids.move_line_ids.quantity, 7)
+        self.assertEqual(purchase_order.picking_ids.move_line_ids.quantity_product_uom, 7)
 
 
         purchase_order.order_line.product_qty = 4
@@ -421,7 +421,7 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         purchase_order.button_confirm()
         self.assertEqual(len(purchase_order.picking_ids), 1)
         self.assertEqual(len(purchase_order.picking_ids.move_line_ids), 1)
-        self.assertEqual(purchase_order.picking_ids.move_line_ids.quantity, 4)
+        self.assertEqual(purchase_order.picking_ids.move_line_ids.quantity_product_uom, 4)
 
     def test_message_qty_already_received(self):
         self.env.user.write({'company_id': self.company_data['company'].id})
@@ -672,3 +672,28 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
 
         self.assertEqual(po.order_line[0].qty_received, 5)
         self.assertEqual(po.order_line[1].qty_received, 5)
+
+    def test_receive_qty_invoiced_but_no_posted(self):
+        """
+        Create a purchase order, confirm it, invoice it, but don't post the invoice.
+        Receive the products.
+        """
+        self.product_id_1.type = 'product'
+        self.product_id_1.categ_id.property_cost_method = 'average'
+        po = self.env['purchase.order'].create(self.po_vals)
+        po.button_confirm()
+        self.assertEqual(po.order_line[0].product_id, self.product_id_1)
+        # Invoice the PO
+        action = po.action_create_invoice()
+        invoice = self.env['account.move'].browse(action['res_id'])
+        self.assertTrue(invoice)
+        # Receive the products
+        receipt01 = po.picking_ids
+        receipt01.button_validate()
+        self.assertEqual(receipt01.state, 'done')
+        self.assertEqual(po.order_line[0].qty_received, 5)
+        self.assertEqual(po.order_line[0].price_unit, 500)
+        layers = self.env['stock.valuation.layer'].search([('product_id', '=', self.product_id_1.id)])
+        self.assertEqual(len(layers), 1)
+        self.assertEqual(layers.quantity, 5)
+        self.assertEqual(layers.value, 2500)

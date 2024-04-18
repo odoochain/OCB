@@ -157,7 +157,7 @@ TRANSLATED_ELEMENTS = {
 TRANSLATED_ATTRS = dict.fromkeys({
     'string', 'add-label', 'help', 'sum', 'avg', 'confirm', 'placeholder', 'alt', 'title', 'aria-label',
     'aria-keyshortcuts', 'aria-placeholder', 'aria-roledescription', 'aria-valuetext',
-    'value_label', 'data-tooltip',
+    'value_label', 'data-tooltip', 'data-editor-message', 'label',
 }, lambda e: True)
 
 def translate_attrib_value(node):
@@ -292,6 +292,47 @@ def parse_xml(text):
 def serialize_xml(node):
     return etree.tostring(node, method='xml', encoding='unicode')
 
+
+MODIFIER_ATTRS = {"invisible", "readonly", "required", "column_invisible", "attrs", "states"}
+def xml_term_adapter(term_en):
+    """
+    Returns an `adapter(term)` function that will ensure the modifiers are copied
+    from the base `term_en` to the translated `term` when the XML structure of
+    both terms match. `term_en` and any input `term` to the adapter must be valid
+    XML terms. Using the adapter only makes sense if `term_en` contains some tags
+    from TRANSLATED_ELEMENTS.
+    """
+    orig_node = parse_xml(f"<div>{term_en}</div>")
+
+    def same_struct_iter(left, right):
+        if left.tag != right.tag:
+            raise ValueError("Non matching struct")
+        yield left, right
+        left_iter = left.iterchildren()
+        right_iter = right.iterchildren()
+        for lc, rc in zip(left_iter, right_iter):
+            yield from same_struct_iter(lc, rc)
+        if next(left_iter, None) is not None or next(right_iter, None) is not None:
+            raise ValueError("Non matching struct")
+
+    def adapter(term):
+        new_node = parse_xml(f"<div>{term}</div>")
+        try:
+            for orig_n, new_n in same_struct_iter(orig_node, new_node):
+                removed_attrs = [k for k in new_n.attrib if k in MODIFIER_ATTRS and k not in orig_n.attrib]
+                for k in removed_attrs:
+                    del new_n.attrib[k]
+                keep_attrs = {k: v for k, v in orig_n.attrib.items() if k in MODIFIER_ATTRS}
+                new_n.attrib.update(keep_attrs)
+        except ValueError:  # non-matching structure
+            return term
+
+        # remove tags <div> and </div> from result
+        return serialize_xml(new_node)[5:-6]
+
+    return adapter
+
+
 _HTML_PARSER = etree.HTMLParser(encoding='utf8')
 
 def parse_html(text):
@@ -367,11 +408,20 @@ def get_text_content(term):
     content = html.fromstring(term).text_content()
     return " ".join(content.split())
 
+def is_text(term):
+    """ Return whether the term has only text. """
+    return len(html.fromstring(f"<_>{term}</_>")) == 0
+
 xml_translate.get_text_content = get_text_content
 html_translate.get_text_content = get_text_content
 
 xml_translate.term_converter = xml_term_converter
 html_translate.term_converter = html_term_converter
+
+xml_translate.is_text = is_text
+html_translate.is_text = is_text
+
+xml_translate.term_adapter = xml_term_adapter
 
 def translate_sql_constraint(cr, key, lang):
     cr.execute("""
@@ -747,7 +797,7 @@ class PoFileWriter:
     def write_rows(self, rows):
         # we now group the translations by source. That means one translation per source.
         grouped_rows = {}
-        modules = set([])
+        modules = set()
         for module, type, name, res_id, src, trad, comments in rows:
             row = grouped_rows.setdefault(src, {})
             row.setdefault('modules', set()).add(module)
@@ -763,7 +813,7 @@ class PoFileWriter:
                 row['translation'] = ''
             elif not row.get('translation'):
                 row['translation'] = ''
-            self.add_entry(row['modules'], sorted(row['tnrs']), src, row['translation'], row['comments'])
+            self.add_entry(sorted(row['modules']), sorted(row['tnrs']), src, row['translation'], sorted(row['comments']))
 
         import odoo.release as release
         self.po.header = "Translation of %s.\n" \
@@ -893,8 +943,8 @@ def _extract_translatable_qweb_terms(element, callback):
             # them all lower case.
             # https://www.w3schools.com/html/html5_syntax.asp
             # https://github.com/odoo/owl/blob/master/doc/reference/component.md#composition
-            if not el.tag[0].isupper() and 't-component' not in el.attrib:
-                for att in ('title', 'alt', 'label', 'placeholder', 'aria-label'):
+            if not el.tag[0].isupper() and 't-component' not in el.attrib and 't-set-slot' not in el.attrib:
+                for att in TRANSLATED_ATTRS:
                     if att in el.attrib:
                         _push(callback, el.attrib[att], el.sourceline)
             _extract_translatable_qweb_terms(el, callback)
@@ -1017,6 +1067,7 @@ class TranslationReader:
         if not records:
             return
 
+        env = records.env
         for record in records.with_context(check_translations=True):
             module = imd_per_id[record.id].module
             xml_name = "%s.%s" % (module, imd_per_id[record.id].name)
@@ -1026,7 +1077,15 @@ class TranslationReader:
                 # From our business perspective, the parent column is no need to be translated,
                 # but it is need to be set to jsonb column, since the child columns need to be translated
                 # And export the parent field may make one value to be translated twice in transifex
-                if not field.translate or not field.store or str(field) == 'ir.actions.actions.name':
+                #
+                # Some ir_model_fields.field_description are filtered
+                # because their fields have falsy attribute export_string_translation
+                if (
+                        not (field.translate and field.store)
+                        or str(field) == 'ir.actions.actions.name'
+                        or (str(field) == 'ir.model.fields.field_description'
+                            and not env[record.model]._fields[record.name].export_string_translation)
+                ):
                     continue
                 name = model + "," + field_name
                 value_en = record[field_name] or ''
@@ -1360,9 +1419,9 @@ class TranslationImporter:
             xmlid = module_name + '.' + row['imd_name']
             if xmlids and xmlid not in xmlids:
                 continue
-            if row.get('type') == 'model':
+            if row.get('type') == 'model' and field.translate is True:
                 self.model_translations[model_name][field_name][xmlid][lang] = row['value']
-            elif row.get('type') == 'model_terms':
+            elif row.get('type') == 'model_terms' and callable(field.translate):
                 self.model_terms_translations[model_name][field_name][xmlid][row['src']][lang] = row['value']
 
     def save(self, overwrite=False, force_overwrite=False):
@@ -1393,7 +1452,7 @@ class TranslationImporter:
                     # [module_name, imd_name, module_name, imd_name, ...]
                     params = []
                     for xmlid in sub_xmlids:
-                        params.extend(xmlid.split('.'))
+                        params.extend(xmlid.split('.', maxsplit=1))
                     cr.execute(f'''
                         SELECT m.id, imd.module || '.' || imd.name, m."{field_name}", imd.noupdate
                         FROM "{model_table}" m, "ir_model_data" imd
@@ -1457,7 +1516,7 @@ class TranslationImporter:
                     # [xmlid, translations, xmlid, translations, ...]
                     params = []
                     for xmlid, translations in sub_field_dictionary:
-                        params.extend([*xmlid.split('.'), Json(translations)])
+                        params.extend([*xmlid.split('.', maxsplit=1), Json(translations)])
                     if not force_overwrite:
                         value_query = f"""CASE WHEN {overwrite} IS TRUE AND imd.noupdate IS FALSE
                         THEN m."{field_name}" || t.value
@@ -1666,7 +1725,7 @@ def _get_translation_upgrade_queries(cr, field):
                 SELECT it.res_id as res_id, jsonb_object_agg(it.lang, it.value) AS value, bool_or(imd.noupdate) AS noupdate
                   FROM _ir_translation it
              LEFT JOIN ir_model_data imd
-                    ON imd.model = %s AND imd.res_id = it.res_id
+                    ON imd.model = %s AND imd.res_id = it.res_id AND imd.module != '__export__'
                  WHERE it.type = 'model' AND it.name = %s AND it.state = 'translated'
               GROUP BY it.res_id
             )

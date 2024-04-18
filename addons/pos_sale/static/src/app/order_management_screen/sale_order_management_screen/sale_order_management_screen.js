@@ -3,6 +3,7 @@
 import { _t } from "@web/core/l10n/translation";
 import { sprintf } from "@web/core/utils/strings";
 import { parseFloat } from "@web/views/fields/parsers";
+import { floatIsZero } from "@web/core/utils/numbers";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 import { ControlButtonsMixin } from "@point_of_sale/app/utils/control_buttons_mixin";
@@ -129,11 +130,6 @@ export class SaleOrderManagementScreen extends ControlButtonsMixin(Component) {
                 }
             }
 
-            try {
-                await this.pos.load_new_partners();
-            } catch {
-                // FIXME Universal catch seems ill advised
-            }
             const order_partner = this.pos.db.get_partner_by_id(sale_order.partner_id[0]);
             if (order_partner) {
                 currentPOSOrder.set_partner(order_partner);
@@ -255,11 +251,12 @@ export class SaleOrderManagementScreen extends ControlButtonsMixin(Component) {
                     const product = this.pos.db.get_product_by_id(line.product_id[0]);
                     const product_unit = product.get_unit();
                     if (product_unit && !product.get_unit().is_pos_groupable) {
-                        //loop for value of quantity
-                        for (let j = 0; j < new_line.quantity; j++) {
+                        let remaining_quantity = new_line.quantity;
+                        while (!floatIsZero(remaining_quantity, 6)) {
                             const splitted_line = new Orderline({ env: this.env }, line_values);
-                            splitted_line.quantity = 1;
+                            splitted_line.set_quantity(Math.min(remaining_quantity, 1.0), true);
                             this.pos.get_order().add_orderline(splitted_line);
+                            remaining_quantity -= splitted_line.quantity;
                         }
                     } else {
                         this.pos.get_order().add_orderline(new_line);
@@ -375,8 +372,7 @@ export class SaleOrderManagementScreen extends ControlButtonsMixin(Component) {
                 } else {
                     const title = _t("No down payment product");
                     const body = _t(
-                        "It seems that you didn't configure a down payment product in your point of sale.\
-                        You can go to your point of sale configuration to choose one."
+                        "It seems that you didn't configure a down payment product in your point of sale. You can go to your point of sale configuration to choose one."
                     );
                     await this.popup.add(ErrorPopup, { title, body });
                 }

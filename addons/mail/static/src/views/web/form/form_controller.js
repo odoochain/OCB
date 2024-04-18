@@ -3,10 +3,22 @@
 import { patch } from "@web/core/utils/patch";
 import { FormController } from "@web/views/form/form_controller";
 import { x2ManyCommands } from "@web/core/orm_service";
+import { useSubEnv } from "@odoo/owl";
 
 patch(FormController.prototype, {
+    setup() {
+        super.setup(...arguments);
+        useSubEnv({
+            chatter: {
+                fetchData: true,
+                fetchMessages: true,
+            },
+        });
+    },
     onWillLoadRoot(nextConfiguration) {
         super.onWillLoadRoot(...arguments);
+        this.env.chatter.fetchData = true;
+        this.env.chatter.fetchMessages = true;
         const isSameThread =
             this.model.root?.resId === nextConfiguration.resId &&
             this.model.root?.resModel === nextConfiguration.resModel;
