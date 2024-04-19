@@ -15,6 +15,14 @@ from odoo.addons.hw_drivers.websocket_client import WebsocketClient
 _logger = logging.getLogger(__name__)
 
 try:
+    import schedule
+except ImportError:
+    schedule = None
+    # For now, it is intended to not be installed on the iot-box as it uses native Unix cron system
+    if platform.system() == 'Windows':
+        _logger.warning('Could not import library schedule')
+
+try:
     from dbus.mainloop.glib import DBusGMainLoop
 except ImportError:
     DBusGMainLoop = None
@@ -81,14 +89,16 @@ class Manager(Thread):
         """
 
         helpers.start_nginx_server()
-        if platform.system() == 'Linux':
+        _logger.info("IoT Box Image version: %s", helpers.get_version())
+        if platform.system() == 'Linux' and helpers.get_odoo_server_url():
             helpers.check_git_branch()
+            helpers.generate_password()
         is_certificate_ok, certificate_details = helpers.get_certificate_status()
         if not is_certificate_ok:
             _logger.warning("An error happened when trying to get the HTTPS certificate: %s",
                             certificate_details)
 
-        iot_client = WebsocketClient(helpers.get_odoo_server_url())
+        iot_client = helpers.get_odoo_server_url() and WebsocketClient(helpers.get_odoo_server_url())
         # We first add the IoT Box to the connected DB because IoT handlers cannot be downloaded if
         # the identifier of the Box is not found in the DB. So add the Box to the DB.
         self.send_alldevices(iot_client)
@@ -104,6 +114,9 @@ class Manager(Thread):
             except Exception as e:
                 _logger.error("Error in %s: %s", str(interface), e)
 
+        # Set scheduled actions
+        schedule and schedule.every().day.at("00:00").do(helpers.get_certificate_status)
+
         #Setup the websocket connection
         if helpers.get_odoo_server_url():
             iot_client.start()
@@ -116,6 +129,7 @@ class Manager(Thread):
                     self.previous_iot_devices = iot_devices.copy()
                     self.send_alldevices(iot_client)
                 time.sleep(3)
+                schedule and schedule.run_pending()
             except Exception:
                 # No matter what goes wrong, the Manager loop needs to keep running
                 _logger.error(format_exc())

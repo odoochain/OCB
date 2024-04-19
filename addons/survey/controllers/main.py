@@ -533,7 +533,7 @@ class Survey(http.Controller):
             answer, comment = self._extract_comment_from_answers(question, post.get(str(question.id)))
             errors.update(question.validate_question(answer, comment))
             if not errors.get(question.id):
-                answer_sudo._save_lines(question, answer, comment, overwrite_existing=survey_sudo.users_can_go_back)
+                answer_sudo._save_lines(question, answer, comment, overwrite_existing=survey_sudo.users_can_go_back or question.save_as_nickname or question.save_as_email)
 
         if errors and not (answer_sudo.survey_time_limit_reached or answer_sudo.question_time_limit_reached):
             return {}, {'error': 'validation', 'fields': errors}
@@ -635,7 +635,7 @@ class Survey(http.Controller):
         access_data = self._get_access_data(survey_token, answer_token, ensure_token=False, check_partner=False)
         if access_data['validity_code'] is not True and (
                 access_data['has_survey_access'] or
-                access_data['validity_code'] not in ['token_required', 'survey_closed', 'survey_void']):
+                access_data['validity_code'] not in ['token_required', 'survey_closed', 'survey_void', 'answer_deadline']):
             return self._redirect_with_error(access_data, access_data['validity_code'])
 
         survey_sudo, answer_sudo = access_data['survey_sudo'], access_data['answer_sudo']

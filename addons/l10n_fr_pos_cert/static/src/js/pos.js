@@ -22,7 +22,7 @@ patch(PosStore.prototype, {
         const result = super.disallowLineQuantityChange(...arguments);
         let selectedOrderLine = this.selectedOrder.get_selected_orderline();
         //Note: is_reward_line is a field in the pos_loyalty module
-        if (selectedOrderLine.is_reward_line) {
+        if (selectedOrderLine?.is_reward_line) {
             //Always allow quantity change for reward lines
             return false || result;
         }
@@ -39,6 +39,9 @@ patch(Order.prototype, {
     export_for_printing() {
         var result = super.export_for_printing(...arguments);
         result.l10n_fr_hash = this.get_l10n_fr_hash();
+        if (this.pos.is_french_country()){
+            result.pos_qr_code = false;
+        }
         return result;
     },
     set_l10n_fr_hash(l10n_fr_hash) {

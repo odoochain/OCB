@@ -369,8 +369,28 @@ class TestCalendar(TestResourceCommon):
         self.assertEqual(hours, 8)
 
     def test_calendar_working_hours_count(self):
-        calendar = self.env.ref('resource.resource_calendar_std_35h')
-        calendar.tz = 'UTC'
+        calendar = self.env['resource.calendar'].create({
+            'name': 'Standard 35 hours/week',
+            'company_id': self.env.company.id,
+            'tz': 'UTC',
+            'attendance_ids': [(5, 0, 0),
+                (0, 0, {'name': 'Monday Morning', 'dayofweek': '0', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
+                (0, 0, {'name': 'Monday Lunch', 'dayofweek': '0', 'hour_from': 12, 'hour_to': 13, 'day_period': 'lunch'}),
+                (0, 0, {'name': 'Monday Afternoon', 'dayofweek': '0', 'hour_from': 13, 'hour_to': 16, 'day_period': 'afternoon'}),
+                (0, 0, {'name': 'Tuesday Morning', 'dayofweek': '1', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
+                (0, 0, {'name': 'Tuesday Lunch', 'dayofweek': '1', 'hour_from': 12, 'hour_to': 13, 'day_period': 'lunch'}),
+                (0, 0, {'name': 'Tuesday Afternoon', 'dayofweek': '1', 'hour_from': 13, 'hour_to': 16, 'day_period': 'afternoon'}),
+                (0, 0, {'name': 'Wednesday Morning', 'dayofweek': '2', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
+                (0, 0, {'name': 'Wednesday Lunch', 'dayofweek': '2', 'hour_from': 12, 'hour_to': 13, 'day_period': 'lunch'}),
+                (0, 0, {'name': 'Wednesday Afternoon', 'dayofweek': '2', 'hour_from': 13, 'hour_to': 16, 'day_period': 'afternoon'}),
+                (0, 0, {'name': 'Thursday Morning', 'dayofweek': '3', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
+                (0, 0, {'name': 'Thursday Lunch', 'dayofweek': '3', 'hour_from': 12, 'hour_to': 13, 'day_period': 'lunch'}),
+                (0, 0, {'name': 'Thursday Afternoon', 'dayofweek': '3', 'hour_from': 13, 'hour_to': 16, 'day_period': 'afternoon'}),
+                (0, 0, {'name': 'Friday Morning', 'dayofweek': '4', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
+                (0, 0, {'name': 'Friday Lunch', 'dayofweek': '4', 'hour_from': 12, 'hour_to': 13, 'day_period': 'lunch'}),
+                (0, 0, {'name': 'Friday Afternoon', 'dayofweek': '4', 'hour_from': 13, 'hour_to': 16, 'day_period': 'afternoon'})
+            ],
+        })
         res = calendar.get_work_hours_count(
             fields.Datetime.from_string('2017-05-03 14:03:00'),  # Wednesday (8:00-12:00, 13:00-16:00)
             fields.Datetime.from_string('2017-05-04 11:03:00'),  # Thursday (8:00-12:00, 13:00-16:00)
@@ -631,16 +651,16 @@ class TestResMixin(TestResourceCommon):
     def test_adjust_calendar_timezone_before(self):
         # Calendar:
         # Every day 8-16
-        self.jean.tz = 'Japan'
+        self.jean.tz = 'Asia/Tokyo'
         self.calendar_jean.tz = 'Europe/Brussels'
 
         result = self.jean._adjust_to_calendar(
-            datetime_tz(2020, 4, 1, 0, 0, 0, tzinfo='Japan'),
-            datetime_tz(2020, 4, 1, 23, 59, 59, tzinfo='Japan'),
+            datetime_tz(2020, 4, 1, 0, 0, 0, tzinfo='Asia/Tokyo'),
+            datetime_tz(2020, 4, 1, 23, 59, 59, tzinfo='Asia/Tokyo'),
         )
         self.assertEqual(result[self.jean], (
-            datetime_tz(2020, 4, 1, 8, 0, 0, tzinfo='Japan'),
-            datetime_tz(2020, 4, 1, 16, 0, 0, tzinfo='Japan'),
+            datetime_tz(2020, 4, 1, 8, 0, 0, tzinfo='Asia/Tokyo'),
+            datetime_tz(2020, 4, 1, 16, 0, 0, tzinfo='Asia/Tokyo'),
         ), "It should have found a starting time the 1st")
 
     def test_adjust_calendar_timezone_after(self):
@@ -667,6 +687,14 @@ class TestResMixin(TestResourceCommon):
             datetime_tz(2018, 4, 6, 16, 0, 0, tzinfo=self.jean.tz),
         )[self.jean.id]
         self.assertEqual(data, {'days': 5, 'hours': 40})
+
+        # Viewing it as Bob
+        data = self.bob._get_work_days_data_batch(
+            datetime_tz(2018, 4, 2, 0, 0, 0, tzinfo=self.bob.tz),
+            datetime_tz(2018, 4, 6, 16, 0, 0, tzinfo=self.bob.tz),
+        )[self.bob.id]
+        self.assertEqual(data, {'days': 5, 'hours': 40})
+
 
         # Viewing it as Patel
         # Views from 2018/04/01 20:00:00 to 2018/04/06 12:00:00
@@ -1358,3 +1386,18 @@ class TestResource(TestResourceCommon):
         """
         self.env.company.resource_calendar_id = self.two_weeks_resource
         self.env['res.company'].create({'name': 'New Company'})
+
+    def test_empty_working_hours_for_two_weeks_resource(self):
+        resource = self._define_calendar_2_weeks(
+            'Two weeks resource',
+            [],
+            'Europe/Brussels'
+        )
+        resource_attendance = self.env['resource.calendar.attendance'].create({
+            'name': 'test',
+            'calendar_id': self.calendar_jean.id,
+            'hour_from': 0,
+            'hour_to': 0
+        })
+        resource_hour = resource._get_hours_per_day(resource_attendance)
+        self.assertEqual(resource_hour, 0.0)

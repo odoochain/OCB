@@ -55,18 +55,18 @@ export class MessageService {
     }
 
     async delete(message) {
-        if (message.isStarred) {
-            this.store.discuss.starred.counter--;
-            this.store.discuss.starred.messages.delete(message);
-        }
-        message.body = "";
-        message.attachments = [];
         await this.rpc("/mail/message/update_content", {
             attachment_ids: [],
             attachment_tokens: [],
             body: "",
             message_id: message.id,
         });
+        if (message.isStarred) {
+            this.store.discuss.starred.counter--;
+            this.store.discuss.starred.messages.delete(message);
+        }
+        message.body = "";
+        message.attachments = [];
     }
 
     /**
@@ -162,13 +162,13 @@ export class MessageService {
     }
 
     scheduledDateSimple(message) {
-        return message.scheduledDate.toLocaleString(DateTime.TIME_SIMPLE, {
+        return message.scheduledDate.toLocaleString(DateTime.TIME_24_SIMPLE, {
             locale: this.userService.lang?.replace("_", "-"),
         });
     }
 
     dateSimple(message) {
-        return message.datetime.toLocaleString(DateTime.TIME_SIMPLE, {
+        return message.datetime.toLocaleString(DateTime.TIME_24_SIMPLE, {
             locale: this.userService.lang?.replace("_", "-"),
         });
     }

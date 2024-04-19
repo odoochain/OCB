@@ -4,15 +4,15 @@
 # 
 # Translators:
 # Wil Odoo, 2023
-# Larissa Manderfeld, 2023
+# Larissa Manderfeld, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Larissa Manderfeld, 2023\n"
+"Last-Translator: Larissa Manderfeld, 2024\n"
 "Language-Team: German (https://app.transifex.com/odoo/teams/41243/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -69,8 +69,8 @@ msgstr "% abgeschlossen"
 #. odoo-python
 #: code:addons/survey/models/survey_user_input.py:0
 #, python-format
-msgid "%(participant) just participated in \"%(survey_title)s\"."
-msgstr "%(participant) hat gerade an „%(survey_title)s“ teilgenommen."
+msgid "%(participant)s just participated in \"%(survey_title)s\"."
+msgstr "%(participant)s hat gerade an „%(survey_title)s“ teilgenommen."
 
 #. module: survey
 #. odoo-python
@@ -478,6 +478,33 @@ msgstr ""
 "</span>"
 
 #. module: survey
+#: model_terms:ir.ui.view,arch_db:survey.question_result_number_or_date_or_datetime
+msgid ""
+"<span class=\"badge text-bg-secondary only_left_radius px-2 pt-1\">Avg "
+"</span>"
+msgstr ""
+"<span class=\"badge text-bg-secondary only_left_radius px-2 "
+"pt-1\">Durchschnitt </span>"
+
+#. module: survey
+#: model_terms:ir.ui.view,arch_db:survey.question_result_number_or_date_or_datetime
+msgid ""
+"<span class=\"badge text-bg-secondary only_left_radius px-2 pt-1\">Max "
+"</span>"
+msgstr ""
+"<span class=\"badge text-bg-secondary only_left_radius px-2 pt-1\">Max. "
+"</span>"
+
+#. module: survey
+#: model_terms:ir.ui.view,arch_db:survey.question_result_number_or_date_or_datetime
+msgid ""
+"<span class=\"badge text-bg-secondary only_left_radius px-2 pt-1\">Min "
+"</span>"
+msgstr ""
+"<span class=\"badge text-bg-secondary only_left_radius px-2 pt-1\">Min. "
+"</span>"
+
+#. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.survey_page_statistics_question
 msgid "<span class=\"d-block text-muted\">Responded</span>"
 msgstr "<span class=\"d-block text-muted\">Beantwortet</span>"
@@ -501,10 +528,10 @@ msgstr "<span class=\"d-block text-warning\">Teilweise</span>"
 #: model_terms:ir.ui.view,arch_db:survey.survey_fill_form_in_progress
 msgid ""
 "<span class=\"fw-bold text-muted ms-2 d-none d-md-inline\" id=\"enter-"
-"tooltip\"> or press Enter</span>"
+"tooltip\"> or press CTRL+Enter</span>"
 msgstr ""
 "<span class=\"fw-bold text-muted ms-2 d-none d-md-inline\" id=\"enter-"
-"tooltip\"> oder Enter drücken</span>"
+"tooltip\"> oder Strg+Enter drücken</span>"
 
 #. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.survey_fill_form_in_progress
@@ -521,12 +548,12 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:survey.survey_fill_form_in_progress
 msgid ""
 "<span class=\"fw-bold text-muted ms-2 d-none d-md-inline\">\n"
-"                        <span id=\"enter-tooltip\">or press Enter</span>\n"
-"                    </span>"
+"                    <span id=\"enter-tooltip\">or press CTRL+Enter</span>\n"
+"                </span>"
 msgstr ""
 "<span class=\"fw-bold text-muted ms-2 d-none d-md-inline\">\n"
-"                        <span id=\"enter-tooltip\">oder Enter drücken</span>\n"
-"                    </span>"
+"                    <span id=\"enter-tooltip\">oder Strg+Enter drücken</span>\n"
+"                </span>"
 
 #. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.survey_survey_view_kanban
@@ -616,9 +643,29 @@ msgid "<span class=\"text-muted\">Registered</span>"
 msgstr "<span class=\"text-muted\">Registriert</span>"
 
 #. module: survey
+#: model_terms:ir.ui.view,arch_db:survey.survey_page_statistics_question
+msgid "<span class=\"text-muted\">Responded</span>"
+msgstr "<span class=\"text-muted\">Beantwortet</span>"
+
+#. module: survey
+#: model_terms:ir.ui.view,arch_db:survey.survey_page_statistics_question
+msgid "<span class=\"text-muted\">Skipped</span>"
+msgstr "<span class=\"text-muted\">Übersprungen</span>"
+
+#. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.survey_survey_view_kanban
 msgid "<span class=\"text-muted\">Success</span>"
 msgstr "<span class=\"text-muted\">Erfolg</span>"
+
+#. module: survey
+#: model_terms:ir.ui.view,arch_db:survey.survey_page_statistics_question
+msgid "<span class=\"text-success\">Correct</span>"
+msgstr "<span class=\"text-success\">Korrekt</span>"
+
+#. module: survey
+#: model_terms:ir.ui.view,arch_db:survey.survey_page_statistics_question
+msgid "<span class=\"text-warning\">Partial</span>"
+msgstr "<span class=\"text-warning\">Teilweise</span>"
 
 #. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.survey_question_form
@@ -1623,8 +1670,8 @@ msgid "Corner Desk Right Sit"
 msgstr "Eckschreibtisch mit Sitz auf der rechten Seite"
 
 #. module: survey
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/survey/models/survey_user_input.py:0
 #: code:addons/survey/static/src/js/survey_result.js:0
 #: model:ir.model.fields,field_description:survey.field_survey_question_answer__is_correct
@@ -2553,8 +2600,8 @@ msgstr ""
 "und eine Antwortwertung, um berücksichtigt zu werden."
 
 #. module: survey
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/survey/models/survey_user_input.py:0
 #: code:addons/survey/static/src/js/survey_result.js:0
 #, python-format
@@ -3560,8 +3607,8 @@ msgid "Papyrus"
 msgstr "Papyrus"
 
 #. module: survey
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/survey/models/survey_user_input.py:0
 #: code:addons/survey/static/src/js/survey_result.js:0
 #, python-format
@@ -3783,6 +3830,11 @@ msgstr "Drucken"
 #: model:survey.question,title:survey.vendor_certification_page_1
 msgid "Products"
 msgstr "Produkte"
+
+#. module: survey
+#: model_terms:ir.ui.view,arch_db:survey.user_input_session_manage_content
+msgid "Progress bar"
+msgstr "Fortschrittsbalken"
 
 #. module: survey
 #: model:ir.model.fields,field_description:survey.field_survey_question_answer__question_id
@@ -4926,8 +4978,8 @@ msgstr ""
 "erreichen. Fühlen Sie sich frei, ihn anzupassen, wie Sie möchten!"
 
 #. module: survey
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/survey/models/survey_question.py:0
 #: code:addons/survey/static/src/js/survey_form.js:0
 #: code:addons/survey/tests/test_survey.py:0
@@ -5144,8 +5196,8 @@ msgstr ""
 "E-Mail-Adresse des Absenders."
 
 #. module: survey
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/survey/models/survey_user_input.py:0
 #: code:addons/survey/static/src/js/survey_result.js:0
 #, python-format
@@ -5753,11 +5805,6 @@ msgstr "Versuch(e)"
 #, python-format
 msgid "close"
 msgstr "Schließen"
-
-#. module: survey
-#: model_terms:ir.ui.view,arch_db:survey.survey_results_filters
-msgid "dropdown-item d-flex align-items-center justify-content-between"
-msgstr "dropdown-item d-flex align-items-center justify-content-between"
 
 #. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.survey_invite_view_form

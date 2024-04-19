@@ -188,6 +188,8 @@ def new_test_user(env, login='', groups='base.group_user', context=None, **kwarg
 
     return env['res.users'].with_context(**context).create(create_values)
 
+def loaded_demo_data(env):
+    return bool(env.ref('base.user_demo', raise_if_not_found=False))
 
 class RecordCapturer:
     def __init__(self, model, domain):
@@ -869,12 +871,11 @@ def fchain(future, next_callback):
 
     return new_future
 
-
-def save_test_file(test_name, content, prefix, extension='png', logger=_logger, document_type='Screenshot'):
+def save_test_file(test_name, content, prefix, extension='png', logger=_logger, document_type='Screenshot', date_format="%Y%m%d_%H%M%S_%f"):
     assert re.fullmatch(r'\w*_', prefix)
     assert re.fullmatch(r'[a-z]+', extension)
     assert re.fullmatch(r'\w+', test_name)
-    now = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    now = datetime.now().strftime(date_format)
     screenshots_dir = pathlib.Path(odoo.tools.config['screenshots']) / get_db_name() / 'screenshots'
     screenshots_dir.mkdir(parents=True, exist_ok=True)
     fname = f'{prefix}{now}_{test_name}.{extension}'
@@ -955,8 +956,11 @@ class ChromeBrowser:
     def stop(self):
         if hasattr(self, 'ws'):
             self._websocket_send('Page.stopScreencast')
-            if self.screencasts_dir and os.path.isdir(self.screencasts_frames_dir):
-                shutil.rmtree(self.screencasts_frames_dir)
+            if self.screencasts_dir:
+                screencasts_frames_dir = self.screencasts_frames_dir
+                self.screencasts_dir = None
+                if os.path.isdir(screencasts_frames_dir):
+                    shutil.rmtree(screencasts_frames_dir, ignore_errors=True)
 
             self._websocket_request('Page.stopLoading')
             self._websocket_request('Runtime.evaluate', params={'expression': """
@@ -1160,6 +1164,8 @@ class ChromeBrowser:
         while True: # or maybe until `self._result` is `done()`?
             try:
                 msg = self.ws.recv()
+                if not msg:
+                    continue
                 self._logger.debug('\n<- %s', msg)
             except websocket.WebSocketTimeoutException:
                 continue
@@ -1187,6 +1193,9 @@ class ChromeBrowser:
                         else:
                             f.set_exception(ChromeBrowserException(res['error']['message']))
             except Exception:
+                msg = str(msg)
+                if msg and len(msg) > 500:
+                    msg = msg[:500] + '...'
                 _logger.exception("While processing message %s", msg)
 
     def _websocket_request(self, method, *, params=None, timeout=10.0):
@@ -1337,14 +1346,21 @@ which leads to stray network requests and inconsistencies."""
             wait()
 
     def _handle_screencast_frame(self, sessionId, data, metadata):
+        if not self.screencasts_frames_dir:
+            return
         self._websocket_send('Page.screencastFrameAck', params={'sessionId': sessionId})
+        if not self.screencasts_dir:
+            return
         outfile = os.path.join(self.screencasts_frames_dir, 'frame_%05d.b64' % len(self.screencast_frames))
-        with open(outfile, 'w') as f:
-            f.write(data)
-            self.screencast_frames.append({
-                'file_path': outfile,
-                'timestamp': metadata.get('timestamp')
-            })
+        try:
+            with open(outfile, 'w') as f:
+                f.write(data)
+                self.screencast_frames.append({
+                    'file_path': outfile,
+                    'timestamp': metadata.get('timestamp')
+                })
+        except FileNotFoundError:
+            self._logger.debug('Useless screencast frame skipped: %s', outfile)
 
     _TO_LEVEL = {
         'debug': logging.DEBUG,
@@ -1378,6 +1394,8 @@ which leads to stray network requests and inconsistencies."""
             self._logger.debug('No screencast frames to encode')
             return None
 
+        self.stop_screencast()
+
         for f in self.screencast_frames:
             with open(f['file_path'], 'rb') as b64_file:
                 frame = base64.decodebytes(b64_file.read())
@@ -1405,7 +1423,11 @@ which leads to stray network requests and inconsistencies."""
                     duration = end_time - self.screencast_frames[i]['timestamp']
                     concat_file.write("file '%s'\nduration %s\n" % (frame_file_path, duration))
                 concat_file.write("file '%s'" % frame_file_path)  # needed by the concat plugin
-            r = subprocess.run([ffmpeg_path, '-intra', '-f', 'concat','-safe', '0', '-i', concat_script_path, '-pix_fmt', 'yuv420p', outfile])
+            try:
+                subprocess.run([ffmpeg_path, '-f', 'concat', '-safe', '0', '-i', concat_script_path, '-pix_fmt', 'yuv420p', '-g', '0', outfile], check=True)
+            except subprocess.CalledProcessError:
+                self._logger.error('Failed to encode screencast.')
+                return
             self._logger.log(25, 'Screencast in: %s', outfile)
         else:
             outfile = outfile.strip('.mp4')
@@ -1415,6 +1437,9 @@ which leads to stray network requests and inconsistencies."""
     def start_screencast(self):
         assert self.screencasts_dir
         self._websocket_send('Page.startScreencast')
+
+    def stop_screencast(self):
+        self._websocket_send('Page.stopScreencast')
 
     def set_cookie(self, name, value, path, domain):
         params = {'name': name, 'value': value, 'path': path, 'domain': domain}
@@ -1427,7 +1452,8 @@ which leads to stray network requests and inconsistencies."""
         self._websocket_request('Network.deleteCookies', params=params)
         return
 
-    def _wait_ready(self, ready_code, timeout=60):
+    def _wait_ready(self, ready_code=None, timeout=60):
+        ready_code = ready_code or "document.readyState === 'complete'"
         self._logger.info('Evaluate ready code "%s"', ready_code)
         start_time = time.time()
         result = None
@@ -1796,7 +1822,6 @@ class HttpCase(TransactionCase):
 
             # Needed because tests like test01.js (qunit tests) are passing a ready
             # code = ""
-            ready = ready or "document.readyState === 'complete'"
             self.assertTrue(browser._wait_ready(ready), 'The ready "%s" code was always falsy' % ready)
 
             error = False

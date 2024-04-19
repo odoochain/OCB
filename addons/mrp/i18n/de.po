@@ -3,16 +3,16 @@
 # 	* mrp
 # 
 # Translators:
-# Wil Odoo, 2023
-# Larissa Manderfeld, 2023
+# Wil Odoo, 2024
+# Larissa Manderfeld, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Larissa Manderfeld, 2023\n"
+"Last-Translator: Larissa Manderfeld, 2024\n"
 "Language-Team: German (https://app.transifex.com/odoo/teams/41243/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -832,8 +832,8 @@ msgid "Attachment URL"
 msgstr "URL des Dateianhangs"
 
 #. module: mrp
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/mrp/models/mrp_bom.py:0
 #: code:addons/mrp/static/src/components/bom_overview_line/mrp_bom_overview_line.js:0
 #: code:addons/mrp/static/src/components/bom_overview_table/mrp_bom_overview_table.xml:0
@@ -2078,6 +2078,11 @@ msgid "Displays the consumed Lot/Serial Numbers."
 msgstr "Zeigt die verbrauchten Los-/Seriennummern an."
 
 #. module: mrp
+#: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
+msgid "Displays the produced Lot/Serial Numbers."
+msgstr "Zeigt die produzierten Los-/Seriennummern an."
+
+#. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.stock_warn_insufficient_qty_unbuild_form_view
 msgid "Do you confirm you want to unbuild"
 msgstr "Bestätigen Sie, dass Sie"
@@ -3278,7 +3283,7 @@ msgstr "Fertigen (1 Schritt)"
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_stock_warehouse__manufacture_mto_pull_id
 msgid "Manufacture MTO Rule"
-msgstr "Einzelfertigungsregel"
+msgstr "Auftragsfertigungregel"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_stock_warehouse__manufacture_pull_id
@@ -3502,8 +3507,8 @@ msgid "Minimum Inventory Rule"
 msgstr "Mindestbestandsregel"
 
 #. module: mrp
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/mrp/report/mrp_report_bom_structure.py:0
 #: code:addons/mrp/report/mrp_report_mo_overview.py:0
 #: code:addons/mrp/static/src/components/bom_overview_special_line/mrp_bom_overview_special_line.xml:0
@@ -3899,8 +3904,8 @@ msgid "Operation not supported"
 msgstr "Vorgang nicht unterstützt"
 
 #. module: mrp
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/mrp/report/mrp_report_bom_structure.py:0
 #: code:addons/mrp/static/src/components/bom_overview_display_filter/mrp_bom_overview_display_filter.js:0
 #: code:addons/mrp/static/src/components/bom_overview_special_line/mrp_bom_overview_special_line.xml:0
@@ -4108,7 +4113,7 @@ msgstr ""
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_stock_warehouse__pbm_mto_pull_id
 msgid "Picking Before Manufacturing MTO Rule"
-msgstr "Kommissionierung vor Einzelfertigungsregel"
+msgstr "Kommissionierung vor Auftragsfertigungregel"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_stock_warehouse__pbm_type_id
@@ -4388,7 +4393,7 @@ msgstr "Produziert in Vorgang"
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_production_work_order_search
 #, python-format
 msgid "Product"
-msgstr "Produkte"
+msgstr "Produkt"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_bom_form_view
@@ -4442,6 +4447,11 @@ msgstr "Vorrätige Menge des Produkts"
 #: model_terms:ir.ui.view,arch_db:mrp.view_production_graph
 msgid "Product Quantity"
 msgstr "Produktmenge"
+
+#. module: mrp
+#: model:ir.model,name:mrp.model_product_replenish
+msgid "Product Replenish"
+msgstr "Produkt auffüllen"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_bom_line__product_tmpl_id
@@ -4826,7 +4836,7 @@ msgstr "Aufstocken"
 #: code:addons/mrp/models/stock_warehouse.py:0
 #, python-format
 msgid "Replenish on Order (MTO)"
-msgstr "Auffüllung nach Auftrag (Einzelfertigung)"
+msgstr "Auffüllung nach Auftrag (Auftragsfertigung)"
 
 #. module: mrp
 #. odoo-javascript
@@ -4843,6 +4853,7 @@ msgstr "Berichtswesen"
 #. module: mrp
 #. odoo-javascript
 #: code:addons/mrp/static/src/components/mo_overview/mrp_mo_overview.xml:0
+#: model_terms:ir.ui.view,arch_db:mrp.mo_overview_content
 #, python-format
 msgid "Reserved"
 msgstr "Reserviert"
@@ -4905,6 +4916,12 @@ msgid "Routing"
 msgstr "Arbeitsplan"
 
 #. module: mrp
+#: code:addons/mrp/models/stock_quant.py:0
+#, python-format
+msgid "Return to Inventory"
+msgstr "Zurück zum Bestand"
+
+#. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workcenter__routing_line_ids
 msgid "Routing Lines"
 msgstr "Arbeitsplanpositionen"
@@ -4913,7 +4930,7 @@ msgstr "Arbeitsplanpositionen"
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_routing_workcenter_form_view
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_routing_workcenter_tree_view
 msgid "Routing Work Centers"
-msgstr "Arbeitzplätze der Arbeitspläne"
+msgstr "Arbeitsplätze der Arbeitspläne"
 
 #. module: mrp
 #: model:ir.ui.menu,name:mrp.menu_procurement_compute_mrp
@@ -7039,17 +7056,6 @@ msgstr ""
 "                        </b>"
 
 #. module: mrp
-#. odoo-python
-#: code:addons/mrp/wizard/change_production_qty.py:0
-#, python-format
-msgid ""
-"You have already processed %(quantity)s. Please input a quantity higher than"
-" %(quantity)s "
-msgstr ""
-"Sie haben bereits %(quantity)s verarbeitet. Bitte geben Sie eine Menge ein, "
-"die größer als %(quantity)s ist. "
-
-#. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.view_assign_serial_numbers_production
 msgid ""
 "You have entered less serial numbers than the quantity to produce.<br/>\n"
@@ -7118,10 +7124,10 @@ msgstr "Sie müssen viel für das fertige Produkt bereitstellen."
 #. odoo-python
 #: code:addons/mrp/models/mrp_production.py:0
 #, python-format
-msgid "You need to supply Lot/Serial Number for products and 'picked' them:"
+msgid "You need to supply Lot/Serial Number for products and 'consume' them:"
 msgstr ""
 "Sie müssen eine Los-/Seriennummer für Produkte zur Verfügung stellen und "
-"diese kommissioniert haben:"
+"diese „verbrauchen“:"
 
 #. module: mrp
 #: model:ir.actions.act_window,name:mrp.action_mrp_production_backorder
@@ -7136,6 +7142,17 @@ msgid "You should provide a lot number for the final product."
 msgstr "Sie sollten eine Losnummer für das Endprodukt angeben."
 
 #. module: mrp
+#. odoo-python
+#: code:addons/mrp/models/stock_quant.py:0
+#, python-format
+msgid ""
+"You should update the components quantity instead of directly updating the "
+"quantity of the kit product."
+msgstr ""
+"Sie sollten die Menge der Komponenten aktualisieren, anstatt direkt die "
+"Menge des Bausatzprodukts zu aktualisieren."
+
+#. module: mrp
 #: model:ir.model.fields.selection,name:mrp.selection__stock_picking_type__done_mrp_lot_label_to_print__zpl
 #: model:ir.model.fields.selection,name:mrp.selection__stock_picking_type__generated_mrp_lot_label_to_print__zpl
 #: model:ir.model.fields.selection,name:mrp.selection__stock_picking_type__mrp_product_label_to_print__zpl
@@ -7148,15 +7165,15 @@ msgid "cancelled"
 msgstr "abgebrochen"
 
 #. module: mrp
-#: model_terms:ir.ui.view,arch_db:mrp.view_assign_serial_numbers_production
-msgid "copy paste a list and/or use Generate"
-msgstr "eine Liste kopieren und einfügen und/oder Generieren verwenden"
-
-#. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_bom_form_view
 #: model_terms:ir.ui.view,arch_db:mrp.res_config_settings_view_form
 msgid "days"
 msgstr "Tage"
+
+#. module: mrp
+#: model_terms:ir.ui.view,arch_db:mrp.view_assign_serial_numbers_production
+msgid "e.g. SN0000001"
+msgstr "z. B. SN0000001"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_workorder_form_view_inherit
@@ -7256,7 +7273,7 @@ msgstr "tatsächliche Dauer"
 #: code:addons/mrp/models/mrp_production.py:0
 #, python-format
 msgid "split"
-msgstr "aufteilen"
+msgstr "aufgeteilt"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_routing_workcenter_form_view

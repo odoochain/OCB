@@ -36,8 +36,7 @@ export function usePartnerAutocomplete() {
         return checkVATNumber(sanitizeVAT(value));
     }
 
-    async function checkGSTNumber(value) {
-        // Lazyload jsvat only if the component is being used.
+    function isGSTNumber(value) {
         // Check if the input is a valid GST number.
         let isGST = false;
         if (value && value.length === 15) {
@@ -55,10 +54,16 @@ export function usePartnerAutocomplete() {
         return isGST;
     }
 
+    async function isTAXNumber(value) {
+        const isVAT = await isVATNumber(value);
+        const isGST = isGSTNumber(value);
+        return isVAT || isGST;
+    }
+
     async function autocomplete(value) {
         value = value.trim();
 
-        const isVAT = await isVATNumber(value) || await checkGSTNumber(value);
+        const isVAT = await isTAXNumber(value);
         let odooSuggestions = [];
         let clearbitSuggestions = [];
         return new Promise((resolve, reject) => {
@@ -148,7 +153,7 @@ export function usePartnerAutocomplete() {
     function getCreateData(company) {
         const removeUselessFields = (company) => {
             // Delete attribute to avoid "Field_changed" errors
-            const fields = ['label', 'description', 'domain', 'logo', 'legal_name', 'ignored', 'email', 'bank_ids', 'classList'];
+            const fields = ['label', 'description', 'domain', 'logo', 'legal_name', 'ignored', 'email', 'bank_ids', 'classList', 'skip_enrich'];
             fields.forEach((field) => {
                 delete company[field];
             });
@@ -164,7 +169,7 @@ export function usePartnerAutocomplete() {
 
         return new Promise((resolve) => {
             // Fetch additional company info via Autocomplete Enrichment API
-            const enrichPromise = enrichCompany(company);
+            const enrichPromise = !company.skip_enrich ? enrichCompany(company) : false;
 
             // Get logo
             const logoPromise = company.logo ? getCompanyLogo(company.logo) : false;
@@ -185,6 +190,15 @@ export function usePartnerAutocomplete() {
                     }
                     else {
                         notification.add(company_data.error_message);
+                    }
+                    if (company_data.city !== undefined) {
+                        company.city = company_data.city;
+                    }
+                    if (company_data.street !== undefined) {
+                        company.street = company_data.street;
+                    }
+                    if (company_data.zip !== undefined) {
+                        company.zip = company_data.zip;
                     }
                     company_data = company;
                 }
@@ -328,5 +342,5 @@ export function usePartnerAutocomplete() {
             notification.add(title);
         }
     }
-    return { autocomplete, getCreateData, isVATNumber };
+    return { autocomplete, getCreateData, isTAXNumber };
 }

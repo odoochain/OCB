@@ -3,7 +3,10 @@
 # 	* base_automation
 # 
 # Translators:
-# Milan Bojovic, 2023
+# Dragan Vukosavljevic <dragan.vukosavljevic@gmail.com>, 2023
+# Martin Trigaux, 2023
+# Milan Bojovic <mbojovic@outlook.com>, 2023
+# コフスタジオ, 2024
 # 
 msgid ""
 msgstr ""
@@ -11,7 +14,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-10-26 21:55+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Milan Bojovic, 2023\n"
+"Last-Translator: コフスタジオ, 2024\n"
 "Language-Team: Serbian (https://app.transifex.com/odoo/teams/41243/sr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -27,6 +30,8 @@ msgid ""
 "\"\n"
 "                (ID:"
 msgstr ""
+"\"\n"
+"                (ID:"
 
 #. module: base_automation
 #. odoo-javascript
@@ -83,6 +88,8 @@ msgid ""
 "<code>time</code>, <code>datetime</code>, <code>dateutil</code>, "
 "<code>timezone</code>: useful Python libraries"
 msgstr ""
+"<code>time</code>, <code>datetime</code>, <code>dateutil</code>, "
+"<code>timezone</code>: useful Python libraries"
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_kanban
@@ -153,12 +160,12 @@ msgstr ""
 #: model:ir.model.fields,field_description:base_automation.field_ir_actions_server__name
 #: model:ir.model.fields,field_description:base_automation.field_ir_cron__name
 msgid "Action Name"
-msgstr ""
+msgstr "Naziv radnje"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__action_server_ids
 msgid "Actions"
-msgstr ""
+msgstr "Radnje"
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
@@ -203,7 +210,7 @@ msgstr ""
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__filter_domain
 msgid "Apply on"
-msgstr ""
+msgstr "Prijavite se na"
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
@@ -249,7 +256,7 @@ msgstr ""
 #: code:addons/base_automation/static/src/kanban_header_patch.js:0
 #, python-format
 msgid "Automations"
-msgstr ""
+msgstr "Automatizacija"
 
 #. module: base_automation
 #: model:ir.model.fields.selection,name:base_automation.selection__base_automation__trigger__on_time
@@ -259,7 +266,7 @@ msgstr ""
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__filter_pre_domain
 msgid "Before Update Domain"
-msgstr ""
+msgstr "Before Update Domain"
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
@@ -273,7 +280,7 @@ msgstr ""
 #: code:addons/base_automation/models/ir_actions_server.py:0
 #, python-format
 msgid "Compute"
-msgstr ""
+msgstr "Izracunaj"
 
 #. module: base_automation
 #. odoo-python
@@ -288,7 +295,7 @@ msgstr ""
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Create a new Record"
-msgstr ""
+msgstr "Create a new Record"
 
 #. module: base_automation
 #. odoo-python
@@ -303,7 +310,7 @@ msgstr ""
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Create next activity"
-msgstr ""
+msgstr "Create next activity"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__create_uid
@@ -320,12 +327,12 @@ msgstr "Kreirano"
 #: code:addons/base_automation/static/src/base_automation_trigger_selection_field.js:0
 #, python-format
 msgid "Custom"
-msgstr ""
+msgstr "Prilagođeno"
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
 msgid "Date Field"
-msgstr ""
+msgstr "Date Field"
 
 #. module: base_automation
 #. odoo-javascript
@@ -333,12 +340,12 @@ msgstr ""
 #: model:ir.model.fields.selection,name:base_automation.selection__base_automation__trg_date_range_type__day
 #, python-format
 msgid "Days"
-msgstr ""
+msgstr "Dani"
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
 msgid "Delay"
-msgstr ""
+msgstr "Kašnjenje"
 
 #. module: base_automation
 #: model:ir.model.fields,help:base_automation.field_base_automation__trg_date_range
@@ -351,12 +358,12 @@ msgstr ""
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__trg_date_range
 msgid "Delay after trigger date"
-msgstr ""
+msgstr "Kasnjenje nakon datuma okidaca"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__trg_date_range_type
 msgid "Delay type"
-msgstr ""
+msgstr "Tip Kasnjenja"
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
@@ -434,7 +441,7 @@ msgstr ""
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Execute Python Code"
-msgstr ""
+msgstr "Execute Python Code"
 
 #. module: base_automation
 #. odoo-javascript
@@ -442,14 +449,14 @@ msgstr ""
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Execute several actions"
-msgstr ""
+msgstr "Execute several actions"
 
 #. module: base_automation
 #. odoo-javascript
 #: code:addons/base_automation/static/src/base_automation_trigger_selection_field.js:0
 #, python-format
 msgid "External"
-msgstr ""
+msgstr "Spoljašnji"
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
@@ -459,7 +466,7 @@ msgstr ""
 #. module: base_automation
 #: model:ir.model.fields,help:base_automation.field_base_automation__on_change_field_ids
 msgid "Fields that trigger the onchange."
-msgstr ""
+msgstr "Fields that trigger the onchange."
 
 #. module: base_automation
 #. odoo-javascript
@@ -471,12 +478,12 @@ msgstr ""
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__model_is_mail_thread
 msgid "Has Mail Thread"
-msgstr ""
+msgstr "Has Mail Thread"
 
 #. module: base_automation
 #: model:ir.model.fields.selection,name:base_automation.selection__base_automation__trg_date_range_type__hour
 msgid "Hours"
-msgstr ""
+msgstr "Sati"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__id
@@ -496,6 +503,8 @@ msgid ""
 "If present, this condition must be satisfied before the update of the "
 "record."
 msgstr ""
+"If present, this condition must be satisfied before the update of the "
+"record."
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
@@ -505,7 +514,7 @@ msgstr ""
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__last_run
 msgid "Last Run"
-msgstr ""
+msgstr "Last Run"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__write_uid
@@ -520,7 +529,7 @@ msgstr "Poslednji put ažurirano"
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__least_delay_msg
 msgid "Least Delay Msg"
-msgstr ""
+msgstr "Least Delay Msg"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__log_webhook_calls
@@ -530,7 +539,7 @@ msgstr ""
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
 msgid "Logs"
-msgstr ""
+msgstr "Logovi"
 
 #. module: base_automation
 #. odoo-python
@@ -544,7 +553,7 @@ msgstr ""
 #. module: base_automation
 #: model:ir.model.fields.selection,name:base_automation.selection__base_automation__trg_date_range_type__minutes
 msgid "Minutes"
-msgstr ""
+msgstr "Minuti"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__model_id
@@ -554,7 +563,7 @@ msgstr "Model"
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__model_name
 msgid "Model Name"
-msgstr ""
+msgstr "Naziv modela"
 
 #. module: base_automation
 #. odoo-python
@@ -576,7 +585,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:base_automation.selection__base_automation__trg_date_range_type__month
 #, python-format
 msgid "Months"
-msgstr ""
+msgstr "Meseci"
 
 #. module: base_automation
 #. odoo-python
@@ -597,12 +606,12 @@ msgstr ""
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
 msgid "Notes"
-msgstr ""
+msgstr "Beleške"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__on_change_field_ids
 msgid "On Change Fields Trigger"
-msgstr ""
+msgstr "On Change Fields Trigger"
 
 #. module: base_automation
 #: model:ir.model.fields.selection,name:base_automation.selection__base_automation__trigger__on_change
@@ -659,14 +668,14 @@ msgstr ""
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Post as Message"
-msgstr ""
+msgstr "Post as Message"
 
 #. module: base_automation
 #. odoo-javascript
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Post as Note"
-msgstr ""
+msgstr "Post as Note"
 
 #. module: base_automation
 #: model:ir.model.fields.selection,name:base_automation.selection__base_automation__trigger__on_priority_set
@@ -719,7 +728,7 @@ msgstr ""
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Send SMS Text Message"
-msgstr ""
+msgstr "Pošalji SMS poruku"
 
 #. module: base_automation
 #. odoo-python
@@ -749,7 +758,7 @@ msgstr ""
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Send email"
-msgstr ""
+msgstr "Pošalji email"
 
 #. module: base_automation
 #. odoo-python
@@ -761,7 +770,7 @@ msgstr ""
 #. module: base_automation
 #: model:ir.model,name:base_automation.model_ir_actions_server
 msgid "Server Action"
-msgstr ""
+msgstr "Akcija servera"
 
 #. module: base_automation
 #: model:ir.model.fields,help:base_automation.field_base_automation__trg_selection_field_id
@@ -782,7 +791,7 @@ msgstr ""
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Specific User"
-msgstr ""
+msgstr "Specific User"
 
 #. module: base_automation
 #: model:ir.model.fields.selection,name:base_automation.selection__base_automation__trigger__on_stage_set
@@ -827,6 +836,8 @@ msgid ""
 "The \"%(trigger_value)s\" %(trigger_label)s can only be used with the "
 "\"%(state_value)s\" action type"
 msgstr ""
+"The \"%(trigger_value)s\" %(trigger_label)s can only be used with the "
+"\"%(state_value)s\" action type"
 
 #. module: base_automation
 #: model:ir.model.fields,help:base_automation.field_base_automation__trigger_field_ids
@@ -861,12 +872,12 @@ msgstr ""
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__trigger
 msgid "Trigger"
-msgstr ""
+msgstr "Okidač"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__trg_date_id
 msgid "Trigger Date"
-msgstr ""
+msgstr "Datum okidanja"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__trg_selection_field_id
@@ -881,7 +892,7 @@ msgstr ""
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__trigger_field_ids
 msgid "Trigger Fields"
-msgstr ""
+msgstr "Trigger Fields"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__trg_field_ref
@@ -896,12 +907,12 @@ msgstr ""
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.ir_actions_server_view_form_automation
 msgid "Type"
-msgstr ""
+msgstr "Vrsta"
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
@@ -913,7 +924,7 @@ msgstr ""
 #: code:addons/base_automation/models/ir_actions_server.py:0
 #, python-format
 msgid "Update"
-msgstr ""
+msgstr "Ažuriraj"
 
 #. module: base_automation
 #. odoo-javascript
@@ -921,23 +932,23 @@ msgstr ""
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Update the Record"
-msgstr ""
+msgstr "Update the Record"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__url
 msgid "Url"
-msgstr ""
+msgstr "Url"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_ir_actions_server__usage
 #: model:ir.model.fields,field_description:base_automation.field_ir_cron__usage
 msgid "Usage"
-msgstr ""
+msgstr "Koriscenje"
 
 #. module: base_automation
 #: model:ir.model.fields,field_description:base_automation.field_base_automation__trg_date_calendar_id
 msgid "Use Calendar"
-msgstr ""
+msgstr "Use Calendar"
 
 #. module: base_automation
 #: model:ir.model.fields.selection,name:base_automation.selection__base_automation__trigger__on_user_set
@@ -957,7 +968,7 @@ msgstr ""
 #: code:addons/base_automation/models/base_automation.py:0
 #, python-format
 msgid "Warning"
-msgstr ""
+msgstr "Pažnja"
 
 #. module: base_automation
 #. odoo-python
@@ -983,7 +994,7 @@ msgstr ""
 #: code:addons/base_automation/static/src/base_automation_actions_one2many_field.js:0
 #, python-format
 msgid "Weeks"
-msgstr ""
+msgstr "Nedelje"
 
 #. module: base_automation
 #: model:ir.model.fields,help:base_automation.field_base_automation__trg_date_calendar_id
@@ -998,11 +1009,13 @@ msgid ""
 "When should the condition be triggered.\n"
 "                If present, will be checked by the scheduler. If empty, will be checked at creation and update."
 msgstr ""
+"When should the condition be triggered.\n"
+"                If present, will be checked by the scheduler. If empty, will be checked at creation and update."
 
 #. module: base_automation
 #: model:ir.model.fields,help:base_automation.field_base_automation__active
 msgid "When unchecked, the rule is hidden and will not be executed."
-msgstr ""
+msgstr "When unchecked, the rule is hidden and will not be executed."
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form
@@ -1039,6 +1052,8 @@ msgid ""
 "You cannot send an email, add followers or create an activity for a deleted "
 "record.  It simply does not work."
 msgstr ""
+"You cannot send an email, add followers or create an activity for a deleted "
+"record.  It simply does not work."
 
 #. module: base_automation
 #: model_terms:ir.ui.view,arch_db:base_automation.view_base_automation_form

@@ -7,6 +7,7 @@ from datetime import datetime
 
 import odoo
 from odoo import fields, tools
+from odoo.fields import Command
 from odoo.tools import float_compare, mute_logger, test_reports
 from odoo.tests.common import Form
 from odoo.addons.point_of_sale.tests.common import TestPointOfSaleCommon
@@ -22,6 +23,58 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
         res = taxes.compute_all(price, currency, qty, product=product)
         untax = res['total_excluded']
         return untax, sum(tax.get('amount', 0.0) for tax in res['taxes'])
+
+    def _create_pos_order_for_postponed_invoicing(self):
+        # Create the order on the first of january.
+        with freeze_time('2020-01-01'):
+            product = self.env['product.product'].create({
+                'name': 'Dummy product',
+                'type': 'product',
+                'categ_id': self.env.ref('product.product_category_all').id,
+                'taxes_id': self.tax_sale_a.ids,
+            })
+            self.pos_config.open_ui()
+            pos_session = self.pos_config.current_session_id
+            untax, atax = self.compute_tax(product, 500, 1)
+            pos_order_data = {
+                'data': {
+                    'amount_paid': untax + atax,
+                    'amount_return': 0,
+                    'amount_tax': atax,
+                    'amount_total': untax + atax,
+                    'date_order': fields.Datetime.to_string(fields.Datetime.now()),
+                    'fiscal_position_id': False,
+                    'lines': [(0, 0, {
+                        'discount': 0,
+                        'id': 42,
+                        'pack_lot_ids': [],
+                        'price_unit': 500.0,
+                        'product_id': product.id,
+                        'price_subtotal': 500.0,
+                        'price_subtotal_incl': 575.0,
+                        'qty': 1,
+                        'tax_ids': [(6, 0, product.taxes_id.ids)]
+                    })],
+                    'name': 'Order 12345-123-1234',
+                    'partner_id': False,
+                    'pos_session_id': pos_session.id,
+                    'sequence_number': 2,
+                    'statement_ids': [(0, 0, {
+                        'amount': untax + atax,
+                        'name': fields.Datetime.now(),
+                        'payment_method_id': self.cash_payment_method.id
+                    })],
+                    'uid': '12345-123-1234',
+                    'user_id': self.env.uid
+                },
+                'id': '12345-123-1234',
+                'to_invoice': False
+            }
+            pos_order_id = self.PosOrder.create_from_ui([pos_order_data])[0]['id']
+            pos_order = self.env['pos.order'].browse(pos_order_id)
+            # End the session. The order has been created without any invoice.
+            self.pos_config.current_session_id.action_pos_session_closing_control()
+        return pos_order
 
     def test_order_refund(self):
         self.pos_config.open_ui()
@@ -186,6 +239,78 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
 
         self.assertEqual(refund.state, 'paid', "The refund is not marked as paid")
         current_session.action_pos_session_closing_control()
+
+    def test_order_partial_refund(self):
+        """ The purpose of this test is to make a partial refund of a pos order.
+        The amount to refund should depend on the article returned and once the
+        payment made, the refund order should be marked as paid."""
+        self.pos_config.open_ui()
+        current_session = self.pos_config.current_session_id
+
+        order = self.PosOrder.create({
+            'company_id': self.env.company.id,
+            'session_id': current_session.id,
+            'partner_id': self.partner1.id,
+            'pricelist_id': self.partner1.property_product_pricelist.id,
+            'lines': [
+                Command.create({
+                    'product_id': self.product_a.id,
+                    'price_unit': 10,
+                    'qty': 1,
+                    'price_subtotal': 10,
+                    'price_subtotal_incl': 10,
+                }),
+                Command.create({
+                    'product_id': self.product_b.id,
+                    'price_unit': 15,
+                    'qty': 1,
+                    'price_subtotal': 15,
+                    'price_subtotal_incl': 15,
+                }),
+                Command.create({
+                    'product_id': self.product3.id,
+                    'price_unit': 20,
+                    'qty': 1,
+                    'price_subtotal': 20,
+                    'price_subtotal_incl': 20,
+                })
+            ],
+            'amount_total': 45.0,
+            'amount_tax': 0.0,
+            'amount_paid': 0.0,
+            'amount_return': 0.0,
+        })
+
+        payment_context = {"active_ids": order.ids, "active_id": order.id}
+        order_payment = self.PosMakePayment.with_context(**payment_context).create({
+            'amount': order.amount_total,
+            'payment_method_id': self.cash_payment_method.id
+        })
+        order_payment.with_context(**payment_context).check()
+        self.assertEqual(order.amount_total, order.amount_paid)
+
+        refund_action = order.refund()
+        refund = self.PosOrder.browse(refund_action['res_id'])
+
+        with Form(refund) as refund_form:
+            with refund_form.lines.edit(0) as line:
+                line.qty = 0
+            with refund_form.lines.edit(1) as line_2:
+                line_2.qty = 0
+        refund = refund_form.save()
+
+        self.assertEqual(refund.amount_total, -20.0)
+
+        payment_context = {"active_ids": refund.ids, "active_id": refund.id}
+        refund_payment = self.PosMakePayment.with_context(**payment_context).create({
+            'amount': refund.amount_total,
+            'payment_method_id': self.cash_payment_method.id,
+        })
+        refund_payment.with_context(**payment_context).check()
+
+        self.assertEqual(refund.state, 'paid')
+        current_session.action_pos_session_closing_control()
+        self.assertEqual(current_session.state, 'closed')
 
     def test_order_to_picking(self):
         """
@@ -491,6 +616,13 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
 
     def test_order_to_invoice(self):
 
+        invoice_partner_address = self.env["res.partner"].create({
+            'name': "Test invoice address",
+            'street': "Invoice Street",
+            'type': 'invoice',
+            'parent_id': self.partner1.id,
+        })
+
         self.pos_config.open_ui()
         current_session = self.pos_config.current_session_id
 
@@ -545,6 +677,7 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
         # I generate an invoice from the order
         res = self.pos_order_pos1.action_pos_order_invoice()
         self.assertIn('res_id', res, "Invoice should be created")
+        self.assertEqual(self.pos_order_pos1.account_move.partner_id.id, invoice_partner_address.id, "Invoice address should be used")
 
         # I test that the total of the attached invoice is correct
         invoice = self.env['account.move'].browse(res['res_id'])
@@ -1094,6 +1227,11 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
         })
         order_payment.with_context(**payment_context).check()
 
+        # Make sure the invoice contains the payment method used
+        # TODO: We might want to test the whole PDF content in another test
+        invoice_pdf_content = str(order.account_move.get_invoice_pdf_report_attachment()[0])
+        self.assertTrue("using Cash" in invoice_pdf_content)
+
         # I create a refund
         refund_action = order.refund()
         refund = self.PosOrder.browse(refund_action['res_id'])
@@ -1175,55 +1313,9 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
            - Reconcile the receivable lines from the created misc entry with the ones from the created payment(s)
         """
         # Create the order on the first of january.
-        with freeze_time('2020-01-01'):
-            product = self.env['product.product'].create({
-                'name': 'Dummy product',
-                'type': 'product',
-                'categ_id': self.env.ref('product.product_category_all').id,
-                'taxes_id': self.tax_sale_a.ids,
-            })
-            self.pos_config.open_ui()
-            pos_session = self.pos_config.current_session_id
-            untax, atax = self.compute_tax(product, 500, 1)
-            pos_order_data = {
-                'data': {
-                    'amount_paid': untax + atax,
-                    'amount_return': 0,
-                    'amount_tax': atax,
-                    'amount_total': untax + atax,
-                    'date_order': fields.Datetime.to_string(fields.Datetime.now()),
-                    'fiscal_position_id': False,
-                    'lines': [(0, 0, {
-                        'discount': 0,
-                        'id': 42,
-                        'pack_lot_ids': [],
-                        'price_unit': 500.0,
-                        'product_id': product.id,
-                        'price_subtotal': 500.0,
-                        'price_subtotal_incl': 575.0,
-                        'qty': 1,
-                        'tax_ids': [(6, 0, product.taxes_id.ids)]
-                    })],
-                    'name': 'Order 12345-123-1234',
-                    'partner_id': False,
-                    'pos_session_id': pos_session.id,
-                    'sequence_number': 2,
-                    'statement_ids': [(0, 0, {
-                        'amount': untax + atax,
-                        'name': fields.Datetime.now(),
-                        'payment_method_id': self.cash_payment_method.id
-                    })],
-                    'uid': '12345-123-1234',
-                    'user_id': self.env.uid
-                },
-                'id': '12345-123-1234',
-                'to_invoice': False
-            }
-            pos_order_id = self.PosOrder.create_from_ui([pos_order_data])[0]['id']
-            pos_order = self.env['pos.order'].browse(pos_order_id)
-            # End the session. The order has been created without any invoice.
-            self.pos_config.current_session_id.action_pos_session_closing_control()
-            self.assertFalse(pos_order.account_move.exists())
+        pos_order = self._create_pos_order_for_postponed_invoicing()
+        self.assertFalse(pos_order.account_move.exists())
+
         # Client is back on the 3rd, asks for an invoice.
         with freeze_time('2020-01-03'):
             # We set the partner on the order
@@ -1258,6 +1350,23 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
             closing_entry_receivable_line = closing_entry.line_ids.filtered(lambda line: line.account_id == self.company_data['default_account_receivable'])  # Because the payment method use the default receivable
             statement_receivable_line = statement.line_ids.filtered(lambda line: line.account_id == self.company_data['default_account_receivable'] and line.name == pos_order.session_id.name)  # Because the payment method use the default receivable
             self.assertEqual(closing_entry_receivable_line.matching_number, statement_receivable_line.matching_number)
+
+    def test_sale_order_postponed_invoicing_anglosaxon(self):
+        """ Test the flow of creating an invoice later, after the POS session has been closed and everything has been processed
+        in the case of anglo-saxon accounting.
+        """
+        self.env.company.anglo_saxon_accounting = True
+        self.env.company.point_of_sale_update_stock_quantities = 'closing'
+        pos_order = self._create_pos_order_for_postponed_invoicing()
+
+        with freeze_time('2020-01-03'):
+            # We set the partner on the order
+            pos_order.partner_id = self.partner1.id
+            pos_order.action_pos_order_invoice()
+
+        picking_ids = pos_order.session_id.picking_ids
+        # only one product is leaving stock
+        self.assertEqual(sum(picking_ids.move_line_ids.mapped('quantity')), 1)
 
     def test_order_pos_tax_same_as_company(self):
         """Test that when the default_pos_receivable_account and the partner account_receivable are the same,
@@ -1830,3 +1939,208 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
         loaded_data = self.pos_config.current_session_id.load_pos_data()
 
         self.assertFalse(loaded_data.get('default_pricelist', False))
+
+    def test_refund_rounding_backend(self):
+        rouding_method = self.env['account.cash.rounding'].create({
+            'name': 'Rounding up',
+            'rounding': 0.05,
+            'rounding_method': 'UP',
+        })
+
+        self.env['product.product'].create({
+            'name': 'Product Test',
+            'available_in_pos': True,
+            'list_price': 49.99,
+            'taxes_id': False,
+        })
+
+        self.pos_config.write({
+            'rounding_method': rouding_method.id,
+            'cash_rounding': True,
+            'only_round_cash_method': True,
+        })
+
+        self.pos_config.open_ui()
+        current_session = self.pos_config.current_session_id
+        order = self.PosOrder.create({
+            'company_id': self.env.company.id,
+            'session_id': current_session.id,
+            'partner_id': False,
+            'lines': [(0, 0, {
+                'name': "OL/0001",
+                'product_id': self.env['product.product'].search([('available_in_pos', '=', True)], limit=1).id,
+                'price_unit': 49.99,
+                'discount': 0,
+                'qty': 1,
+                'tax_ids': [],
+                'price_subtotal': 49.99,
+                'price_subtotal_incl': 49.99,
+            })],
+            'pricelist_id': False,
+            'amount_paid': 50.0,
+            'amount_total': 49.99,
+            'amount_tax': 0.0,
+            'amount_return': 0.0,
+            'to_invoice': False,
+            'last_order_preparation_change': {}
+        })
+        #make payment
+        payment_context = {"active_ids": order.ids, "active_id": order.id}
+        order_payment = self.PosMakePayment.with_context(**payment_context).create({
+            'amount': order.amount_total,
+            'payment_method_id': self.cash_payment_method.id
+        })
+        order_payment.with_context(**payment_context).check()
+
+        refund = order.refund()
+        refund = self.PosOrder.browse(refund['res_id'])
+        payment_context = {"active_ids": refund.ids, "active_id": refund.id}
+        refund_payment = self.PosMakePayment.with_context(**payment_context).create({
+            'payment_method_id': self.cash_payment_method.id
+        })
+        self.assertEqual(refund_payment.amount, -50.0)
+        refund_payment.with_context(**payment_context).check()
+        current_session.action_pos_session_closing_control()
+        self.assertEqual(refund.amount_total, -49.99)
+        self.assertEqual(refund.amount_paid, -50.0)
+        self.assertEqual(current_session.state, 'closed')
+    def test_order_different_lots(self):
+        self.pos_config.open_ui()
+        current_session = self.pos_config.current_session_id
+        self.stock_location = self.company_data['default_warehouse'].lot_stock_id
+        self.product2 = self.env['product.product'].create({
+            'name': 'Product A',
+            'type': 'product',
+            'tracking': 'lot',
+        })
+
+        lot1 = self.env['stock.lot'].create({
+            'name': '1001',
+            'product_id': self.product2.id,
+        })
+        lot2 = self.env['stock.lot'].create({
+            'name': '1002',
+            'product_id': self.product2.id,
+        })
+
+        quant1 = self.env['stock.quant'].with_context(inventory_mode=True).create({
+            'product_id': self.product2.id,
+            'inventory_quantity': 5,
+            'location_id': self.stock_location.id,
+            'lot_id': lot1.id
+        })
+        quant1.action_apply_inventory()
+        quant2 = self.env['stock.quant'].with_context(inventory_mode=True).create({
+            'product_id': self.product2.id,
+            'inventory_quantity': 5,
+            'location_id': self.stock_location.id,
+            'lot_id': lot2.id
+        })
+        quant2.action_apply_inventory()
+
+        order = self.PosOrder.create({
+            'company_id': self.env.company.id,
+            'session_id': current_session.id,
+            'partner_id': self.partner1.id,
+            'lines': [(0, 0, {
+                'name': "OL/0001",
+                'product_id': self.product2.id,
+                'price_unit': 6,
+                'discount': 0,
+                'qty': 2,
+                'tax_ids': [[6, False, []]],
+                'price_subtotal': 12,
+                'price_subtotal_incl': 12,
+                'pack_lot_ids': [
+                    [0, 0, {'lot_name': '1001'}],
+                ]
+            }),
+            (0, 0, {
+                'name': "OL/0002",
+                'product_id': self.product2.id,
+                'price_unit': 6,
+                'discount': 0,
+                'qty': 1,
+                'tax_ids': [[6, False, []]],
+                'price_subtotal': 6,
+                'price_subtotal_incl': 6,
+                'pack_lot_ids': [
+                    [0, 0, {'lot_name': '1002'}],
+                ]
+            })],
+            'pricelist_id': self.pos_config.pricelist_id.id,
+            'amount_paid': 18.0,
+            'amount_total': 18.0,
+            'amount_tax': 0.0,
+            'amount_return': 0.0,
+            'to_invoice': False,
+            'last_order_preparation_change': '{}'
+            })
+
+        payment_context = {"active_ids": order.ids, "active_id": order.id}
+        order_payment = self.PosMakePayment.with_context(**payment_context).create({
+            'amount': order.amount_total,
+            'payment_method_id': self.bank_payment_method.id
+        })
+        order_payment.with_context(**payment_context).check()
+        self.pos_config.current_session_id.action_pos_session_closing_control()
+        self.assertEqual(quant2.quantity, 4)
+        self.assertEqual(quant1.quantity, 3)
+
+    def test_pos_branch_account(self):
+        branch = self.env['res.company'].create({
+            'name': 'Branch 1',
+            'parent_id': self.env.company.id,
+            'chart_template': self.env.company.chart_template,
+        })
+
+        outstanding_receipts = self.env.company.account_journal_payment_debit_account_id.copy()
+        outstanding_receipts.company_id = branch
+
+        self.env.cr.precommit.run()
+        branch.account_journal_payment_debit_account_id = outstanding_receipts
+
+        bank_payment_method = self.bank_payment_method.copy()
+        bank_payment_method.company_id = branch.id
+
+        b_pos_config = self.env['pos.config'].with_company(branch).create({
+            'name': 'Main',
+            'journal_id': self.company_data['default_journal_sale'].id,
+            'invoice_journal_id': self.company_data['default_journal_sale'].id,
+            'payment_method_ids': [(4, bank_payment_method.id)],
+        })
+
+        b_pos_config.open_ui()
+        current_session = b_pos_config.current_session_id
+
+        order = self.PosOrder.create({
+            'session_id': current_session.id,
+            'partner_id': self.partner1.id,
+            'lines': [(0, 0, {
+                'name': "OL/0001",
+                'product_id': self.product3.id,
+                'price_unit': 450,
+                'discount': 0,
+                'qty': 1,
+                'tax_ids': [[6, False, []]],
+                'price_subtotal': 450,
+                'price_subtotal_incl': 450,
+            })],
+            'pricelist_id': b_pos_config.pricelist_id.id,
+            'amount_paid': 450.0,
+            'amount_total': 450.0,
+            'amount_tax': 0.0,
+            'amount_return': 0.0,
+            'to_invoice': False,
+            'last_order_preparation_change': '{}'
+        })
+
+        payment_context = {"active_ids": order.ids, "active_id": order.id}
+        order_payment = self.PosMakePayment.with_context(payment_context).create({
+            'amount': order.amount_total,
+            'payment_method_id': bank_payment_method.id,
+        })
+        order_payment.with_context(payment_context).check()
+        b_pos_config.current_session_id.action_pos_session_closing_control()
+
+        self.assertEqual(current_session.state, 'closed', msg='State of current session should be closed.')

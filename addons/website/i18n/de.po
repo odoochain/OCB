@@ -3,16 +3,17 @@
 # 	* website
 # 
 # Translators:
-# Wil Odoo, 2023
-# Larissa Manderfeld, 2023
+# Martin Trigaux, 2024
+# Wil Odoo, 2024
+# Larissa Manderfeld, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:54+0000\n"
+"POT-Creation-Date: 2024-01-29 10:44+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Larissa Manderfeld, 2023\n"
+"Last-Translator: Larissa Manderfeld, 2024\n"
 "Language-Team: German (https://app.transifex.com/odoo/teams/41243/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1070,12 +1071,12 @@ msgstr ""
 msgid ""
 "<small>\n"
 "                            <i class=\"fa fa-1x fa-fw fa-envelope me-1\"/>\n"
-"                             info@yourcompany.example.com\n"
+"                            info@yourcompany.example.com\n"
 "                        </small>"
 msgstr ""
 "<small>\n"
 "                            <i class=\"fa fa-1x fa-fw fa-envelope me-1\"/>\n"
-"                             info@yourcompany.example.com\n"
+"                            info@yourcompany.example.com\n"
 "                        </small>"
 
 #. module: website
@@ -1544,7 +1545,7 @@ msgstr ""
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_picture
 msgid "A punchy Headline"
-msgstr "Eine einprägsame Überschrift"
+msgstr "Eine aussagekräftige Überschrift"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
@@ -1587,6 +1588,13 @@ msgstr ""
 
 #. module: website
 #. odoo-javascript
+#: code:addons/website/static/src/xml/web_editor.xml:0
+#, python-format
+msgid "AI"
+msgstr "KI"
+
+#. module: website
+#. odoo-javascript
 #: code:addons/website/static/src/xml/website.editor.xml:0
 #, python-format
 msgid "API Key"
@@ -1620,6 +1628,13 @@ msgstr "Über uns"
 #: model_terms:ir.ui.view,arch_db:website.template_footer_minimalist
 msgid "About us"
 msgstr "Über uns"
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/website.py:0
+#, python-format
+msgid "Access Denied"
+msgstr "Zugriff verweigert"
 
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website_visitor__access_token
@@ -1717,7 +1732,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website.s_image_gallery_options
 #, python-format
 msgid "Add"
-msgstr "Hinzufügen von"
+msgstr "Hinzufügen:"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.grid_layout_options
@@ -1854,6 +1869,11 @@ msgid "Add a new field at the end"
 msgstr "Ein neues Feld am Ende hinzufügen"
 
 #. module: website
+#: model_terms:ir.ui.view,arch_db:website.view_view_form_extend
+msgid "Add groups in the \"Access Rights\" tab below."
+msgstr "Fügen Sie Gruppen unten im Reiter „Zugriffsrechte“ hinzu."
+
+#. module: website
 #. odoo-python
 #: code:addons/website/models/res_lang.py:0
 #, python-format
@@ -1866,6 +1886,13 @@ msgstr "Sprachen hinzufügen"
 #, python-format
 msgid "Add new %s"
 msgstr "%s hinzufügen"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/components/dialog/add_page_dialog.xml:0
+#, python-format
+msgid "Add page template"
+msgstr "Seitenvorlage hinzufügen"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.external_snippets
@@ -2225,6 +2252,13 @@ msgstr "Und ein toller Untertitel"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/xml/web_editor.xml:0
+#, python-format
+msgid "Animate"
+msgstr "Animieren"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/xml/web_editor.xml:0
 #: code:addons/website/static/src/xml/web_editor.xml:0
 #, python-format
 msgid "Animate text"
@@ -2445,6 +2479,13 @@ msgstr "Hintergrund"
 #, python-format
 msgid "Background Shape"
 msgstr "Hintergrundform"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/xml/website.background.video.xml:0
+#, python-format
+msgid "Background video"
+msgstr "Hindergrundvideo"
 
 #. module: website
 #. odoo-javascript
@@ -2928,7 +2969,10 @@ msgid "Careful"
 msgstr "Vorsichtig"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_dynamic_snippet_carousel/000.xml:0
 #: model_terms:ir.ui.view,arch_db:website.snippets
+#, python-format
 msgid "Carousel"
 msgstr "Karussell"
 
@@ -3222,6 +3266,13 @@ msgstr "Editor schließen"
 #: model_terms:ir.ui.view,arch_db:website.s_product_list
 msgid "Clothes"
 msgstr "Bekleidung"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/client_actions/configurator/configurator.xml:0
+#, python-format
+msgid "Clothes, Marketing, ..."
+msgstr "Kleidung, Marketing ..."
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
@@ -3927,6 +3978,13 @@ msgid "Default Access Rights"
 msgstr "Standard-Zugriffsrechte"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_searchbar/options.js:0
+#, python-format
+msgid "Default Input Style"
+msgstr "Standardeingabetyp"
+
+#. module: website
 #: model:ir.model.fields,field_description:website.field_website__default_lang_id
 msgid "Default Language"
 msgstr "Standardsprache"
@@ -4367,6 +4425,18 @@ msgid "Display this website when users visit this domain"
 msgstr "Zeigen Sie diese Website an, wenn Benutzer diese Domain besuchen"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/components/edit_head_body_dialog/edit_head_body_dialog.xml:0
+#: code:addons/website/static/src/xml/website.editor.xml:0
+#, python-format
+msgid ""
+"Do not copy/paste code you do not understand, this could put your data at "
+"risk."
+msgstr ""
+"Kopieren oder fügen Sie keinen Code ein, den Sie nicht verstehen, da dies "
+"Ihre Daten gefährden könnte."
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_mega_menu_cards
 msgid ""
 "Do you need specific information? Our specialists will help you with "
@@ -4715,6 +4785,7 @@ msgstr "Bauen Sie Ihre Marke mit uns aus"
 
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website_visitor__email
+#: model_terms:ir.ui.view,arch_db:website.s_share
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
 #: model_terms:ir.ui.view,arch_db:website.website_visitor_view_kanban
 #: model_terms:ir.ui.view,arch_db:website.website_visitor_view_tree
@@ -5005,9 +5076,19 @@ msgid "Extra Large"
 msgstr "Extragroß"
 
 #. module: website
+#: model_terms:ir.ui.view,arch_db:website.layout
+msgid "Extra items button"
+msgstr "Schaltfläche für zusätzliche Elemente"
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.searchbar_input_snippet_options
 msgid "Extra link"
 msgstr "Extra-Link"
+
+#. module: website
+#: model_terms:ir.ui.view,arch_db:website.footer_custom
+msgid "Extra page"
+msgstr "Zusatzseite"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
@@ -5025,8 +5106,19 @@ msgid "F.A.Q."
 msgstr "F.A.Q."
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_facebook_page/000.js:0
+#: code:addons/website/static/src/snippets/s_social_media/options.js:0
+#: model_terms:ir.ui.view,arch_db:website.footer_custom
+#: model_terms:ir.ui.view,arch_db:website.header_social_links
+#: model_terms:ir.ui.view,arch_db:website.s_mega_menu_odoo_menu
+#: model_terms:ir.ui.view,arch_db:website.s_share
+#: model_terms:ir.ui.view,arch_db:website.s_social_media
 #: model_terms:ir.ui.view,arch_db:website.snippets
+#: model_terms:ir.ui.view,arch_db:website.template_footer_centered
+#: model_terms:ir.ui.view,arch_db:website.template_footer_headline
 #: model_terms:ir.ui.view,arch_db:website.template_footer_links
+#, python-format
 msgid "Facebook"
 msgstr "Facebook"
 
@@ -5580,6 +5672,15 @@ msgid "Get in touch"
 msgstr "Kontakt aufnehmen"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_social_media/options.js:0
+#: model_terms:ir.ui.view,arch_db:website.s_mega_menu_odoo_menu
+#: model_terms:ir.ui.view,arch_db:website.s_social_media
+#, python-format
+msgid "GitHub"
+msgstr "GitHub"
+
+#. module: website
 #: model:ir.model.fields,field_description:website.field_website__social_github
 msgid "GitHub Account"
 msgstr "GitHub-Konto"
@@ -5684,6 +5785,18 @@ msgstr "API-Schlüssel von Google Maps"
 #: model:ir.model.fields,field_description:website.field_website__google_search_console
 msgid "Google Search Console"
 msgstr "Google-Suchkonsole"
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/res_config_settings.py:0
+#: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
+#, python-format
+msgid ""
+"Google doesn't need to be pinged anymore. It will automatically fetch your "
+"/sitemap.xml."
+msgstr ""
+"Google braucht nicht mehr gepingt zu werden. Ihre /sitemap.xml wird "
+"automatisch abgerufen."
 
 #. module: website
 #: model:ir.model.fields,help:website.field_res_config_settings__google_search_console
@@ -5988,7 +6101,10 @@ msgid "High"
 msgstr "Hoch"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/xml/web_editor.xml:0
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
+#, python-format
 msgid "Highlight"
 msgstr "Hervorheben"
 
@@ -6050,8 +6166,8 @@ msgid "Home page of the current website"
 msgstr "Startseite der aktuellen Website"
 
 #. module: website
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/website/models/website.py:0
 #: code:addons/website/static/src/client_actions/website_preview/website_preview.xml:0
 #: model:ir.model.fields,field_description:website.field_website_page__is_homepage
@@ -6255,6 +6371,18 @@ msgstr ""
 "Wenn Sie die aktuellen Bearbeitungen verwerfen, gehen alle nicht "
 "gespeicherten Änderungen verloren. Sie können abbrechen, um zum "
 "Bearbeitungsmodus zurückzukehren."
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/components/resource_editor/resource_editor_warning.xml:0
+#: code:addons/website/static/src/xml/website.editor.xml:0
+#, python-format
+msgid ""
+"If you need to add analytics or marketing tags, inject code in your <head> "
+"or <body> instead."
+msgstr ""
+"Wenn Sie Analyse- oder Marketing-Stichwörter hinzufügen müssen, fügen Sie "
+"stattdessen Code in Ihre <head> oder Ihren <body> ein."
 
 #. module: website
 #. odoo-javascript
@@ -6556,7 +6684,15 @@ msgid "Inset"
 msgstr "Eingesetzt"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_instagram_page/000.js:0
+#: code:addons/website/static/src/snippets/s_social_media/options.js:0
+#: model_terms:ir.ui.view,arch_db:website.header_social_links
+#: model_terms:ir.ui.view,arch_db:website.s_mega_menu_odoo_menu
+#: model_terms:ir.ui.view,arch_db:website.s_social_media
+#: model_terms:ir.ui.view,arch_db:website.template_footer_headline
 #: model_terms:ir.ui.view,arch_db:website.template_footer_links
+#, python-format
 msgid "Instagram"
 msgstr "Instagram"
 
@@ -7195,7 +7331,10 @@ msgid "Library"
 msgstr "Bibliothek"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_searchbar/options.js:0
 #: model_terms:ir.ui.view,arch_db:website.s_faq_collapse_options
+#, python-format
 msgid "Light"
 msgstr "Hell"
 
@@ -7260,6 +7399,19 @@ msgstr "Link-Schaltfläche"
 #: model_terms:ir.ui.view,arch_db:website.color_combinations_debug_view
 msgid "Link text"
 msgstr "Linktext"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_social_media/options.js:0
+#: model_terms:ir.ui.view,arch_db:website.footer_custom
+#: model_terms:ir.ui.view,arch_db:website.header_social_links
+#: model_terms:ir.ui.view,arch_db:website.s_mega_menu_odoo_menu
+#: model_terms:ir.ui.view,arch_db:website.s_share
+#: model_terms:ir.ui.view,arch_db:website.s_social_media
+#: model_terms:ir.ui.view,arch_db:website.template_footer_centered
+#, python-format
+msgid "LinkedIn"
+msgstr "LinkedIn"
 
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website__social_linkedin
@@ -7343,6 +7495,7 @@ msgstr "Lädt …"
 
 #. module: website
 #. odoo-javascript
+#: code:addons/website/static/src/client_actions/configurator/configurator.xml:0
 #: code:addons/website/static/src/js/editor/snippets.editor.js:0
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
 #, python-format
@@ -7438,6 +7591,7 @@ msgid "Management"
 msgstr "Verwaltung"
 
 #. module: website
+#: model_terms:ir.ui.view,arch_db:website.s_map
 #: model_terms:ir.ui.view,arch_db:website.snippets
 msgid "Map"
 msgstr "Karte"
@@ -7538,6 +7692,13 @@ msgid "Media heading"
 msgstr "Medientitel"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/js/content/snippets.animation.js:0
+#, python-format
+msgid "Media video"
+msgstr "Medienvideo"
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_three_columns_menu
 msgid "Mediterranean buffet of starters, main dishes and desserts"
 msgstr "Mediterranes Buffet mit Vorspeisen, Hauptgerichten und Desserts"
@@ -7574,6 +7735,11 @@ msgstr "Mega-Menü-Klassen"
 #: model:ir.model.fields,field_description:website.field_website_menu__mega_menu_content
 msgid "Mega Menu Content"
 msgstr "Mega-Menü-Inhalt"
+
+#. module: website
+#: model_terms:ir.ui.view,arch_db:website.s_mega_menu_menu_image_menu
+msgid "Mega menu default image"
+msgstr "Standardbild für Megamenü"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_mega_menu_menus_logos
@@ -8128,6 +8294,11 @@ msgid "Next"
 msgstr "Weiter"
 
 #. module: website
+#: model_terms:ir.ui.view,arch_db:website.step_wizard
+msgid "Next:"
+msgstr "Als nächstes:"
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_tabs_options
 msgid "No Slide Effect"
 msgstr "Kein Schiebeeffekt"
@@ -8559,6 +8730,13 @@ msgstr "Jetzt bestellen"
 #, python-format
 msgid "Other Information:"
 msgstr "Weitere Informationen:"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_social_media/options.js:0
+#, python-format
+msgid "Other social network"
+msgstr "Anderes soziales Netzwerk"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_landing_s_text_image
@@ -9019,6 +9197,11 @@ msgid "Pills"
 msgstr "Viereck"
 
 #. module: website
+#: model_terms:ir.ui.view,arch_db:website.s_share
+msgid "Pinterest"
+msgstr "Pinterest"
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
 msgid "Placeholder"
 msgstr "Platzhalter"
@@ -9096,6 +9279,7 @@ msgid "Points of sale"
 msgstr "Kassensystem"
 
 #. module: website
+#: model_terms:ir.ui.view,arch_db:website.s_popup
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
 #: model_terms:ir.ui.view,arch_db:website.snippets
 msgid "Popup"
@@ -9306,6 +9490,11 @@ msgid "Progress Tracking"
 msgstr "Fortschrittskontrolle"
 
 #. module: website
+#: model_terms:ir.ui.view,arch_db:website.s_progress_bar
+msgid "Progress bar"
+msgstr "Fortschrittsbalken"
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_mega_menu_odoo_menu
 msgid "Projectors"
 msgstr "Projektoren"
@@ -9421,6 +9610,11 @@ msgstr "Qweb"
 #: model:ir.model,name:website.model_ir_qweb_field_contact
 msgid "Qweb Field Contact"
 msgstr "Qweb-Feld Kontakt"
+
+#. module: website
+#: model:ir.model,name:website.model_ir_qweb_field_html
+msgid "Qweb Field HTML"
+msgstr "Qweb-Feld HTML"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_chart_options
@@ -10824,8 +11018,11 @@ msgid "Structure"
 msgstr "Struktur"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_searchbar/options.js:0
 #: model_terms:ir.ui.view,arch_db:website.s_tabs_options
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
+#, python-format
 msgid "Style"
 msgstr "Stil"
 
@@ -11105,6 +11302,17 @@ msgstr ""
 "Das kompakte Ladeetui ermöglicht bequemes Aufladen unterwegs. Mit einer "
 "Akkulaufzeit von bis zu 17 Stunden können Sie Ihre Lieblingsmusik ohne "
 "Unterbrechung genießen."
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/res_company.py:0
+#, python-format
+msgid ""
+"The company %(company_name)r cannot be archived because it has a linked website %(website_name)r.\n"
+"Change that website's company first."
+msgstr ""
+"Das Unternehmen %(company_name)r kann nicht archiviert werden, weil es eine verlinkte Website %(website_name)r hat.\n"
+"Ändere zuerst das Unternehmen dieser Website."
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
@@ -11538,6 +11746,16 @@ msgstr ""
 "länger."
 
 #. module: website
+#: model:ir.ui.view,website_meta_description:website.contactus
+msgid "This is the contact us page of the website"
+msgstr "Das ist die „Kontaktieren Sie uns“-Seite der Website"
+
+#. module: website
+#: model:ir.ui.view,website_meta_description:website.homepage
+msgid "This is the homepage of the website"
+msgstr "Das ist die Startseite der Website"
+
+#. module: website
 #. odoo-python
 #: code:addons/website/controllers/form.py:0
 #, python-format
@@ -11614,6 +11832,15 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
 msgid "Thumbnails"
 msgstr "Vorschaubilder"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_social_media/options.js:0
+#: model_terms:ir.ui.view,arch_db:website.s_mega_menu_odoo_menu
+#: model_terms:ir.ui.view,arch_db:website.s_social_media
+#, python-format
+msgid "TikTok"
+msgstr "TikTok"
 
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website__social_tiktok
@@ -11881,7 +12108,17 @@ msgid "Turn every feature into a benefit for your reader."
 msgstr "Verwandeln Sie jede Funktion in einen Nutzen für Ihren Leser."
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_social_media/options.js:0
+#: model_terms:ir.ui.view,arch_db:website.footer_custom
+#: model_terms:ir.ui.view,arch_db:website.header_social_links
+#: model_terms:ir.ui.view,arch_db:website.s_mega_menu_odoo_menu
+#: model_terms:ir.ui.view,arch_db:website.s_share
+#: model_terms:ir.ui.view,arch_db:website.s_social_media
+#: model_terms:ir.ui.view,arch_db:website.template_footer_centered
+#: model_terms:ir.ui.view,arch_db:website.template_footer_headline
 #: model_terms:ir.ui.view,arch_db:website.template_footer_links
+#, python-format
 msgid "Twitter"
 msgstr "Twitter"
 
@@ -12314,6 +12551,7 @@ msgid "Vertical Alignment"
 msgstr "Vertikale Ausrichtung"
 
 #. module: website
+#: model_terms:ir.ui.view,arch_db:website.s_video
 #: model_terms:ir.ui.view,arch_db:website.snippet_options_background_options
 #: model_terms:ir.ui.view,arch_db:website.snippets
 msgid "Video"
@@ -13035,6 +13273,11 @@ msgid "What you see is what you get"
 msgstr "Es ist das drin, was draufsteht"
 
 #. module: website
+#: model_terms:ir.ui.view,arch_db:website.s_share
+msgid "WhatsApp"
+msgstr "WhatsApp"
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_hr_options
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
 msgid "Width"
@@ -13234,6 +13477,16 @@ msgid "You cannot duplicate this field."
 msgstr "Sie können dieses Feld nicht duplizieren."
 
 #. module: website
+#: code:addons/website/models/website_menu.py:0
+#, python-format
+msgid ""
+"You cannot delete this website menu as this serves as the default parent "
+"menu for new websites (e.g., /shop, /event, ...)."
+msgstr ""
+"Sie können dieses Website-Menü nicht löschen, da es als übergeordnetes "
+"Standardmenü für neue Websites dient (z. B. /shop, /event, ...)."
+
+#. module: website
 #. odoo-python
 #: code:addons/website/models/mixins.py:0
 #, python-format
@@ -13241,6 +13494,13 @@ msgid "You do not have the rights to publish/unpublish"
 msgstr ""
 "Sie haben nicht die Rechte zum Veröffentlichen oder zum Aufheben der "
 "Veröffentlichung"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/components/dialog/seo.xml:0
+#, python-format
+msgid "You don't have permissions to edit this record."
+msgstr "Sie sind nicht berechtigt, diesen Datensatz zu bearbeiten."
 
 #. module: website
 #. odoo-javascript
@@ -13293,6 +13553,15 @@ msgstr "Sie können Ihre Seiten später erstellen."
 
 #. module: website
 #. odoo-javascript
+#: code:addons/website/static/src/snippets/s_social_media/options.js:0
+#: model_terms:ir.ui.view,arch_db:website.s_mega_menu_odoo_menu
+#: model_terms:ir.ui.view,arch_db:website.s_social_media
+#, python-format
+msgid "YouTube"
+msgstr "YouTube"
+
+#. module: website
+#. odoo-javascript
 #: code:addons/website/static/src/js/send_mail_form.js:0
 #, python-format
 msgid "Your Company"
@@ -13314,6 +13583,17 @@ msgstr ""
 #, python-format
 msgid "Your Email"
 msgstr "Ihre E-Mail"
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/snippets/s_embed_code/000.js:0
+#, python-format
+msgid ""
+"Your Embed Code snippet doesn't have anything to display. Click on Edit to "
+"modify it."
+msgstr ""
+"Ihr Snippet zum Einbetten von Code zeigt nichts an. Klicken Sie auf "
+"Bearbeiten, um ihn zu ändern."
 
 #. module: website
 #. odoo-javascript
@@ -13456,7 +13736,7 @@ msgstr "einen Blog"
 #: code:addons/website/static/src/client_actions/configurator/configurator.js:0
 #, python-format
 msgid "a business website"
-msgstr "eine Business-Website"
+msgstr "eine Firmenwebsite"
 
 #. module: website
 #. odoo-javascript

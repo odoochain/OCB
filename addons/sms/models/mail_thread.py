@@ -208,8 +208,10 @@ class MailThread(models.AbstractModel):
         )
 
     def _notify_thread(self, message, msg_vals=False, **kwargs):
+        scheduled_date = self._is_notification_scheduled(kwargs.get('scheduled_date'))
         recipients_data = super(MailThread, self)._notify_thread(message, msg_vals=msg_vals, **kwargs)
-        self._notify_thread_by_sms(message, recipients_data, msg_vals=msg_vals, **kwargs)
+        if not scheduled_date:
+            self._notify_thread_by_sms(message, recipients_data, msg_vals=msg_vals, **kwargs)
         return recipients_data
 
     def _notify_thread_by_sms(self, message, recipients_data, msg_vals=False,
@@ -273,13 +275,14 @@ class MailThread(models.AbstractModel):
                 self._phone_format(number=sms_number) or sms_number
                 for sms_number in sms_numbers
             ]
+            existing_partners_numbers = {vals_dict['number'] for vals_dict in sms_create_vals}
             sms_create_vals += [dict(
                 sms_base_vals,
                 partner_id=False,
                 number=n,
                 state='outgoing' if n else 'error',
                 failure_type='' if n else 'sms_number_missing',
-            ) for n in tocreate_numbers]
+            ) for n in tocreate_numbers if n not in existing_partners_numbers]
 
         # create sms and notification
         existing_pids, existing_numbers = [], []

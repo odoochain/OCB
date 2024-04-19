@@ -13,8 +13,6 @@ class AccountChartTemplate(models.AbstractModel):
             'property_account_payable_id': 'p11211',
             'property_account_expense_categ_id': 'p2107',
             'property_account_income_categ_id': 'p20011',
-            'property_tax_payable_account_id': 'p11239',
-            'property_tax_receivable_account_id': 'p10059',
             'code_digits': '6',
             'display_invoice_amount_total_words': True,
         }
@@ -34,7 +32,7 @@ class AccountChartTemplate(models.AbstractModel):
                 'account_journal_early_pay_discount_gain_account_id': '2012',
                 'account_opening_date': fields.Date.context_today(self).replace(month=4, day=1),
                 'fiscalyear_last_month': '3',
-                'account_sale_tax_id': 'igst_sale_18',
-                'account_purchase_tax_id': 'igst_purchase_18',
+                'account_sale_tax_id': 'sgst_sale_5',
+                'account_purchase_tax_id': 'sgst_purchase_5',
             },
         }

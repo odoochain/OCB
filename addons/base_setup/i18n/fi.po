@@ -14,17 +14,17 @@
 # Tuomas Lyyra <tuomas.lyyra@legenda.fi>, 2023
 # Pekka Ikonen, 2023
 # Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2023
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2023
 # Miku Laitinen <miku.laitinen@gmail.com>, 2023
 # Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2023
+# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2023\n"
+"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2023\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -42,10 +42,10 @@ msgstr ""
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"<span class=\"o_form_label\" invisible=\"active_user_count &gt; '1'\">\n"
+"<span class=\"o_form_label\" invisible=\"active_user_count &gt; 1\">\n"
 "                                        Active User\n"
 "                                    </span>\n"
-"                                    <span class=\"o_form_label\" invisible=\"active_user_count &lt;= '1'\">\n"
+"                                    <span class=\"o_form_label\" invisible=\"active_user_count &lt;= 1\">\n"
 "                                        Active Users\n"
 "                                    </span>"
 msgstr ""
@@ -53,10 +53,10 @@ msgstr ""
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"<span class=\"o_form_label\" invisible=\"company_count &gt; '1'\">\n"
+"<span class=\"o_form_label\" invisible=\"company_count &gt; 1\">\n"
 "                                        Company\n"
 "                                    </span>\n"
-"                                    <span class=\"o_form_label\" invisible=\"company_count &lt;= '1'\">\n"
+"                                    <span class=\"o_form_label\" invisible=\"company_count &lt;= 1\">\n"
 "                                        Companies\n"
 "                                    </span>\n"
 "                                    <br/>"
@@ -65,10 +65,10 @@ msgstr ""
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid ""
-"<span class=\"o_form_label\" invisible=\"language_count &gt; '1'\">\n"
+"<span class=\"o_form_label\" invisible=\"language_count &gt; 1\">\n"
 "                                            Language\n"
 "                                        </span>\n"
-"                                        <span class=\"o_form_label\" invisible=\"language_count &lt;= '1'\">\n"
+"                                        <span class=\"o_form_label\" invisible=\"language_count &lt;= 1\">\n"
 "                                            Languages\n"
 "                                        </span>"
 msgstr ""
@@ -88,6 +88,8 @@ msgid ""
 "<strong>Save</strong> this page and come back here to set up Cloudflare "
 "turnstile."
 msgstr ""
+"<strong>Tallenna</strong> tämä sivu ja palaa tänne asettaaksesi Cloudflaren "
+"turnstile-robottitunnistuksen."
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -116,6 +118,8 @@ msgid ""
 "API Keys allow your users to access Odoo with external tools when multi-"
 "factor authentication is enabled."
 msgstr ""
+"API-avaimien avulla käyttäjät voivat käyttää Odoota ulkoisilla työkaluilla, "
+"kun monitekijätodennus on käytössä."
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -202,7 +206,7 @@ msgstr "Valitse dokumenttien asettelu"
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_website_cf_turnstile
 msgid "Cloudflare Turnstile"
-msgstr ""
+msgstr "Cloudflare Turnstile"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -217,7 +221,7 @@ msgstr "Yritys"
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_country_code
 msgid "Company Country Code"
-msgstr ""
+msgstr "Yrityksen maakoodi"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__company_informations
@@ -275,7 +279,7 @@ msgstr "Käyttäjän oikeuksien oletusmallia ei löytynyt"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Document Layout"
-msgstr ""
+msgstr "Asiakirjan ulkoasu"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__external_report_layout_id
@@ -338,11 +342,6 @@ msgid "Get product pictures using barcode"
 msgstr "Hae tuotekuvia viivakoodeilla"
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Google Calendar"
-msgstr "Google-kalenteri"
-
-#. module: base_setup
 #: model:ir.model,name:base_setup.model_ir_http
 msgid "HTTP Routing"
 msgstr "HTTP-reititys"
@@ -370,7 +369,7 @@ msgstr "Yritysten välinen siirto"
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__is_root_company
 msgid "Is Root Company"
-msgstr ""
+msgstr "Onko emoyritys"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_auth_ldap
@@ -459,11 +458,6 @@ msgid "On Google Play"
 msgstr "Google Playssä"
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Outlook Calendar"
-msgstr "Outlook-kalenteri"
-
-#. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_partner_autocomplete
 msgid "Partner Autocomplete"
 msgstr "Partnerien tietojen automaattinen täydentäminen"
@@ -491,7 +485,7 @@ msgstr "Pfofilointi on käytössä ja loppuu"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Progressive Web App"
-msgstr ""
+msgstr "Progressiivinen verkkosovellus"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -501,7 +495,7 @@ msgstr "Suojaa lomakkeesi sikanaudalta ja kiusanteolta"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Protect your forms with CF Turnstile."
-msgstr ""
+msgstr "Suojaa lomakkeesi CloudFlaren Turnstile-robottitunnistuksella."
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -529,16 +523,6 @@ msgid "Show Effect"
 msgstr "Näytä efekti"
 
 #. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Synchronize your calendar with Google Calendar"
-msgstr "Synkronoi kalenterisi Google Calendarin kanssa"
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Synchronize your calendar with Outlook"
-msgstr "Synkronoi kalenterisi Outlookin kanssa"
-
-#. module: base_setup
 #: model:ir.model.fields,help:base_setup.field_res_config_settings__company_country_code
 msgid ""
 "The ISO country code in two chars. \n"
@@ -553,6 +537,7 @@ msgid ""
 "This name will be used for the application when Odoo is installed through "
 "the browser."
 msgstr ""
+"Tätä nimeä käytetään sovellukselle, kun Odoo asennetaan selaimen kautta."
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_web_unsplash

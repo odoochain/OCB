@@ -30,14 +30,14 @@ class ReportBomStructure(models.AbstractModel):
             if comp['product'].type != 'product' or float_is_zero(comp['base_bom_line_qty'], precision_digits=comp['uom'].rounding):
                 continue
             components_qty_to_produce[comp['product_id']] += comp['base_bom_line_qty']
-            components_qty_available[comp['product_id']] = comp['quantity_available']
+            components_qty_available[comp['product_id']] = comp['free_to_manufacture_qty']
         producibles = [float_round(components_qty_available[p_id] / qty, precision_digits=0, rounding_method='DOWN') for p_id, qty in components_qty_to_produce.items()]
         return min(producibles) * bom_data['bom']['product_qty'] if producibles else 0
 
     @api.model
     def _compute_production_capacities(self, bom_qty, bom_data):
         date_today = self.env.context.get('from_date', fields.date.today())
-        lead_time = bom_data['lead_time'] - bom_data['bom'].days_to_prepare_mo
+        lead_time = bom_data['manufacture_delay']
         same_delay = lead_time == bom_data['availability_delay']
         res = {}
         if bom_data.get('producible_qty', 0):
@@ -199,7 +199,7 @@ class ReportBomStructure(models.AbstractModel):
         is_minimized = self.env.context.get('minimized', False)
         if not product:
             product = bom.product_id or bom.product_tmpl_id.product_variant_id
-        if not line_qty:
+        if line_qty is False:
             line_qty = bom.product_qty
 
         if not product_info:
@@ -241,6 +241,7 @@ class ReportBomStructure(models.AbstractModel):
             'quantity': current_quantity,
             'quantity_available': quantities_info.get('free_qty', 0),
             'quantity_on_hand': quantities_info.get('on_hand_qty', 0),
+            'free_to_manufacture_qty': quantities_info.get('free_to_manufacture_qty', 0),
             'base_bom_line_qty': bom_line.product_qty if bom_line else False,  # bom_line isn't defined only for the top-level product
             'name': product.display_name or bom.product_tmpl_id.display_name,
             'uom': bom.product_uom_id if bom else product.uom_id,
@@ -281,8 +282,8 @@ class ReportBomStructure(models.AbstractModel):
             if not line.child_bom_id:
                 no_bom_lines |= line
                 # Update product_info for all the components before computing closest forecasted.
-                self._update_product_info(line.product_id, bom.id, product_info, warehouse, line_quantity, bom=False, parent_bom=bom, parent_product=parent_product)
-        components_closest_forecasted = self._get_components_closest_forecasted(no_bom_lines, line_quantities, bom, product_info, parent_product, ignore_stock)
+                self._update_product_info(line.product_id, bom.id, product_info, warehouse, line_quantity, bom=False, parent_bom=bom, parent_product=product)
+        components_closest_forecasted = self._get_components_closest_forecasted(no_bom_lines, line_quantities, bom, product_info, product, ignore_stock)
         for component_index, line in enumerate(bom.bom_line_ids):
             new_index = f"{index}{component_index}"
             if product and line._skip_bom_line(product):
@@ -316,6 +317,7 @@ class ReportBomStructure(models.AbstractModel):
         availabilities = self._get_availabilities(product, current_quantity, product_info, bom_key, quantities_info, level, ignore_stock, components, report_line=bom_report_line)
         # in case of subcontracting, lead_time will be calculated with components availability delay
         bom_report_line['lead_time'] = route_info.get('lead_time', False)
+        bom_report_line['manufacture_delay'] = route_info.get('manufacture_delay', False)
         bom_report_line.update(availabilities)
 
         if level == 0:
@@ -360,6 +362,7 @@ class ReportBomStructure(models.AbstractModel):
             'quantity': line_quantity,
             'quantity_available': quantities_info.get('free_qty', 0),
             'quantity_on_hand': quantities_info.get('on_hand_qty', 0),
+            'free_to_manufacture_qty': quantities_info.get('free_to_manufacture_qty', 0),
             'base_bom_line_qty': bom_line.product_qty,
             'uom': bom_line.product_uom_id,
             'uom_name': bom_line.product_uom_id.name,
@@ -369,6 +372,7 @@ class ReportBomStructure(models.AbstractModel):
             'route_name': route_info.get('route_name', ''),
             'route_detail': route_info.get('route_detail', ''),
             'lead_time': route_info.get('lead_time', False),
+            'manufacture_delay': route_info.get('manufacture_delay', False),
             'stock_avail_state': availabilities['stock_avail_state'],
             'resupply_avail_delay': availabilities['resupply_avail_delay'],
             'availability_display': availabilities['availability_display'],
@@ -381,11 +385,13 @@ class ReportBomStructure(models.AbstractModel):
 
     @api.model
     def _get_quantities_info(self, product, bom_uom, product_info, parent_bom=False, parent_product=False):
-        return {
-            'free_qty': max(product.uom_id._compute_quantity(product.free_qty, bom_uom), 0) if product.detailed_type == 'product' else False,
-            'on_hand_qty': product.uom_id._compute_quantity(product.qty_available, bom_uom) if product.detailed_type == 'product' else False,
+        quantities_info = {
+            'free_qty': max(product.uom_id._compute_quantity(product.free_qty, bom_uom), 0) if product.detailed_type == 'product' else 0,
+            'on_hand_qty': product.uom_id._compute_quantity(product.qty_available, bom_uom) if product.detailed_type == 'product' else 0,
             'stock_loc': 'in_stock',
         }
+        quantities_info['free_to_manufacture_qty'] = quantities_info['free_qty']
+        return quantities_info
 
     @api.model
     def _update_product_info(self, product, bom_key, product_info, warehouse, quantity, bom, parent_bom, parent_product):
@@ -428,6 +434,10 @@ class ReportBomStructure(models.AbstractModel):
         return byproducts, byproduct_cost_portion
 
     @api.model
+    def _get_operation_cost(self, duration, operation):
+        return (duration / 60.0) * operation.workcenter_id.costs_hour
+
+    @api.model
     def _get_operation_line(self, product, bom, qty, level, index):
         operations = []
         total = 0.0
@@ -441,7 +451,7 @@ class ReportBomStructure(models.AbstractModel):
             operation_cycle = float_round(qty / capacity, precision_rounding=1, rounding_method='UP')
             duration_expected = (operation_cycle * operation.time_cycle * 100.0 / operation.workcenter_id.time_efficiency) + \
                                 operation.workcenter_id._get_expected_duration(product)
-            total = ((duration_expected / 60.0) * operation.workcenter_id.costs_hour)
+            total = self._get_operation_cost(duration_expected, operation)
             operations.append({
                 'type': 'operation',
                 'index': f"{index}{operation_index}",
@@ -503,6 +513,7 @@ class ReportBomStructure(models.AbstractModel):
                 'route_name': bom_line['route_name'],
                 'route_detail': bom_line['route_detail'],
                 'lead_time': bom_line['lead_time'],
+                'manufacture_delay': bom_line['manufacture_delay'],
                 'level': bom_line['level'],
                 'code': bom_line['code'],
                 'availability_state': bom_line['availability_state'],
@@ -562,12 +573,19 @@ class ReportBomStructure(models.AbstractModel):
         found_rules = []
         if self._need_special_rules(product_info, parent_bom, parent_product):
             found_rules = self._find_special_rules(product, product_info, parent_bom, parent_product)
+            if found_rules and not self._is_resupply_rules(found_rules, bom):
+                # We only want to show the effective resupply (i.e. a form of manufacture or buy)
+                found_rules = []
         if not found_rules:
             found_rules = product._get_rules_from_location(warehouse.lot_stock_id)
         if not found_rules:
             return {}
         rules_delay = sum(rule.delay for rule in found_rules)
         return self.with_context(parent_bom=parent_bom)._format_route_info(found_rules, rules_delay, warehouse, product, bom, quantity)
+
+    @api.model
+    def _is_resupply_rules(self, rules, bom):
+        return bom and any(rule.action == 'manufacture' for rule in rules)
 
     @api.model
     def _need_special_rules(self, product_info, parent_bom=False, parent_product=False):
@@ -612,7 +630,7 @@ class ReportBomStructure(models.AbstractModel):
         elif route_info:
             resupply_state, resupply_delay = self._get_resupply_availability(route_info, components)
 
-        if resupply_state == "unavailable" and route_info == {} and components and report_line:
+        if resupply_state == "unavailable" and route_info == {} and components and report_line and report_line['phantom_bom']:
             val = self._get_last_availability(report_line)
             return val
 

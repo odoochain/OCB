@@ -1,9 +1,11 @@
 from unittest.mock import patch
 
 from odoo import Command
+from odoo.addons.account.models.chart_template import code_translations
 from odoo.addons.account.models.chart_template import AccountChartTemplate
 from odoo.addons.account.models.chart_template import TEMPLATE_MODELS
 from odoo.addons.account.tests.common import instantiate_accountman
+from odoo.exceptions import UserError
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 
@@ -47,7 +49,7 @@ def test_get_data(self, template_code):
             }
         },
         'account.tax': {
-            xmlid: _tax_vals(name, amount)
+            xmlid: _tax_vals(name, amount, 'account.account_tax_tag_1')
             for name, xmlid, amount in [
                 ('Tax 1', 'test_tax_1_template', 15),
                 ('Tax 2', 'test_tax_2_template', 0),
@@ -98,7 +100,8 @@ def test_get_data(self, template_code):
         }
     }
 
-def _tax_vals(name, amount, children_tax_xmlids=None, active=True):
+def _tax_vals(name, amount, tax_tag_id=None, children_tax_xmlids=None, active=True):
+    tag_command = [Command.set([tax_tag_id])] if tax_tag_id else None
     tax_vals = {
         'name': name,
         'amount': amount,
@@ -108,6 +111,13 @@ def _tax_vals(name, amount, children_tax_xmlids=None, active=True):
     }
     if children_tax_xmlids:
         tax_vals.update({'children_tax_ids': [Command.set(children_tax_xmlids)]})
+    else:
+        tax_vals.update({'repartition_line_ids': [
+            Command.create({'document_type': 'invoice', 'factor_percent': 100, 'repartition_type': 'base', 'tag_ids': tag_command}),
+            Command.create({'document_type': 'invoice', 'factor_percent': 100, 'repartition_type': 'tax'}),
+            Command.create({'document_type': 'refund', 'factor_percent': 100, 'repartition_type': 'base'}),
+            Command.create({'document_type': 'refund', 'factor_percent': 100, 'repartition_type': 'tax'}),
+        ]})
     return tax_vals
 
 
@@ -199,6 +209,38 @@ class TestChartTemplate(TransactionCase):
             })
         )
 
+    def test_inactive_tag_tax(self):
+        inactive_tag = self.env['account.account.tag'].create({
+            'name': 'Inactive Tax Tag',
+            'applicability': 'taxes',
+            'active': False,
+        })
+        tax_to_load = {
+            'name': 'Inactive Tags Tax',
+            'amount': 30,
+            'amount_type': 'percent',
+            'tax_group_id': 'tax_group_taxes',
+            'active': True,
+            'repartition_line_ids': [
+                Command.create({
+                    'document_type': 'invoice',
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'tag_ids': inactive_tag.name,
+                }),
+            ]
+        }
+        self.env['account.chart.template']._deref_account_tags('test', {'tax1': tax_to_load})
+        self.assertEqual(
+            tax_to_load['repartition_line_ids'][0],
+            Command.create({
+                'document_type': 'invoice',
+                'factor_percent': 100,
+                'repartition_type': 'base',
+                'tag_ids': [(Command.set([inactive_tag.id]))],
+            }),
+        )
+
     def test_update_taxes_creation(self):
         """ Tests that adding a new tax and a fiscal position tax creates new records when updating. """
         def local_get_data(self, template_code):
@@ -252,9 +294,6 @@ class TestChartTemplate(TransactionCase):
             data['account.account.tag']['account.account_tax_tag_1']['name'] += ' [DUP]'
             return data
 
-        tax_existing = self.env['account.tax'].search([('company_id', '=', self.company_1.id), ('name', '=', 'Tax 1')])
-        tag_existing = self.env['account.account.tag'].search([('name', '=', 'tax_tag_name_1')])
-        tax_existing.invoice_repartition_line_ids.tag_ids = tag_existing
         with patch.object(AccountChartTemplate, '_get_chart_template_data', side_effect=local_get_data, autospec=True):
             self.env['account.chart.template'].try_loading('test', company=self.company_1, install_demo=False)
 
@@ -406,6 +445,12 @@ class TestChartTemplate(TransactionCase):
         self.assertEqual(len(children_taxes), 2, "Two children should have been created.")
         self.assertEqual(parent_tax.children_tax_ids.ids, children_taxes.ids, "The parent and its children taxes should be linked together.")
 
+        with patch.object(AccountChartTemplate, '_get_chart_template_data', side_effect=local_get_data, autospec=True):
+            # We don't change anything
+            self.env['account.chart.template'].try_loading('test', company=self.company_1, install_demo=False)
+
+        self.assertEqual(parent_tax.name, 'Tax with children', "The parent tax created before should not have changed")
+
     def test_update_taxes_children_tax_ids_inactive(self):
         """ Ensure tax templates are correctly generated when updating taxes with children taxes,
         even if templates are inactive.
@@ -462,3 +507,221 @@ class TestChartTemplate(TransactionCase):
         for model in TEMPLATE_MODELS + sub_models:
             data_after = self.env[model].search(get_domain(model))
             self.assertEqual(data_before[model], data_after)
+
+    def test_unknown_company_fields(self):
+        """ Tests that if a key is not known in the company template data when the
+        context value 'l10n_check_fields_complete' is set, an error is raised. If a
+        key is not known in the company template data but the context value is not
+        set, that key is skipped and no error is raised."""
+
+        def local_get_data(self, template_code):
+            data = test_get_data(self, template_code)
+            data['res.company'][company.id]['unknown_company_key'] = 'unknown_company_value'
+            return data
+
+        company = self.company_1
+
+        with patch.object(AccountChartTemplate, '_get_chart_template_data', side_effect=local_get_data, autospec=True):
+            # hard fail the loading if the context key is set to ensure `test_all_l10n` works as expected
+            with (
+                self.assertRaisesRegex(ValueError, 'unknown_company_key'),
+                self.env.cr.savepoint(),
+            ):
+                self.env['account.chart.template'].with_context(l10n_check_fields_complete=True).try_loading('test', company=company, install_demo=False)
+
+            # silently ignore if the field doesn't exist (yet)
+            self.env['account.chart.template'].try_loading('test', company=company, install_demo=False)
+
+    def test_update_tax_with_non_existent_tag(self):
+        """ Tests that when we update the CoA with a tax that has a tag that does not exist yet we raise an error.
+        Typical use case is when the code got updated but the module haven't been updated (-u).
+        """
+        tax_to_load = {
+            'name': 'Mixed Tags Tax',
+            'amount': 30,
+            'amount_type': 'percent',
+            'tax_group_id': 'tax_group_taxes',
+            'active': True,
+            'repartition_line_ids': [
+                Command.create({'document_type': 'invoice', 'factor_percent': 100, 'repartition_type': 'base', 'tag_ids': '+SIGNED_TAG'}),
+                Command.create({'document_type': 'invoice', 'factor_percent': 100, 'repartition_type': 'tax'}),
+                Command.create({'document_type': 'refund', 'factor_percent': 100, 'repartition_type': 'base'}),
+                Command.create({'document_type': 'refund', 'factor_percent': 100, 'repartition_type': 'tax'}),
+            ]
+        }
+        with self.assertRaisesRegex(UserError, 'update your localization'):
+            self.env['account.chart.template']._deref_account_tags('test', {'tax1': tax_to_load})
+
+    def test_install_with_translations(self):
+        """ Ensure that the translations are loaded correctly when installing chart data; i.e. test '_load_translations' and that the untranslatable fields are translated correctly.
+        Note: The '_load_translations' function depends on the '_get_chart_template_data' function for some information.
+        The result of '_get_chart_template_data' is mocked (correctly) in this test (and not tested).
+        """
+
+        # Local mock for '_get_chart_template_mapping'
+        # We will use / install a dedicated new chart 'translation' (not just reload 'test')
+        # To have control over the original / en_US values.
+        def local_get_mapping(self, get_all=False):
+            return {'translation': {
+                'name': 'translation',
+                'country_id': None,
+                'country_code': None,
+                'modules': ['account'],
+                'parent': None,
+            }}
+
+        company = self.company_1
+
+        # Create records that are not part of the chart template
+        # They will be translated via code translations.
+        # The module used to source the translation is the module from the xml_id or 'account' (as fallback)
+
+        non_chart_data = {
+            'account.group': {
+                # try module 'no_translation'; fallback to 'account'
+                'no_translation.test_chart_template_company_test_free_account_group': {
+                    'name': 'Free Account Group',
+                    'code_prefix_start': 333330,
+                    'code_prefix_end': 333339,
+                    'company_id': company.id,
+                },
+            },
+            'account.account': {
+                # translate via 'translation' module
+                'translation.test_chart_template_company_test_free_account': {
+                    'name': 'Free Account',
+                    'code': '333331',
+                    'account_type': 'asset_current',
+                    'company_id': company.id,
+                },
+            },
+            'account.tax': {
+                # translate via 'translation' module;
+                # 2 translatable fields ('name' and 'description')
+                'translation.test_chart_template_company_test_free_tax': {
+                    "name": "Free Tax",
+                    "description": "Free Tax Description",
+                    "amount": "0.00",
+                    "company_id": company.id,
+                },
+            },
+        }
+
+        # Local function to "extend" '_post_load_data' to ensure the creation of the records from 'non_chart_data'
+        def test_post_load_data(template_code, company, template_data):
+            for model, data in non_chart_data.items():
+                for xml_id, values in data.items():
+                    self.env[model]._load_records([{
+                        'xml_id': xml_id,
+                        'values': values,
+                    }])
+
+        # Create a local mock of '_get_chart_template_data'; "extend" 'test_get_data' with the translation info
+
+        translation_update_for_test_get_data = {
+            # Use code translations from module 'translation'
+            'account.journal': {
+                'cash': {
+                    'name': "Cash",
+                    'code': "C",  # untranslatable field; shortened due to length restriction (for _translation)
+                    '__translation_module__': {
+                        'name': 'translation',
+                        'code': 'translation',
+                    },
+                },
+            },
+            # Different modules for code translations of 'name' and 'description'
+            'account.tax': {
+                'test_tax_1_template': {
+                    'name': "Tax 1",
+                    'description': "Tax 1 Description",
+                    '__translation_module__': {
+                        'name': 'translation',
+                        'description': 'translation2',
+                    },
+                },
+            },
+            # Use 'name@' and not code translation
+            'account.tax.group': {
+                'tax_group_taxes': {
+                    'name': "Taxes",
+                    'name@fr': "Taxes FR",
+                    '__translation_module__': {
+                        'name': 'translation',
+                    },
+                },
+            },
+        }
+
+        def local_get_data(self, template_code):
+            data = test_get_data(self, template_code)
+            for model, record_info in translation_update_for_test_get_data.items():
+                for xmlid, data_update in record_info.items():
+                    data[model][xmlid].update(data_update)
+            return data
+
+        # Tranlations should fall back to more generic locale 'fr'
+
+        # Target lang for untranslatable fields
+        company.partner_id.lang = self.env['res.lang']._activate_lang('fr_BE').code
+
+        # Init empty mock translations to make sure we do not use unintended translation
+        mock_python_translations = {}
+
+        for module, lang, value, translation in [
+            # wrong translations
+            ('translation', 'fr', "Taxes", "WRONG"),  # there is a value in the chart data
+            ('translation', 'fr', "Free Account", "Free Account FR"),  # there is a value for fr_BE
+            # correct translations
+            ('translation', 'fr', "Cash", "Cash FR"),
+            ('translation', 'fr', "C", "C FR"),
+            ('translation', 'fr', "Tax 1", "Tax 1 FR"),
+            ('translation', 'fr_BE', "Free Account", "Free Account FR_BE"),
+            ('translation', 'fr', "Free Tax", "Free Tax FR"),
+            ('translation', 'fr', "Free Tax Description", "Free Tax Description FR"),
+            ('translation2', 'fr', "Tax 1 Description", "Tax 1 Description translation2/FR"),
+            ('account', 'fr', "Free Account Group", "Free Account Group account/FR"),
+        ]:
+            mock_python_translations.setdefault((module, lang), {})[value] = translation
+
+        with patch.object(AccountChartTemplate, '_get_chart_template_mapping', side_effect=local_get_mapping, autospec=True):
+            with patch.object(AccountChartTemplate, '_get_chart_template_data', side_effect=local_get_data, autospec=True):
+                with patch.object(AccountChartTemplate, '_post_load_data', wraps=test_post_load_data):
+                    with patch.object(code_translations, 'python_translations', mock_python_translations):
+                        self.env['account.chart.template'].try_loading('translation', company=company, install_demo=False)
+
+        # Check translations
+        translatable_model_fields = self.env['account.chart.template']._get_translatable_template_model_fields()
+        untranslatable_model_fields = self.env['account.chart.template']._get_untranslatable_fields_to_translate()
+        fields_to_translate = {
+            model: set(translatable_model_fields.get(model, []) + untranslatable_model_fields.get(model, []))
+            for model in TEMPLATE_MODELS
+        }
+
+        self.assertEqual({
+            f'{xmlid}.{field}@{lang}': self.env['account.chart.template'].ref(xmlid).with_context(lang=lang)[field]
+            for chart_like_data in [non_chart_data, translation_update_for_test_get_data]
+            for model, data in chart_like_data.items()
+            for xmlid, record_data in data.items()
+            for field in record_data if field in fields_to_translate.get(model, set())
+            for lang in ['en_US', 'fr_BE']
+        }, {
+            'cash.code@en_US': 'C FR',  # untranslatable field loaded in lang fr_BE
+            'cash.code@fr_BE': 'C FR',
+            'cash.name@en_US': 'Cash',
+            'cash.name@fr_BE': 'Cash FR',
+            'no_translation.test_chart_template_company_test_free_account_group.name@en_US': 'Free Account Group',
+            'no_translation.test_chart_template_company_test_free_account_group.name@fr_BE': 'Free Account Group account/FR',  # fallback to account
+            'tax_group_taxes.name@en_US': 'Taxes',
+            'tax_group_taxes.name@fr_BE': 'Taxes FR',
+            'test_tax_1_template.description@en_US': 'Tax 1 Description',
+            'test_tax_1_template.description@fr_BE': 'Tax 1 Description translation2/FR',
+            'test_tax_1_template.name@en_US': 'Tax 1',
+            'test_tax_1_template.name@fr_BE': 'Tax 1 FR',
+            'translation.test_chart_template_company_test_free_account.name@en_US': 'Free Account',
+            'translation.test_chart_template_company_test_free_account.name@fr_BE': 'Free Account FR_BE',  # do not use generic lang
+            'translation.test_chart_template_company_test_free_tax.description@en_US': 'Free Tax Description',
+            'translation.test_chart_template_company_test_free_tax.description@fr_BE': 'Free Tax Description FR',
+            'translation.test_chart_template_company_test_free_tax.name@en_US': 'Free Tax',
+            'translation.test_chart_template_company_test_free_tax.name@fr_BE': 'Free Tax FR',
+        })

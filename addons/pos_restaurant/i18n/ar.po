@@ -3,15 +3,16 @@
 # 	* pos_restaurant
 # 
 # Translators:
-# Wil Odoo, 2023
+# Wil Odoo, 2024
+# Malaz Abuidris <msea@odoo.com>, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:54+0000\n"
+"POT-Creation-Date: 2024-01-29 10:44+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Wil Odoo, 2023\n"
+"Last-Translator: Malaz Abuidris <msea@odoo.com>, 2024\n"
 "Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -59,7 +60,7 @@ msgstr "إضافة"
 #: code:addons/pos_restaurant/static/src/app/floor_screen/floor_screen.xml:0
 #, python-format
 msgid "Add Floor"
-msgstr ""
+msgstr "إضافة طابق "
 
 #. module: pos_restaurant
 #. odoo-javascript
@@ -166,6 +167,13 @@ msgstr "هل أنت متأكد؟ "
 
 #. module: pos_restaurant
 #. odoo-javascript
+#: code:addons/pos_restaurant/static/src/overrides/components/navbar/back_button/back_button.xml:0
+#, python-format
+msgid "BACK"
+msgstr "العودة "
+
+#. module: pos_restaurant
+#. odoo-javascript
 #: code:addons/pos_restaurant/static/src/app/split_bill_screen/split_bill_screen.xml:0
 #: code:addons/pos_restaurant/static/src/app/tip_screen/tip_screen.xml:0
 #, python-format
@@ -240,11 +248,30 @@ msgid "Blue"
 msgstr "أزرق"
 
 #. module: pos_restaurant
+#. odoo-javascript
+#: code:addons/pos_restaurant/static/src/app/product_screen/product_screen.xml:0
+#, python-format
+msgid "Book table"
+msgstr "حجز طاولة "
+
+#. module: pos_restaurant
+#: model:product.template,name:pos_restaurant.burger_drink_combo_product_template
+msgid "Burger Menu Combo"
+msgstr "كومبو قائمة البرجر "
+
+#. module: pos_restaurant
 #. odoo-python
 #: code:addons/pos_restaurant/models/pos_config.py:0
 #, python-format
 msgid "Cash Restaurant"
-msgstr ""
+msgstr "مطعم يتعامل بالنقد "
+
+#. module: pos_restaurant
+#. odoo-javascript
+#: code:addons/pos_restaurant/static/src/overrides/components/navbar/back_button/back_button.xml:0
+#, python-format
+msgid "Change table"
+msgstr "تغيير الطاولة "
 
 #. module: pos_restaurant
 #: model:product.template,name:pos_restaurant.pos_food_cheeseburger_product_template
@@ -372,7 +399,7 @@ msgstr "يسمح بتقسيم الفاتورة في نقطة البيع."
 #. module: pos_restaurant
 #: model:product.template,name:pos_restaurant.espresso_product_template
 msgid "Espresso"
-msgstr ""
+msgstr "اسبريسو "
 
 #. module: pos_restaurant
 #: model:product.template,name:pos_restaurant.fanta_product_template
@@ -464,7 +491,7 @@ msgstr "أخضر"
 #. module: pos_restaurant
 #: model:product.template,name:pos_restaurant.green_tea_product_template
 msgid "Green Tea"
-msgstr ""
+msgstr "شاي أخضر "
 
 #. module: pos_restaurant
 #. odoo-javascript
@@ -514,7 +541,7 @@ msgstr "المُعرف"
 #. module: pos_restaurant
 #: model:product.template,name:pos_restaurant.ice_tea_product_template
 msgid "Ice Tea"
-msgstr ""
+msgstr "شاي مثلج "
 
 #. module: pos_restaurant
 #: model:ir.model.fields,help:pos_restaurant.field_restaurant_table__active
@@ -598,7 +625,7 @@ msgstr "مارغريتا "
 #. module: pos_restaurant
 #: model:product.template,name:pos_restaurant.milkshake_banana_product_template
 msgid "Milkshake Banana"
-msgstr ""
+msgstr "حليب مخفوق بالموز "
 
 #. module: pos_restaurant
 #: model:product.template,name:pos_restaurant.minute_maid_product_template
@@ -630,6 +657,20 @@ msgstr "بلا بقشيش "
 #, python-format
 msgid "Number of Seats?"
 msgstr "عدد المقاعد؟ "
+
+#. module: pos_restaurant
+#. odoo-javascript
+#: code:addons/pos_restaurant/static/src/overrides/components/receipt_screen/order_receipt/order_receipt.xml:0
+#, python-format
+msgid "Odoo Point of Sale"
+msgstr "نقطة بيع أودو "
+
+#. module: pos_restaurant
+#. odoo-javascript
+#: code:addons/pos_restaurant/static/src/overrides/components/receipt_screen/order_receipt/order_receipt.xml:0
+#, python-format
+msgid "Odoo Restaurant"
+msgstr "تطبيق أودو للمطاعم "
 
 #. module: pos_restaurant
 #. odoo-javascript
@@ -796,13 +837,6 @@ msgstr "أحمر"
 
 #. module: pos_restaurant
 #. odoo-javascript
-#: code:addons/pos_restaurant/static/src/app/product_screen/product_screen.xml:0
-#, python-format
-msgid "Release table"
-msgstr "اجعل الطاولة متاحة "
-
-#. module: pos_restaurant
-#. odoo-javascript
 #: code:addons/pos_restaurant/static/src/app/floor_screen/floor_screen.js:0
 #, python-format
 msgid "Removing a floor cannot be undone. Do you still want to remove %s?"
@@ -890,7 +924,7 @@ msgstr "احفظ هذه الصفحة ثم عد لضبط الخاصية."
 #. module: pos_restaurant
 #: model:product.template,name:pos_restaurant.schweppes_product_template
 msgid "Schweppes"
-msgstr ""
+msgstr "Schweppes"
 
 #. module: pos_restaurant
 #. odoo-javascript
@@ -1011,6 +1045,13 @@ msgid "Table Name?"
 msgstr "اسم الطاولة "
 
 #. module: pos_restaurant
+#. odoo-javascript
+#: code:addons/pos_restaurant/static/src/app/floor_screen/floor_screen.js:0
+#, python-format
+msgid "Table is not empty"
+msgstr "الطاولة ليست شاغرة "
+
+#. module: pos_restaurant
 #: model:ir.model.fields,field_description:pos_restaurant.field_restaurant_floor__table_ids
 #: model_terms:ir.ui.view,arch_db:pos_restaurant.view_restaurant_floor_form
 msgid "Tables"
@@ -1036,6 +1077,16 @@ msgstr "عدد العملاء الافتراضي المقدم لهم خدمة ع
 #: model:ir.model.fields,help:pos_restaurant.field_res_config_settings__pos_floor_ids
 msgid "The restaurant floors served by this point of sale."
 msgstr "طوابق المطعم المتاحة في نقطة البيع هذه."
+
+#. module: pos_restaurant
+#. odoo-javascript
+#: code:addons/pos_restaurant/static/src/app/floor_screen/floor_screen.js:0
+#, python-format
+msgid ""
+"The table already contains an order. Do you want to proceed and transfer the"
+" order here?"
+msgstr ""
+"تحتوي الطاولة على طلب بالفعل. هل ترغب في الاستمرار ونقل الطلب إلى هنا؟ "
 
 #. module: pos_restaurant
 #: model:ir.model.fields,help:pos_restaurant.field_pos_order__table_id
@@ -1199,6 +1250,13 @@ msgid "Yellow"
 msgstr "أصفر"
 
 #. module: pos_restaurant
+#. odoo-javascript
+#: code:addons/pos_restaurant/static/src/app/floor_screen/floor_screen.js:0
+#, python-format
+msgid "Yes"
+msgstr "نعم"
+
+#. module: pos_restaurant
 #. odoo-python
 #: code:addons/pos_restaurant/models/pos_restaurant.py:0
 #, python-format
@@ -1269,7 +1327,7 @@ msgstr "في الطاولة"
 #: code:addons/pos_restaurant/static/src/overrides/components/product_screen/product_screen.xml:0
 #, python-format
 msgid "changes"
-msgstr ""
+msgstr "التغييرات "
 
 #. module: pos_restaurant
 #. odoo-javascript
@@ -1277,3 +1335,10 @@ msgstr ""
 #, python-format
 msgid "items"
 msgstr "العناصر "
+
+#. module: pos_restaurant
+#. odoo-javascript
+#: code:addons/pos_restaurant/static/src/overrides/components/order_widget/order_widget.js:0
+#, python-format
+msgid "or book the table for later"
+msgstr "أو قم بحجز الطاولة لوقت لاحق "

@@ -10,7 +10,6 @@ from odoo.exceptions import ValidationError, AccessError
 from odoo.osv import expression
 from odoo.tools import Query, SQL, OrderedSet
 
-from odoo.addons.project.models.project_task import CLOSED_STATES
 
 
 class Project(models.Model):
@@ -93,7 +92,7 @@ class Project(models.Model):
 
     @api.depends('sale_order_id', 'task_ids.sale_order_id')
     def _compute_sale_order_count(self):
-        sale_order_items_per_project_id = self._fetch_sale_order_items_per_project_id({'project.task': [('state', 'not in', list(CLOSED_STATES))]})
+        sale_order_items_per_project_id = self._fetch_sale_order_items_per_project_id({'project.task': [('state', 'in', self.env['project.task'].OPEN_STATES)]})
         for project in self:
             sale_order_lines = sale_order_items_per_project_id.get(project.id, self.env['sale.order.line'])
             project.sale_order_line_count = len(sale_order_lines)
@@ -101,15 +100,24 @@ class Project(models.Model):
 
     def _compute_invoice_count(self):
         query = self.env['account.move.line']._search([('move_id.move_type', 'in', ['out_invoice', 'out_refund'])])
-        query.add_where('analytic_distribution ?| %s', [[str(project.analytic_account_id.id) for project in self]])
+        query.add_where(
+            SQL(
+                "%s && %s",
+                [str(project.analytic_account_id.id) for project in self],
+                self.env['account.move.line']._query_analytic_accounts(),
+            )
+        )
         query.order = None
         query_string, query_param = query.select(
-            'jsonb_object_keys(account_move_line.analytic_distribution) as account_id',
-            'COUNT(DISTINCT move_id) as move_count',
+            r"""DISTINCT move_id, (regexp_matches(jsonb_object_keys(account_move_line.analytic_distribution), '\d+', 'g'))[1]::int as account_id"""
         )
-        query_string = f"{query_string} GROUP BY jsonb_object_keys(account_move_line.analytic_distribution)"
+        query_string = f"""
+            SELECT account_id, count(move_id) FROM
+            ({query_string}) distribution
+            GROUP BY account_id
+        """
         self._cr.execute(query_string, query_param)
-        data = {int(row.get('account_id')): row.get('move_count') for row in self._cr.dictfetchall()}
+        data = {res['account_id']: res['count'] for res in self._cr.dictfetchall()}
         for project in self:
             project.invoice_count = data.get(project.analytic_account_id.id, 0)
 
@@ -120,7 +128,7 @@ class Project(models.Model):
 
     def action_view_sols(self):
         self.ensure_one()
-        all_sale_order_lines = self._fetch_sale_order_items({'project.task': [('state', 'not in', list(CLOSED_STATES))]})
+        all_sale_order_lines = self._fetch_sale_order_items({'project.task': [('state', 'in', self.env['project.task'].OPEN_STATES)]})
         action_window = {
             'type': 'ir.actions.act_window',
             'res_model': 'sale.order.line',
@@ -149,12 +157,12 @@ class Project(models.Model):
 
     def action_view_sos(self):
         self.ensure_one()
-        all_sale_orders = self._fetch_sale_order_items({'project.task': [('state', 'not in', list(CLOSED_STATES))]}).order_id
+        all_sale_orders = self._fetch_sale_order_items({'project.task': [('state', 'in', self.env['project.task'].OPEN_STATES)]}).order_id
         action_window = {
             "type": "ir.actions.act_window",
             "res_model": "sale.order",
             'name': _("%(name)s's Sales Orders", name=self.name),
-            "context": {"create": self.env.context.get('create_for_project_id'), "show_sale": True},
+            "context": {"create": self.env.context.get('create_for_project_id', False), "show_sale": True},
         }
         if len(all_sale_orders) <= 1:
             action_window.update({
@@ -227,7 +235,13 @@ class Project(models.Model):
 
     def action_open_project_invoices(self):
         query = self.env['account.move.line']._search([('move_id.move_type', 'in', ['out_invoice', 'out_refund'])])
-        query.add_where('analytic_distribution ? %s', [str(self.analytic_account_id.id)])
+        query.add_where(
+            SQL(
+                "%s && %s",
+                [str(self.analytic_account_id.id)],
+                self.env['account.move.line']._query_analytic_accounts(),
+            )
+        )
         query_string, query_param = query.select('DISTINCT move_id')
         self._cr.execute(query_string, query_param)
         invoice_ids = [line.get('move_id') for line in self._cr.dictfetchall()]
@@ -365,9 +379,9 @@ class Project(models.Model):
         } for sol_read in sols.with_context(with_price_unit=True).read(['display_name', 'product_uom_qty', 'qty_delivered', 'qty_invoiced', 'product_uom'])]
 
     def _get_sale_items_domain(self, additional_domain=None):
-        sale_items = self._get_sale_order_items()
+        sale_items = self.sudo()._get_sale_order_items()
         domain = [
-            ('order_id', 'in', sale_items.order_id.ids),
+            ('order_id', 'in', sale_items.sudo().order_id.ids),
             ('is_downpayment', '=', False),
             ('state', '=', 'sale'),
             ('display_type', '=', False),
@@ -382,7 +396,7 @@ class Project(models.Model):
         return domain
 
     def _get_sale_items(self, with_action=True):
-        domain = self.sudo()._get_sale_items_domain()
+        domain = self._get_sale_items_domain()
         return {
             'total': self.env['sale.order.line'].sudo().search_count(domain),
             'data': self.get_sale_items_data(domain, limit=5, with_action=with_action),
@@ -391,6 +405,9 @@ class Project(models.Model):
     def _show_profitability(self):
         self.ensure_one()
         return self.allow_billable and super()._show_profitability()
+
+    def _show_profitability_helper(self):
+        return True
 
     def _get_profitability_labels(self):
         return {
@@ -556,7 +573,13 @@ class Project(models.Model):
         query = self.env['account.move.line'].sudo()._search(
             self._get_revenues_items_from_invoices_domain([('id', 'not in', excluded_move_line_ids)]),
         )
-        query.add_where('account_move_line.analytic_distribution ? %s', [str(self.analytic_account_id.id)])
+        query.add_where(
+            SQL(
+                "%s && %s",
+                [str(self.analytic_account_id.id)],
+                self.env['account.move.line']._query_analytic_accounts(),
+            )
+        )
         # account_move_line__move_id is the alias of the joined table account_move in the query
         # we can use it, because of the "move_id.move_type" clause in the domain of the query, which generates the join
         # this is faster than a search_read followed by a browse on the move_id to retrieve the move_type of each account.move.line
@@ -570,7 +593,11 @@ class Project(models.Model):
             for moves_read in invoices_move_line_read:
                 currency = self.env['res.currency'].browse(moves_read['currency_id']).with_prefetch(currency_ids)
                 price_subtotal = currency._convert(moves_read['price_subtotal'], self.currency_id, self.company_id)
-                analytic_contribution = moves_read['analytic_distribution'][str(self.analytic_account_id.id)] / 100.
+                # an analytic account can appear several time in an analytic distribution with different repartition percentage
+                analytic_contribution = sum(
+                    percentage for ids, percentage in moves_read['analytic_distribution'].items()
+                    if str(self.analytic_account_id.id) in ids.split(',')
+                ) / 100.
                 move_ids.add(moves_read['move_id'])
                 if moves_read['parent_state'] == 'draft':
                     if moves_read['move_type'] == 'out_invoice':
@@ -717,7 +744,13 @@ class Project(models.Model):
 
     def action_open_project_vendor_bills(self):
         query = self.env['account.move.line']._search([('move_id.move_type', 'in', ['in_invoice', 'in_refund'])])
-        query.add_where('analytic_distribution ? %s', [str(self.analytic_account_id.id)])
+        query.add_where(
+            SQL(
+                "%s && %s",
+                [str(self.analytic_account_id.id)],
+                self.env['account.move.line']._query_analytic_accounts(),
+            )
+        )
         query_string, query_param = query.select('DISTINCT move_id')
         self._cr.execute(query_string, query_param)
         vendor_bill_ids = [line.get('move_id') for line in self._cr.dictfetchall()]
@@ -805,7 +838,7 @@ class ProjectTask(models.Model):
         (self - billable_task).partner_id = False
         super(ProjectTask, billable_task)._compute_partner_id()
 
-    @api.depends('partner_id.commercial_partner_id', 'sale_line_id.order_partner_id', 'parent_id.sale_line_id', 'project_id.sale_line_id', 'milestone_id.sale_line_id', 'allow_billable')
+    @api.depends('partner_id', 'sale_line_id.order_partner_id', 'parent_id.sale_line_id', 'project_id.sale_line_id', 'milestone_id.sale_line_id', 'allow_billable')
     def _compute_sale_line(self):
         for task in self:
             if not (task.allow_billable or task.parent_id.allow_billable):

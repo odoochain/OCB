@@ -14,6 +14,7 @@ class PaymentProvider(models.Model):
         inverse='_inverse_journal_id',
         check_company=True,
         domain='[("type", "=", "bank")]',
+        copy=False,
     )
 
     #=== COMPUTE METHODS ===#
@@ -29,7 +30,7 @@ class PaymentProvider(models.Model):
                 provider.journal_id = payment_method.journal_id
             else:  # Fallback to the first journal of type bank that we find.
                 provider.journal_id = self.env['account.journal'].search([
-                    *self.env['account.journal']._check_company_domain(provider.company_id.id),
+                    ('company_id', '=', provider.company_id.id),
                     ('type', '=', 'bank'),
                 ], limit=1)
                 if provider.journal_id:
@@ -98,11 +99,16 @@ class PaymentProvider(models.Model):
                 payment_method.id)], limit=1)
         return bool(existing_payment_method_lines_count)
 
+    def _check_existing_payment(self, payment_method):
+        existing_payment_count = self.env['account.payment'].search_count([('payment_method_id', '=', payment_method.id)], limit=1)
+        return bool(existing_payment_count)
+
     @api.model
     def _remove_provider(self, code):
         """ Override of `payment` to delete the payment method of the provider. """
         payment_method = self._get_provider_payment_method(code)
-        if self._check_existing_payment_method_lines(payment_method):
-            raise UserError(_("You cannot uninstall this module as payment method transactions already exist."))
+        # If the payment method is used by any payments, we block the uninstallation of the module.
+        if self._check_existing_payment(payment_method):
+            raise UserError(_("You cannot uninstall this module as payments using this payment method already exist."))
         super()._remove_provider(code)
         payment_method.unlink()

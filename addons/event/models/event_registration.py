@@ -86,6 +86,18 @@ class EventRegistration(models.Model):
         registrations_confirmed.event_id._check_seats_availability()
         registrations_confirmed.event_ticket_id._check_seats_availability()
 
+    def default_get(self, fields):
+        ret_vals = super().default_get(fields)
+        utm_mixin_fields = ("campaign_id", "medium_id", "source_id")
+        utm_fields = ("utm_campaign_id", "utm_medium_id", "utm_source_id")
+        if not any(field in utm_fields for field in fields):
+            return ret_vals
+        utm_mixin_defaults = self.env['utm.mixin'].default_get(utm_mixin_fields)
+        for (mixin_field, field) in zip(utm_mixin_fields, utm_fields):
+            if field in fields and utm_mixin_defaults.get(mixin_field):
+                ret_vals[field] = utm_mixin_defaults[mixin_field]
+        return ret_vals
+
     @api.depends('partner_id')
     def _compute_name(self):
         for registration in self:
@@ -161,7 +173,7 @@ class EventRegistration(models.Model):
         res = attendee._get_registration_summary()
         if attendee.state == 'cancel':
             status = 'canceled_registration'
-        elif not attendee.event_id.is_ongoing:
+        elif attendee.event_id.is_finished:
             status = 'not_ongoing_event'
         elif attendee.state != 'done':
             if event_id and attendee.event_id.id != event_id:
@@ -290,16 +302,23 @@ class EventRegistration(models.Model):
 
         onsubscribe_schedulers = self.env['event.mail'].sudo().search([
             ('event_id', 'in', open_registrations.event_id.ids),
-            ('interval_type', '=', 'after_sub')
+            ('interval_type', '=', 'after_sub'),
         ])
         if not onsubscribe_schedulers:
             return
 
         onsubscribe_schedulers.update({'mail_done': False})
-        # we could simply call _create_missing_mail_registrations and let cron do their job
-        # but it currently leads to several delays. We therefore call execute until
-        # cron triggers are correctly used
-        onsubscribe_schedulers.with_user(SUPERUSER_ID).execute()
+        # either trigger the cron, either run schedulers immediately (scaling choice)
+        async_scheduler = self.env['ir.config_parameter'].sudo().get_param('event.event_mail_async')
+        if async_scheduler:
+            self.env.ref('event.event_mail_scheduler')._trigger()
+        else:
+            # we could simply call _create_missing_mail_registrations and let cron do their job
+            # but it currently leads to several delays. We therefore call execute until
+            # cron triggers are correctly used
+            onsubscribe_schedulers.with_context(
+                event_mail_registration_ids=open_registrations.ids
+            ).with_user(SUPERUSER_ID).execute()
 
     # ------------------------------------------------------------
     # MAILING / GATEWAY

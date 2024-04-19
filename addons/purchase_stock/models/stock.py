@@ -19,7 +19,7 @@ class StockWarehouse(models.Model):
 
     buy_to_resupply = fields.Boolean('Buy to Resupply', default=True,
                                      help="When products are bought, they can be delivered to this warehouse")
-    buy_pull_id = fields.Many2one('stock.rule', 'Buy rule')
+    buy_pull_id = fields.Many2one('stock.rule', 'Buy rule', copy=False)
 
     def _generate_global_route_rules_values(self):
         rules = super()._generate_global_route_rules_values()
@@ -194,12 +194,16 @@ class Orderpoint(models.Model):
         return res
 
     def _set_default_route_id(self):
-        route_id = self.env['stock.rule'].search([
+        route_ids = self.env['stock.rule'].search([
             ('action', '=', 'buy')
-        ], limit=1).route_id
-        orderpoint_wh_supplier = self.filtered(lambda o: o.product_id.seller_ids)
-        if route_id and orderpoint_wh_supplier and (not self.product_id.route_ids or route_id in self.product_id.route_ids):
-            orderpoint_wh_supplier.route_id = route_id[0].id
+        ]).route_id
+        for orderpoint in self:
+            route_id = orderpoint.rule_ids.route_id & route_ids
+            if not orderpoint.product_id.seller_ids:
+                continue
+            if not route_id:
+                continue
+            orderpoint.route_id = route_id[0].id
         return super()._set_default_route_id()
 
 

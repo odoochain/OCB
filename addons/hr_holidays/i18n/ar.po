@@ -3,16 +3,16 @@
 # 	* hr_holidays
 # 
 # Translators:
-# Wil Odoo, 2023
-# Malaz Abuidris <msea@odoo.com>, 2023
+# Wil Odoo, 2024
+# Malaz Abuidris <msea@odoo.com>, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-30 14:15+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Malaz Abuidris <msea@odoo.com>, 2023\n"
+"Last-Translator: Malaz Abuidris <msea@odoo.com>, 2024\n"
 "Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -639,13 +639,13 @@ msgstr "<span class=\"o_stat_text\">إجازة</span> "
 
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_leave_view_kanban
-msgid "<span class=\"text-muted\">from </span>"
-msgstr "<span class=\"text-muted\">من </span>"
+msgid "<span class=\"text-muted\"> to </span>"
+msgstr "<span class=\"text-muted\"> إلى </span> "
 
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_leave_view_kanban
-msgid "<span class=\"text-muted\">to </span>"
-msgstr "<span class=\"text-muted\">إلى </span>"
+msgid "<span class=\"text-muted\">from </span>"
+msgstr "<span class=\"text-muted\">من </span>"
 
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_leave_view_form
@@ -950,6 +950,11 @@ msgid "All accrued time carried over"
 msgstr "تم ترحيل كل الوقت المتراكم "
 
 #. module: hr_holidays
+#: model:ir.model.fields,field_description:hr_holidays.field_hr_leave__last_several_days
+msgid "All day"
+msgstr "طوال اليوم"
+
+#. module: hr_holidays
 #. odoo-javascript
 #: code:addons/hr_holidays/static/src/dashboard/time_off_card.xml:0
 #, python-format
@@ -1128,8 +1133,8 @@ msgid "Approval"
 msgstr "الموافقة "
 
 #. module: hr_holidays
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/hr_holidays/models/hr_leave.py:0
 #: code:addons/hr_holidays/models/hr_leave_allocation.py:0
 #: code:addons/hr_holidays/static/src/views/view_dialog/form_view_dialog.xml:0
@@ -2150,7 +2155,7 @@ msgstr "الأنشطة المستقبلية"
 #: code:addons/hr_holidays/static/src/dashboard/time_off_dashboard.xml:0
 #, python-format
 msgid "Grant Time"
-msgstr ""
+msgstr "منح أيام إجازة "
 
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_accrual_plan_view_search
@@ -2249,8 +2254,8 @@ msgid "Hourly"
 msgstr "في الساعة "
 
 #. module: hr_holidays
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/hr_holidays/models/hr_leave.py:0
 #: code:addons/hr_holidays/static/src/dashboard/time_off_card.xml:0
 #: code:addons/hr_holidays/static/src/dashboard/time_off_card.xml:0
@@ -2843,6 +2848,11 @@ msgstr "بلا تصديق "
 #. module: hr_holidays
 #: model_terms:ir.actions.act_window,help:hr_holidays.act_hr_employee_holiday_type
 #: model_terms:ir.actions.act_window,help:hr_holidays.action_hr_available_holidays_report
+#: model_terms:ir.actions.act_window,help:hr_holidays.mail_activity_type_action_config_hr_holidays
+msgid "No data to display"
+msgstr "لا توجد بيانات لعرضها "
+
+#. module: hr_holidays
 #: model_terms:ir.actions.act_window,help:hr_holidays.hr_leave_action_action_department
 msgid "No data yet!"
 msgstr "لا توجد أي بيانات بعد! "
@@ -3186,8 +3196,8 @@ msgid "Reasons"
 msgstr "الأسباب"
 
 #. module: hr_holidays
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/hr_holidays/models/hr_leave.py:0
 #: code:addons/hr_holidays/models/hr_leave_allocation.py:0
 #: code:addons/hr_holidays/static/src/views/view_dialog/form_view_dialog.xml:0
@@ -3402,6 +3412,13 @@ msgid "Second Month Day Display"
 msgstr "عرض اليوم الثاني من الشهر "
 
 #. module: hr_holidays
+#. odoo-python
+#: code:addons/hr_holidays/models/hr_leave.py:0
+#, python-format
+msgid "Second approval request for %(leave_type)s"
+msgstr "طلب الموافقة الثاني لـ %(leave_type)s "
+
+#. module: hr_holidays
 #. odoo-javascript
 #: code:addons/hr_holidays/static/src/tours/hr_holidays_tour.js:0
 #, python-format
@@ -3484,6 +3501,13 @@ msgstr ""
 #: model:mail.message.subtype,name:hr_holidays.mt_leave_sick
 msgid "Sick Time Off"
 msgstr "الإجازة المرضية "
+
+#. module: hr_holidays
+#. odoo-javascript
+#: code:addons/hr_holidays/static/src/dashboard/time_off_card.xml:0
+#, python-format
+msgid "Some leaves cannot be linked to any allocation. To see those leaves,"
+msgstr "بعض الإجازات لا يمكن ربطها بأي مخصصات. لرؤية تلك الإجازات، "
 
 #. module: hr_holidays
 #: model:ir.model.fields,help:hr_holidays.field_hr_leave_accrual_plan__time_off_type_id
@@ -3769,6 +3793,13 @@ msgstr "النوع الذي يحتوي على أقل تسلسل هو القيم�
 
 #. module: hr_holidays
 #. odoo-python
+#: code:addons/hr_holidays/models/hr_leave.py:0
+#, python-format
+msgid "There is no valid allocation to cover that request."
+msgstr "لا يوجد تخصيص صالح لتغطية هذا الطلب. "
+
+#. module: hr_holidays
+#. odoo-python
 #: code:addons/hr_holidays/models/hr_leave_allocation.py:0
 #, python-format
 msgid ""
@@ -3931,6 +3962,8 @@ msgstr ""
 "               يطلب الموظفون المخصصات من الموظفين المسؤولين عن الإجازات (مثال: أيام الاستجمام)."
 
 #. module: hr_holidays
+#. odoo-javascript
+#: code:addons/hr_holidays/static/src/views/calendar/calendar_controller.js:0
 #: model:ir.actions.act_window,name:hr_holidays.hr_leave_action_my_request
 #: model:ir.model.fields,field_description:hr_holidays.field_hr_holidays_cancel_leave__leave_id
 #: model:ir.model.fields,field_description:hr_holidays.field_hr_leave_report__leave_id
@@ -3941,6 +3974,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_leave_view_calendar
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_leave_view_dashboard
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_leave_view_form
+#, python-format
 msgid "Time Off Request"
 msgstr "طلبات الإجازة "
 
@@ -4198,6 +4232,14 @@ msgstr ""
 #: model:hr.leave.type,name:hr_holidays.holiday_status_training
 msgid "Training Time Off"
 msgstr "إجازة للتدريب "
+
+#. module: hr_holidays
+#: model_terms:ir.actions.act_window,help:hr_holidays.mail_activity_type_action_config_hr_holidays
+msgid ""
+"Try to add some records, or make sure that there is no active filter in the "
+"search bar."
+msgstr ""
+"جرب إضافة بعض السجلات، أو تأكد من أنه لا يوجد عامل تصفية نشط في شريط البحث. "
 
 #. module: hr_holidays
 #: model:ir.model.fields.selection,name:hr_holidays.selection__hr_leave_accrual_level__week_day__tue
@@ -4559,13 +4601,6 @@ msgstr ""
 #. odoo-python
 #: code:addons/hr_holidays/models/hr_leave.py:0
 #, python-format
-msgid "You don't have a valid allocation to cover that request."
-msgstr "ليس لديك تخصيص صالح لتغطية هذا الطلب. "
-
-#. module: hr_holidays
-#. odoo-python
-#: code:addons/hr_holidays/models/hr_leave.py:0
-#, python-format
 msgid ""
 "You don't have the rights to apply second approval on a time off request"
 msgstr "لا تملك صلاحيات تطبيق الموافقة الثانية على طلب الإجازة "
@@ -4701,6 +4736,13 @@ msgid "can be used before the allocation expires."
 msgstr "يمكن استخدامها قبل انتهاء صلاحية التخصيص. "
 
 #. module: hr_holidays
+#. odoo-javascript
+#: code:addons/hr_holidays/static/src/dashboard/time_off_card.xml:0
+#, python-format
+msgid "click here"
+msgstr "اضغط هنا "
+
+#. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_accrual_plan_view_form
 msgid "day of the month"
 msgstr "اليوم من الشهر "
@@ -4714,8 +4756,8 @@ msgid "day(s)"
 msgstr "يوم"
 
 #. module: hr_holidays
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/hr_holidays/models/hr_leave.py:0
 #: code:addons/hr_holidays/models/hr_leave_allocation.py:0
 #: code:addons/hr_holidays/models/hr_leave_allocation.py:0
@@ -4760,8 +4802,8 @@ msgid "from %(date_from)s to %(date_to)s - %(state)s"
 msgstr "من %(date_from)s إلى %(date_to)s - %(state)s "
 
 #. module: hr_holidays
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/hr_holidays/models/hr_leave.py:0
 #: code:addons/hr_holidays/models/hr_leave_allocation.py:0
 #: code:addons/hr_holidays/models/hr_leave_allocation.py:0
@@ -4860,6 +4902,11 @@ msgstr "المبلغ المتراكم غير كاف لتلك المدة. "
 #: model_terms:ir.ui.view,arch_db:hr_holidays.report_holidayssummary
 msgid "to"
 msgstr "إلى"
+
+#. module: hr_holidays
+#: model_terms:ir.ui.view,arch_db:hr_holidays.hr_leave_view_kanban
+msgid "to refuse"
+msgstr "للرفض "
 
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_accrual_plan_view_form

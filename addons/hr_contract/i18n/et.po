@@ -4,8 +4,6 @@
 # 
 # Translators:
 # Andre Roomet <andreroomet@gmail.com>, 2023
-# Anna, 2023
-# Rivo Zängov <eraser@eraser.ee>, 2023
 # Algo Kärp <algokarp@gmail.com>, 2023
 # Maidu Targama <m.targama@gmail.com>, 2023
 # Triine Aavik <triine@avalah.ee>, 2023
@@ -17,14 +15,18 @@
 # Eneli Õigus <enelioigus@gmail.com>, 2023
 # JanaAvalah, 2023
 # Arma Gedonsky <armagedonsky@hot.ee>, 2023
+# Mihkel avalah, 2023
+# Rivo Zängov <eraser@eraser.ee>, 2024
+# Anna, 2024
+# Birgit Vijar, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Arma Gedonsky <armagedonsky@hot.ee>, 2023\n"
+"Last-Translator: Birgit Vijar, 2024\n"
 "Language-Team: Estonian (https://app.transifex.com/odoo/teams/41243/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -61,6 +63,9 @@ msgid ""
 "                                    In Contract Since\n"
 "                                </span>"
 msgstr ""
+"<span class=\"o_stat_text text-danger\" invisible=\"not contract_warning\" title=\"In Contract Since\">\n"
+"                                   Leping alates\n"
+"                                </span>"
 
 #. module: hr_contract
 #: model_terms:ir.ui.view,arch_db:hr_contract.hr_hr_employee_view_form3
@@ -68,6 +73,8 @@ msgid ""
 "<span class=\"o_stat_text text-success\" invisible=\"contract_warning\" "
 "title=\"In Contract Since\"> In Contract Since</span>"
 msgstr ""
+"<span class=\"o_stat_text text-success\" invisible=\"contract_warning\" "
+"title=\"In Contract Since\">Leping alates</span>"
 
 #. module: hr_contract
 #: model_terms:ir.ui.view,arch_db:hr_contract.hr_contract_view_kanban
@@ -76,6 +83,9 @@ msgid ""
 "                                            To\n"
 "                                        </span>"
 msgstr ""
+"<span class=\"o_stat_text\">\n"
+"                                            (kellele?)\n"
+"                                        </span>"
 
 #. module: hr_contract
 #: model_terms:ir.ui.view,arch_db:hr_contract.hr_contract_view_kanban
@@ -84,6 +94,9 @@ msgid ""
 "                                        From\n"
 "                                    </span>"
 msgstr ""
+"<span class=\"o_stat_text\">\n"
+"                                        (kellelt?)\n"
+"                                    </span>"
 
 #. module: hr_contract
 #: model_terms:ir.ui.view,arch_db:hr_contract.hr_hr_employee_view_form3
@@ -95,6 +108,12 @@ msgid ""
 "                                    Contracts\n"
 "                                </span>"
 msgstr ""
+"<span invisible=\"contracts_count != 1\" class=\"o_stat_text text-danger\">\n"
+"                                    Leping\n"
+"                                </span>\n"
+"                                <span invisible=\"contracts_count == 1\" class=\"o_stat_text text-danger\">\n"
+"                                    Lepingud\n"
+"                                </span>"
 
 #. module: hr_contract
 #: model_terms:ir.ui.view,arch_db:hr_contract.hr_contract_view_form
@@ -106,6 +125,12 @@ msgid ""
 "                                        Contract\n"
 "                                    </span>"
 msgstr ""
+"<span invisible=\"contracts_count == 1\" class=\"o_stat_text\">\n"
+"                                        Lepingud\n"
+"                                    </span>\n"
+"                                    <span invisible=\"contracts_count &gt; 1\" class=\"o_stat_text\">\n"
+"                                        Leping\n"
+"                                    </span>"
 
 #. module: hr_contract
 #: model_terms:ir.ui.view,arch_db:hr_contract.res_config_settings_view_form
@@ -760,6 +785,11 @@ msgid "No Contracts"
 msgstr "Lepingud puudu"
 
 #. module: hr_contract
+#: model_terms:ir.actions.act_window,help:hr_contract.hr_contract_history_view_list_action
+msgid "No data to display"
+msgstr "Pole andmeid, mida näidata"
+
+#. module: hr_contract
 #: model:ir.model.fields.selection,name:hr_contract.selection__hr_contract_history__under_contract_state__blocked
 msgid "Not Under Contract"
 msgstr "Ei sisaldu lepingus"
@@ -797,7 +827,7 @@ msgstr "Vigade arv"
 #. module: hr_contract
 #: model:ir.model.fields,help:hr_contract.field_hr_contract__message_needaction_counter
 msgid "Number of messages requiring action"
-msgstr ""
+msgstr "Tegevust nõudvate sõnumite arv"
 
 #. module: hr_contract
 #: model:ir.model.fields,help:hr_contract.field_hr_contract__message_has_error_counter
@@ -854,7 +884,7 @@ msgstr "Vastutav kasutaja"
 #: model:ir.model.fields.selection,name:hr_contract.selection__hr_contract__state__open
 #: model:ir.model.fields.selection,name:hr_contract.selection__hr_contract_history__state__open
 msgid "Running"
-msgstr "Pidev"
+msgstr "Töös"
 
 #. module: hr_contract
 #: model_terms:ir.ui.view,arch_db:hr_contract.hr_contract_history_view_search
@@ -1020,7 +1050,7 @@ msgstr "Veebilehe suhtluse ajalugu"
 #. module: hr_contract
 #: model_terms:ir.ui.view,arch_db:hr_contract.res_config_settings_view_form
 msgid "Work Permit Expiration Notice Period"
-msgstr ""
+msgstr "Tööloa aegumiskuupäev"
 
 #. module: hr_contract
 #: model:ir.model.fields,field_description:hr_contract.field_res_company__work_permit_expiration_notice_period

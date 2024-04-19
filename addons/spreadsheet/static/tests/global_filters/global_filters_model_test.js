@@ -48,6 +48,7 @@ import { GlobalFiltersUIPlugin } from "@spreadsheet/global_filters/plugins/globa
 import { migrate } from "@spreadsheet/o_spreadsheet/migration";
 import { toRangeData } from "../utils/zones";
 import { PivotUIPlugin } from "@spreadsheet/pivot/index";
+import { getEvaluatedCell } from "../utils/getters";
 const { DateTime } = luxon;
 const { toZone } = helpers;
 
@@ -251,18 +252,20 @@ QUnit.module("spreadsheet > Global filters model", {}, () => {
         const gf = model.getters.getGlobalFilters()[0];
         let result = await setGlobalFilterValue(model, {
             id: gf.id,
-            value: { period: "february" },
+            value: { period: "february", yearOffset: 0 },
         });
         assert.deepEqual(result, DispatchResult.Success);
         assert.equal(model.getters.getGlobalFilters().length, 1);
         assert.deepEqual(model.getters.getGlobalFilterDefaultValue(gf.id).yearOffset, -1);
         assert.deepEqual(model.getters.getGlobalFilterValue(gf.id).period, "february");
+        assert.deepEqual(model.getters.getGlobalFilterValue(gf.id).yearOffset, 0);
         result = await setGlobalFilterValue(model, {
             id: gf.id,
-            value: { period: "march" },
+            value: { period: "march", yearOffset: 0 },
         });
         assert.deepEqual(result, DispatchResult.Success);
         assert.deepEqual(model.getters.getGlobalFilterValue(gf.id).period, "march");
+        assert.deepEqual(model.getters.getGlobalFilterValue(gf.id).yearOffset, 0);
         const computedDomain = model.getters.getPivotComputedDomain("1");
         assert.equal(computedDomain.length, 3);
         const listDomain = model.getters.getListComputedDomain("1");
@@ -889,8 +892,86 @@ QUnit.module("spreadsheet > Global filters model", {}, () => {
         assert.equal(getCellValue(model, "A10"), ``);
     });
 
+    QUnit.test("ODOO.FILTER.VALUE date from/to without values", async function (assert) {
+        const model = await createModelWithDataSource();
+        setCellContent(model, "A1", `=ODOO.FILTER.VALUE("Date Filter")`);
+        await addGlobalFilter(model, {
+            id: "42",
+            type: "date",
+            label: "Date Filter",
+            rangeType: "from_to",
+        });
+        assert.equal(getEvaluatedCell(model, "A1").value, "");
+        assert.equal(getEvaluatedCell(model, "A2").value, "");
+    });
+
+    QUnit.test("ODOO.FILTER.VALUE date from/to with only from defined", async function (assert) {
+        const model = await createModelWithDataSource();
+        setCellContent(model, "A1", `=ODOO.FILTER.VALUE("Date Filter")`);
+        await addGlobalFilter(model, {
+            id: "42",
+            type: "date",
+            label: "Date Filter",
+            rangeType: "from_to",
+        });
+        await setGlobalFilterValue(model, {
+            id: "42",
+            value: {
+                from: "2020-01-01",
+            },
+        });
+        assert.equal(getEvaluatedCell(model, "A1").value, 43831);
+        assert.equal(getEvaluatedCell(model, "A1").format, "m/d/yyyy");
+        assert.equal(getEvaluatedCell(model, "A1").formattedValue, "1/1/2020");
+        assert.equal(getEvaluatedCell(model, "B1").value, "");
+    });
+
+    QUnit.test("ODOO.FILTER.VALUE date from/to with only to defined", async function (assert) {
+        const model = await createModelWithDataSource();
+        setCellContent(model, "A1", `=ODOO.FILTER.VALUE("Date Filter")`);
+        await addGlobalFilter(model, {
+            id: "42",
+            type: "date",
+            label: "Date Filter",
+            rangeType: "from_to",
+        });
+        await setGlobalFilterValue(model, {
+            id: "42",
+            value: {
+                to: "2020-01-01",
+            },
+        });
+        assert.equal(getEvaluatedCell(model, "A1").value, "");
+        assert.equal(getEvaluatedCell(model, "B1").value, 43831);
+        assert.equal(getEvaluatedCell(model, "B1").format, "m/d/yyyy");
+        assert.equal(getEvaluatedCell(model, "B1").formattedValue, "1/1/2020");
+    });
+
+    QUnit.test("ODOO.FILTER.VALUE date from/to with from and to defined", async function (assert) {
+        const model = await createModelWithDataSource();
+        setCellContent(model, "A1", `=ODOO.FILTER.VALUE("Date Filter")`);
+        await addGlobalFilter(model, {
+            id: "42",
+            type: "date",
+            label: "Date Filter",
+            rangeType: "from_to",
+        });
+        await setGlobalFilterValue(model, {
+            id: "42",
+            value: {
+                from: "2020-01-01",
+                to: "2021-01-01",
+            },
+        });
+        assert.equal(getEvaluatedCell(model, "A1").value, 43831);
+        assert.equal(getEvaluatedCell(model, "A1").format, "m/d/yyyy");
+        assert.equal(getEvaluatedCell(model, "A1").formattedValue, "1/1/2020");
+        assert.equal(getEvaluatedCell(model, "B1").value, 44197);
+        assert.equal(getEvaluatedCell(model, "B1").format, "m/d/yyyy");
+        assert.equal(getEvaluatedCell(model, "B1").formattedValue, "1/1/2021");
+    });
+
     QUnit.test("ODOO.FILTER.VALUE relation filter", async function (assert) {
-        assert.expect(6);
         const model = await createModelWithDataSource({
             mockRPC: function (route, { method, args }) {
                 if (method === "read") {
@@ -911,10 +992,11 @@ QUnit.module("spreadsheet > Global filters model", {}, () => {
             type: "relation",
             label: "Relation Filter",
             modelName: "partner",
+            defaultValue: [],
         });
         await nextTick();
         const [filter] = model.getters.getGlobalFilters();
-
+        assert.verifySteps([]);
         // One record; displayNames not defined => rpc
         await setGlobalFilterValue(model, {
             id: filter.id,
@@ -941,6 +1023,21 @@ QUnit.module("spreadsheet > Global filters model", {}, () => {
         assert.equal(getCellValue(model, "A10"), "Raoul Grosbedon");
         assert.verifySteps(["read_1", "read_2"]);
     });
+
+    QUnit.test(
+        "ODOO.FILTER.VALUE with escaped quotes in the filter label",
+        async function (assert) {
+            const model = await createModelWithDataSource();
+            await addGlobalFilter(model, {
+                id: "42",
+                type: "text",
+                label: 'my "special" filter',
+                defaultValue: "Jean-Jacques",
+            });
+            setCellContent(model, "A1", '=ODOO.FILTER.VALUE("my \\"special\\" filter")');
+            assert.equal(getCellValue(model, "A1"), "Jean-Jacques");
+        }
+    );
 
     QUnit.test(
         "ODOO.FILTER.VALUE formulas are updated when filter label is changed",
@@ -1254,7 +1351,7 @@ QUnit.module("spreadsheet > Global filters model", {}, () => {
                     type: "date",
                     rangeType: "fixedPeriod",
                     label: "This month",
-                    defaultValue: { yearOffset: 0, period: "january" },
+                    defaultValue: { period: "january", yearOffset: 0 },
                 },
                 pivot: {
                     1: { chain: "date", type: "date" },
@@ -1345,7 +1442,7 @@ QUnit.module("spreadsheet > Global filters model", {}, () => {
         await addGlobalFilter(model, THIS_YEAR_GLOBAL_FILTER);
         const [filter] = model.getters.getGlobalFilters();
         assert.strictEqual(
-            model.getters.getFilterDisplayValue(filter.label),
+            model.getters.getFilterDisplayValue(filter.label)[0][0].value,
             String(new Date().getFullYear())
         );
     });
@@ -1366,9 +1463,41 @@ QUnit.module("spreadsheet > Global filters model", {}, () => {
         assert.equal(filterSheet.cells["B1"].content, "Value");
         assert.equal(
             filterSheet.cells["B2"].content,
-            model.getters.getFilterDisplayValue(filter.label)
+            model.getters.getFilterDisplayValue(filter.label)[0][0].value
         );
         model.exportXLSX(); // should not crash
+    });
+
+    QUnit.test("Export from/to global filters for excel", async function (assert) {
+        const model = await createModelWithDataSource();
+        await addGlobalFilter(model, {
+            id: "42",
+            type: "date",
+            label: "Date Filter",
+            rangeType: "from_to",
+        });
+        await setGlobalFilterValue(model, {
+            id: "42",
+            value: {
+                from: "2020-01-01",
+                to: "2021-01-01",
+            },
+        });
+        const [filter] = model.getters.getGlobalFilters();
+        const filterPlugin = model["handlers"].find(
+            (handler) => handler instanceof GlobalFiltersUIPlugin
+        );
+        const exportData = { styles: {}, formats: {}, sheets: [] };
+        filterPlugin.exportForExcel(exportData);
+        const filterSheet = exportData.sheets[0];
+        assert.equal(filterSheet.cells["A1"].content, "Filter");
+        assert.equal(filterSheet.cells["A2"].content, filter.label);
+        assert.equal(filterSheet.cells["B1"].content, "Value");
+        assert.equal(filterSheet.cells["B2"].content, 43831);
+        assert.equal(filterSheet.cells["C2"].content, 44197);
+        assert.equal(filterSheet.cells["B2"].format, 1);
+        assert.equal(filterSheet.cells["C2"].format, 1);
+        assert.strictEqual(exportData.formats[1], "m/d/yyyy");
     });
 
     QUnit.test("Date filter automatic default value for years filter", async function (assert) {
@@ -1481,7 +1610,7 @@ QUnit.module("spreadsheet > Global filters model", {}, () => {
             rangeType: "relative",
         });
         assert.equal(
-            model.getters.getFilterDisplayValue(label),
+            model.getters.getFilterDisplayValue(label)[0][0].value,
             RELATIVE_DATE_RANGE_TYPES[1].description
         );
     });
@@ -1697,6 +1826,53 @@ QUnit.module("spreadsheet > Global filters model", {}, () => {
             "can clear 'from_to' date filter values"
         );
     });
+
+    QUnit.test(
+        "A date filter without a yearOffset value yields an empty domain",
+        async function (assert) {
+            patchDate(2022, 4, 16, 0, 0, 0);
+            const { model } = await createSpreadsheetWithPivot();
+            const filter = {
+                id: "43",
+                type: "date",
+                label: "This Year",
+                rangeType: "fixedPeriod",
+                defaultValue: "this_year",
+            };
+            await addGlobalFilter(model, filter, {
+                pivot: { 1: { chain: "date", type: "date", offset: 0 } },
+            });
+            let computedDomain = model.getters.getPivotComputedDomain("1");
+            assertDateDomainEqual(assert, "date", "2022-01-01", "2022-12-31", computedDomain);
+            model.dispatch("CLEAR_GLOBAL_FILTER_VALUE", { id: filter.id });
+            computedDomain = model.getters.getPivotComputedDomain("1");
+            assert.deepEqual(computedDomain, []);
+        }
+    );
+
+    QUnit.test(
+        "Date filter with automatic default without a yearOffset value yields an empty domain",
+        async function (assert) {
+            patchDate(2022, 4, 16, 0, 0, 0);
+            const { model } = await createSpreadsheetWithPivot();
+            const filter = {
+                id: "43",
+                type: "date",
+                label: "This Year",
+                rangeType: "fixedPeriod",
+                defaultValue: "this_year",
+                defaultsToCurrentPeriod: true,
+            };
+            await addGlobalFilter(model, filter, {
+                pivot: { 1: { chain: "date", type: "date", offset: 0 } },
+            });
+            let computedDomain = model.getters.getPivotComputedDomain("1");
+            assertDateDomainEqual(assert, "date", "2022-01-01", "2022-12-31", computedDomain);
+            model.dispatch("CLEAR_GLOBAL_FILTER_VALUE", { id: filter.id });
+            computedDomain = model.getters.getPivotComputedDomain("1");
+            assert.deepEqual(computedDomain, []);
+        }
+    );
 
     QUnit.test(
         "Can set a value to a relation filter from the SET_MANY_GLOBAL_FILTER_VALUE command",

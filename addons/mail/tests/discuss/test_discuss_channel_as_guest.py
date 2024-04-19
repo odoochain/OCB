@@ -1,11 +1,12 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo.addons.mail.tests.common import mail_new_test_user
-from odoo.tests.common import HttpCase, tagged
+from odoo.tests.common import tagged
+from odoo.addons.base.tests.common import HttpCaseWithUserPortal, HttpCaseWithUserDemo
 
 
 @tagged("post_install", "-at_install")
-class TestMailPublicPage(HttpCase):
+class TestMailPublicPage(HttpCaseWithUserPortal, HttpCaseWithUserDemo):
     """Checks that the invite page redirects to the channel and that all
     modules load correctly on the welcome and channel page when authenticated as various users"""
 
@@ -88,3 +89,13 @@ class TestMailPublicPage(HttpCase):
         self.url_open('/chat/xyz')
         channel = self.env['discuss.channel'].search([('uuid', '=', 'xyz')])
         self.assertEqual(len(channel), 1)
+
+    def test_channel_invitation_from_token(self):
+        public_channel = self.env["discuss.channel"].channel_create(name="Public Channel", group_id=None)
+        internal_channel = self.env["discuss.channel"].channel_create(name="Internal Channel", group_id=self.env.ref("base.group_user").id)
+
+        public_response = self.url_open(public_channel.invitation_url)
+        self.assertEqual(public_response.status_code, 200)
+
+        internal_response = self.url_open(internal_channel.invitation_url)
+        self.assertEqual(internal_response.status_code, 404)

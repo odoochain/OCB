@@ -61,7 +61,9 @@ export class ProductScreen extends ControlButtonsMixin(Component) {
         // the callbacks in `onMounted` hook.
         onMounted(() => this.numberBuffer.reset());
         this.numberBuffer.use({
-            triggerAtInput: (...args) => this.updateSelectedOrderline(...args),
+            triggerAtInput: (...args) => {
+                if (!this.pos.tempScreenIsShown) this.updateSelectedOrderline(...args);
+            },
             useWithBarcode: true,
         });
     }
@@ -74,15 +76,15 @@ export class ProductScreen extends ControlButtonsMixin(Component) {
             { value: "1" },
             { value: "2" },
             { value: "3" },
-            { value: "quantity", text: "Qty" },
+            { value: "quantity", text: _t("Qty") },
             { value: "4" },
             { value: "5" },
             { value: "6" },
-            { value: "discount", text: "% Disc", disabled: !this.pos.config.manual_discount },
+            { value: "discount", text: _t("% Disc"), disabled: !this.pos.config.manual_discount },
             { value: "7" },
             { value: "8" },
             { value: "9" },
-            { value: "price", text: "Price", disabled: !this.pos.cashierHasPriceControlRights() },
+            { value: "price", text: _t("Price"), disabled: !this.pos.cashierHasPriceControlRights() },
             { value: "-", text: "+/-" },
             { value: "0" },
             { value: this.env.services.localization.decimalPoint },
@@ -184,7 +186,7 @@ export class ProductScreen extends ControlButtonsMixin(Component) {
             }
             return;
         }
-        if (this.pos.numpadMode === "quantity" && this.pos.disallowLineQuantityChange()) {
+        if (selectedLine && this.pos.numpadMode === "quantity" && this.pos.disallowLineQuantityChange()) {
             const orderlines = order.orderlines;
             const lastId = orderlines.length !== 0 && orderlines.at(orderlines.length - 1).cid;
             const currentQuantity = this.pos.get_order().get_selected_orderline().get_quantity();
@@ -363,10 +365,10 @@ export class ProductScreen extends ControlButtonsMixin(Component) {
                 return true;
             }
             if (newQuantity >= selectedLine.saved_quantity) {
+                selectedLine.set_quantity(newQuantity);
                 if (newQuantity == 0) {
                     order._unlinkOrderline(selectedLine);
                 }
-                selectedLine.set_quantity(newQuantity);
                 return true;
             }
             const newLine = selectedLine.clone();

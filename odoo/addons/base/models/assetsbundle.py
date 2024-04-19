@@ -150,7 +150,7 @@ class AssetsBundle(object):
             self._checksum_cache[asset_type] = hashlib.sha512(unique_descriptor.encode()).hexdigest()[:64]
         return self._checksum_cache[asset_type]
 
-    def get_asset_url(self, unique='%', extension='%', ignore_params=False):
+    def get_asset_url(self, unique=ANY_UNIQUE, extension='%', ignore_params=False):
         direction = '.rtl' if self.is_css(extension) and self.rtl else ''
         bundle_name = f"{self.name}{direction}.{extension}"
         return self.env['ir.asset']._get_asset_bundle_url(bundle_name, unique, self.assets_params, ignore_params)
@@ -197,6 +197,7 @@ class AssetsBundle(object):
         # avoid to invalidate cache if it's already empty (mainly useful for test)
 
         if attachments:
+            _logger.info('Deleting attachments %s (matching %s) because it was replaced with %s', attachments.ids, to_clean_pattern, keep_url)
             self._unlink_attachments(attachments)
             # clear_cache was removed
 
@@ -263,6 +264,7 @@ class AssetsBundle(object):
                 }
                 attachment = self.env['ir.attachment'].with_user(SUPERUSER_ID).create(values)
                 attachment_id = attachment.id
+                self.clean_attachments(extension)
 
         return self.env['ir.attachment'].sudo().browse(attachment_id)
 
@@ -305,6 +307,8 @@ class AssetsBundle(object):
             'url': url,
         }
         attachment = ira.with_user(SUPERUSER_ID).create(values)
+
+        _logger.info('Generating a new asset bundle attachment %s (id:%s)', attachment.url, attachment.id)
 
         self._clean_attachments(extension, url)
 
@@ -535,7 +539,7 @@ class AssetsBundle(object):
 
         css = self.preprocess_css()
         if self.css_errors:
-            error_message = '\n'.join(self.css_errors).replace('"', r'\\"').replace('\n', r'\A').replace('*', r'\*')
+            error_message = '\n'.join(self.css_errors).replace('"', r'\"').replace('\n', r'\A').replace('*', r'\*')
             previous_attachment = self.get_attachments(extension, ignore_version=True)
             previous_css = previous_attachment.raw.decode() if previous_attachment else ''
             css_error_message_header = '\n\n/* ## CSS error message ##*/'
@@ -601,7 +605,7 @@ css_error_message {
                 content_bundle_list.append(content)
                 content_line_count += len(content.split("\n"))
 
-        content_bundle = '\n'.join(content_bundle_list) + f"\n//*# sourceMappingURL={sourcemap_attachment.url} */"
+        content_bundle = '\n'.join(content_bundle_list) + f"\n/*# sourceMappingURL={sourcemap_attachment.url} */"
         css_attachment = self.save_attachment('css', content_bundle)
 
         generator._file = css_attachment.url

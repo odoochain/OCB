@@ -3,16 +3,16 @@
 # 	* website_event
 # 
 # Translators:
-# Wil Odoo, 2023
-# Abe Manyo, 2023
+# Wil Odoo, 2024
+# Abe Manyo, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-29 10:44+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Abe Manyo, 2023\n"
+"Last-Translator: Abe Manyo, 2024\n"
 "Language-Team: Indonesian (https://app.transifex.com/odoo/teams/41243/id/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -407,6 +407,16 @@ msgid "Cards"
 msgstr "Kartu-Kartu"
 
 #. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Card design"
+msgstr "Desain kartu"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.snippet_options
+msgid "Template badge"
+msgstr "Lencana templat"
+
+#. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.display_timer_alert_widget
 #: model_terms:ir.ui.view,arch_db:website_event.index_topbar
 #: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
@@ -470,6 +480,7 @@ msgid "Consumers"
 msgstr "Konsumen"
 
 #. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_location
 #: model_terms:ir.ui.view,arch_db:website_event.snippet_options
 msgid "Countries"
 msgstr "Negara"
@@ -496,7 +507,7 @@ msgid "Created on"
 msgstr "Dibuat pada"
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.index_topbar
+#: model_terms:ir.ui.view,arch_db:website_event.event_time
 #: model_terms:ir.ui.view,arch_db:website_event.snippet_options
 msgid "Date"
 msgstr "Tanggal"
@@ -719,6 +730,16 @@ msgstr "Berakhir"
 #: model_terms:ir.ui.view,arch_db:website_event.event_event_view_form
 msgid "Extra Register Button"
 msgstr "Tombol Pendaftaran Ekstra"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_location
+msgid "Filter by Country"
+msgstr "Filter berdasarkan Negara"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_time
+msgid "Filter by Date"
+msgstr "Filter berdasarkan Tanggal"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.index_topbar
@@ -1021,6 +1042,11 @@ msgid "Once per Order"
 msgstr "Sekali per Order"
 
 #. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_location
+msgid "Online Events"
+msgstr "Acara Online"
+
+#. module: website_event
 #. odoo-python
 #: code:addons/website_event/models/website_snippet_filter.py:0
 #, python-format
@@ -1092,10 +1118,8 @@ msgstr "Tipe Pertanyaan"
 #. odoo-python
 #: code:addons/website_event/models/event_question.py:0
 #, python-format
-msgid "Question cannot belong to both the event category and itself."
-msgstr ""
-"Pertanyaan tidak boleh dimiliki secara sekaligus di kategori acara dan di "
-"pertanyaan tersebut sendiri."
+msgid "Question cannot be linked to both an Event and an Event Type."
+msgstr "Pertanyaan tidak boleh ke masing-masing Acara dan Tipe Acara."
 
 #. module: website_event
 #: model:ir.model.fields,field_description:website_event.field_event_event__question_ids
@@ -1124,8 +1148,8 @@ msgid "Ref:"
 msgstr "Ref:"
 
 #. module: website_event
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/website_event/models/event_event.py:0
 #: code:addons/website_event/static/src/js/register_toaster_widget.js:0
 #: model:ir.model.fields.selection,name:website_event.selection__website_event_menu__menu_type__register
@@ -1134,7 +1158,7 @@ msgstr "Ref:"
 #: model_terms:ir.ui.view,arch_db:website_event.registration_template
 #, python-format
 msgid "Register"
-msgstr "Tidak ada Cash Register didefinisikan!"
+msgstr "Daftar"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.event_type_view_form
@@ -1229,6 +1253,11 @@ msgstr "Kembali ke daftar acara."
 #: model:ir.model.fields,field_description:website_event.field_event_event__is_seo_optimized
 msgid "SEO optimized"
 msgstr "Dioptimalkan SEO"
+
+#. module: website_event
+#: model_terms:ir.ui.view,arch_db:website_event.event_description_full
+msgid "Share"
+msgstr "Bagikan"
 
 #. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.event_description_full
@@ -1670,11 +1699,6 @@ msgid ""
 msgstr "Anda tidak dapat menghapus jawaban yang sudah dipilih oleh peserta."
 
 #. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_template
-msgid "alert-link my-3"
-msgstr "alert-link my-3"
-
-#. module: website_event
 #: model_terms:ir.ui.view,arch_db:website_event.modal_ticket_registration
 msgid "available)"
 msgstr "tersedia)"
@@ -1694,8 +1718,3 @@ msgstr "contohnya \"Apakah Anda memilih larangan makanan apapun?\""
 #: model_terms:ir.ui.view,arch_db:website_event.event_description_full
 msgid "iCal/Outlook"
 msgstr "iCal/Outlook"
-
-#. module: website_event
-#: model_terms:ir.ui.view,arch_db:website_event.registration_template
-msgid "ms-2"
-msgstr "ms-2"

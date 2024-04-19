@@ -4,15 +4,16 @@
 # 
 # Translators:
 # Wil Odoo, 2023
-# Jolien De Paepe, 2023
+# Jolien De Paepe, 2024
+# Asia Ba, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:56+0000\n"
+"POT-Creation-Date: 2024-01-29 10:46+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Jolien De Paepe, 2023\n"
+"Last-Translator: Asia Ba, 2024\n"
 "Language-Team: French (https://app.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -248,6 +249,13 @@ msgstr "<span>Personnaliser</span>"
 
 #. module: web_editor
 #. odoo-javascript
+#: code:addons/web_editor/static/src/xml/snippets.xml:0
+#, python-format
+msgid "ACCESS OPTIONS ANYWAY"
+msgstr "OPTIONS D'ACCES EN TOUT TEMPS"
+
+#. module: web_editor
+#. odoo-javascript
 #: code:addons/web_editor/static/src/js/wysiwyg/wysiwyg.js:0
 #, python-format
 msgid "AI Tools"
@@ -291,6 +299,7 @@ msgstr "Ajouter une rangée"
 
 #. module: web_editor
 #. odoo-javascript
+#: code:addons/web_editor/static/src/components/media_dialog/document_selector.js:0
 #: code:addons/web_editor/static/src/components/media_dialog/image_selector.js:0
 #, python-format
 msgid "Add URL"
@@ -330,13 +339,6 @@ msgstr "Ajouter un lien"
 #, python-format
 msgid "Add an emoji"
 msgstr "Ajouter un émoji"
-
-#. module: web_editor
-#. odoo-javascript
-#: code:addons/web_editor/static/src/components/media_dialog/document_selector.js:0
-#, python-format
-msgid "Add document"
-msgstr "Ajouter un document"
 
 #. module: web_editor
 #: model_terms:ir.ui.view,arch_db:web_editor.snippet_options_image_optimization_widgets
@@ -1392,8 +1394,15 @@ msgstr "Générer ou transformer du contenu grâce à l'IA."
 #. odoo-javascript
 #: code:addons/web_editor/static/src/js/wysiwyg/widgets/chatgpt_alternatives_dialog.xml:0
 #, python-format
-msgid "Generating alternatives..."
-msgstr "Génération d'alternatives..."
+msgid "Generating"
+msgstr "Générer"
+
+#. module: web_editor
+#. odoo-javascript
+#: code:addons/web_editor/static/src/js/wysiwyg/widgets/chatgpt_alternatives_dialog.xml:0
+#, python-format
+msgid "Generating an alternative..."
+msgstr "Généner une alternative..."
 
 #. module: web_editor
 #: model_terms:ir.ui.view,arch_db:web_editor.snippet_options
@@ -2077,7 +2086,7 @@ msgstr "Média"
 #: code:addons/web_editor/static/src/xml/wysiwyg.xml:0
 #, python-format
 msgid "Medium"
-msgstr "Moyenne"
+msgstr "Médium"
 
 #. module: web_editor
 #. odoo-javascript
@@ -2361,6 +2370,13 @@ msgid "Primary"
 msgstr "Primaire"
 
 #. module: web_editor
+#. odoo-javascript
+#: code:addons/web_editor/static/src/components/upload_progress_toast/upload_progress_toast.xml:0
+#, python-format
+msgid "Progress bar"
+msgstr "Barre de progression"
+
+#. module: web_editor
 #: model:ir.model.fields.selection,name:web_editor.selection__web_editor_converter_test__selection_str__c
 msgid "Qu'est-ce qu'il fout ce maudit pancake, tabernacle ?"
 msgstr "Qu'est-ce qu'il fout ce maudit pancake, tabernacle ?"
@@ -2467,6 +2483,13 @@ msgstr "Qweb Champ de texte"
 #: model:ir.model,name:web_editor.model_ir_qweb_field_qweb
 msgid "Qweb Field qweb"
 msgstr "Qweb Champ qweb"
+
+#. module: web_editor
+#. odoo-javascript
+#: code:addons/web_editor/static/src/xml/snippets.xml:0
+#, python-format
+msgid "REPLACE BY NEW VERSION"
+msgstr "REMPLACER PAR LA NOUVELLE VERSION"
 
 #. module: web_editor
 #: model_terms:ir.ui.view,arch_db:web_editor.colorpicker
@@ -3196,8 +3219,8 @@ msgstr "Cette URL n'est pas valide. L'aperçu n'a pas pu être mis à jour."
 #. odoo-javascript
 #: code:addons/web_editor/static/src/xml/snippets.xml:0
 #, python-format
-msgid "This block is outdated"
-msgstr "Ce bloc est obsolète"
+msgid "This block is outdated."
+msgstr "Ce bloc est obsolète."
 
 #. module: web_editor
 #. odoo-javascript
@@ -3251,17 +3274,6 @@ msgstr "Titre"
 #: model_terms:ir.ui.view,arch_db:web_editor.snippet_options
 msgid "Title tag"
 msgstr "Étiquette de titre"
-
-#. module: web_editor
-#. odoo-javascript
-#: code:addons/web_editor/static/src/xml/snippets.xml:0
-#, python-format
-msgid ""
-"To make changes, drop this block and use the new options in the last "
-"version."
-msgstr ""
-"Pour apporter des modifications, supprimez ce bloc et utilisez les nouvelles"
-" options de la dernière version."
 
 #. module: web_editor
 #. odoo-javascript
@@ -3605,6 +3617,15 @@ msgstr "Oui"
 
 #. module: web_editor
 #. odoo-javascript
+#: code:addons/web_editor/static/src/xml/snippets.xml:0
+#, python-format
+msgid "You can still access the block options but it might be ineffective."
+msgstr ""
+"Vous pouvez toujours accéder aux options de bloc, mais cela pourrait "
+"s'avérer inefficace."
+
+#. module: web_editor
+#. odoo-javascript
 #: code:addons/web_editor/static/src/components/media_dialog/document_selector.xml:0
 #, python-format
 msgid ""
@@ -3613,6 +3634,13 @@ msgid ""
 msgstr ""
 "Vous pouvez télécharger des documents avec le bouton situé en haut à gauche "
 "de l'écran."
+
+#. module: web_editor
+#. odoo-javascript
+#: code:addons/web_editor/static/src/xml/snippets.xml:0
+#, python-format
+msgid "You might not be able to customize it anymore."
+msgstr "Il se peut que vous ne soyez plus en mesure de le personnaliser."
 
 #. module: web_editor
 #. odoo-python
@@ -3669,6 +3697,13 @@ msgstr "Réduire"
 #: model_terms:ir.ui.view,arch_db:web_editor.snippet_options_image_optimization_widgets
 msgid "add"
 msgstr "ajouter"
+
+#. module: web_editor
+#. odoo-javascript
+#: code:addons/web_editor/static/src/js/wysiwyg/widgets/chatgpt_alternatives_dialog.xml:0
+#, python-format
+msgid "alternatives..."
+msgstr "alternatives..."
 
 #. module: web_editor
 #. odoo-javascript

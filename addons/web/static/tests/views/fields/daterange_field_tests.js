@@ -38,6 +38,7 @@ QUnit.module("Fields", (hooks) => {
                         date: { string: "A date", type: "date", searchable: true },
                         datetime: { string: "A datetime", type: "datetime", searchable: true },
                         datetime_end: { string: "Datetime End", type: "datetime" },
+                        bool_field: { string: "A boolean", type: "boolean" },
                     },
                     records: [
                         {
@@ -375,7 +376,10 @@ QUnit.module("Fields", (hooks) => {
                 resId: 1,
                 mockRPC(route, args) {
                     if (args.method === "web_save") {
-                        assert.deepEqual(args.args[1], { datetime: "2017-02-08 06:00:00" });
+                        assert.deepEqual(args.args[1], {
+                            datetime: "2017-02-08 06:00:00",
+                            datetime_end: "2017-03-13 00:00:00",
+                        });
                     }
                 },
             });
@@ -871,10 +875,18 @@ QUnit.module("Fields", (hooks) => {
             serverData,
             arch: /* xml */ `
                 <form>
-                    <field name="datetime" widget="daterange" options="{'end_date_field': 'datetime_end'}" required="datetime and datetime_end"/>
+                    <field name="bool_field"/>
+                    <field name="datetime" widget="daterange" options="{'end_date_field': 'datetime_end'}" required="bool_field"/>
                 </form>`,
             resId: 1,
         });
+
+        assert.strictEqual(getInputs().length, 1);
+        assert.hasAttrValue(getInputs()[0], "data-field", "datetime");
+        assert.strictEqual(getInputs()[0].value, "");
+        assert.containsNone(target, ".o_add_date");
+
+        await click(target, ".o_field_boolean input");
 
         assert.strictEqual(getInputs().length, 2);
         assert.hasAttrValue(getInputs()[0], "data-field", "datetime");
@@ -909,6 +921,10 @@ QUnit.module("Fields", (hooks) => {
         assert.hasAttrValue(getInputs()[1], "data-field", "datetime_end");
         assert.strictEqual(getInputs()[1].value, "07/07/2023 13:00:00");
         assert.containsNone(target, ".o_add_date");
+
+        // Open the picker, this checks that props validation for the picker isn't
+        // broken by required being present
+        await click(getInputs()[0]);
     });
 
     QUnit.test("related start date, both start date and end date empty", async (assert) => {
@@ -1113,10 +1129,10 @@ QUnit.module("Fields", (hooks) => {
             .map((node) => {
                 if (node === arrowIcon) {
                     return "->";
-                } else if (node.nodeType === 3) {
+                } else if (node.nodeType === Node.TEXT_NODE) {
                     return node.nodeValue.trim();
                 } else {
-                    return false;
+                    return node.innerText?.trim();
                 }
             })
             .filter(Boolean);
@@ -1144,14 +1160,84 @@ QUnit.module("Fields", (hooks) => {
             .map((node) => {
                 if (node === arrowIcon) {
                     return "->";
-                } else if (node.nodeType === 3) {
+                } else if (node.nodeType === Node.TEXT_NODE) {
                     return node.nodeValue.trim();
                 } else {
-                    return false;
+                    return node.innerText?.trim();
                 }
             })
             .filter(Boolean);
 
         assert.deepEqual(textSiblings, ["->", "02/03/2017"]);
     });
+
+    QUnit.test(
+        "always range: related end date, both start date and end date empty",
+        async (assert) => {
+            serverData.models.partner.records[0].datetime = false;
+
+            await makeView({
+                type: "form",
+                resModel: "partner",
+                serverData,
+                arch: /* xml */ `
+                <form>
+                    <field name="datetime" widget="daterange" options="{'end_date_field': 'datetime_end', 'always_range': '1'}"/>
+                </form>`,
+                resId: 1,
+            });
+
+            assert.strictEqual(getInputs().length, 2);
+            assert.hasAttrValue(getInputs()[0], "data-field", "datetime");
+            assert.strictEqual(getInputs()[0].value, "");
+            assert.hasAttrValue(getInputs()[1], "data-field", "datetime_end");
+            assert.strictEqual(getInputs()[1].value, "");
+            assert.containsNone(target, ".o_add_date");
+
+            await editInput(getInputs()[0], null, "06/06/2023 12:00:00");
+
+            assert.strictEqual(getInputs().length, 2);
+            assert.hasAttrValue(getInputs()[0], "data-field", "datetime");
+            assert.strictEqual(getInputs()[0].value, "06/06/2023 12:00:00");
+            assert.hasAttrValue(getInputs()[1], "data-field", "datetime_end");
+            assert.strictEqual(getInputs()[1].value, "");
+            assert.containsNone(target, ".o_add_date");
+
+            await editInput(getInputs()[1], null, "07/07/2023 13:00:00");
+
+            assert.strictEqual(getInputs().length, 2);
+            assert.hasAttrValue(getInputs()[0], "data-field", "datetime");
+            assert.strictEqual(getInputs()[0].value, "06/06/2023 12:00:00");
+            assert.hasAttrValue(getInputs()[1], "data-field", "datetime_end");
+            assert.strictEqual(getInputs()[1].value, "07/07/2023 13:00:00");
+            assert.containsNone(target, ".o_add_date");
+
+            await editInput(getInputs()[0], null, "");
+
+            assert.strictEqual(getInputs().length, 2);
+            assert.hasAttrValue(getInputs()[0], "data-field", "datetime");
+            assert.strictEqual(getInputs()[0].value, "");
+            assert.hasAttrValue(getInputs()[1], "data-field", "datetime_end");
+            assert.strictEqual(getInputs()[1].value, "07/07/2023 13:00:00");
+            assert.containsNone(target, ".o_add_date");
+        }
+    );
+
+    QUnit.test(
+        "there is no arrow between the dates with option always_range if nothing is set and it is readonly",
+        async (assert) => {
+            await makeView({
+                type: "form",
+                resModel: "partner",
+                serverData,
+                arch: /* xml */ `
+                <form>
+                    <field name="datetime" widget="daterange" options="{'end_date_field': 'datetime_end', 'always_range': 'true'}" />
+                    <field name="datetime" widget="daterange" options="{'end_date_field': 'datetime_end', 'always_range': 'true'}" readonly="true" />
+                </form>`,
+            });
+
+            assert.containsOnce(target, ".fa-long-arrow-right");
+        }
+    );
 });

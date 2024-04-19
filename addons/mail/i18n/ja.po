@@ -4,16 +4,17 @@
 # 
 # Translators:
 # Martin Trigaux, 2023
-# Wil Odoo, 2023
-# Junko Augias, 2023
+# Ryoko Tsuda <ryoko@quartile.co>, 2024
+# Wil Odoo, 2024
+# Junko Augias, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Junko Augias, 2023\n"
+"Last-Translator: Junko Augias, 2024\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -89,7 +90,6 @@ msgstr "%(author name)s  %(channel name)sから"
 #. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_context_menu.js:0
-#: code:addons/mail/static/src/discuss/call/common/call_context_menu.js:0
 #, python-format
 msgid "%(candidateType)s (%(protocol)s)"
 msgstr "%(candidateType)s (%(protocol)s)"
@@ -109,6 +109,60 @@ msgstr "%(email)sが有効なメールアドレスとして認識されません
 #, python-format
 msgid "%(name)s: %(message)s)"
 msgstr "%(name)s: %(message)s)"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+#, python-format
+msgid ""
+"%(new_line)s%(new_line)sType %(bold_start)s@username%(bold_end)s to mention "
+"someone, and grab their attention.%(new_line)sType "
+"%(bold_start)s#channel%(bold_end)s to mention a channel.%(new_line)sType "
+"%(bold_start)s/command%(bold_end)s to execute a command."
+msgstr ""
+"%(new_line)s%(new_line)sタイプ %(bold_start)s@username%(bold_end)s "
+"して、誰かについてメンションし、注意を引きます。%(new_line)sタイプ %(bold_start)s#channel%(bold_end)s "
+"してチャネルをメンションします。%(new_line)sタイプ "
+"%(bold_start)s/command%(bold_end)sしてコマンドを実行します。"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+#, python-format
+msgid ""
+"%(open_button)s%(icon)s%(open_em)sDiscard "
+"editing%(close_em)s%(close_button)s"
+msgstr "%(open_button)s%(icon)s%(open_em)s編集を破棄%(close_em)s%(close_button)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+#, python-format
+msgid ""
+"%(open_samp)sEscape%(close_samp)s %(open_em)sto "
+"%(open_cancel)scancel%(close_cancel)s%(close_em)s, %(open_samp)sCTRL-"
+"Enter%(close_samp)s %(open_em)sto "
+"%(open_save)ssave%(close_save)s%(close_em)s"
+msgstr ""
+"%(open_samp)s%(close_samp)s %(open_em)sをエスケープして "
+"%(open_cancel)s%(close_cancel)s%(close_em)sを取消、%(open_samp)sCTRL-"
+"Enter%(close_samp)s %(open_em)sして、 "
+"%(open_save)s%(close_save)s%(close_em)sを保存"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+#, python-format
+msgid ""
+"%(open_samp)sEscape%(close_samp)s %(open_em)sto "
+"%(open_cancel)scancel%(close_cancel)s%(close_em)s, "
+"%(open_samp)sEnter%(close_samp)s %(open_em)sto "
+"%(open_save)ssave%(close_save)s%(close_em)s"
+msgstr ""
+"%(open_samp)s%(close_samp)s "
+"%(open_em)sをエスケープして%(open_cancel)s%(close_cancel)s%(close_em)sを取消、 "
+"%(open_samp)s%(close_samp)s "
+"%(open_em)sを入力して%(open_save)s%(close_save)s%(close_em)sを保存"
 
 #. module: mail
 #. odoo-javascript
@@ -154,7 +208,14 @@ msgstr "%s (コピー)"
 
 #. module: mail
 #. odoo-javascript
-#: code:addons/mail/static/src/core/common/out_of_focus_service.js:0
+#: code:addons/mail/static/src/core/web/out_of_focus_service_patch.js:0
+#, python-format
+msgid "%s Message"
+msgstr "%sメッセージ "
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/out_of_focus_service_patch.js:0
 #, python-format
 msgid "%s Messages"
 msgstr "%sメッセージ "
@@ -226,7 +287,7 @@ msgstr "%sメッセージが見つかりました "
 #. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
 #, python-format
-msgid "%s raised a hand"
+msgid "%s raised their hand"
 msgstr "%sが手を挙げました"
 
 #. module: mail
@@ -324,13 +385,6 @@ msgid ". Narrow your search to see more choices."
 msgstr "。検索を狭めて、もっと選択肢を見ましょう。"
 
 #. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/core/common/out_of_focus_service.js:0
-#, python-format
-msgid "1 Message"
-msgstr "1 メッセージ"
-
-#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_template_preview_view_form
 msgid ""
 "<b invisible=\"not no_record\" class=\"text-warning\">No record for this "
@@ -338,37 +392,9 @@ msgid ""
 msgstr "<b invisible=\"not no_record\" class=\"text-warning\">このモデルの記録はありません</b>"
 
 #. module: mail
-#. odoo-python
-#: code:addons/mail/models/discuss/discuss_channel.py:0
-#, python-format
-msgid ""
-"<br><br>\n"
-"            Type <b>@username</b> to mention someone, and grab their attention.<br>\n"
-"            Type <b>#channel</b> to mention a channel.<br>\n"
-"            Type <b>/command</b> to execute a command.<br>"
-msgstr ""
-"<br><br>\n"
-"            <b>@username</b> と入力してメンションし注意を引きます。<br>\n"
-"            <b>#channel</b>と入力してチャンネルにメンションします。<br>\n"
-"            <b>/command</b> と入力してコマンドを実行します。<br>"
-
-#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_document_file_kanban
 msgid "<i class=\"fa fa-globe\" aria-label=\"Document url\"/>"
 msgstr "<i class=\"fa fa-globe\" aria-label=\"Document url\"/>"
-
-#. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/core/common/composer.js:0
-#, python-format
-msgid ""
-"<samp>%(cancel_keybind)s</samp><i> to <a href='#' data-"
-"type='%(cancel_type)s'>cancel</a></i>, <samp>%(save_keybind)s</samp><i> to "
-"<a href='#' data-type='%(save_type)s'>save</a></i>"
-msgstr ""
-"<samp>%(cancel_keybind)s</samp><i> で<a href='#' data-"
-"type='%(cancel_type)s'>キャンセル</a></i>, <samp>%(save_keybind)s</samp><i> で <a "
-"href='#' data-type='%(save_type)s'>保存</a></i>"
 
 #. module: mail
 #. odoo-javascript
@@ -386,6 +412,11 @@ msgstr "<span class=\"d-block w-75 py-2\">ボタン色</span>"
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
 msgid "<span class=\"d-block w-75 py-2\">Header Color</span>"
 msgstr "<span class=\"d-block w-75 py-2\">ヘッダ色</span>"
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.mail_alias_domain_view_form
+msgid "<span class=\"me-1 oe_inline\">@</span>"
+msgstr "<span class=\"me-1 oe_inline\">@</span>"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
@@ -500,16 +531,6 @@ msgid ""
 msgstr "このエイリアスの新しいレコードを作成する時にデフォルト値を与えるためのPython辞書です。"
 
 #. module: mail
-#: model:ir.model.constraint,message:mail.constraint_bus_presence_partner_or_guest_exists
-msgid "A bus presence must have a user or a guest."
-msgstr "バス・プレゼンスには、ユーザがゲストがある必要があります。"
-
-#. module: mail
-#: model:ir.model.constraint,message:mail.constraint_discuss_channel_member_partner_or_guest_exists
-msgid "A channel member must be a partner or a guest."
-msgstr "チャンネルメンバはパートナーかゲストが必要です。"
-
-#. module: mail
 #. odoo-python
 #: code:addons/mail/models/discuss/discuss_channel.py:0
 #, python-format
@@ -526,11 +547,6 @@ msgid ""
 msgstr "チャットは2人以上で作成することはできません。代わりにグループを作成して下さい。"
 
 #. module: mail
-#: model:ir.model.constraint,message:mail.constraint_mail_message_reaction_partner_or_guest_exists
-msgid "A message reaction must be from a partner or from a guest."
-msgstr "メッセージリアクションはパートナーまたはゲストからである必要があります。"
-
-#. module: mail
 #. odoo-python
 #: code:addons/mail/models/ir_actions_server.py:0
 #, python-format
@@ -545,11 +561,6 @@ msgid ""
 msgstr ""
 "メッセージ翻訳を有効にするにはGoogle "
 "APIキーが必要です。https://cloud.google.com/translate/docs/setup"
-
-#. module: mail
-#: model:ir.model.constraint,message:mail.constraint_res_users_settings_volumes_partner_or_guest_exists
-msgid "A volume setting must have a partner or a guest."
-msgstr "ボリューム設定にはパートナーかゲストが必要です。"
 
 #. module: mail
 #. odoo-javascript
@@ -675,11 +686,6 @@ msgstr "活動"
 #: model_terms:ir.ui.view,arch_db:mail.mail_activity_plan_view_form
 msgid "Activities To Generate"
 msgstr "生成活動"
-
-#. module: mail
-#: model:ir.model.constraint,message:mail.constraint_mail_activity_check_res_id_is_set
-msgid "Activities have to be linked to records with a not null res_id."
-msgstr "活動は空の res_idでないレコードとリンクする必要があります。"
 
 #. module: mail
 #. odoo-javascript
@@ -922,53 +928,9 @@ msgid "Advanced Options"
 msgstr "詳細オプション"
 
 #. module: mail
-#: model:ir.model.fields.selection,name:mail.selection__account_journal__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__account_move__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__account_payment__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__crm_lead__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__event_booth__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__event_event__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__event_registration__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__event_sponsor__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__event_track__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle_log_contract__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle_log_services__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__hr_applicant__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__hr_contract__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__hr_employee__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__hr_expense__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__hr_expense_sheet__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__hr_leave__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__hr_leave_allocation__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__lunch_supplier__activity_exception_decoration__warning
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity_mixin__activity_exception_decoration__warning
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity_type__decoration_type__warning
-#: model:ir.model.fields.selection,name:mail.selection__mailing_mailing__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__maintenance_equipment__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__maintenance_request__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__mrp_production__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__mrp_unbuild__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__pos_session__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__product_pricelist__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__product_product__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__product_template__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__project_project__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__project_task__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__project_update__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__purchase_order__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__purchase_requisition__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__repair_order__activity_exception_decoration__warning
 #: model:ir.model.fields.selection,name:mail.selection__res_partner__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__res_partner_bank__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__sale_order__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__slide_channel__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__stock_landed_cost__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__stock_lot__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__stock_picking__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__stock_picking_batch__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__survey_survey__activity_exception_decoration__warning
-#: model:ir.model.fields.selection,name:mail.selection__survey_user_input__activity_exception_decoration__warning
 msgid "Alert"
 msgstr "警告"
 
@@ -1176,13 +1138,6 @@ msgid "And 1 other member."
 msgstr "および他の1会員。"
 
 #. module: mail
-#. odoo-python
-#: code:addons/mail/models/discuss/discuss_channel.py:0
-#, python-format
-msgid "Anonymous"
-msgstr "匿名"
-
-#. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_activity_plan__res_model_id
 #: model:ir.model.fields,field_description:mail.field_mail_activity_schedule__res_model_id
 #: model:ir.model.fields,field_description:mail.field_mail_template__model_id
@@ -1256,14 +1211,14 @@ msgstr "ローンチ時に聞く"
 #: code:addons/mail/static/src/views/web/fields/assign_user_command_hook.js:0
 #, python-format
 msgid "Assign to ..."
-msgstr "以下に割当:"
+msgstr "担当者:"
 
 #. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/views/web/fields/assign_user_command_hook.js:0
 #, python-format
 msgid "Assign to me"
-msgstr "自分に割当"
+msgstr "自分が担当"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_activity_schedule__plan_on_demand_user_id
@@ -1288,7 +1243,7 @@ msgstr "担当者"
 msgid ""
 "Assigned user %s has no access to the document and is not able to handle "
 "this activity."
-msgstr "割り当てられたユーザー%sはドキュメントにアクセスできず、このアクティビティを処理できません。"
+msgstr "割当てられたユーザー%sはドキュメントにアクセスできず、このアクティビティを処理できません。"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_activity_plan_template__responsible_type
@@ -1630,11 +1585,6 @@ msgstr ""
 "バウンスエイリアス %(bounce)sは同じ名前で別のドメインに既に使用されています。他のバウンスを使用するか他のエイリアスドメインを使用して下さい。"
 
 #. module: mail
-#: model:ir.model.constraint,message:mail.constraint_mail_alias_domain_bounce_email_uniques
-msgid "Bounce emails should be unique"
-msgstr "バウンスEメールは一意である必要があります。"
-
-#. module: mail
 #. odoo-python
 #: code:addons/mail/models/mail_alias_domain.py:0
 #, python-format
@@ -1752,7 +1702,7 @@ msgstr "通知のメッセージまたは受信者を更新できません。"
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_form
 #, python-format
 msgid "Cancel"
-msgstr "キャンセル"
+msgstr "取消"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_tree
@@ -1850,11 +1800,6 @@ msgstr ""
 "%(catchall)sは同じ名前で別のドメインに既に使用されています。他のキャッチオールを使用するか他のエイリアスドメインを使用して下さい。"
 
 #. module: mail
-#: model:ir.model.constraint,message:mail.constraint_mail_alias_domain_catchall_email_uniques
-msgid "Catchall emails should be unique"
-msgstr "キャッチオールEメールは一意である必要があります。"
-
-#. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_mail__email_cc
 #: model:ir.model.fields,field_description:mail.field_mail_template__email_cc
 #: model:ir.model.fields,field_description:mail.field_mail_template_preview__email_cc
@@ -1877,7 +1822,6 @@ msgstr "このタイプの関連アクティビティの背景色を変更しま
 #. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/core/web/messaging_menu.js:0
-#: code:addons/mail/static/src/core/web/messaging_menu.js:0
 #: model:ir.model.fields,field_description:mail.field_discuss_channel_member__channel_id
 #: model:ir.model.fields,field_description:mail.field_discuss_channel_rtc_session__channel_id
 #: model:ir.model.fields.selection,name:mail.selection__discuss_channel__channel_type__channel
@@ -1898,6 +1842,13 @@ msgstr "チャネルメンバ"
 #: model:ir.model.fields,field_description:mail.field_discuss_channel__channel_type
 msgid "Channel Type"
 msgstr "チャネルタイプ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+#, python-format
+msgid "Channel full"
+msgstr "チャンネル・フル"
 
 #. module: mail
 #. odoo-python
@@ -1934,7 +1885,6 @@ msgstr "チャネル/メンバ"
 
 #. module: mail
 #. odoo-javascript
-#: code:addons/mail/static/src/core/web/messaging_menu.js:0
 #: code:addons/mail/static/src/core/web/messaging_menu.js:0
 #: model:ir.model.fields.selection,name:mail.selection__discuss_channel__channel_type__chat
 #, python-format
@@ -2062,7 +2012,7 @@ msgstr "特定のメールアドレスで回答を集める"
 #: code:addons/mail/static/src/core/web/messaging_menu.js:0
 #, python-format
 msgid "Come here often? Install Odoo on your device!"
-msgstr "頻繁に訪れるであれば、デバイスにOdooをインストールしましょう！"
+msgstr "頻繁に利用するようであれば、デバイスにOdooをインストールしましょう！"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.email_template_form
@@ -2103,6 +2053,11 @@ msgstr "コメント"
 #: model:ir.model.fields,field_description:mail.field_mail_alias_domain__company_ids
 msgid "Companies"
 msgstr "会社"
+
+#. module: mail
+#: model:ir.model.fields,help:mail.field_mail_alias_domain__company_ids
+msgid "Companies using this domain as default for sending mails"
+msgstr "このドメインをデフォルトでメール送信に使用している会社"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_activity_plan__company_id
@@ -2165,8 +2120,8 @@ msgid "Confirm"
 msgstr "確認"
 
 #. module: mail
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/mail/models/mail_template.py:0
 #: code:addons/mail/static/src/core/common/message_confirm_dialog.js:0
 #: model_terms:ir.ui.view,arch_db:mail.mail_template_view_form_confirm_delete
@@ -2212,6 +2167,21 @@ msgstr "接続に失敗しました(送信メールサーバーの問題)"
 #, python-format
 msgid "Connection test failed: %s"
 msgstr "接続テストに失敗しました: %s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+#, python-format
+msgid "Connection to SFU server closed by the server"
+msgstr "SFUサーバへの接続がサーバによって切断されました"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "Connection type:"
+msgstr "コネクションタイプ:"
 
 #. module: mail
 #. odoo-javascript
@@ -2520,11 +2490,6 @@ msgid "Custom channel name"
 msgstr "カスタムチャネル名"
 
 #. module: mail
-#: model:ir.model.constraint,message:mail.constraint_mail_notification_notification_partner_required
-msgid "Customer is required for inbox / email notification"
-msgstr "受信トレイ/電子メール通知には顧客が必要です"
-
-#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
 msgid "Customize the look and feel of automated emails"
 msgstr "自動配信Eメールの外観と操作感のカスタマイズ"
@@ -2663,6 +2628,16 @@ msgstr "デフォルトユーザ"
 #: model:ir.model.fields,field_description:mail.field_mail_alias_mixin_optional__alias_defaults
 msgid "Default Values"
 msgstr "デフォルト値"
+
+#. module: mail
+#: model:ir.model.fields,help:mail.field_mail_alias_domain__default_from
+msgid ""
+"Default from when it does not match outgoing server filters. Can be either a"
+" local-part e.g. 'notifications' either a complete email address e.g. "
+"'notifications@example.com' to override all outgoing emails."
+msgstr ""
+"送信サーバフィルタに一致しない場合のデフォルト。'notifications' "
+"のようなローカルパートか、'notifications@example.com'のような完全なメールアドレスを指定し、全ての送信メールを上書きすることができます。"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_template__use_default_to
@@ -2853,6 +2828,13 @@ msgid "Discussions"
 msgstr "ディスカッション"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/messaging_menu.xml:0
+#, python-format
+msgid "Dismiss"
+msgstr "閉じる"
+
+#. module: mail
 #: model:ir.model.fields,field_description:mail.field_discuss_channel__display_name
 #: model:ir.model.fields,field_description:mail.field_discuss_channel_member__display_name
 #: model:ir.model.fields,field_description:mail.field_discuss_channel_rtc_session__display_name
@@ -2956,6 +2938,11 @@ msgid "Document: \""
 msgstr "ドキュメント: \""
 
 #. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.mail_alias_domain_view_form
+msgid "Domain"
+msgstr "ドメイン"
+
+#. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/core/web/activity_list_popover.xml:0
 #: code:addons/mail/static/src/core/web/activity_markasdone_popover.xml:0
@@ -3015,6 +3002,13 @@ msgstr "ファイルをダウンロード"
 #, python-format
 msgid "Download logs"
 msgstr "ログのダウンロード"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "Download:"
+msgstr "ダウンロード:"
 
 #. module: mail
 #. odoo-javascript
@@ -3253,11 +3247,6 @@ msgid "Email Thread"
 msgstr "Eメールスレッド"
 
 #. module: mail
-#: model:ir.model.constraint,message:mail.constraint_mail_blacklist_unique_email
-msgid "Email address already exists!"
-msgstr "メールアドレスはすでに存在します'"
-
-#. module: mail
 #: model:ir.model.fields,help:mail.field_mail_compose_message__email_from
 #: model:ir.model.fields,help:mail.field_mail_mail__email_from
 #: model:ir.model.fields,help:mail.field_mail_message__email_from
@@ -3306,6 +3295,15 @@ msgstr "メールCC"
 #: model:ir.model,name:mail.model_mail_compose_message
 msgid "Email composition wizard"
 msgstr "メール作成アシスタント"
+
+#. module: mail
+#: model:ir.model.fields,help:mail.field_mail_alias__alias_domain
+#: model:ir.model.fields,help:mail.field_mail_alias_domain__name
+#: model:ir.model.fields,help:mail.field_mail_alias_mixin__alias_domain
+#: model:ir.model.fields,help:mail.field_mail_alias_mixin_optional__alias_domain
+#: model:ir.model.fields,help:mail.field_res_company__alias_domain_name
+msgid "Email domain e.g. 'example.com' in 'odoo@example.com'"
+msgstr "Eメールドメイン例 'example.com' in 'odoo@example.com'"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_form
@@ -3392,53 +3390,9 @@ msgstr "全画面入力"
 #. odoo-javascript
 #: code:addons/mail/static/src/core/common/notification_model.js:0
 #: model:ir.model.fields,field_description:mail.field_mail_activity_schedule__error
-#: model:ir.model.fields.selection,name:mail.selection__account_journal__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__account_move__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__account_payment__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__crm_lead__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__event_booth__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__event_event__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__event_registration__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__event_sponsor__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__event_track__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle_log_contract__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle_log_services__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__hr_applicant__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__hr_contract__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__hr_employee__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__hr_expense__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__hr_expense_sheet__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__hr_leave__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__hr_leave_allocation__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__lunch_supplier__activity_exception_decoration__danger
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity_mixin__activity_exception_decoration__danger
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity_type__decoration_type__danger
-#: model:ir.model.fields.selection,name:mail.selection__mailing_mailing__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__maintenance_equipment__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__maintenance_request__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__mrp_production__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__mrp_unbuild__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__pos_session__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__product_pricelist__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__product_product__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__product_template__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__project_project__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__project_task__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__project_update__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__purchase_order__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__purchase_requisition__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__repair_order__activity_exception_decoration__danger
 #: model:ir.model.fields.selection,name:mail.selection__res_partner__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__res_partner_bank__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__sale_order__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__slide_channel__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__stock_landed_cost__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__stock_lot__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__stock_picking__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__stock_picking_batch__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__survey_survey__activity_exception_decoration__danger
-#: model:ir.model.fields.selection,name:mail.selection__survey_user_input__activity_exception_decoration__danger
 #, python-format
 msgid "Error"
 msgstr "エラー"
@@ -3477,11 +3431,6 @@ msgid ""
 "Error without exception. Probably due to sending an email without computed "
 "recipients."
 msgstr "例外なしエラー。 おそらく、算定された受信者なしでメールを送信する必要があります。"
-
-#. module: mail
-#: model:ir.model.constraint,message:mail.constraint_mail_followers_mail_followers_res_partner_res_model_id_uniq
-msgid "Error, a partner cannot follow twice the same object."
-msgstr "エラー、パートナーは同じオブジェクトを二回フォローすることはできません。"
 
 #. module: mail
 #: model:ir.model.fields.selection,name:mail.selection__mail_alias__alias_contact__everyone
@@ -3534,6 +3483,13 @@ msgstr "不合格"
 #, python-format
 msgid "Failed to load gifs..."
 msgstr "gifのロードに失敗しました..."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+#, python-format
+msgid "Failed to load the SFU server, falling back to peer-to-peer"
+msgstr "SFUサーバのロードに失敗し、P2Pにフォールバックしています。"
 
 #. module: mail
 #. odoo-python
@@ -3969,13 +3925,6 @@ msgstr "グループ化"
 #: model_terms:ir.ui.view,arch_db:mail.discuss_channel_view_form
 msgid "Group Name"
 msgstr "グループ名"
-
-#. module: mail
-#: model:ir.model.constraint,message:mail.constraint_discuss_channel_group_public_id_check
-msgid ""
-"Group authorization and group auto-subscription are only supported on "
-"channels."
-msgstr "グループ認証とグループ自動サブスクリプションは、チャネルでのみサポートされています。"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_email_template_search
@@ -4641,6 +4590,13 @@ msgid ""
 msgstr "式が無効です。リテラルPython辞書定義でなければなりません。 例,\"{'field': 'value'}\""
 
 #. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+#, python-format
+msgid "Invalid field “%(field_name)s” when creating a channel with members."
+msgstr "メンバとチャネルを作成時に無効なフィールド “%(field_name)s”"
+
+#. module: mail
 #: model:ir.model.fields.selection,name:mail.selection__mail_mail__failure_type__mail_from_invalid
 #: model:ir.model.fields.selection,name:mail.selection__mail_notification__failure_type__mail_from_invalid
 msgid "Invalid from address"
@@ -4975,6 +4931,11 @@ msgid "Keep activities marked as done in the activity view"
 msgstr "活動ビューで活動を完了のまま残す"
 
 #. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Key"
+msgstr "キー"
+
+#. module: mail
 #. odoo-python
 #: code:addons/mail/models/mail_alias.py:0
 #: code:addons/mail/models/mail_alias.py:0
@@ -5107,7 +5068,7 @@ msgstr "最終更新日"
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_shortcode__last_used
 msgid "Last Used"
-msgstr "最後に使用された"
+msgstr "最終使用"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_discuss_channel_member__last_seen_dt
@@ -5231,6 +5192,21 @@ msgid "Local-part based incoming detection"
 msgstr "ローカルパートに基づく着信検知"
 
 #. module: mail
+#: model:ir.model.fields,help:mail.field_mail_alias_domain__catchall_alias
+msgid ""
+"Local-part of email used for Reply-To to catch answers e.g. 'catchall' in "
+"'catchall@example.com'"
+msgstr "返信先に使用され、回答を受取るためのメールのローカルパート例：'catchall@example.com'の'catchall'"
+
+#. module: mail
+#: model:ir.model.fields,help:mail.field_mail_alias_domain__bounce_alias
+msgid ""
+"Local-part of email used for Return-Path used when emails bounce e.g. "
+"'bounce' in 'bounce@example.com'"
+msgstr ""
+"'bounce@example.com'内の'bounce'など、メールがバウンスしたときに使用される返信パスに使用されるメールのローカルパート。"
+
+#. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/core/common/composer.js:0
 #: model_terms:ir.ui.view,arch_db:mail.email_compose_message_wizard_form
@@ -5286,10 +5262,10 @@ msgstr "記録ステップ:"
 
 #. module: mail
 #. odoo-javascript
-#: code:addons/mail/static/src/discuss/core/public/welcome_page.xml:0
+#: code:addons/mail/static/src/discuss/core/public/welcome_page.js:0
 #, python-format
-msgid "Logged as"
-msgstr "以下としてログイン:"
+msgid "Logged in as %s"
+msgstr "%sとしてログイン済"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_email_server_form
@@ -5595,7 +5571,7 @@ msgstr "中"
 #. module: mail
 #: model:mail.activity.type,name:mail.mail_activity_data_meeting
 msgid "Meeting"
-msgstr "打ち合わせ"
+msgstr "ミーティング"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_discuss_channel__member_count
@@ -6173,6 +6149,13 @@ msgid "No messages found"
 msgstr "メッセージが見つかりません"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/chatter.js:0
+#, python-format
+msgid "No recipient"
+msgstr "受信者が見つかりません"
+
+#. module: mail
 #. odoo-python
 #: code:addons/mail/wizard/mail_compose_message.py:0
 #, python-format
@@ -6549,11 +6532,6 @@ msgid "Only custom models can be modified."
 msgstr "カスタムモデルのみを変更できます。"
 
 #. module: mail
-#: model:ir.model.constraint,message:mail.constraint_res_users_notification_type
-msgid "Only internal user can receive notifications in Odoo"
-msgstr "内部ユーザだけがOdooで通知を受け取ることができます。"
-
-#. module: mail
 #. odoo-python
 #: code:addons/mail/models/mail_thread.py:0
 #, python-format
@@ -6693,10 +6671,18 @@ msgid "Original message was deleted"
 msgstr "元のメッセージが削除されました"
 
 #. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_users.py:0
+#: model:ir.actions.act_window,name:mail.mail_activity_without_access_action
+#, python-format
+msgid "Other activities"
+msgstr "その他の活動"
+
+#. module: mail
 #: model:ir.model.fields.selection,name:mail.selection__mail_mail__state__outgoing
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_search
 msgid "Outgoing"
-msgstr "出庫"
+msgstr "送信"
 
 #. module: mail
 #: model:ir.model.fields.selection,name:mail.selection__mail_message__message_type__email_outgoing
@@ -6729,53 +6715,9 @@ msgstr "送信メールサーバ"
 #. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/core/web/activity_list_popover.xml:0
-#: model:ir.model.fields.selection,name:mail.selection__account_journal__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__account_move__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__account_payment__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__crm_lead__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__event_booth__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__event_event__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__event_registration__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__event_sponsor__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__event_track__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle_log_contract__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle_log_services__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__hr_applicant__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__hr_contract__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__hr_employee__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__hr_expense__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__hr_expense_sheet__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__hr_leave__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__hr_leave_allocation__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__lunch_supplier__activity_state__overdue
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity__state__overdue
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity_mixin__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__mailing_mailing__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__maintenance_equipment__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__maintenance_request__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__mrp_production__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__mrp_unbuild__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__pos_session__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__product_pricelist__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__product_product__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__product_template__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__project_project__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__project_task__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__project_update__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__purchase_order__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__purchase_requisition__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__repair_order__activity_state__overdue
 #: model:ir.model.fields.selection,name:mail.selection__res_partner__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__res_partner_bank__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__sale_order__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__slide_channel__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__stock_landed_cost__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__stock_lot__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__stock_picking__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__stock_picking_batch__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__survey_survey__activity_state__overdue
-#: model:ir.model.fields.selection,name:mail.selection__survey_user_input__activity_state__overdue
 #, python-format
 msgid "Overdue"
 msgstr "滞納"
@@ -6803,12 +6745,14 @@ msgstr "POP/MAPサーバ"
 #. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
 #, python-format
 msgid "Packets received:"
 msgstr "受信パケット:"
 
 #. module: mail
 #. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
 #: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
 #, python-format
 msgid "Packets sent:"
@@ -7004,53 +6948,9 @@ msgstr "計画概要"
 #. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/core/web/activity_list_popover.xml:0
-#: model:ir.model.fields.selection,name:mail.selection__account_journal__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__account_move__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__account_payment__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__crm_lead__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__event_booth__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__event_event__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__event_registration__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__event_sponsor__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__event_track__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle_log_contract__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle_log_services__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__hr_applicant__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__hr_contract__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__hr_employee__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__hr_expense__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__hr_expense_sheet__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__hr_leave__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__hr_leave_allocation__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__lunch_supplier__activity_state__planned
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity__state__planned
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity_mixin__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__mailing_mailing__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__maintenance_equipment__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__maintenance_request__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__mrp_production__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__mrp_unbuild__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__pos_session__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__product_pricelist__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__product_product__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__product_template__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__project_project__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__project_task__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__project_update__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__purchase_order__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__purchase_requisition__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__repair_order__activity_state__planned
 #: model:ir.model.fields.selection,name:mail.selection__res_partner__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__res_partner_bank__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__sale_order__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__slide_channel__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__stock_landed_cost__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__stock_lot__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__stock_picking__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__stock_picking_batch__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__survey_survey__activity_state__planned
-#: model:ir.model.fields.selection,name:mail.selection__survey_user_input__activity_state__planned
 #, python-format
 msgid "Planned"
 msgstr "予定済"
@@ -7315,6 +7215,13 @@ msgid "RTC Session"
 msgstr "RTCセッション"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "RTC Session ID:"
+msgstr "RTC セッション ID:"
+
+#. module: mail
 #: model:ir.model.fields,field_description:mail.field_discuss_channel_member__rtc_session_ids
 msgid "RTC Sessions"
 msgstr "RTCセッション"
@@ -7388,7 +7295,7 @@ msgstr "Odooで通知を受取る"
 #: model:ir.model.fields.selection,name:mail.selection__mail_mail__state__received
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_search
 msgid "Received"
-msgstr "入荷済"
+msgstr "受信済"
 
 #. module: mail
 #. odoo-javascript
@@ -7803,6 +7710,11 @@ msgid "SFU Server key"
 msgstr "SFUサーバキー"
 
 #. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "SFU server"
+msgstr "SFU サーバ"
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_email_template_search
 msgid "SMTP Server"
 msgstr "SMTPサーバ"
@@ -7840,6 +7752,13 @@ msgid "Save as a new template"
 msgstr "新しいテンプレートとして保存"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+#, python-format
+msgid "Save editing"
+msgstr ""
+
+#. module: mail
 #: model:ir.model,name:mail.model_discuss_gif_favorite
 msgid "Save favorite GIF from Tenor API"
 msgstr "Tenor APIからお気に入りのGIFを保存"
@@ -7857,23 +7776,23 @@ msgid "Schedule & Mark as Done"
 msgstr "予定＆完了済とする"
 
 #. module: mail
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/mail/static/src/core/web/activity_service.js:0
 #: code:addons/mail/static/src/core/web/activity_service.js:0
 #: code:addons/mail/wizard/mail_activity_schedule.py:0
 #, python-format
 msgid "Schedule Activity"
-msgstr "活動の予定"
+msgstr "活動をスケジュール"
 
 #. module: mail
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/mail/static/src/core/web/activity_service.js:0
 #: code:addons/mail/wizard/mail_activity_schedule.py:0
 #, python-format
 msgid "Schedule Activity On Selected Records"
-msgstr "選択済レコード上で活動を予定"
+msgstr "選択済レコード上で活動をスケジュール"
 
 #. module: mail
 #. odoo-javascript
@@ -7901,7 +7820,7 @@ msgstr "ある活動をスケジュール　"
 #: code:addons/mail/static/src/core/web/activity_list_popover.xml:0
 #, python-format
 msgid "Schedule an activity"
-msgstr "アクティビティをスケジュールする"
+msgstr "活動をスケジュールする"
 
 #. module: mail
 #. odoo-javascript
@@ -8207,7 +8126,7 @@ msgstr "送信失敗"
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_search
 #, python-format
 msgid "Sent"
-msgstr "送信日"
+msgstr "送信済"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_activity_plan_template__sequence
@@ -8943,16 +8862,6 @@ msgid "The avatar has been updated!"
 msgstr "アバターが更新されました！"
 
 #. module: mail
-#: model:ir.model.constraint,message:mail.constraint_discuss_channel_uuid_unique
-msgid "The channel UUID must be unique"
-msgstr "チャネルUUIDは一意にして下さい。"
-
-#. module: mail
-#: model:ir.model.constraint,message:mail.constraint_discuss_channel_channel_type_not_null
-msgid "The channel type cannot be empty"
-msgstr "チャネルタイプは空にすることはできません。"
-
-#. module: mail
 #: model:ir.model.fields,help:mail.field_mail_template__can_write
 msgid "The current user can edit the template."
 msgstr "現在のユーザはテンプレートを編集できます。"
@@ -8968,11 +8877,6 @@ msgstr "ボイスメッセージの時間は1分間に制限されています�
 #: model_terms:ir.ui.view,arch_db:mail.mail_bounce_catchall
 msgid "The email sent to"
 msgstr "に送信されたメール"
-
-#. module: mail
-#: model:ir.model.constraint,message:mail.constraint_mail_partner_device_endpoint_unique
-msgid "The endpoint must be unique !"
-msgstr "エンドポイントは一意にして下さい！"
 
 #. module: mail
 #. odoo-python
@@ -9114,11 +9018,6 @@ msgstr "メールプレビューとして使用される本文のテキストの
 #, python-format
 msgid "There are no messages in this conversation."
 msgstr "この会話にはメッセージはありません。"
-
-#. module: mail
-#: model:ir.model.constraint,message:mail.constraint_discuss_channel_rtc_session_channel_member_unique
-msgid "There can only be one rtc session per channel member"
-msgstr "チャネル会員につき1つのRTCセッションのみ可能です。"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.message_origin_link
@@ -9313,53 +9212,9 @@ msgstr "To:"
 #: code:addons/mail/static/src/core/web/activity_list_popover.xml:0
 #: code:addons/mail/static/src/core/web/activity_list_popover_item.js:0
 #: code:addons/mail/static/src/core/web/activity_menu.xml:0
-#: model:ir.model.fields.selection,name:mail.selection__account_journal__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__account_move__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__account_payment__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__crm_lead__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__event_booth__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__event_event__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__event_registration__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__event_sponsor__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__event_track__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle_log_contract__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__fleet_vehicle_log_services__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__hr_applicant__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__hr_contract__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__hr_employee__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__hr_expense__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__hr_expense_sheet__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__hr_leave__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__hr_leave_allocation__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__lunch_supplier__activity_state__today
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity__state__today
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity_mixin__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__mailing_mailing__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__maintenance_equipment__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__maintenance_request__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__mrp_production__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__mrp_unbuild__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__pos_session__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__product_pricelist__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__product_product__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__product_template__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__project_project__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__project_task__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__project_update__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__purchase_order__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__purchase_requisition__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__repair_order__activity_state__today
 #: model:ir.model.fields.selection,name:mail.selection__res_partner__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__res_partner_bank__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__sale_order__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__slide_channel__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__stock_landed_cost__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__stock_lot__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__stock_picking__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__stock_picking_batch__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__survey_survey__activity_state__today
-#: model:ir.model.fields.selection,name:mail.selection__survey_user_input__activity_state__today
 #, python-format
 msgid "Today"
 msgstr "今日"
@@ -9522,7 +9377,7 @@ msgstr ""
 "- レコードの作成': 新しい値で新しいレコードを作成します\n"
 "- コードの実行': 実行されるPythonコードのブロックします\n"
 "- 'Webhook通知の送信': Webhookとしても知られるPOSTリクエストを外部システムに送信します\n"
-"- '既存アクションの実行': 他のサーバーアクションをトリガするアクションを定義します\n"
+"- '既存アクションの実行': 他のサーバーアクションをトリガーするアクションを定義します\n"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_activity_mixin__activity_exception_decoration
@@ -9545,6 +9400,7 @@ msgstr "URI"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_link_preview__source_url
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
 msgid "URL"
 msgstr "URL"
 
@@ -9622,6 +9478,13 @@ msgstr "フォロー解除"
 #: model:ir.model.fields,help:mail.field_mail_activity_type__delay_unit
 msgid "Unit of delay"
 msgstr "遅延の単位"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_tracking_value.py:0
+#, python-format
+msgid "Unknown"
+msgstr "不明"
 
 #. module: mail
 #. odoo-python
@@ -9745,6 +9608,13 @@ msgstr "ファイルをアップロードする"
 
 #. module: mail
 #. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "Upload:"
+msgstr "アップロード:"
+
+#. module: mail
+#. odoo-javascript
 #: code:addons/mail/static/src/core/common/attachment_list.xml:0
 #, python-format
 msgid "Uploaded"
@@ -9822,6 +9692,11 @@ msgstr "テンプレートを使用"
 #: model:ir.model.fields,field_description:mail.field_res_users_settings__use_push_to_talk
 msgid "Use the push to talk feature"
 msgstr "プッシュ・トゥ・トーク機能を使用"
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.mail_alias_domain_view_form
+msgid "Used In"
+msgstr "使用箇所"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_compose_message__res_domain_user_id
@@ -9938,11 +9813,6 @@ msgstr "ユーザーはオフラインです"
 #, python-format
 msgid "User is online"
 msgstr "ユーザーはオンラインです"
-
-#. module: mail
-#: model:ir.model.constraint,message:mail.constraint_discuss_gif_favorite_user_gif_favorite
-msgid "User should not have duplicated favorite GIF"
-msgstr "ユーザはお気に入りGIFを重複して持つことはできません"
 
 #. module: mail
 #. odoo-python
@@ -10275,6 +10145,13 @@ msgstr "このグループ会話から退出し、再度招待されない限り
 #. odoo-python
 #: code:addons/mail/models/discuss/discuss_channel.py:0
 #, python-format
+msgid "You are alone in a private conversation."
+msgstr "プライベートな会話であなただけです。"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+#, python-format
 msgid "You are alone in this channel."
 msgstr "あなたはこのチャンネルに一人でいます。"
 
@@ -10282,15 +10159,15 @@ msgstr "あなたはこのチャンネルに一人でいます。"
 #. odoo-python
 #: code:addons/mail/models/discuss/discuss_channel.py:0
 #, python-format
-msgid "You are in a private conversation with <b>@%s</b>."
-msgstr "あなたは<b>@%s</b>とプライベートな会話中です。"
+msgid "You are in a private conversation with %(member_names)s."
+msgstr "あなたは %(member_names)sとプライベートな会話中です。"
 
 #. module: mail
 #. odoo-python
 #: code:addons/mail/models/discuss/discuss_channel.py:0
 #, python-format
-msgid "You are in channel <b>#%s</b>."
-msgstr "あなたは <b>#%s</b> チャネルにいます。"
+msgid "You are in channel %(bold_start)s#%(channel_name)s%(bold_end)s."
+msgstr "あなたはチャネル%(bold_start)s#%(channel_name)s%(bold_end)sに居ます。"
 
 #. module: mail
 #. odoo-javascript
@@ -10535,6 +10412,13 @@ msgid "Your name"
 msgstr "名前"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/recipient_list.js:0
+#, python-format
+msgid "[%(name)s] (no email address)"
+msgstr "[%(name)s] (eメールアドレスなし)"
+
+#. module: mail
 #. odoo-python
 #: code:addons/mail/models/mail_alias.py:0
 #, python-format
@@ -10565,6 +10449,13 @@ msgstr "このメールの添付"
 
 #. module: mail
 #. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "available bitrate:"
+msgstr "利用可能なビットレート:"
+
+#. module: mail
+#. odoo-javascript
 #: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
 #, python-format
 msgid "back"
@@ -10592,6 +10483,13 @@ msgid "by"
 msgstr "by"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "camera"
+msgstr "カメラ"
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_bounce_catchall
 msgid ""
 "cannot be processed. This address\n"
@@ -10609,10 +10507,28 @@ msgstr "チャネル"
 
 #. module: mail
 #. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "clock rate:"
+msgstr "クロックレート:"
+
+#. module: mail
+#. odoo-javascript
 #: code:addons/mail/static/src/core/common/search_messages_panel.xml:0
 #, python-format
 msgid "close"
 msgstr "閉じる"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "codec:"
+msgstr "コーデック:"
 
 #. module: mail
 #. odoo-python
@@ -10669,6 +10585,20 @@ msgid "done"
 msgstr "完了"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "down DTLS:"
+msgstr "ダウンDTLS:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "down ICE:"
+msgstr "ダウンICE:"
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_activity_type_view_form
 msgid "e.g. \"Discuss proposal\""
 msgstr "例: ”提案内容説明”"
@@ -10688,6 +10618,26 @@ msgstr "例: ウェルカムメール"
 #: model_terms:ir.ui.view,arch_db:mail.mail_compose_message_view_form_template_save
 msgid "e.g. \"Welcome to MyCompany\" or \"Nice to meet you, {{ object.name }}\""
 msgstr "例:  \"MyCompanyへようこそ\" または \"こんにちは、 {{ object.name }}様\""
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.mail_alias_domain_view_form
+msgid "e.g. \"bounce\""
+msgstr "例 \"bounce\""
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.mail_alias_domain_view_form
+msgid "e.g. \"catchall\""
+msgstr "例 \"catchall\""
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.mail_alias_domain_view_form
+msgid "e.g. \"mycompany.com\""
+msgstr "例:  \"mycompany.com\""
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.mail_alias_domain_view_form
+msgid "e.g. \"notifications\""
+msgstr "例 \"notifications\""
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
@@ -10850,6 +10800,13 @@ msgid "media player Error"
 msgstr "メディアプレイヤーエラー"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "microphone"
+msgstr "マイク"
+
+#. module: mail
 #. odoo-python
 #: code:addons/mail/models/mail_thread.py:0
 #, python-format
@@ -10878,7 +10835,6 @@ msgstr "新規"
 
 #. module: mail
 #. odoo-javascript
-#: code:addons/mail/static/src/discuss/call/common/call_context_menu.js:0
 #: code:addons/mail/static/src/discuss/call/common/call_context_menu.js:0
 #, python-format
 msgid "no connection"
@@ -10968,6 +10924,13 @@ msgid "results out of"
 msgstr "以下からの結果:"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "screen"
+msgstr "画面"
+
+#. module: mail
 #. odoo-python
 #: code:addons/mail/models/mail_alias.py:0
 #, python-format
@@ -11025,6 +10988,20 @@ msgstr "不明なエラー"
 #, python-format
 msgid "unknown target model %s"
 msgstr "不明なターゲットモデル %s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "up DTLS:"
+msgstr "アップDTLS:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+#, python-format
+msgid "up ICE:"
+msgstr "アップICE:"
 
 #. module: mail
 #. odoo-javascript

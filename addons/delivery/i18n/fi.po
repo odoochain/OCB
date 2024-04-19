@@ -19,7 +19,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
 "Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2023\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
@@ -34,12 +34,19 @@ msgstr ""
 #: code:addons/delivery/wizard/choose_delivery_carrier.py:0
 #, python-format
 msgid "%(carrier)s Error"
+msgstr "%(carrier)s Virhe"
+
+#. module: delivery
+#. odoo-python
+#: code:addons/delivery/models/delivery_carrier.py:0
+#, python-format
+msgid "%(old_name)s (copy)"
 msgstr ""
 
 #. module: delivery
 #: model_terms:ir.ui.view,arch_db:delivery.choose_delivery_carrier_view_form
 msgid "<i class=\"oi oi-arrow-right me-1\"/>Get rate"
-msgstr ""
+msgstr "<i class=\"oi oi-arrow-right me-1\"/>Hae hinta"
 
 #. module: delivery
 #. odoo-python
@@ -60,11 +67,13 @@ msgid ""
 "<span class=\"o_stat_text o_warning_text fw-bold\">Test</span>\n"
 "                                <span class=\"o_stat_text\">Environment</span>"
 msgstr ""
+"<span class=\"o_stat_text o_warning_text fw-bold\">Testi</span>\n"
+"                                <span class=\"o_stat_text\">Ympäristö</span>"
 
 #. module: delivery
 #: model_terms:ir.ui.view,arch_db:delivery.view_delivery_carrier_form
 msgid "<span class=\"o_stat_text text-danger\">No debug</span>"
-msgstr ""
+msgstr "<span class=\"o_stat_text text-danger\">Ei virheenkorjausta</span>"
 
 #. module: delivery
 #: model_terms:ir.ui.view,arch_db:delivery.view_delivery_carrier_form
@@ -77,6 +86,8 @@ msgid ""
 "<span class=\"text-success\">Production</span>\n"
 "                                <span class=\"o_stat_text\">Environment</span>"
 msgstr ""
+"<span class=\"text-success\">Tuotanto</span>\n"
+"                                <span class=\"o_stat_text\">Ympäristö</span>"
 
 #. module: delivery
 #: model_terms:ir.ui.view,arch_db:delivery.delivery_report_saleorder_document
@@ -124,7 +135,7 @@ msgstr "Lisää toimitus"
 #. module: delivery
 #: model_terms:ir.ui.view,arch_db:delivery.view_delivery_carrier_form
 msgid "Additional margin"
-msgstr ""
+msgstr "Lisämarginaali"
 
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_delivery_carrier__amount
@@ -137,8 +148,7 @@ msgid ""
 "Amount of the order to benefit from a free shipping, expressed in the "
 "company currency"
 msgstr ""
-"Summa jonka ylittyessä toimitus on ilmainen, ilmaistuna yrityksen "
-"valuutassa."
+"Summa jonka ylittyessä toimitus on ilmainen, ilmaistuna yrityksen valuutassa"
 
 #. module: delivery
 #: model_terms:ir.ui.view,arch_db:delivery.view_delivery_carrier_form
@@ -315,6 +325,8 @@ msgid ""
 "Delivery zip prefixes are assigned to delivery carriers to restrict\n"
 "            which zips it is available to."
 msgstr ""
+"Toimituspostinumeron etuliitteet osoitetaan jakeluliikenteen harjoittajille, jotta voidaan rajoittaa\n"
+"            mihin postinumeroihin se on saatavilla."
 
 #. module: delivery
 #: model_terms:ir.ui.view,arch_db:delivery.view_delivery_carrier_form
@@ -351,6 +363,9 @@ msgid ""
 "            UPS Express, UPS Standard) with a set of pricing rules attached\n"
 "            to each method."
 msgstr ""
+"Kullakin kuljetusliikkeellä (esim. UPS) voi olla useita toimitustapoja (esim.\n"
+"            UPS Express, UPS Standard), joihin liittyy joukko hinnoittelusääntöjä\n"
+"            kuhunkin menetelmään."
 
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_delivery_carrier__prod_environment
@@ -368,8 +383,8 @@ msgstr "Virhe: tämä toimitustapa ei ole käytettävissä tässä osoitteessa."
 #. module: delivery
 #: model:ir.model.fields,help:delivery.field_delivery_carrier__invoice_policy
 msgid ""
-"Estimated Cost: the customer will be invoiced the estimated cost of the shipping.\n"
-"Real Cost: the customer will be invoiced the real cost of the shipping, the cost of theshipping will be updated on the SO after the delivery."
+"Estimated Cost: the customer will be invoiced the estimated cost of the "
+"shipping."
 msgstr ""
 
 #. module: delivery
@@ -394,7 +409,7 @@ msgstr ""
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_delivery_carrier__fixed_margin
 msgid "Fixed Margin"
-msgstr ""
+msgstr "Kiinteä marginaali"
 
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_delivery_carrier__fixed_price
@@ -550,7 +565,7 @@ msgstr "Uudet palveluntarjoajat"
 #: code:addons/delivery/models/delivery_carrier.py:0
 #, python-format
 msgid "Not available for current order"
-msgstr ""
+msgstr "Ei saatavilla nykyisessä tilauksessa"
 
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_delivery_price_rule__operator
@@ -566,6 +581,7 @@ msgstr "Tilaus"
 #: model_terms:ir.ui.view,arch_db:delivery.view_delivery_carrier_form
 msgid "Please select a country before choosing a state or a zip prefix."
 msgstr ""
+"Valitse maa ennen osavaltion tai postinumeron etuliitteen valitsemista."
 
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_delivery_zip_prefix__name
@@ -712,7 +728,7 @@ msgstr ""
 #: model:delivery.carrier,name:delivery.free_delivery_carrier
 #: model:product.template,name:delivery.product_product_delivery_product_template
 msgid "Standard delivery"
-msgstr ""
+msgstr "Vakiotoimitus"
 
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_delivery_carrier__state_ids
@@ -760,11 +776,14 @@ msgid ""
 "            according to your settings; on the sales order (based on the\n"
 "            quotation) or the invoice (based on the delivery orders)."
 msgstr ""
+"Näiden menetelmien avulla toimitushinta voidaan laskea automaattisesti\n"
+"            asetustenne mukaisesti; myyntitilauksessa (perustuen myyntitilauksen\n"
+"            tarjouksen perusteella) tai laskun perusteella (toimitustilausten perusteella)."
 
 #. module: delivery
 #: model:ir.model.fields,help:delivery.field_delivery_carrier__fixed_margin
 msgid "This fixed amount will be added to the shipping price."
-msgstr ""
+msgstr "Tämä kiinteä summa lisätään toimituksen hintaan."
 
 #. module: delivery
 #: model:ir.model.fields,help:delivery.field_delivery_carrier__margin
@@ -774,7 +793,7 @@ msgstr "Tämä prosenttiosuus lisätään toimitushintaan."
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_choose_delivery_carrier__total_weight
 msgid "Total Order Weight"
-msgstr ""
+msgstr "Tilauksen kokonaispaino"
 
 #. module: delivery
 #: model_terms:ir.ui.view,arch_db:delivery.choose_delivery_carrier_view_form
@@ -820,7 +839,7 @@ msgstr "Paino * Tilavuus"
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_choose_delivery_carrier__weight_uom_name
 msgid "Weight Uom Name"
-msgstr ""
+msgstr "Painon mittayksikön nimi"
 
 #. module: delivery
 #. odoo-python
@@ -836,6 +855,14 @@ msgstr ""
 "\n"
 "Seuraavat toimitusrivit (tuote, laskutettu määrä ja hinta) on jo käsitelty:\n"
 "\n"
+
+#. module: delivery
+#: code:addons/delivery/models/product_category.py:0
+#, python-format
+msgid ""
+"You cannot delete the deliveries product category as it is used on the "
+"delivery carriers products."
+msgstr ""
 
 #. module: delivery
 #: model:ir.actions.act_window,name:delivery.action_delivery_zip_prefix_list

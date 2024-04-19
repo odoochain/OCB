@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import ast
 import re
 from collections import defaultdict
 
@@ -341,7 +342,7 @@ class AccountReportLine(models.Model):
             if report_line.parent_id.groupby or report_line.parent_id.user_groupby:
                 raise ValidationError(_("A line cannot have both children and a groupby value (line '%s').", report_line.parent_id.name))
 
-    @api.constrains('expression_ids', 'groupby')
+    @api.constrains('expression_ids', 'groupby', 'user_groupby')
     def _validate_formula(self):
         for expression in self.expression_ids:
             if expression.engine == 'aggregation' and (expression.report_line_id.groupby or expression.report_line_id.user_groupby):
@@ -549,6 +550,16 @@ class AccountReportExpression(models.Model):
         ),
     ]
 
+    @api.constrains('formula')
+    def _check_domain_formula(self):
+        for expression in self.filtered(lambda expr: expr.engine == 'domain'):
+            try:
+                domain = ast.literal_eval(expression.formula)
+                self.env['account.move.line']._where_calc(domain)
+            except:
+                raise UserError(_("Invalid domain for expression '%s' of line '%s': %s",
+                                expression.label, expression.report_line_name, expression.formula))
+
     @api.depends('engine')
     def _compute_auditable(self):
         auditable_engines = self._get_auditable_engines()
@@ -596,7 +607,8 @@ class AccountReportExpression(models.Model):
             self._create_tax_tags(tag_name, country)
             return super().write(vals)
 
-        if 'formula' not in vals:
+        # In case the engine is changed we don't propagate any change to the tags themselves
+        if 'formula' not in vals or (vals.get('engine') and vals['engine'] != 'tax_tags'):
             return super().write(vals)
 
         tax_tags_expressions = self.filtered(lambda x: x.engine == 'tax_tags')
@@ -638,7 +650,7 @@ class AccountReportExpression(models.Model):
             other_expression_using_tag = self.env['account.report.expression'].sudo().search([
                 ('engine', '=', 'tax_tags'),
                 ('formula', '=', tag.name[1:]),  # we escape the +/- sign
-                ('report_line_id.report_id.country_id.id', '=', tag.country_id.id),
+                ('report_line_id.report_id.country_id', '=', tag.country_id.id),
                 ('id', 'not in', self.ids),
             ], limit=1)
             if not other_expression_using_tag:
@@ -821,7 +833,7 @@ class AccountReportExternalValue(models.Model):
     text_value = fields.Char(string="Text Value")
     date = fields.Date(required=True)
 
-    target_report_expression_id = fields.Many2one(string="Target Expression", comodel_name="account.report.expression", required=True)
+    target_report_expression_id = fields.Many2one(string="Target Expression", comodel_name="account.report.expression", required=True, ondelete="cascade")
     target_report_line_id = fields.Many2one(string="Target Line", related="target_report_expression_id.report_line_id")
     target_report_expression_label = fields.Char(string="Target Expression Label", related="target_report_expression_id.label")
     report_country_id = fields.Many2one(string="Country", related='target_report_line_id.report_id.country_id')

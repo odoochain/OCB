@@ -1,5 +1,7 @@
 /* @odoo-module */
 
+import { assignDefined } from "@mail/utils/common/misc";
+
 import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 
@@ -41,12 +43,12 @@ export class ChatWindowService {
         return chatWindow;
     }
 
-    openNewMessage() {
+    openNewMessage({ openMessagingMenuOnClose } = {}) {
         if (this.store.discuss.chatWindows.some(({ thread }) => !thread)) {
             // New message chat window is already opened.
             return;
         }
-        this.store.ChatWindow.insert();
+        this.store.ChatWindow.insert(assignDefined({}, { openMessagingMenuOnClose }));
     }
 
     closeNewMessage() {
@@ -86,7 +88,7 @@ export class ChatWindowService {
     makeVisible(chatWindow) {
         const swaped = this.visible[this.visible.length - 1];
         this.hide(swaped);
-        this.show(chatWindow);
+        this.show(chatWindow, { notifyState: false });
     }
 
     toggleFold(chatWindow) {
@@ -105,8 +107,6 @@ export class ChatWindowService {
 
     hide(chatWindow) {
         chatWindow.hidden = true;
-        chatWindow.folded = true;
-        chatWindow.thread.state = "folded";
     }
 
     async close(chatWindow, options = {}) {

@@ -10,7 +10,6 @@ class AccountChartTemplate(models.AbstractModel):
     def _get_mx_template_data(self):
         return {
             'code_digits': '3',
-            'use_anglo_saxon': True,
             'display_invoice_amount_total_words': True,
             'property_account_receivable_id': 'cuenta105_01',
             'property_account_payable_id': 'cuenta201_01',
@@ -26,6 +25,7 @@ class AccountChartTemplate(models.AbstractModel):
     def _get_mx_res_company(self):
         return {
             self.env.company.id: {
+                'anglo_saxon_accounting': True,
                 'account_fiscal_country_id': 'base.mx',
                 'bank_account_code_prefix': '102.01.0',
                 'cash_account_code_prefix': '101.01.0',
@@ -52,7 +52,3 @@ class AccountChartTemplate(models.AbstractModel):
                 'show_on_dashboard': True,
             }
         }
-
-    def _setup_utility_bank_accounts(self, template_code, company, template_data):
-        super()._setup_utility_bank_accounts(template_code, company, template_data)
-        company.account_journal_suspense_account_id.tag_ids = self.env.ref('l10n_mx.tag_credit_balance_account')

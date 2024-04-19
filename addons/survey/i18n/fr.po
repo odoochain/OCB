@@ -4,15 +4,16 @@
 # 
 # Translators:
 # Wil Odoo, 2023
-# Jolien De Paepe, 2023
+# Jolien De Paepe, 2024
+# Asia Ba, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Jolien De Paepe, 2023\n"
+"Last-Translator: Asia Ba, 2024\n"
 "Language-Team: French (https://app.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -69,8 +70,8 @@ msgstr "% terminé"
 #. odoo-python
 #: code:addons/survey/models/survey_user_input.py:0
 #, python-format
-msgid "%(participant) just participated in \"%(survey_title)s\"."
-msgstr "%(participant) vient de participer à \"%(survey_title)s\"."
+msgid "%(participant)s just participated in \"%(survey_title)s\"."
+msgstr ""
 
 #. module: survey
 #. odoo-python
@@ -501,10 +502,8 @@ msgstr "<span class=\"d-block text-warning\">Partielle</span>"
 #: model_terms:ir.ui.view,arch_db:survey.survey_fill_form_in_progress
 msgid ""
 "<span class=\"fw-bold text-muted ms-2 d-none d-md-inline\" id=\"enter-"
-"tooltip\"> or press Enter</span>"
+"tooltip\"> or press CTRL+Enter</span>"
 msgstr ""
-"<span class=\"fw-bold text-muted ms-2 d-none d-md-inline\" id=\"enter-"
-"tooltip\">ou appuyer sur Enter</span>"
 
 #. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.survey_fill_form_in_progress
@@ -521,12 +520,9 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:survey.survey_fill_form_in_progress
 msgid ""
 "<span class=\"fw-bold text-muted ms-2 d-none d-md-inline\">\n"
-"                        <span id=\"enter-tooltip\">or press Enter</span>\n"
-"                    </span>"
+"                    <span id=\"enter-tooltip\">or press CTRL+Enter</span>\n"
+"                </span>"
 msgstr ""
-"<span class=\"fw-bold text-muted ms-2 d-none d-md-inline\">\n"
-"                        <span id=\"enter-tooltip\">ou appuyer sur Enter</span>\n"
-"                    </span>"
 
 #. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.survey_survey_view_kanban
@@ -1181,7 +1177,7 @@ msgstr "Automne"
 #. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.question_result_number_or_date_or_datetime
 msgid "Average"
-msgstr "Moyen"
+msgstr "Moyenne"
 
 #. module: survey
 #: model:ir.model.fields,field_description:survey.field_survey_survey__answer_duration_avg
@@ -1457,7 +1453,7 @@ msgstr "Fermer"
 #. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.survey_survey_view_form
 msgid "Close Live Session"
-msgstr "Fermer la Session Live"
+msgstr "Fermer la Session en direct"
 
 #. module: survey
 #: model:survey.question.answer,value:survey.vendor_certification_page_1_question_3_choice_1
@@ -1625,8 +1621,8 @@ msgid "Corner Desk Right Sit"
 msgstr "Bureau d'angle avec siège à droite"
 
 #. module: survey
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/survey/models/survey_user_input.py:0
 #: code:addons/survey/static/src/js/survey_result.js:0
 #: model:ir.model.fields,field_description:survey.field_survey_question_answer__is_correct
@@ -2551,8 +2547,8 @@ msgstr ""
 "réponse et une note de réponse pour être pris en compte."
 
 #. module: survey
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/survey/models/survey_user_input.py:0
 #: code:addons/survey/static/src/js/survey_result.js:0
 #, python-format
@@ -2577,7 +2573,7 @@ msgstr "Jeton d'invitation"
 #. module: survey
 #: model:ir.model.fields.selection,name:survey.selection__survey_survey__access_mode__token
 msgid "Invited people only"
-msgstr "Seulement les personnes invitées"
+msgstr "Seules les personnes invitées"
 
 #. module: survey
 #: model:ir.model.fields,field_description:survey.field_survey_invite__is_mail_template_editor
@@ -3560,8 +3556,8 @@ msgid "Papyrus"
 msgstr "Papyrus"
 
 #. module: survey
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/survey/models/survey_user_input.py:0
 #: code:addons/survey/static/src/js/survey_result.js:0
 #, python-format
@@ -3781,6 +3777,11 @@ msgstr "Imprimer"
 #: model:survey.question,title:survey.vendor_certification_page_1
 msgid "Products"
 msgstr "Produits"
+
+#. module: survey
+#: model_terms:ir.ui.view,arch_db:survey.user_input_session_manage_content
+msgid "Progress bar"
+msgstr "Barre de progression"
 
 #. module: survey
 #: model:ir.model.fields,field_description:survey.field_survey_question_answer__question_id
@@ -4928,8 +4929,8 @@ msgstr ""
 "N'hésitez pas à le personnaliser comme bon vous semble !"
 
 #. module: survey
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/survey/models/survey_question.py:0
 #: code:addons/survey/static/src/js/survey_form.js:0
 #: code:addons/survey/tests/test_survey.py:0
@@ -5147,8 +5148,8 @@ msgstr ""
 "l'expéditeur."
 
 #. module: survey
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/survey/models/survey_user_input.py:0
 #: code:addons/survey/static/src/js/survey_result.js:0
 #, python-format
@@ -5756,11 +5757,6 @@ msgstr "tentatives"
 #, python-format
 msgid "close"
 msgstr "fermer"
-
-#. module: survey
-#: model_terms:ir.ui.view,arch_db:survey.survey_results_filters
-msgid "dropdown-item d-flex align-items-center justify-content-between"
-msgstr "dropdown-item d-flex align-items-center justify-content-between"
 
 #. module: survey
 #: model_terms:ir.ui.view,arch_db:survey.survey_invite_view_form

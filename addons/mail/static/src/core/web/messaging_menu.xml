@@ -33,15 +33,17 @@
                     displayName="installationRequest.displayName"
                     iconSrc="installationRequest.iconSrc"
                     onClick="installationRequest.onClick"
+                    onSwipeRight="hasTouch() ? { action: () => this.installPrompt.decline(), icon: 'fa-times-circle', bgColor: 'bg-warning' } : undefined"
                 >
                     <t t-set-slot="icon">
                         <ImStatus persona="installationRequest.partner" className="'position-absolute top-100 start-100 translate-middle mt-n1 ms-n1'"/>
                     </t>
                     <t t-set-slot="requestContent">
                         <a t-if="ui.isSmall" class="btn fa fa-cloud-download" />
-                        <a t-else="" class="btn btn-primary">
-                            Install
-                        </a>
+                        <t t-else="">
+                            <a class="btn btn-primary">Install</a>
+                            <span t-if="!hasTouch()" t-on-click.stop="() => this.installPrompt.decline()" class="text-dark bg-transparent fa fa-close opacity-50 opacity-100-hover" title="Dismiss"></span>
+                        </t>
                     </t>
                 </NotificationItem>
             </t>
@@ -72,7 +74,7 @@
                 </t>
             </t>
             <t t-foreach="threads" t-as="thread" t-key="thread.localId">
-                <t t-set="message" t-value="thread.isChatChannel or (thread.type === 'channel' and thread.needactionMessages.length === 0) ? thread.newestMessage : thread.needactionMessages.at(-1)"/>
+                <t t-set="message" t-value="thread.isChatChannel or (thread.type === 'channel' and thread.needactionMessages.length === 0) ? thread.newestPersistentNotEmptyOfAllMessage : thread.needactionMessages.at(-1)"/>
                 <NotificationItem
                     body="message?.inlineBody"
                     counter="thread.needactionCounter"

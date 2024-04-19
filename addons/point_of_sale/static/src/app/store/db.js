@@ -489,7 +489,7 @@ export class PosDB {
             // eslint-disable-next-line no-useless-escape
             query = query.replace(/[\[\]\(\)\+\*\?\.\-\!\&\^\$\|\~\_\{\}\:\,\\\/]/g, ".");
             query = query.replace(/ /g, ".+");
-            var re = RegExp("([0-9]+):.*?" + unaccent(query), "gi");
+            var re = RegExp("^([0-9]+):.*?" + unaccent(query), "gim");
         } catch {
             return [];
         }
@@ -711,7 +711,10 @@ export class PosDB {
         return savedOrders.filter(
             (order) =>
                 ids.includes(order.id) &&
-                (order.data.server_id || order.data.lines.length || order.data.statement_ids.length)
+                (order.data.server_id ||
+                    order.data.lines.length ||
+                    order.data.statement_ids.length ||
+                    order.data.booked)
         );
     }
     /**

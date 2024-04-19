@@ -4,17 +4,20 @@
 # 
 # Translators:
 # Ivana Bartonkova, 2023
-# Jakub Smolka, 2023
-# Tomáš Píšek, 2023
 # Wil Odoo, 2023
+# Tomáš Píšek, 2023
+# Aleš Fiala <f.ales1@seznam.cz>, 2024
+# Katerina Horylova, 2024
+# Vojtech Smolka, 2024
+# Jakub Smolka, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:56+0000\n"
+"POT-Creation-Date: 2024-01-05 12:32+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Wil Odoo, 2023\n"
+"Last-Translator: Jakub Smolka, 2024\n"
 "Language-Team: Czech (https://app.transifex.com/odoo/teams/41243/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -49,12 +52,12 @@ msgstr ""
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.my_account_link
 msgid "<i class=\"fa fa-fw fa-id-card-o me-1 small text-primary\"/> My Account"
-msgstr ""
+msgstr "Můj účet"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.user_dropdown
 msgid "<i class=\"fa fa-fw fa-sign-out me-1 small text-primary\"/> Logout"
-msgstr ""
+msgstr "<i class=\"fa fa-fw fa-sign-out me-1 small text-primary\"/> Odhlásit se"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.user_dropdown
@@ -64,12 +67,12 @@ msgstr ""
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.side_content
 msgid "<i class=\"fa fa-pencil\"/> Edit information"
-msgstr ""
+msgstr "<i class=\"fa fa-pencil\"/> Změnit informace"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_back_in_edit_mode
 msgid "<i class=\"oi oi-arrow-right me-1\"/>Back to edit mode"
-msgstr ""
+msgstr "<i class=\"oi oi-arrow-right me-1\"/>Zpět do režimu úprav"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.record_pager
@@ -91,7 +94,7 @@ msgstr "<i title=\"Dokumentace\" class=\"fa fa-fw o_button_icon fa-info-circle\"
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_details_fields
 msgid "<option value=\"\">Country...</option>"
-msgstr ""
+msgstr "<option value=\"\">Země...</option>"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_details_fields
@@ -101,9 +104,22 @@ msgstr ""
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_details_fields
 msgid ""
-"<small class=\"form-text text-muted\">Changing company name or VAT number is"
-" not allowed once document(s) have been issued for your account. <br/>Please"
-" contact us directly for this operation.</small>"
+"<small class=\"form-text text-muted\">\n"
+"                Company name, VAT Number and country can not be changed once document(s) have been issued for your account.\n"
+"                <br/>Please contact us directly for that operation.\n"
+"            </small>"
+msgstr ""
+
+#. module: portal
+#: model_terms:ir.ui.view,arch_db:portal.pager
+msgid ""
+"<span class=\"fa fa-chevron-left\" role=\"img\" aria-label=\"Previous\" "
+"title=\"Previous\"/>"
+msgstr ""
+
+#. module: portal
+#: model_terms:ir.ui.view,arch_db:portal.pager
+msgid "<span class=\"fa fa-chevron-right\" role=\"img\" aria-label=\"Next\" title=\"Next\"/>"
 msgstr ""
 
 #. module: portal
@@ -216,7 +232,7 @@ msgstr "Popis API klíče"
 #: code:addons/portal/static/src/js/portal_security.js:0
 #, python-format
 msgid "API Key Ready"
-msgstr ""
+msgstr "API klíč je připraven"
 
 #. module: portal
 #. odoo-javascript
@@ -263,7 +279,7 @@ msgstr "Přidat další obsah, který chcete zobrazit v e-mailu"
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_home
 msgid "Add, remove or modify your addresses"
-msgstr ""
+msgstr "Přidávejte, spravujte nebo odstraňujte vaše adresy"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_security
@@ -273,7 +289,7 @@ msgstr "Přidáno na"
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_home
 msgid "Addresses"
-msgstr ""
+msgstr "Adresy"
 
 #. module: portal
 #: model:ir.model.fields.selection,name:portal.selection__portal_wizard_user__email_state__exist
@@ -325,6 +341,13 @@ msgstr ""
 "Kontaktujte nás přímo pro tuto operaci."
 
 #. module: portal
+#: model_terms:ir.ui.view,arch_db:portal.portal_my_details_fields
+msgid ""
+"Changing the country is not allowed once document(s) have been issued for "
+"your account. Please contact us directly for this operation."
+msgstr ""
+
+#. module: portal
 #. odoo-javascript
 #: code:addons/portal/static/src/js/portal_security.js:0
 #: code:addons/portal/static/src/js/portal_security.js:0
@@ -367,7 +390,7 @@ msgstr "Konfigurační nastavení"
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_home
 msgid "Configure your connection parameters"
-msgstr ""
+msgstr "Nastavte si vaše možnosti přihlášení"
 
 #. module: portal
 #. odoo-javascript
@@ -387,7 +410,7 @@ msgstr "Potvrzení hesla"
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_home
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_security
 msgid "Connection &amp; Security"
-msgstr ""
+msgstr "Účet &amp; bezpečnost"
 
 #. module: portal
 #: model:ir.model,name:portal.model_res_partner
@@ -529,7 +552,7 @@ msgstr "Zobrazovací název"
 #: code:addons/portal/static/src/js/portal_sidebar.js:0
 #, python-format
 msgid "Due in %s days"
-msgstr ""
+msgstr "Splatnost za %s dní"
 
 #. module: portal
 #. odoo-javascript
@@ -639,7 +662,7 @@ msgstr "Interní uživatel"
 #: code:addons/portal/static/src/xml/portal_chatter.xml:0
 #, python-format
 msgid "Internal notes are only displayed to internal users."
-msgstr ""
+msgstr "Interní poznámky se zobrazují pouze interním uživatelům."
 
 #. module: portal
 #: model:ir.model.fields.selection,name:portal.selection__portal_wizard_user__email_state__ko
@@ -649,7 +672,7 @@ msgstr "Neplatný"
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.wizard_view
 msgid "Invalid Email Address"
-msgstr ""
+msgstr "Neplatná e-mailová adresa"
 
 #. module: portal
 #. odoo-python
@@ -681,7 +704,7 @@ msgstr ""
 #: code:addons/portal/wizard/portal_share.py:0
 #, python-format
 msgid "Invitation to access %s"
-msgstr ""
+msgstr "Pozvánka na přístup %s"
 
 #. module: portal
 #: model:ir.model.fields,field_description:portal.field_portal_wizard_user__is_internal
@@ -739,14 +762,14 @@ msgstr "Odkaz"
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_security
 #, python-format
 msgid "Log out from all devices"
-msgstr ""
+msgstr "Odhlásit ze všech zařízení"
 
 #. module: portal
 #. odoo-javascript
 #: code:addons/portal/static/src/js/portal_security.js:0
 #, python-format
 msgid "Log out from all devices?"
-msgstr ""
+msgstr "Odhlásit ze všech zařízení?"
 
 #. module: portal
 #: model:ir.model,name:portal.model_mail_message
@@ -774,7 +797,7 @@ msgstr ""
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_layout
 msgid "My account"
-msgstr ""
+msgstr "Můj účet"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_details_fields
@@ -805,7 +828,6 @@ msgstr "Nové heslo:"
 #. odoo-javascript
 #: code:addons/portal/static/src/xml/portal_chatter.xml:0
 #: code:addons/portal/static/src/xml/portal_chatter.xml:0
-#: model_terms:ir.ui.view,arch_db:portal.pager
 #, python-format
 msgid "Next"
 msgstr "Další"
@@ -813,7 +835,7 @@ msgstr "Další"
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_home
 msgid "No Documents to display"
-msgstr ""
+msgstr "Žádné dokumenty k zobrazení"
 
 #. module: portal
 #: model:ir.model.fields,field_description:portal.field_portal_share__note
@@ -910,11 +932,6 @@ msgid "Powered by"
 msgstr "Běží na"
 
 #. module: portal
-#: model_terms:ir.ui.view,arch_db:portal.pager
-msgid "Prev"
-msgstr "Předchozí"
-
-#. module: portal
 #. odoo-javascript
 #: code:addons/portal/static/src/xml/portal_chatter.xml:0
 #: code:addons/portal/static/src/xml/portal_chatter.xml:0
@@ -962,7 +979,7 @@ msgstr "Příjemci"
 #. module: portal
 #: model:ir.model.fields,field_description:portal.field_portal_share__resource_ref
 msgid "Related Document"
-msgstr ""
+msgstr "Související dokument"
 
 #. module: portal
 #: model:ir.model.fields,field_description:portal.field_portal_share__res_id
@@ -982,7 +999,7 @@ msgstr ""
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_security
 msgid "Revoke All Sessions"
-msgstr ""
+msgstr "Odhlášení ze všech zařízení"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_details
@@ -1033,7 +1050,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:portal.portal_share_wizard
 #, python-format
 msgid "Send"
-msgstr "Odchozí"
+msgstr "Odeslat"
 
 #. module: portal
 #: model:ir.actions.act_window,name:portal.portal_share_action

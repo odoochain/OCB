@@ -2296,9 +2296,7 @@ class TestSinglePicking(TestStockCommon):
         picking_type = self.env['stock.picking.type'].browse(self.picking_type_in)
         picking_type.show_reserved = True
 
-        receipt_form = Form(self.env['stock.picking'].with_context(
-            force_detailed_view=True
-        ), view='stock.view_picking_form')
+        receipt_form = Form(self.env['stock.picking'], view='stock.view_picking_form')
         receipt_form.partner_id = partner
         receipt_form.picking_type_id = picking_type
         # <field name="location_id" invisible="picking_type_code' == 'incoming'"
@@ -2622,7 +2620,7 @@ class TestStockUOM(TestStockCommon):
             ('lot_id', '=', quant_LtDA.lot_id.id),
             ('package_id', '=', quant_LtDA.package_id.id),
             ('owner_id', '=', quant_LtDA.owner_id.id),
-            ('quantity', '!=', 0)
+            ('quantity_product_uom', '!=', 0)
         ])
         reserved_on_move_lines_LtDA = sum(move_lines_LtDA.mapped('quantity_product_uom'))
 
@@ -2632,7 +2630,7 @@ class TestStockUOM(TestStockCommon):
             ('lot_id', '=', quant_GtDA.lot_id.id),
             ('package_id', '=', quant_GtDA.package_id.id),
             ('owner_id', '=', quant_GtDA.owner_id.id),
-            ('quantity', '!=', 0)
+            ('quantity_product_uom', '!=', 0)
         ])
         reserved_on_move_lines_GtDA = sum(move_lines_GtDA.mapped('quantity_product_uom'))
 
@@ -2742,7 +2740,7 @@ class TestRoutes(TestStockCommon):
         self.product1.write({'route_ids': [(4, resupply_route.id), (4, self.env.ref('stock.route_warehouse0_mto').id)]})
         self.wh = warehouse_1
 
-        replenish_wizard = self.env['product.replenish'].create({
+        replenish_wizard = self.env['product.replenish'].with_context(default_product_tmpl_id=self.product1.product_tmpl_id.id).create({
             'product_id': self.product1.id,
             'product_tmpl_id': self.product1.product_tmpl_id.id,
             'product_uom_id': self.uom_unit.id,

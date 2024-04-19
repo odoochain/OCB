@@ -45,7 +45,7 @@ patch(PosStore.prototype, {
     setIdleTimer() {
         clearTimeout(this.idleTimer);
         if (this.shouldResetIdleTimer()) {
-            this.idleTimer = setTimeout(() => this.actionAfterIdle(), 60000);
+            this.idleTimer = setTimeout(() => this.actionAfterIdle(), 180000);
         }
     },
     async actionAfterIdle() {
@@ -62,13 +62,13 @@ patch(PosStore.prototype, {
             this.showScreen("FloorScreen", { floor: table?.floor });
         }
     },
-    getReceiptHeaderData() {
+    getReceiptHeaderData(order) {
         const json = super.getReceiptHeaderData(...arguments);
-        if (this.config.module_pos_restaurant) {
-            if (this.get_order().getTable()) {
-                json.table = this.get_order().getTable().name;
+        if (this.config.module_pos_restaurant && order) {
+            if (order.getTable()) {
+                json.table = order.getTable().name;
             }
-            json.customer_count = this.get_order().getCustomerCount();
+            json.customer_count = order.getCustomerCount();
         }
         return json;
     },
@@ -281,9 +281,14 @@ patch(PosStore.prototype, {
             Promise.reject(e);
         }
         this.table = null;
+        const order = this.get_order();
+        if (order && !order.isBooked) {
+            this.removeOrder(order);
+        }
         this.set_order(null);
     },
     setCurrentOrderToTransfer() {
+        this.selectedOrder.setBooked(true);
         this.orderToTransfer = this.selectedOrder;
     },
     async transferTable(table) {
@@ -329,5 +334,11 @@ patch(PosStore.prototype, {
             }
         }
         return super.updateModelsData(models_data);
+    },
+    async addProductToCurrentOrder(product, options = {}) {
+        if (this.config.module_pos_restaurant && !this.get_order().booked) {
+            this.get_order().setBooked(true);
+        }
+        return super.addProductToCurrentOrder(...arguments);
     },
 });

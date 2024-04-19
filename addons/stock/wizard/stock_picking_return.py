@@ -78,14 +78,11 @@ class ReturnPicking(models.TransientModel):
 
     @api.model
     def _prepare_stock_return_picking_line_vals_from_move(self, stock_move):
-        quantity = stock_move.product_qty
+        quantity = stock_move.quantity
         for move in stock_move.move_dest_ids:
             if not move.origin_returned_move_id or move.origin_returned_move_id != stock_move:
                 continue
-            if move.state in ('partially_available', 'assigned'):
-                quantity -= sum(move.move_line_ids.mapped('quantity'))
-            elif move.state in ('done'):
-                quantity -= move.product_qty
+            quantity -= move.quantity
         quantity = float_round(quantity, precision_rounding=stock_move.product_id.uom_id.rounding)
         return {
             'product_id': stock_move.product_id.id,
@@ -109,6 +106,8 @@ class ReturnPicking(models.TransientModel):
             'origin_returned_move_id': return_line.move_id.id,
             'procure_method': 'make_to_stock',
         }
+        if new_picking.picking_type_id.code == 'outgoing':
+            vals['partner_id'] = new_picking.partner_id.id
         return vals
 
     def _prepare_picking_default_values(self):

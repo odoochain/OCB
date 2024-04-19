@@ -3,17 +3,18 @@
 # 	* web
 # 
 # Translators:
-# Wil Odoo, 2023
 # Sarah Park, 2023
-# Daye Jeong, 2023
+# Daye Jeong, 2024
+# Martin Trigaux, 2024
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:56+0000\n"
+"POT-Creation-Date: 2024-01-29 10:46+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Daye Jeong, 2023\n"
+"Last-Translator: Wil Odoo, 2024\n"
 "Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1049,6 +1050,15 @@ msgstr "시작일 추가"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#, python-format
+msgid "Add to Favorites"
+msgstr "즐겨찾기에 추가"
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/x2many/x2many_field.js:0
 #, python-format
 msgid "Add: %s"
@@ -1113,6 +1123,13 @@ msgstr "모든 사용자"
 #, python-format
 msgid "Almond"
 msgstr "아몬드"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
+#, python-format
+msgid "Always range"
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -1472,6 +1489,15 @@ msgstr "파란색"
 #, python-format
 msgid "Boolean Icon"
 msgstr "불리언 아이콘"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/statusbar/statusbar_field.js:0
+#, python-format
+msgid ""
+"Boolean field from the model used in the relation, which indicates whether "
+"the state is folded or not."
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -3087,6 +3113,13 @@ msgstr "필드 유형"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/expression_editor/expression_editor.js:0
+#, python-format
+msgid "Field properties not supported"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/progress_bar/progress_bar_field.js:0
 #, python-format
 msgid ""
@@ -3385,6 +3418,18 @@ msgstr "모든 보고서의 상단에 표시되는 머리말 문구입니다."
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/model/relational_model/record.js:0
+#, python-format
+msgid ""
+"Heads up! Your recent changes are too large to save automatically. Please "
+"click the <i class=\"fa fa-cloud-upload fa-fw\"></i> button now to ensure "
+"your work is saved before you exit this tab."
+msgstr ""
+"주의! 최근 변경 내용이 너무 커서 자동으로 저장할 수 없습니다. 이 탭을 종료하기 전에 지금 <i class=\"fa fa-cloud-"
+"upload fa-fw\"></i> 버튼을 클릭하여 작업이 저장되었는지 확인하세요."
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/many2many_tags/many2many_tags_field.xml:0
 #, python-format
 msgid "Hide in kanban"
@@ -3487,8 +3532,8 @@ msgstr "ILY"
 #: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
 #: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
 #, python-format
-msgid "ISO-formatted date (e.g. \"2018-12-31\") or \"today\"."
-msgstr "ISO-형식의 날짜 (예. \"2018-12-31\") 또는 \"오늘\"."
+msgid "ISO-formatted date (e.g. \"2018-12-31\") or \"%s\"."
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -4987,6 +5032,13 @@ msgstr ""
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/many2many_binary/many2many_binary_field.js:0
+#, python-format
+msgid "Number of files"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 #, python-format
@@ -5393,6 +5445,11 @@ msgid "Password"
 msgstr "비밀번호"
 
 #. module: web
+#: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
+msgid "Payment Communication: <b><span>INV/2023/00003</span></b>"
+msgstr ""
+
+#. module: web
 #. odoo-javascript
 #: code:addons/web/static/src/webclient/settings_form_view/widgets/res_config_invite_users.xml:0
 #, python-format
@@ -5516,15 +5573,6 @@ msgstr "내보내기 목록을 저장할 필드를 선택하십시오..."
 msgid ""
 "Please use the copy button to report the error to your support service."
 msgstr "오류 복사 버튼으로 내용을 복사하여 고객지원팀으로 연락하세요."
-
-#. module: web
-#: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
-msgid ""
-"Please use the following communication for your payment : <b><span>\n"
-"                           INV/2023/00003</span></b>"
-msgstr ""
-"결제는 다음 연락처로 문의해 주세요: <b><span>\n"
-"                           INV/2023/00003</span></b>"
 
 #. module: web
 #. odoo-javascript
@@ -5707,6 +5755,13 @@ msgstr "진행 표시 줄"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/view_components/column_progress.xml:0
+#, python-format
+msgid "Progress bar"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/properties/properties_field.js:0
 #, python-format
 msgid "Properties"
@@ -5855,16 +5910,12 @@ msgstr "읽기 전용:"
 #, python-format
 msgid ""
 "Ready to make your record disappear into thin air? Are you sure?\n"
-"\n"
 "It will be gone forever!\n"
-"\n"
 "\n"
 "Think twice before you click that 'Delete' button!"
 msgstr ""
 "삭제 시 기록이 완전히 허공으로 사라지게 됩니다.\n"
-"\n"
 "한번 삭제된 기록은 복구할 수 없습니다.\n"
-"\n"
 "\n"
 "'삭제' 버튼을 클릭하기 전에 다시 한 번 생각해 보세요!"
 
@@ -5993,6 +6044,15 @@ msgstr "속성 제거"
 #, python-format
 msgid "Remove field"
 msgstr "필드 제거"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#, python-format
+msgid "Remove from Favorites"
+msgstr "즐겨찾기에서 제거"
 
 #. module: web
 #. odoo-javascript
@@ -6213,6 +6273,13 @@ msgstr "저장 및 새로 만들기"
 #, python-format
 msgid "Save as:"
 msgstr "다른 이름으로 저장 :"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/search/custom_favorite_item/custom_favorite_item.xml:0
+#, python-format
+msgid "Save current search"
+msgstr "현재 검색 저장"
 
 #. module: web
 #. odoo-javascript
@@ -6523,6 +6590,15 @@ msgstr "칸반 상태를 %s로 설정"
 #, python-format
 msgid "Set priority..."
 msgstr "우선순위 설정..."
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
+#, python-format
+msgid ""
+"Set to true the full range input has to be display by default, even if "
+"empty."
+msgstr "true로 설정하면 비어 있어도 기본적으로 전체 범위 입력을 표시해야 합니다."
 
 #. module: web
 #. odoo-javascript
@@ -6974,6 +7050,18 @@ msgstr "선택한 파일 (%sB)이 허용된 최대 파일 크기 (%sB)를 초과
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/errors/scss_error_dialog.js:0
+#, python-format
+msgid ""
+"The style compilation failed. This is an administrator or developer error "
+"that must be fixed for the entire database before continuing working. See "
+"browser console or server logs for details."
+msgstr ""
+"스타일 컴파일 중에 오류가 발생했습니다. 작업을 계속하기 전에 전체 데이터베이스에 대해 수정해야 하는 관리자 또는 개발자 오류입니다. "
+"자세한 내용은 브라우저 콘솔 또는 서버 로그를 참조하세요."
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/core/errors/error_dialogs.xml:0
 #, python-format
 msgid ""
@@ -7393,27 +7481,6 @@ msgstr "전체 보관 취소"
 
 #. module: web
 #. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid "Uncaught CORS Error"
-msgstr "Uncaught CORS Error"
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid "Uncaught Javascript Error"
-msgstr "Uncaught Javascript Error"
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid "Uncaught Promise"
-msgstr "Uncaught Promise"
-
-#. module: web
-#. odoo-javascript
 #. odoo-python
 #: code:addons/web/controllers/export.py:0
 #: code:addons/web/static/src/views/calendar/calendar_model.js:0
@@ -7430,23 +7497,6 @@ msgstr "미지정"
 #, python-format
 msgid "Unfold"
 msgstr "펼치기"
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid ""
-"Unknown CORS error\n"
-"\n"
-"An unknown CORS error occured.\n"
-"The error probably originates from a JavaScript file served from a different origin.\n"
-"(Opening your browser console might give you a hint on the error.)"
-msgstr ""
-"알 수 없는 CORS 오류\n"
-"\n"
-"알 수 없는 CORS 오류가 발생했습니다.\n"
-"이 오류는 다른 출처에서 제공된 JavaScript 파일에서 발생했을 수 있습니다.\n"
-"(브라우저 콘솔을 열어 오류에 대한 힌트를 얻을 수 있습니다.)"
 
 #. module: web
 #. odoo-javascript
@@ -7595,6 +7645,8 @@ msgid ""
 "Use to override the display value (e.g. if your progress bar is a computed "
 "percentage but you want to display the actual field value instead)."
 msgstr ""
+"이 옵션을 사용하여 표시된 값을 재정의할 수 있습니다. (예: 진행 표시줄이 백분율을 기준으로 계산되지만 대신 필드의 실제 값을 표시하고"
+" 싶은 경우 이 옵션을 활용할 수 있습니다.)"
 
 #. module: web
 #. odoo-javascript

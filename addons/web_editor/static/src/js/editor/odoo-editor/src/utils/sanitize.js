@@ -54,6 +54,9 @@ export function areSimilarElements(node, node2) {
     if ([node, node2].some(n => hasPseudoElementContent(n, ':before') || hasPseudoElementContent(n, ':after'))) {
         return false; // The nodes have pseudo elements with content.
     }
+    if (isFontAwesome(node) || isFontAwesome(node2)) {
+        return false;
+    }
     if (nodeName === 'LI' && node.classList.contains('oe-nested')) {
         // If the nodes are adjacent nested list items, we need to compare the
         // types of their "adjacent" list children rather that the list items
@@ -177,13 +180,20 @@ function sanitizeNode(node, root) {
         node = parent; // The node has been removed, update the reference.
     } else if (
         node.nodeName === 'P' && // Note: not sure we should limit to <p>.
-        node.parentElement.nodeName === 'LI'
+        node.parentElement.nodeName === 'LI' &&
+        !node.parentElement.classList.contains('nav-item')
     ) {
         // Remove empty paragraphs in <li>.
+        const classes = node.classList;
         const parent = node.parentElement;
         const restoreCursor = shouldPreserveCursor(node, root) && preserveCursor(root.ownerDocument);
         if (isEmptyBlock(node)) {
             node.remove();
+        } else if (classes.length) {
+            const spanEl = document.createElement('span');
+            spanEl.setAttribute('class', classes);
+            spanEl.append(...node.childNodes);
+            node.replaceWith(spanEl);
         } else {
             unwrapContents(node);
         }
@@ -242,7 +252,7 @@ export function sanitize(nodeToSanitize, root = nodeToSanitize) {
         let node = isList ? block.parentElement : block;
 
         // Sanitize the tree.
-        while (node?.isConnected && root.contains(node)) {
+        while (node && !(root.isConnected && !node.isConnected) && root.contains(node)) {
             if (!isProtected(node)) {
                 node = sanitizeNode(node, root); // The node itself might be replaced during sanitization.
             }

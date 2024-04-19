@@ -76,6 +76,13 @@ class StockMoveLine(models.Model):
                 move_line._log_message(production, move_line, 'mrp.track_production_move_template', vals)
         return super(StockMoveLine, self).write(vals)
 
+    def _get_aggregated_properties(self, move_line=False, move=False):
+        aggregated_properties = super()._get_aggregated_properties(move_line, move)
+        bom = aggregated_properties['move'].bom_line_id.bom_id
+        aggregated_properties['bom'] = bom or False
+        aggregated_properties['line_key'] += f'_{bom.id if bom else ""}'
+        return aggregated_properties
+
     def _get_aggregated_product_quantities(self, **kwargs):
         """Returns dictionary of products and corresponding values of interest grouped by optional kit_name
 
@@ -88,10 +95,25 @@ class StockMoveLine(models.Model):
         """
         aggregated_move_lines = super()._get_aggregated_product_quantities(**kwargs)
         kit_name = kwargs.get('kit_name')
-        if kit_name:
-            for aggregated_move_line in aggregated_move_lines:
-                if aggregated_move_lines[aggregated_move_line]['description'] == kit_name:
+
+        to_be_removed = []
+        for aggregated_move_line in aggregated_move_lines:
+            bom = aggregated_move_lines[aggregated_move_line]['bom']
+            is_phantom = bom.type == 'phantom' if bom else False
+            if kit_name:
+                product = bom.product_id or bom.product_tmpl_id if bom else False
+                display_name = product.display_name if product else False
+                description = aggregated_move_lines[aggregated_move_line]['description']
+                if not is_phantom or display_name != kit_name:
+                    to_be_removed.append(aggregated_move_line)
+                elif description == kit_name:
                     aggregated_move_lines[aggregated_move_line]['description'] = ""
+            elif not kwargs and is_phantom:
+                to_be_removed.append(aggregated_move_line)
+
+        for move_line in to_be_removed:
+            del aggregated_move_lines[move_line]
+
         return aggregated_move_lines
 
 
@@ -113,7 +135,7 @@ class StockMove(models.Model):
         'mrp.routing.workcenter', 'Operation To Consume', check_company=True,
         domain="[('id', 'in', allowed_operation_ids)]")
     workorder_id = fields.Many2one(
-        'mrp.workorder', 'Work Order To Consume', copy=False, check_company=True)
+        'mrp.workorder', 'Work Order To Consume', copy=False, check_company=True, index='btree_not_null')
     # Quantities to process, in normalized UoMs
     bom_line_id = fields.Many2one('mrp.bom.line', 'BoM Line', check_company=True)
     byproduct_id = fields.Many2one(
@@ -218,6 +240,11 @@ class StockMove(models.Model):
                 continue
             move.should_consume_qty = float_round((mo.qty_producing - mo.qty_produced) * move.unit_factor, precision_rounding=move.product_uom.rounding)
 
+    @api.depends('byproduct_id')
+    def _compute_show_info(self):
+        super()._compute_show_info()
+        self.filtered(lambda m: m.byproduct_id or m in self.production_id.move_finished_ids).show_quant = False
+
     @api.onchange('product_uom_qty')
     def _onchange_product_uom_qty(self):
         if self.raw_material_production_id and self.has_tracking == 'none':
@@ -285,6 +312,17 @@ class StockMove(models.Model):
         return super().create(vals_list)
 
     def write(self, vals):
+        if 'product_id' in vals:
+            move_to_unlink = self.filtered(lambda m: m.product_id.id != vals.get('product_id'))
+            other_move = self - move_to_unlink
+            if move_to_unlink.production_id and move_to_unlink.state not in ['draft', 'cancel', 'done']:
+                moves_data = move_to_unlink.copy_data()
+                for move_data in moves_data:
+                    move_data.update({'product_id': vals.get('product_id')})
+                updated_product_move = self.create(moves_data)
+                updated_product_move._action_confirm()
+                move_to_unlink.unlink()
+                self = other_move + updated_product_move
         if self.env.context.get('force_manual_consumption'):
             vals['manual_consumption'] = True
         if 'product_uom_qty' in vals and 'move_line_ids' in vals:
@@ -444,7 +482,7 @@ class StockMove(models.Model):
     def _get_backorder_move_vals(self):
         self.ensure_one()
         return {
-            'state': 'confirmed',
+            'state': 'draft' if self.state == 'draft' else 'confirmed',
             'reservation_date': self.reservation_date,
             'date_deadline': self.date_deadline,
             'manual_consumption': self._is_manual_consumption(),
@@ -507,6 +545,7 @@ class StockMove(models.Model):
         :return: The quantity delivered or received
         """
         qty_ratios = []
+        kit_qty = kit_qty / kit_bom.product_qty
         boms, bom_sub_lines = kit_bom.explode(product_id, kit_qty)
         for bom_line, bom_line_data in bom_sub_lines:
             # skip service since we never deliver them
@@ -521,8 +560,8 @@ class StockMove(models.Model):
                 # We compute the quantities needed of each components to make one kit.
                 # Then, we collect every relevant moves related to a specific component
                 # to know how many are considered delivered.
-                uom_qty_per_kit = bom_line_data['qty'] / bom_line_data['original_qty']
-                qty_per_kit = bom_line.product_uom_id._compute_quantity(uom_qty_per_kit, bom_line.product_id.uom_id, round=False)
+                uom_qty_per_kit = bom_line_data['qty'] / (bom_line_data['original_qty'])
+                qty_per_kit = bom_line.product_uom_id._compute_quantity(uom_qty_per_kit / kit_bom.product_qty, bom_line.product_id.uom_id, round=False)
                 if not qty_per_kit:
                     continue
                 incoming_moves = bom_line_moves.filtered(filters['incoming_moves'])
@@ -580,6 +619,8 @@ class StockMove(models.Model):
         res = super()._get_relevant_state_among_moves()
         if res == 'partially_available'\
                 and self.raw_material_production_id\
-                and all(move.should_consume_qty and float_compare(move.quantity, move.should_consume_qty, precision_rounding=move.product_uom.rounding) >= 0 for move in self):
+                and all(move.should_consume_qty and float_compare(move.quantity, move.should_consume_qty, precision_rounding=move.product_uom.rounding) >= 0
+                        or (float_compare(move.quantity, move.product_uom_qty, precision_rounding=move.product_uom.rounding) >= 0 or (move.manual_consumption and move.picked))
+                        for move in self):
             res = 'assigned'
         return res

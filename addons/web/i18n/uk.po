@@ -3,17 +3,17 @@
 # 	* web
 # 
 # Translators:
-# Martin Trigaux, 2023
-# Wil Odoo, 2023
-# Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2023
+# Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2024
+# Martin Trigaux, 2024
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:56+0000\n"
+"POT-Creation-Date: 2024-01-29 10:46+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2023\n"
+"Last-Translator: Wil Odoo, 2024\n"
 "Language-Team: Ukrainian (https://app.transifex.com/odoo/teams/41243/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1049,6 +1049,15 @@ msgstr ""
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#, python-format
+msgid "Add to Favorites"
+msgstr "Додати до закладок"
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/x2many/x2many_field.js:0
 #, python-format
 msgid "Add: %s"
@@ -1112,6 +1121,13 @@ msgstr "Всі користувачі"
 #: code:addons/web/static/src/core/colorlist/colorlist.js:0
 #, python-format
 msgid "Almond"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
+#, python-format
+msgid "Always range"
 msgstr ""
 
 #. module: web
@@ -1475,6 +1491,15 @@ msgstr "Синій"
 #: code:addons/web/static/src/views/fields/boolean_icon/boolean_icon_field.js:0
 #, python-format
 msgid "Boolean Icon"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/statusbar/statusbar_field.js:0
+#, python-format
+msgid ""
+"Boolean field from the model used in the relation, which indicates whether "
+"the state is folded or not."
 msgstr ""
 
 #. module: web
@@ -3091,6 +3116,13 @@ msgstr "Тип поля"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/expression_editor/expression_editor.js:0
+#, python-format
+msgid "Field properties not supported"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/progress_bar/progress_bar_field.js:0
 #, python-format
 msgid ""
@@ -3389,6 +3421,16 @@ msgstr "Заголовок тексту відображається зверх�
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/model/relational_model/record.js:0
+#, python-format
+msgid ""
+"Heads up! Your recent changes are too large to save automatically. Please "
+"click the <i class=\"fa fa-cloud-upload fa-fw\"></i> button now to ensure "
+"your work is saved before you exit this tab."
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/many2many_tags/many2many_tags_field.xml:0
 #, python-format
 msgid "Hide in kanban"
@@ -3490,7 +3532,7 @@ msgstr "ILY"
 #: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
 #: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
 #, python-format
-msgid "ISO-formatted date (e.g. \"2018-12-31\") or \"today\"."
+msgid "ISO-formatted date (e.g. \"2018-12-31\") or \"%s\"."
 msgstr ""
 
 #. module: web
@@ -4470,7 +4512,7 @@ msgstr "Правила запису моделі"
 #: code:addons/web/static/src/views/fields/reference/reference_field.js:0
 #, python-format
 msgid "Model field"
-msgstr ""
+msgstr "Поле моделі"
 
 #. module: web
 #. odoo-javascript
@@ -4986,6 +5028,13 @@ msgstr "Неактивний стан, натисніть, щоб змінити
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/many2many_binary/many2many_binary_field.js:0
+#, python-format
+msgid "Number of files"
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 #, python-format
@@ -5400,6 +5449,11 @@ msgid "Password"
 msgstr "Пароль"
 
 #. module: web
+#: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
+msgid "Payment Communication: <b><span>INV/2023/00003</span></b>"
+msgstr ""
+
+#. module: web
 #. odoo-javascript
 #: code:addons/web/static/src/webclient/settings_form_view/widgets/res_config_invite_users.xml:0
 #, python-format
@@ -5527,15 +5581,6 @@ msgid ""
 msgstr ""
 "Скористайтеся кнопкою копіювання, щоби повідомити про помилку в службу "
 "підтримки."
-
-#. module: web
-#: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
-msgid ""
-"Please use the following communication for your payment : <b><span>\n"
-"                           INV/2023/00003</span></b>"
-msgstr ""
-"Використовуйте наступні дані для оплати: <b><span>\n"
-"                           INV/2023/00003</span></b>"
 
 #. module: web
 #. odoo-javascript
@@ -5718,6 +5763,13 @@ msgstr "Гістограма прогресу"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/view_components/column_progress.xml:0
+#, python-format
+msgid "Progress bar"
+msgstr "Гістограма прогресу"
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/properties/properties_field.js:0
 #, python-format
 msgid "Properties"
@@ -5866,9 +5918,7 @@ msgstr ""
 #, python-format
 msgid ""
 "Ready to make your record disappear into thin air? Are you sure?\n"
-"\n"
 "It will be gone forever!\n"
-"\n"
 "\n"
 "Think twice before you click that 'Delete' button!"
 msgstr ""
@@ -5998,6 +6048,15 @@ msgstr "Вилучити властивість"
 #, python-format
 msgid "Remove field"
 msgstr "Вилучити поле"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#, python-format
+msgid "Remove from Favorites"
+msgstr "Видалити з вибраного"
 
 #. module: web
 #. odoo-javascript
@@ -6218,6 +6277,13 @@ msgstr "Зберегти і створити новий"
 #, python-format
 msgid "Save as:"
 msgstr "Зберегти як:"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/search/custom_favorite_item/custom_favorite_item.xml:0
+#, python-format
+msgid "Save current search"
+msgstr "Зберегти поточний пошук"
 
 #. module: web
 #. odoo-javascript
@@ -6528,6 +6594,15 @@ msgstr ""
 #, python-format
 msgid "Set priority..."
 msgstr "Встановити пріорите..."
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
+#, python-format
+msgid ""
+"Set to true the full range input has to be display by default, even if "
+"empty."
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -6985,6 +7060,16 @@ msgstr ""
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/errors/scss_error_dialog.js:0
+#, python-format
+msgid ""
+"The style compilation failed. This is an administrator or developer error "
+"that must be fixed for the entire database before continuing working. See "
+"browser console or server logs for details."
+msgstr ""
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/core/errors/error_dialogs.xml:0
 #, python-format
 msgid ""
@@ -7403,27 +7488,6 @@ msgstr "Розархівувати все"
 
 #. module: web
 #. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid "Uncaught CORS Error"
-msgstr "Неперехоплена помилка CORS"
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid "Uncaught Javascript Error"
-msgstr "Неперехоплена помилка Javascript"
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid "Uncaught Promise"
-msgstr "Неперехоплена помилка Promise"
-
-#. module: web
-#. odoo-javascript
 #. odoo-python
 #: code:addons/web/controllers/export.py:0
 #: code:addons/web/static/src/views/calendar/calendar_model.js:0
@@ -7440,23 +7504,6 @@ msgstr "Невизначений"
 #, python-format
 msgid "Unfold"
 msgstr "Розгорнути"
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_service.js:0
-#, python-format
-msgid ""
-"Unknown CORS error\n"
-"\n"
-"An unknown CORS error occured.\n"
-"The error probably originates from a JavaScript file served from a different origin.\n"
-"(Opening your browser console might give you a hint on the error.)"
-msgstr ""
-"Невідома помилка CORS\n"
-"\n"
-"Виникла невідома помилка CORS.\n"
-"Помилка, ймовірно, походить від файлу JavaScript, який обслуговується з іншого джерела.\n"
-"(Відкриття консолі браузера може дати вам підказку щодо помилки.)"
 
 #. module: web
 #. odoo-javascript
@@ -25599,7 +25646,7 @@ msgstr "prophecy"
 #: code:addons/web/static/src/views/fields/many2many_tags_avatar/many2many_tags_avatar_field.xml:0
 #, python-format
 msgid "props.placeholder"
-msgstr ""
+msgstr "props.placeholder"
 
 #. module: web
 #. odoo-javascript

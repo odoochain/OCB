@@ -8,28 +8,29 @@
 # Marek Pontus, 2023
 # Piia Paurson <piia@avalah.ee>, 2023
 # Katrin Kampura, 2023
-# Arma Gedonsky <armagedonsky@hot.ee>, 2023
 # Martin Talts <martin.t@avalah.ee>, 2023
 # Patrick-Jordan Kiudorv, 2023
 # Egon Raamat <egon@avalah.ee>, 2023
 # Martin Aavastik <martin@avalah.ee>, 2023
 # Eneli Õigus <enelioigus@gmail.com>, 2023
 # JanaAvalah, 2023
-# Leaanika Randmets, 2023
 # Maidu Targama <m.targama@gmail.com>, 2023
 # Martin Trigaux, 2023
 # Triine Aavik <triine@avalah.ee>, 2023
-# Anna, 2023
 # Algo Kärp <algokarp@gmail.com>, 2023
 # Rivo Zängov <eraser@eraser.ee>, 2023
+# Mihkel avalah, 2023
+# Leaanika Randmets, 2023
+# Anna, 2023
+# Arma Gedonsky <armagedonsky@hot.ee>, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Rivo Zängov <eraser@eraser.ee>, 2023\n"
+"Last-Translator: Arma Gedonsky <armagedonsky@hot.ee>, 2024\n"
 "Language-Team: Estonian (https://app.transifex.com/odoo/teams/41243/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -70,12 +71,12 @@ msgstr "&amp; tarne"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.address
 msgid "&amp;nbsp;(<i>Your shipping address will be requested later)</i>"
-msgstr ""
+msgstr "&nbsp;(<i>Sinu tarneaadressit küsitakse hiljem)</i>"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.checkout_layout
 msgid "&amp;nbsp;item(s)&amp;nbsp;-&amp;nbsp;"
-msgstr ""
+msgstr "&amp;nbsp;item(s)&amp;nbsp;-&amp;nbsp;"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
@@ -167,6 +168,13 @@ msgstr ""
 "                Tarne: 2-3 tööpäeva"
 
 #. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.extra_info
+msgid ""
+"<i class=\"fa fa-angle-left me-2 fw-light\"/>\n"
+"                                    Return to shipping"
+msgstr ""
+
+#. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.product_buy_now
 msgid ""
 "<i class=\"fa fa-bolt me-2\"/>\n"
@@ -239,7 +247,7 @@ msgstr ""
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.address
 msgid "<option value=\"\">Country...</option>"
-msgstr ""
+msgstr "<option value=\"\">Riik...</option>"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.address
@@ -332,6 +340,8 @@ msgid ""
 "<span class=\"oi oi-chevron-left fa-2x oe_unmovable\" role=\"img\" aria-"
 "label=\"Previous\" title=\"Previous\"/>"
 msgstr ""
+"<span class=\"oi oi-chevron-left fa-2x oe_unmovable\" role=\"img\" aria-"
+"label=\"Previous\" title=\"Previous\"/>"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.shop_product_carousel
@@ -339,9 +349,12 @@ msgid ""
 "<span class=\"oi oi-chevron-right fa-2x oe_unmovable\" role=\"img\" aria-"
 "label=\"Next\" title=\"Next\"/>"
 msgstr ""
+"<span class=\"oi oi-chevron-right fa-2x oe_unmovable\" role=\"img\" aria-"
+"label=\"Next\" title=\"Next\"/>"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.address
+#: model_terms:ir.ui.view,arch_db:website_sale.extra_info
 #: model_terms:ir.ui.view,arch_db:website_sale.navigation_buttons
 msgid "<span class=\"px-3\">or</span>"
 msgstr ""
@@ -778,7 +791,7 @@ msgstr "Atribuudid"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "Automatically send abandoned checkout emails"
-msgstr ""
+msgstr "Automaatselt saada hüljatud ostukorvi e-kirju"
 
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_product_template__rating_avg
@@ -965,16 +978,8 @@ msgstr "Võib avaldada"
 #. odoo-python
 #: code:addons/website_sale/controllers/main.py:0
 #, python-format
-msgid "Can not resequence a video at first position."
+msgid "You can't use a video as the product's main image."
 msgstr ""
-
-#. module: website_sale
-#. odoo-python
-#: code:addons/website_sale/controllers/main.py:0
-#, python-format
-msgid "Can not resequence embedded image/video with a non compatible image."
-msgstr ""
-"Manustatud pilti/videot ei saa uuesti järjestada mitteühilduva pildiga."
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options
@@ -1097,7 +1102,7 @@ msgstr ""
 #: code:addons/website_sale/models/website.py:0
 #, python-format
 msgid "Checkout"
-msgstr ""
+msgstr "Väljaregistreerimine"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options
@@ -1318,8 +1323,16 @@ msgstr "Sisu"
 #. module: website_sale
 #. odoo-python
 #: code:addons/website_sale/models/website.py:0
+#: model_terms:ir.ui.view,arch_db:website_sale.address
 #, python-format
 msgid "Continue checkout"
+msgstr ""
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.extra_info
+msgid ""
+"Continue checkout\n"
+"                                    <i class=\"fa fa-angle-right ms-2 fw-light\"/>"
 msgstr ""
 
 #. module: website_sale
@@ -1469,6 +1482,11 @@ msgstr "DHL Expressi ühendus"
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "DHL Shipping Methods"
 msgstr "DHL tarneviis"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.product
+msgid "DROP BUILDING BLOCKS HERE TO MAKE THEM AVAILABLE ACROSS ALL PRODUCTS"
+msgstr ""
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options
@@ -2164,6 +2182,13 @@ msgstr ""
 "muuta."
 
 #. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/js/website_sale_utils.js:0
+#, python-format
+msgid "Item(s) added to your cart"
+msgstr ""
+
+#. module: website_sale
 #: model:ir.model,name:website_sale.model_account_move
 msgid "Journal Entry"
 msgstr "Andmiku kanne"
@@ -2318,6 +2343,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "Manage Promotions, coupons, loyalty cards, Gift cards & eWallet"
 msgstr ""
+"Halda pakkumisi, kuponge, lojaalsuskaarte, kinkekaarte ja e-rahakotte."
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
@@ -2410,6 +2436,13 @@ msgid "Name Short"
 msgstr "Nimi lühidalt"
 
 #. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/models/product_public_category.py:0
+#, python-format
+msgid "New"
+msgstr "Uus"
+
+#. module: website_sale
 #: model:ir.actions.act_window,name:website_sale.product_product_action_add
 msgid "New Product"
 msgstr "Uus toode"
@@ -2464,8 +2497,8 @@ msgstr "Toodet pole määratud"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
-msgid "No product defined in category \""
-msgstr "Ühetgi toodet pole määratud kategoorias"
+msgid "No product defined in this category."
+msgstr ""
 
 #. module: website_sale
 #: model_terms:ir.actions.act_window,help:website_sale.website_sale_visitor_product_action
@@ -2539,7 +2572,7 @@ msgstr "Veergude ruudustiku arv poes"
 #. module: website_sale
 #: model:ir.model.fields,help:website_sale.field_product_template__message_needaction_counter
 msgid "Number of messages requiring action"
-msgstr ""
+msgstr "Tegevust nõudvate sõnumite arv"
 
 #. module: website_sale
 #: model:ir.model.fields,help:website_sale.field_product_template__message_has_error_counter
@@ -2673,7 +2706,7 @@ msgstr "Tellimused lingitud Veebis"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.cart
 msgid "Order overview"
-msgstr ""
+msgstr "Tellimuse ülevaade"
 
 #. module: website_sale
 #: model:ir.actions.act_window,name:website_sale.action_orders_ecommerce
@@ -2925,7 +2958,7 @@ msgstr "Tootevõrdluse tööriist"
 #. module: website_sale
 #: model:ir.model,name:website_sale.model_product_document
 msgid "Product Document"
-msgstr ""
+msgstr "Toote dokument"
 
 #. module: website_sale
 #: model:ir.model,name:website_sale.model_product_image
@@ -3424,6 +3457,11 @@ msgstr "Müügiesindaja"
 #: model_terms:ir.ui.view,arch_db:website_sale.dynamic_filter_template_product_product_view_detail
 msgid "Sample"
 msgstr "Näidis"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.address
+msgid "Save address"
+msgstr ""
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.view_sales_order_filter_ecommerce_abondand
@@ -4154,7 +4192,7 @@ msgstr "Vaata toodet"
 
 #. module: website_sale
 #. odoo-javascript
-#: code:addons/website_sale/static/src/js/notification/cart_notification/cart_notification.xml:0
+#: code:addons/website_sale/static/src/js/notification/add_to_cart_notification/add_to_cart_notification.xml:0
 #, python-format
 msgid "View cart"
 msgstr ""
@@ -4214,10 +4252,13 @@ msgid "Visitor Product Views History"
 msgstr "Külastaja toodete vaadete ajalugu"
 
 #. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/js/website_sale_utils.js:0
 #: model:ir.model.fields,field_description:website_sale.field_sale_order__shop_warning
 #: model:ir.model.fields,field_description:website_sale.field_sale_order_line__shop_warning
 #: model_terms:ir.ui.view,arch_db:website_sale.cart_lines
 #: model_terms:ir.ui.view,arch_db:website_sale.checkout_layout
+#, python-format
 msgid "Warning"
 msgstr "Hoiatus"
 
@@ -4481,11 +4522,6 @@ msgid "Zip Prefix"
 msgstr "Sihtnumbri prefiks"
 
 #. module: website_sale
-#: model_terms:ir.ui.view,arch_db:website_sale.add_grid_or_list_option
-msgid "active"
-msgstr "aktiivne"
-
-#. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "bpost"
 msgstr "Bpost"
@@ -4541,6 +4577,11 @@ msgstr "E-kaubanduse müügid"
 #: model_terms:ir.ui.view,arch_db:website_sale.product_template_form_view
 msgid "eCommerce Shop"
 msgstr "E-kaubanduse pood"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.header_cart_link
+msgid "eCommerce cart"
+msgstr ""
 
 #. module: website_sale
 #: model:ir.actions.server,name:website_sale.ir_cron_send_availability_email_ir_actions_server

@@ -14,6 +14,7 @@ class TestProjectCommon(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super(TestProjectCommon, cls).setUpClass()
+        cls.env.company.resource_calendar_id.tz = "Europe/Brussels"
 
         user_group_employee = cls.env.ref('base.group_user')
         user_group_project_user = cls.env.ref('project.group_project_user')
@@ -214,13 +215,16 @@ class TestProjectBase(TestProjectCommon):
         with self.assertRaises(UserError):
             # Cannot change the company of a partner if both the project and its partner have a company
             partner.company_id = company_2
-        with self.assertRaises(UserError):
-            # Cannot set the company of a partner to False if both the project and its partner have a company
-            partner.company_id = False
+        partner.company_id = False
         self.project_pigs.company_id = False
         self.assertFalse(self.project_pigs.company_id, "The company of the project should have been set to False.")
-        partner.company_id = False
         self.project_pigs.company_id = company_1
+        self.project_goats.company_id = company_1
+        self.project_goats.partner_id = partner
+        with self.assertRaises(UserError):
+            # Cannot change the company of a partner that part of multiple projects with different companies
+            self.project_goats.partner_id.company_id = company_2
+
 
         # The project has a company, but the partner has none. The partner can only be set to False/project.company but the project can have any new company.
         with self.assertRaises(UserError):

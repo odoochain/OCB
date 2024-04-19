@@ -20,6 +20,7 @@ import { useBounceButton } from "@web/views/view_hook";
 import { Widget } from "@web/views/widgets/widget";
 import { getFormattedValue } from "../utils";
 import { localization } from "@web/core/l10n/localization";
+import { uniqueId } from "@web/core/utils/functions";
 
 import {
     Component,
@@ -73,6 +74,26 @@ function getElementToFocus(cell, index) {
     return getTabableElements(cell).at(index) || cell;
 }
 
+/**
+ * Here be dragons. 🐉
+ * This is a workaround to avoid clipping issues in Firefox and Safari.
+ * cf. https://bugzilla.mozilla.org/show_bug.cgi?id=1887116
+ */
+class OptionalFieldsDropdown extends Dropdown {
+    static template = "web.ListRenderer.OptionalFieldsDropdown";
+    static props = {
+        ...Dropdown.props,
+        listRendererClass: String,
+    };
+
+    onWindowClicked(ev) {
+        if (ev.target.closest(".o_optional_columns_dropdown.o-dropdown--menu")) {
+            return;
+        }
+        super.onWindowClicked(...arguments);
+    }
+}
+
 export class ListRenderer extends Component {
     setup() {
         this.uiService = useService("ui");
@@ -123,26 +144,6 @@ export class ListRenderer extends Component {
         onWillUpdateProps((nextProps) => {
             this.allColumns = this.processAllColumn(nextProps.archInfo.columns, nextProps.list);
             this.state.columns = this.getActiveColumns(nextProps.list);
-        });
-        onPatched(async () => {
-            // HACK: we need to wait for the next tick to be sure that the Field components are patched.
-            // OWL don't wait the patch for the children components if the children trigger a patch by himself.
-            await Promise.resolve();
-
-            const editedRecord = this.props.list.editedRecord;
-            if (editedRecord && this.activeRowId !== editedRecord.id) {
-                if (this.cellToFocus && this.cellToFocus.record === editedRecord) {
-                    const column = this.cellToFocus.column;
-                    const forward = this.cellToFocus.forward;
-                    this.focusCell(column, forward);
-                } else if (this.lastEditedCell) {
-                    this.focusCell(this.lastEditedCell.column, true);
-                } else {
-                    this.focusCell(this.state.columns[0]);
-                }
-            }
-            this.cellToFocus = null;
-            this.lastEditedCell = null;
         });
         let dataRowId;
         this.rootRef = useRef("root");
@@ -214,7 +215,28 @@ export class ListRenderer extends Component {
         useExternalListener(window, "blur", (ev) => {
             this.shiftKeyMode = false;
         });
+        onPatched(async () => {
+            // HACK: we need to wait for the next tick to be sure that the Field components are patched.
+            // OWL don't wait the patch for the children components if the children trigger a patch by himself.
+            await Promise.resolve();
+
+            const editedRecord = this.props.list.editedRecord;
+            if (editedRecord && this.activeRowId !== editedRecord.id) {
+                if (this.cellToFocus && this.cellToFocus.record === editedRecord) {
+                    const column = this.cellToFocus.column;
+                    const forward = this.cellToFocus.forward;
+                    this.focusCell(column, forward);
+                } else if (this.lastEditedCell) {
+                    this.focusCell(this.lastEditedCell.column, true);
+                } else {
+                    this.focusCell(this.state.columns[0]);
+                }
+            }
+            this.cellToFocus = null;
+            this.lastEditedCell = null;
+        });
         this.isRTL = localization.direction === "rtl";
+        this.uniqueRendererClass = uniqueId("o_list_renderer_");
     }
 
     displaySaveNotification() {
@@ -799,7 +821,7 @@ export class ListRenderer extends Component {
 
     getSortableIconClass(column) {
         const { orderBy } = this.props.list;
-        const classNames = this.isSortable(column) ? ["fa", "fa-lg", "px-2"] : ["d-none"];
+        const classNames = this.isSortable(column) ? ["fa", "fa-lg"] : ["d-none"];
         if (orderBy.length && orderBy[0].name === column.name) {
             classNames.push(orderBy[0].asc ? "fa-angle-up" : "fa-angle-down");
         } else {
@@ -1012,23 +1034,24 @@ export class ListRenderer extends Component {
         if (this.hasSelectors) {
             colspan++;
         }
-        if (this.props.onOpenFormView) {
-            colspan++;
-        }
         return colspan;
     }
 
     getGroupPagerCellColspan(group) {
         const lastAggregateIndex = this.getLastAggregateIndex(group);
+        let colspan;
         if (lastAggregateIndex > -1) {
-            let colspan = this.state.columns.length - lastAggregateIndex - 1;
+            colspan = this.state.columns.length - lastAggregateIndex - 1;
             if (this.displayOptionalFields) {
                 colspan++;
             }
-            return colspan;
         } else {
-            return this.state.columns.length > 1 ? DEFAULT_GROUP_PAGER_COLSPAN : 0;
+            colspan = this.state.columns.length > 1 ? DEFAULT_GROUP_PAGER_COLSPAN : 0;
         }
+        if (this.props.onOpenFormView) {
+            colspan++;
+        }
+        return colspan;
     }
 
     getGroupPagerProps(group) {
@@ -1036,7 +1059,7 @@ export class ListRenderer extends Component {
         return {
             offset: list.offset,
             limit: list.limit,
-            total: group.count,
+            total: list.isGrouped ? list.count : group.count,
             onUpdate: async ({ offset, limit }) => {
                 await list.load({ limit, offset });
                 this.render(true);
@@ -1056,7 +1079,7 @@ export class ListRenderer extends Component {
             optionalColumn.forEach((col) => {
                 this.optionalActiveFields[col.name] = optionalActiveFields.includes(col.name);
             });
-        } else {
+        } else if (optionalActiveFields !== "") {
             for (const col of optionalColumn) {
                 this.optionalActiveFields[col.name] = col.optional === "show";
             }
@@ -1777,7 +1800,10 @@ export class ListRenderer extends Component {
     }
 
     showGroupPager(group) {
-        return !group.isFolded && group.list.limit < group.count;
+        return (
+            !group.isFolded &&
+            group.list.limit < (group.list.isGrouped ? group.list.count : group.count)
+        );
     }
 
     /**
@@ -2133,7 +2159,7 @@ ListRenderer.rowsTemplate = "web.ListRenderer.Rows";
 ListRenderer.recordRowTemplate = "web.ListRenderer.RecordRow";
 ListRenderer.groupRowTemplate = "web.ListRenderer.GroupRow";
 
-ListRenderer.components = { DropdownItem, Field, ViewButton, CheckBox, Dropdown, Pager, Widget };
+ListRenderer.components = { DropdownItem, Field, ViewButton, CheckBox, Dropdown: OptionalFieldsDropdown, Pager, Widget };
 ListRenderer.props = [
     "activeActions?",
     "list",

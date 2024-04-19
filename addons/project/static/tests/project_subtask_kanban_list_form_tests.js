@@ -6,6 +6,7 @@ import { addModelNamesToFetch } from "@bus/../tests/helpers/model_definitions_he
 import { start } from "@mail/../tests/helpers/test_utils";
 
 import {
+    editInput,
     click,
     getFixture,
     clickOpenedDropdownItem,
@@ -50,7 +51,7 @@ QUnit.module('Subtask Kanban List tests', {
                     <templates>
                         <t t-name="kanban-box">
                             <div>
-                                <field name="name"/>
+                                <field name="name" widget="name_with_subtask_count"/>
                                 <field name="user_ids" invisible="1" widget="many2many_avatar_user"/>
                                 <field name="state" invisible="1" widget="project_task_state_selection"/>
                                 <a t-if="record.closed_subtask_count.raw_value">
@@ -68,6 +69,7 @@ QUnit.module('Subtask Kanban List tests', {
                         <tree editable="bottom">
                             <field name="display_in_project" force_save="1"/>
                             <field name="project_id" widget="project"/>
+                            <field name="name"/>
                         </tree>
                     </field>
                 </form>`
@@ -77,7 +79,7 @@ QUnit.module('Subtask Kanban List tests', {
     }
 }, function () {
     QUnit.test("Check whether subtask list functionality works as intended", async function (assert) {
-        assert.expect(8);
+        assert.expect(9);
 
         const views = this.views;
         const { openView } = await start({ serverData: { views } });
@@ -86,6 +88,7 @@ QUnit.module('Subtask Kanban List tests', {
             views: [[false, "kanban"]],
         });
 
+        assert.containsOnce(target, '.o_field_name_with_subtask_count:contains("(1/4 sub-tasks)")', "Task title should also display the number of (closed) sub-tasks linked to the task");
         assert.containsOnce(target, '.subtask_list_button', "Only kanban boxes of parent tasks having open subtasks should have the drawdown button, in this case this is 1");
         assert.containsNone(target, '.subtask_list', "If the drawdown button is not clicked, the subtasks list should be hidden");
 
@@ -146,8 +149,25 @@ QUnit.module('Subtask Kanban List tests', {
         await click(target.querySelector(".o_field_x2many_list_row_add a"));
         await clickDropdown(target, 'project_id');
         await clickOpenedDropdownItem(target, 'project_id', 'Project One');
+        await editInput(target, ".o_data_row > td[name='name'] > div > input", "aaa");
         await click(target, ".o_form_button_save");
         assert.equal(target.querySelector('.o_field_project').textContent.trim(), 'Project One')
     });
 
+    QUnit.test("focus new subtask's name", async function (assert) {
+        const views = this.views;
+        const { openView } = await start({ serverData: { views } });
+        await openView({
+            res_model: "project.task",
+            views: [[false, "form"]],
+        });
+
+        await click(target.querySelector(".o_field_x2many_list_row_add a"));
+
+        assert.strictEqual(
+            document.activeElement,
+            target.querySelector(".o_data_row > td[name='name'] > div > input"),
+            "Upon clicking on 'Add a line', the new subtask's name should be focused."
+        );
+    });
 });

@@ -18,6 +18,11 @@ class TestDiscussFullPerformance(HttpCase):
         super().setUp()
         self.group_user = self.env.ref('base.group_user')
         self.password = 'Pl1bhD@2!kXZ'
+        self.env['mail.shortcode'].search([]).unlink()
+        self.shortcodes = self.env['mail.shortcode'].create([
+            {'source': 'hello', 'substitution': 'Hello, how may I help you?'},
+            {'source': 'bye', 'substitution': 'Thanks for your feedback. Goodbye!'},
+        ])
         self.users = self.env['res.users'].create([
             {
                 'email': 'e.e@example.com',
@@ -64,6 +69,7 @@ class TestDiscussFullPerformance(HttpCase):
     def test_init_messaging(self):
         """Test performance of `_init_messaging`."""
         self.channel_general = self.env.ref('mail.channel_all_employees')  # Unfortunately #general cannot be deleted. Assertions below assume data from a fresh db with demo.
+        self.channel_general.message_ids.unlink() # Remove messages to avoid depending on demo data.
         self.env['discuss.channel'].sudo().search([('id', '!=', self.channel_general.id)]).unlink()
         self.user_root = self.env.ref('base.user_root')
         # create public channels
@@ -100,7 +106,15 @@ class TestDiscussFullPerformance(HttpCase):
                 'channel_id': im_livechat_channel.id,
                 'previous_operator_id': self.users[0].partner_id.id,
             })['id'])
-        self.channel_livechat_2.with_user(self.env.ref('base.public_user')).sudo().message_post(body="test")
+        guest_sudo = self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).guest_id.sudo()
+        self.make_jsonrpc_request("/mail/message/post", {
+            "post_data": {
+                "body": "test",
+                "message_type": "comment",
+            },
+            "thread_id": self.channel_livechat_2.id,
+            "thread_model": "discuss.channel",
+        }, headers={"Cookie": f"{guest_sudo._cookie_name}={guest_sudo._format_auth_cookie()};"})
         # add needaction
         self.users[0].notification_type = 'inbox'
         message = self.channel_channel_public_1.message_post(body='test', message_type='comment', author_id=self.users[2].partner_id.id, partner_ids=self.users[0].partner_id.ids)
@@ -123,6 +137,7 @@ class TestDiscussFullPerformance(HttpCase):
             The point of having a separate getter is to allow it to be overriden.
         """
         return {
+            'action_discuss_id': self.env['ir.model.data']._xmlid_to_res_id('mail.action_discuss'),
             'initBusId': self.env['bus.bus'].sudo()._bus_last_id(),
             'hasGifPickerFeature': False,
             'hasLinkPreviewFeature': True,
@@ -143,6 +158,9 @@ class TestDiscussFullPerformance(HttpCase):
                             'id': self.channel_general.id,
                             'model': "discuss.channel",
                         },
+                        'create_date': fields.Datetime.to_string(
+                            self.channel_general.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                        ),
                         'id': self.channel_general.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                         'persona': {
                             'active': True,
@@ -163,7 +181,7 @@ class TestDiscussFullPerformance(HttpCase):
                     'custom_channel_name': False,
                     'id': self.channel_general.id,
                     'memberCount': len(self.group_user.users),
-                    'message_unread_counter': 5,
+                    'message_unread_counter': 0,
                     'model': "discuss.channel",
                     'create_uid': self.user_root.id,
                     'defaultDisplayMode': False,
@@ -195,6 +213,9 @@ class TestDiscussFullPerformance(HttpCase):
                             'id': self.channel_channel_public_1.id,
                             'model': "discuss.channel",
                         },
+                        'create_date': fields.Datetime.to_string(
+                            self.channel_channel_public_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                        ),
                         'id': self.channel_channel_public_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                         'persona': {
                             'active': True,
@@ -247,6 +268,9 @@ class TestDiscussFullPerformance(HttpCase):
                             'id': self.channel_channel_public_2.id,
                             'model': "discuss.channel",
                         },
+                        'create_date': fields.Datetime.to_string(
+                            self.channel_channel_public_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                        ),
                         'id': self.channel_channel_public_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                         'persona': {
                             'active': True,
@@ -299,6 +323,9 @@ class TestDiscussFullPerformance(HttpCase):
                             'id': self.channel_channel_group_1.id,
                             'model': "discuss.channel",
                         },
+                        'create_date': fields.Datetime.to_string(
+                            self.channel_channel_group_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                        ),
                         'id': self.channel_channel_group_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                         'persona': {
                             'active': True,
@@ -351,6 +378,9 @@ class TestDiscussFullPerformance(HttpCase):
                             'id': self.channel_channel_group_2.id,
                             'model': "discuss.channel",
                         },
+                        'create_date': fields.Datetime.to_string(
+                            self.channel_channel_group_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                        ),
                         'id': self.channel_channel_group_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                         'persona': {
                             'active': True,
@@ -404,6 +434,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_group_1.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_group_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                            ),
                             'id': self.channel_group_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -426,6 +459,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_group_1.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_group_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[12].partner_id).create_date
+                            ),
                             'id': self.channel_group_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[12].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -494,6 +530,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_chat_1.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_chat_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                            ),
                             'id': self.channel_chat_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -516,6 +555,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_chat_1.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_chat_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[14].partner_id).create_date
+                            ),
                             'id': self.channel_chat_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[14].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -584,6 +626,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_chat_2.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_chat_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                            ),
                             'id': self.channel_chat_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -606,6 +651,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_chat_2.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_chat_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[15].partner_id).create_date
+                            ),
                             'id': self.channel_chat_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[15].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -674,6 +722,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_chat_3.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_chat_3.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                            ),
                             'id': self.channel_chat_3.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -696,6 +747,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_chat_3.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_chat_3.channel_member_ids.filtered(lambda m: m.partner_id == self.users[2].partner_id).create_date
+                            ),
                             'id': self.channel_chat_3.channel_member_ids.filtered(lambda m: m.partner_id == self.users[2].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -764,6 +818,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_chat_4.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_chat_4.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                            ),
                             'id': self.channel_chat_4.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -786,6 +843,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_chat_4.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_chat_4.channel_member_ids.filtered(lambda m: m.partner_id == self.users[3].partner_id).create_date
+                            ),
                             'id': self.channel_chat_4.channel_member_ids.filtered(lambda m: m.partner_id == self.users[3].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -858,6 +918,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_livechat_1.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_livechat_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                            ),
                             'id': self.channel_livechat_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -874,6 +937,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_livechat_1.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_livechat_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[1].partner_id).create_date
+                            ),
                             'id': self.channel_livechat_1.channel_member_ids.filtered(lambda m: m.partner_id == self.users[1].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -945,6 +1011,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_livechat_2.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).create_date
+                            ),
                             'id': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                             'persona': {
                                 'active': True,
@@ -961,6 +1030,9 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.channel_livechat_2.id,
                                 'model': "discuss.channel",
                             },
+                            'create_date': fields.Datetime.to_string(
+                                self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).create_date
+                            ),
                             'id': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).id,
                             'persona': {
                                 'id': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).guest_id.id,
@@ -974,7 +1046,7 @@ class TestDiscussFullPerformance(HttpCase):
                     'custom_channel_name': False,
                     'id': self.channel_livechat_2.id,
                     'memberCount': 2,
-                    'message_unread_counter': 0,
+                    'message_unread_counter': 1,
                     'model': "discuss.channel",
                     'create_uid': self.env.ref('base.public_user').id,
                     'defaultDisplayMode': False,
@@ -993,6 +1065,12 @@ class TestDiscussFullPerformance(HttpCase):
                     'rtcSessions': [('ADD', [])],
                     'seen_partners_info': [
                         {
+                            'fetched_message_id': next(res['message_id'] for res in self.channel_livechat_2._channel_last_message_ids()),
+                            'id': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).id,
+                            'guest_id': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).guest_id.id,
+                            'seen_message_id': next(res['message_id'] for res in self.channel_livechat_2._channel_last_message_ids()),
+                        },
+                        {
                             'fetched_message_id': False,
                             'id': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                             'partner_id': self.users[0].partner_id.id,
@@ -1007,12 +1085,12 @@ class TestDiscussFullPerformance(HttpCase):
             'companyName': 'YourCompany',
             'shortcodes': [
                 {
-                    'id': 1,
+                    'id': self.shortcodes[0].id,
                     'source': 'hello',
                     'substitution': 'Hello, how may I help you?',
                 },
                 {
-                    'id': 2,
+                    'id': self.shortcodes[1].id,
                     'source': 'bye',
                     'substitution': 'Thanks for your feedback. Goodbye!',
                 },
@@ -1029,7 +1107,10 @@ class TestDiscussFullPerformance(HttpCase):
                 'name': 'OdooBot',
                 'out_of_office_date_end': False,
                 'type': "partner",
-                'user': False,
+                'user': {
+                    'id': self.user_root.id,
+                    'isInternalUser': True,
+                },
                 'write_date': fields.Datetime.to_string(self.user_root.partner_id.write_date),
             },
             'currentGuest': False,
@@ -1059,7 +1140,7 @@ class TestDiscussFullPerformance(HttpCase):
                 'livechat_lang_ids': [],
                 'livechat_username': False,
                 'user_id': {'id': self.users[0].id},
-                'voice_active_duration': 0,
+                'voice_active_duration': 200,
                 'volume_settings_ids': [('ADD', [])],
             },
         }

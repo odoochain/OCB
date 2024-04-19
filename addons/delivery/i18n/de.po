@@ -4,14 +4,15 @@
 # 
 # Translators:
 # Wil Odoo, 2023
+# Larissa Manderfeld, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Wil Odoo, 2023\n"
+"Last-Translator: Larissa Manderfeld, 2024\n"
 "Language-Team: German (https://app.transifex.com/odoo/teams/41243/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -25,6 +26,13 @@ msgstr ""
 #, python-format
 msgid "%(carrier)s Error"
 msgstr "%(carrier)s-Fehler"
+
+#. module: delivery
+#. odoo-python
+#: code:addons/delivery/models/delivery_carrier.py:0
+#, python-format
+msgid "%(old_name)s (copy)"
+msgstr "%(old_name)s (Kopie)"
 
 #. module: delivery
 #: model_terms:ir.ui.view,arch_db:delivery.choose_delivery_carrier_view_form
@@ -252,7 +260,7 @@ msgstr "Assistent zur Auswahl von Zustellern"
 #. module: delivery
 #: model_terms:ir.ui.view,arch_db:delivery.view_delivery_price_rule_form
 msgid "Delivery Cost"
-msgstr "Lieferkosten"
+msgstr "Versandkosten"
 
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_choose_delivery_carrier__delivery_message
@@ -368,11 +376,11 @@ msgstr "Fehler: Diese Liefermethode ist für diese Adresse nicht verfügbar."
 #. module: delivery
 #: model:ir.model.fields,help:delivery.field_delivery_carrier__invoice_policy
 msgid ""
-"Estimated Cost: the customer will be invoiced the estimated cost of the shipping.\n"
-"Real Cost: the customer will be invoiced the real cost of the shipping, the cost of theshipping will be updated on the SO after the delivery."
+"Estimated Cost: the customer will be invoiced the estimated cost of the "
+"shipping."
 msgstr ""
-"Geschätzte Kosten: Dem Kunden werden die geschätzten Kosten für den Versand in Rechnung gestellt.\n"
-"Tatsächliche Kosten: Dem Kunden werden die tatsächlichen Kosten für den Versand in Rechnung gestellt, die Kosten für den Versand werden nach der Lieferung auf dem Verkaufsauftrag aktualisiert."
+"Geschätzte Kosten: Dem Kunden werden die geschätzten Kosten für den Versand "
+"werden in Rechnung gestellt."
 
 #. module: delivery
 #: model:ir.model.fields.selection,name:delivery.selection__delivery_carrier__invoice_policy__estimated
@@ -807,7 +815,7 @@ msgstr "Versandkosten aktualisieren"
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_delivery_price_rule__variable
 msgid "Variable"
-msgstr "Variabel"
+msgstr "Variable"
 
 #. module: delivery
 #: model:ir.model.fields,field_description:delivery.field_delivery_price_rule__variable_factor
@@ -850,6 +858,16 @@ msgstr ""
 "Sie können die Versandkosten für einen Auftrag, der bereits abgerechnet wurde, nicht aktualisieren!\n"
 "\n"
 "Die folgenden Lieferpositionen (Produkt, abgerechnete Menge und Preis) sind bereits bearbeitet worden:\n"
+
+#. module: delivery
+#: code:addons/delivery/models/product_category.py:0
+#, python-format
+msgid ""
+"You cannot delete the deliveries product category as it is used on the "
+"delivery carriers products."
+msgstr ""
+"Sie können die Produktkategorie für Lieferungen nicht löschen, da sie für "
+"die Produkte der Zusteller verwendet wird."
 
 #. module: delivery
 #: model:ir.actions.act_window,name:delivery.action_delivery_zip_prefix_list

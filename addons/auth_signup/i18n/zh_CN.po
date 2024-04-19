@@ -4,8 +4,10 @@
 # 
 # Translators:
 # Wil Odoo, 2023
-# Chloe Wang, 2023
 # 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2023
+# 何彬 <vnsoft.he@gmail.com>, 2023
+# Chloe Wang, 2023
+# 湘子 南 <1360857908@qq.com>, 2024
 # 
 msgid ""
 msgstr ""
@@ -13,7 +15,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-10-26 21:55+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2023\n"
+"Last-Translator: 湘子 南 <1360857908@qq.com>, 2024\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -34,7 +36,7 @@ msgid ""
 "                                You may change your password by following this link which will remain valid during 24 hours:<br/>"
 msgstr ""
 ",<br/><br/>\n"
-"                                此电子邮件中链接的 Odoo 帐户请求密码重置。\n"
+"                                此电子邮件中链接的 ERP 帐户请求密码重置。\n"
 "                                您可以通过此链接更改密码，该链接在 24 小时内有效：<br/>"
 
 #. module: auth_signup
@@ -187,10 +189,10 @@ msgstr ""
 "                                <li t-out=\"invited_user or ''\">demo@example.com</li>\n"
 "                            </t>\n"
 "                        </ul>\n"
-"                        您可以同他们跟进，以便他们访问您的数据库并开始与您合作。\n"
+"                        您可以与他们跟进，以便他们能访问您的数据库并开始与您合作。\n"
 "                        <br><br>\n"
 "                        工作顺利！<br>\n"
-"                        --<br> <t t-out=\"object.company_id.name or ''\">YourCompany</t> Team\n"
+"                        --<br> <t t-out=\"object.company_id.name or ''\">YourCompany</t>团队\n"
 "                    </div>\n"
 "                </td></tr>\n"
 "                <tr><td style=\"text-align:center;\">\n"
@@ -553,7 +555,7 @@ msgstr "已经拥有账户？"
 #: code:addons/auth_signup/controllers/main.py:0
 #, python-format
 msgid "Another user is already registered using this email address."
-msgstr "该邮件地址已经被其他用户注册了。"
+msgstr "此电子邮件地址已被其他用户注册。"
 
 #. module: auth_signup
 #. odoo-python
@@ -680,8 +682,8 @@ msgid ""
 "If you do not expect this, you can safely ignore this email.<br/><br/>\n"
 "                                Thanks,"
 msgstr ""
-"如果您不希望这样，可以放心地忽略这封邮件。<br/><br/>\n"
-"                                谢谢、"
+"如果您并未要求此操作，可以放心忽略此电子邮件。<br/><br/>\n"
+"                                谢谢,"
 
 #. module: auth_signup
 #: model_terms:ir.ui.view,arch_db:auth_signup.alert_login_new_device
@@ -719,7 +721,7 @@ msgstr "马克-迪莫"
 #: code:addons/auth_signup/models/res_users.py:0
 #, python-format
 msgid "Multiple accounts found for this login"
-msgstr ""
+msgstr "在当前登录用户下找到多个帐户"
 
 #. module: auth_signup
 #. odoo-python
@@ -827,7 +829,7 @@ msgstr "注册成功。"
 #. module: auth_signup
 #: model:mail.template,subject:auth_signup.mail_template_data_unregistered_users
 msgid "Reminder for unregistered users"
-msgstr "对未注册用户的提醒"
+msgstr "未注册用户的提醒"
 
 #. module: auth_signup
 #: model_terms:ir.ui.view,arch_db:auth_signup.alert_login_new_device
@@ -840,7 +842,7 @@ msgstr "重置密码"
 #: model:ir.actions.server,name:auth_signup.action_send_password_reset_instructions
 #: model_terms:ir.ui.view,arch_db:auth_signup.res_users_view_form
 msgid "Send Password Reset Instructions"
-msgstr "发送重置密码建议"
+msgstr "发送重置密码说明"
 
 #. module: auth_signup
 #: model_terms:ir.ui.view,arch_db:auth_signup.res_users_view_form
@@ -856,7 +858,7 @@ msgstr "如果新用户未响应邀请，则自动发送给管理员"
 #. module: auth_signup
 #: model:mail.template,description:auth_signup.set_password_email
 msgid "Sent to new user after you invited them"
-msgstr "邀请新用户后发送给他们"
+msgstr "邀请新用户后发送"
 
 #. module: auth_signup
 #: model:mail.template,description:auth_signup.mail_template_user_signup_account_created
@@ -899,13 +901,13 @@ msgstr "注册令牌 Token"
 #: model:ir.model.fields,field_description:auth_signup.field_res_partner__signup_type
 #: model:ir.model.fields,field_description:auth_signup.field_res_users__signup_type
 msgid "Signup Token Type"
-msgstr "注册令牌（Token）类型"
+msgstr "注册令牌类型"
 
 #. module: auth_signup
 #: model:ir.model.fields,field_description:auth_signup.field_res_partner__signup_valid
 #: model:ir.model.fields,field_description:auth_signup.field_res_users__signup_valid
 msgid "Signup Token is Valid"
-msgstr "注册令牌（ Token  ）是有效的"
+msgstr "注册令牌是有效的"
 
 #. module: auth_signup
 #: model:ir.model.fields,field_description:auth_signup.field_res_partner__signup_url
@@ -1040,7 +1042,7 @@ msgstr "例如：John Doe"
 #. module: auth_signup
 #: model_terms:ir.ui.view,arch_db:auth_signup.reset_password_email
 msgid "http://www.example.com"
-msgstr "http://www.weixiaoduo.com"
+msgstr "http://www.example.com"
 
 #. module: auth_signup
 #: model_terms:ir.ui.view,arch_db:auth_signup.reset_password_email

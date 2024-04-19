@@ -2,17 +2,13 @@
 
 import { AND, Record } from "@mail/core/common/record";
 import { ScrollPosition } from "@mail/core/common/scroll_position";
-import { assignDefined, assignIn, onChange } from "@mail/utils/common/misc";
+import { assignDefined, assignIn } from "@mail/utils/common/misc";
 
 import { deserializeDateTime } from "@web/core/l10n/dates";
 import { _t } from "@web/core/l10n/translation";
 import { Deferred } from "@web/core/utils/concurrency";
 
 /**
- * @typedef SeenInfo
- * @property {{id: number|undefined}} lastFetchedMessage
- * @property {{id: number|undefined}} lastSeenMessage
- * @property {{id: number}} partner
  * @typedef SuggestedRecipient
  * @property {string} email
  * @property {import("models").Persona|false} persona
@@ -33,11 +29,13 @@ export class Thread extends Record {
         /** @type {import("models").Thread} */
         const thread = super.new(data);
         thread.composer = {};
-        onChange(thread, "isLoaded", () => thread.isLoadedDeferred.resolve());
-        onChange(thread, "channelMembers", () => this.store.updateBusSubscription());
-        onChange(thread, "is_pinned", () => {
-            if (!thread.is_pinned && thread.eq(this.store.discuss.thread)) {
-                this.store.discuss.thread = undefined;
+        Record.onChange(thread, "isLoaded", () => {
+            if (thread.isLoaded) {
+                thread.isLoadedDeferred.resolve();
+            } else {
+                const def = thread.isLoadedDeferred;
+                thread.isLoadedDeferred = new Deferred();
+                thread.isLoadedDeferred.then(() => def.resolve());
             }
         });
         return thread;
@@ -64,7 +62,6 @@ export class Thread extends Record {
         assignDefined(this, { id, name, description });
         if (attachments) {
             this.attachments = attachments;
-            this.attachments.sort((a1, a2) => a2.id - a1.id);
         }
         if (serverData) {
             assignDefined(this, serverData, [
@@ -114,16 +111,20 @@ export class Thread extends Record {
                 }
             }
             if ("seen_partners_info" in serverData) {
-                this.seenInfos = serverData.seen_partners_info.map(
-                    ({ fetched_message_id, partner_id, seen_message_id }) => {
-                        return {
+                this._store.ChannelMember.insert(
+                    serverData.seen_partners_info.map(
+                        ({ id, fetched_message_id, partner_id, guest_id, seen_message_id }) => ({
+                            id,
+                            persona: {
+                                id: partner_id ?? guest_id,
+                                type: partner_id ? "partner" : "guest",
+                            },
                             lastFetchedMessage: fetched_message_id
                                 ? { id: fetched_message_id }
                                 : undefined,
                             lastSeenMessage: seen_message_id ? { id: seen_message_id } : undefined,
-                            partner: { id: partner_id, type: "partner" },
-                        };
-                    }
+                        })
+                    )
                 );
             }
         }
@@ -143,9 +144,18 @@ export class Thread extends Record {
     uuid;
     /** @type {string} */
     model;
+    allMessages = Record.many("Message", {
+        inverse: "originThread2",
+    });
     /** @type {boolean} */
     areAttachmentsLoaded = false;
-    attachments = Record.many("Attachment");
+    attachments = Record.many("Attachment", {
+        /**
+         * @param {import("models").Attachment} a1
+         * @param {import("models").Attachment} a2
+         */
+        sort: (a1, a2) => (a1.id < a2.id ? 1 : -1),
+    });
     activeRtcSession = Record.one("RtcSession");
     /** @type {object|undefined} */
     channel;
@@ -167,14 +177,40 @@ export class Thread extends Record {
             this._store.discuss.ringingThreads.delete(this);
         },
     });
+    toggleBusSubscription = Record.attr(false, {
+        compute() {
+            return (
+                this.model === "discuss.channel" &&
+                this.selfMember?.memberSince >= this._store.env.services.bus_service.startedAt
+            );
+        },
+        onUpdate() {
+            this._store.updateBusSubscription();
+        },
+    });
     invitedMembers = Record.many("ChannelMember");
     chatPartner = Record.one("Persona");
     composer = Record.one("Composer", { inverse: "thread", onDelete: (r) => r.delete() });
+    correspondent2 = Record.one("Persona", {
+        compute() {
+            return this.computeCorrespondent();
+        },
+    });
     counter = 0;
     /** @type {string} */
     custom_channel_name;
     /** @type {string} */
     description;
+    displayToSelf = Record.attr(false, {
+        compute() {
+            return (
+                this.is_pinned || (["channel", "group"].includes(this.type) && this.hasSelfAsMember)
+            );
+        },
+        onUpdate() {
+            this.onPinStateUpdated();
+        },
+    });
     followers = Record.many("Follower");
     selfFollower = Record.one("Follower");
     /** @type {integer|undefined} */
@@ -182,9 +218,19 @@ export class Thread extends Record {
     isAdmin = false;
     loadOlder = false;
     loadNewer = false;
+    isCorrespondentOdooBot = Record.attr(undefined, {
+        compute() {
+            return this.correspondent2?.eq(this._store.odoobot);
+        },
+    });
     isLoadingAttachments = false;
     isLoadedDeferred = new Deferred();
     isLoaded = false;
+    is_pinned = Record.attr(undefined, {
+        onUpdate() {
+            this.onPinStateUpdated();
+        },
+    });
     mainAttachment = Record.one("Attachment");
     memberCount = 0;
     message_needaction_counter = 0;
@@ -225,6 +271,9 @@ export class Thread extends Record {
     name;
     /** @type {number|false} */
     seen_message_id;
+    selfMember = Record.one("ChannelMember", {
+        inverse: "threadAsSelf",
+    });
     /** @type {'open' | 'folded' | 'closed'} */
     state;
     status = "new";
@@ -246,8 +295,6 @@ export class Thread extends Record {
     type;
     /** @type {string} */
     defaultDisplayMode;
-    /** @type {SeenInfo[]} */
-    seenInfos = [];
     /** @type {SuggestedRecipient[]} */
     suggestedRecipients = [];
     hasLoadingFailed = false;
@@ -260,6 +307,14 @@ export class Thread extends Record {
     custom_notifications = false;
     /** @type {String} */
     mute_until_dt;
+    /** @type {Boolean} */
+    isLocallyPinned = Record.attr(false, {
+        onUpdate() {
+            this.onPinStateUpdated();
+        },
+    });
+    /** @type {"not_fetched"|"pending"|"fetched"} */
+    fetchMembersState = "not_fetched";
 
     get accessRestrictedToGroupText() {
         if (!this.authorizedGroupFullName) {
@@ -272,6 +327,10 @@ export class Thread extends Record {
 
     get areAllMembersLoaded() {
         return this.memberCount === this.channelMembers.length;
+    }
+
+    get busChannel() {
+        return `${this.model}_${this.id}`;
     }
 
     get followersFullyLoaded() {
@@ -334,10 +393,6 @@ export class Thread extends Record {
         return this.name;
     }
 
-    get displayToSelf() {
-        return this.is_pinned || (["channel", "group"].includes(this.type) && this.hasSelfAsMember);
-    }
-
     /** @type {import("models").Persona[]} */
     get correspondents() {
         return this.channelMembers
@@ -346,8 +401,11 @@ export class Thread extends Record {
             .filter((p) => p.notEq(this._store.self));
     }
 
-    /** @type {import("models").Persona|undefined} */
     get correspondent() {
+        return this.correspondent2;
+    }
+
+    computeCorrespondent() {
         if (this.type === "channel") {
             return undefined;
         }
@@ -398,14 +456,36 @@ export class Thread extends Record {
         return [...this.messages].reverse().find((msg) => Number.isInteger(msg.id));
     }
 
+    newestPersistentAllMessages = Record.many("Message", {
+        compute() {
+            const allPersistentMessages = this.allMessages.filter((message) =>
+                Number.isInteger(message.id)
+            );
+            allPersistentMessages.sort((m1, m2) => m2.id - m1.id);
+            return allPersistentMessages;
+        },
+    });
+
+    newestPersistentOfAllMessage = Record.one("Message", {
+        compute() {
+            return this.newestPersistentAllMessages[0];
+        },
+    });
+
+    newestPersistentNotEmptyOfAllMessage = Record.one("Message", {
+        compute() {
+            return this.newestPersistentAllMessages.find((message) => !message.isEmpty);
+        },
+    });
+
     get oldestPersistentMessage() {
         return this.messages.find((msg) => Number.isInteger(msg.id));
     }
 
+    onPinStateUpdated() {}
+
     get hasSelfAsMember() {
-        return this.channelMembers.some((channelMember) =>
-            channelMember.persona?.eq(this._store.self)
-        );
+        return Boolean(this.selfMember);
     }
 
     get invitationLink() {
@@ -434,7 +514,7 @@ export class Thread extends Record {
     }
 
     get persistentMessages() {
-        return this.messages.filter((message) => !message.isTransient);
+        return this.messages.filter((message) => !message.is_transient);
     }
 
     get prefix() {
@@ -442,15 +522,15 @@ export class Thread extends Record {
     }
 
     get lastSelfMessageSeenByEveryone() {
-        const otherSeenInfos = [...this.seenInfos].filter(
-            (seenInfo) => seenInfo.partner.id !== this._store.self?.id
+        const otherMembers = this.channelMembers.filter((member) =>
+            member.persona.notEq(this._store.self)
         );
-        if (otherSeenInfos.length === 0) {
+        if (otherMembers.length === 0) {
             return false;
         }
-        const otherLastSeenMessageIds = otherSeenInfos
-            .filter((seenInfo) => seenInfo.lastSeenMessage)
-            .map((seenInfo) => seenInfo.lastSeenMessage.id);
+        const otherLastSeenMessageIds = otherMembers
+            .filter((member) => member.lastSeenMessage)
+            .map((member) => member.lastSeenMessage.id);
         if (otherLastSeenMessageIds.length === 0) {
             return false;
         }

@@ -1,7 +1,8 @@
 /* @odoo-module */
 
-import { Component } from "@odoo/owl";
+import { Component, useState } from "@odoo/owl";
 
+import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 
 /**
@@ -18,6 +19,10 @@ export class ActivityMailTemplate extends Component {
     };
     static props = ["activity", "onClickButtons?", "onUpdate?"];
     static template = "mail.ActivityMailTemplate";
+
+    setup() {
+        this.store = useState(useService("mail.store"));
+    }
 
     /**
      * @param {MouseEvent} ev
@@ -41,8 +46,12 @@ export class ActivityMailTemplate extends Component {
                 force_email: true,
             },
         };
+        const thread = this.store.Thread.get({
+            model: this.props.activity.res_model,
+            id: this.props.activity.res_id,
+        });
         this.env.services.action.doAction(action, {
-            onClose: () => this.props.onUpdate(),
+            onClose: () => this.props.onUpdate(thread),
         });
     }
 
@@ -54,10 +63,14 @@ export class ActivityMailTemplate extends Component {
         ev.stopPropagation();
         ev.preventDefault();
         this.props.onClickButtons();
+        const thread = this.store.Thread.get({
+            model: this.props.activity.res_model,
+            id: this.props.activity.res_id,
+        });
         await this.env.services.orm.call(this.props.activity.res_model, "activity_send_mail", [
             [this.props.activity.res_id],
             mailTemplate.id,
         ]);
-        this.props.onUpdate();
+        this.props.onUpdate(thread);
     }
 }
