@@ -7,7 +7,7 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.tools.float_utils import float_round
 from odoo.tools.misc import formatLang
 
-from zeep import Client
+from odoo.tools.zeep import Client
 
 # -------------------------------------------------------------------------
 # UNIT OF MEASURE
@@ -84,7 +84,7 @@ COUNTRY_EAS = {
     'SG': '0195',
     'AU': '0151',
     'NZ': '0088',
-    'FI': '0213',
+    'FI': '0216',
 }
 
 
