@@ -423,6 +423,7 @@ class account_journal(models.Model):
             has_outstanding, outstanding_pay_account_balance = outstanding_pay_account_balances[journal.id]
             to_check_balance, number_to_check = to_check.get(journal, (0, 0))
             misc_balance, number_misc = misc_totals.get(journal.default_account_id, (0, 0))
+            currency_consistent = not journal.currency_id or journal.currency_id == journal.default_account_id.currency_id
             accessible = journal.company_id.id in journal.company_id._accessible_branches().ids
 
             dashboard_data[journal.id].update({
@@ -439,7 +440,7 @@ class account_journal(models.Model):
                 'bank_statements_source': journal.bank_statements_source,
                 'is_sample_data': journal.has_statement_lines,
                 'nb_misc_operations': number_misc,
-                'misc_operations_balance': currency.format(misc_balance),
+                'misc_operations_balance': currency.format(misc_balance) if currency_consistent else None,
             })
 
     def _fill_sale_purchase_dashboard_data(self, dashboard_data):
@@ -740,7 +741,7 @@ class account_journal(models.Model):
         """ This function is called by the "Import" button of Vendor Bills,
         visible on dashboard if no bill has been created yet.
         """
-        self.env['onboarding.onboarding.step'].action_validate_step('account.onboarding_onboarding_step_setup_bill')
+        self.env['onboarding.onboarding.step'].sudo().action_validate_step('account.onboarding_onboarding_step_setup_bill')
 
         new_wizard = self.env['account.tour.upload.bill'].create({})
         view_id = self.env.ref('account.account_tour_upload_bill').id
