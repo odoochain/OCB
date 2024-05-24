@@ -75,6 +75,7 @@ class HrExpense(models.Model):
     product_has_tax = fields.Boolean(string="Whether tax is defined on a selected product", compute='_compute_from_product')
     quantity = fields.Float(required=True, digits='Product Unit of Measure', default=1)
     description = fields.Text(string="Internal Notes")
+    message_main_attachment_checksum = fields.Char(related='message_main_attachment_id.checksum')
     nb_attachment = fields.Integer(string="Number of Attachments", compute='_compute_nb_attachment')
     attachment_ids = fields.One2many(
         comodel_name='ir.attachment',
@@ -394,7 +395,7 @@ class HrExpense(models.Model):
             else:  # Mono-currency case computation shortcut
                 expense.tax_amount = expense.tax_amount_currency
 
-    @api.depends('total_amount', 'total_amount_currency', 'nb_attachment')
+    @api.depends('total_amount', 'total_amount_currency')
     def _compute_price_unit(self):
         """
            The price_unit is the unit price of the product if no product is set and no attachment overrides it.
@@ -405,7 +406,7 @@ class HrExpense(models.Model):
             if expense.state not in {'draft', 'reported'}:
                 continue
             product_id = expense.product_id
-            if product_id and expense.product_has_cost and not expense.nb_attachment:
+            if expense._needs_product_price_computation():
                 expense.price_unit = product_id._price_compute(
                     'standard_price',
                     uom=expense.product_uom_id,
@@ -413,6 +414,11 @@ class HrExpense(models.Model):
                 )[product_id.id]
             else:
                 expense.price_unit = expense.company_currency_id.round(expense.total_amount / expense.quantity) if expense.quantity else 0.
+
+    def _needs_product_price_computation(self):
+        # Hook to be overridden.
+        self.ensure_one()
+        return self.product_has_cost
 
     @api.depends('product_id', 'company_id')
     def _compute_account_id(self):

@@ -96,7 +96,7 @@ class SaleOrder(models.Model):
             carrier = carrier.with_context(lang=self.partner_id.lang)
 
         # Apply fiscal position
-        taxes = carrier.product_id.taxes_id.filtered(lambda t: t.company_id.id == self.company_id.id)
+        taxes = carrier.product_id.taxes_id._filter_taxes_by_company(self.company_id)
         taxes_ids = taxes.ids
         if self.partner_id and self.fiscal_position_id:
             taxes_ids = self.fiscal_position_id.map_tax(taxes).ids
@@ -136,8 +136,6 @@ class SaleOrder(models.Model):
 
     def _get_estimated_weight(self):
         self.ensure_one()
-        if self.delivery_set:
-            return self.shipping_weight
         weight = 0.0
         for order_line in self.order_line.filtered(lambda l: l.product_id.type in ['product', 'consu'] and not l.is_delivery and not l.display_type and l.product_uom_qty > 0):
             weight += order_line.product_qty * order_line.product_id.weight
