@@ -63,7 +63,7 @@ class SaleOrder(models.Model):
         string="Customer",
         required=True, change_default=True, index=True,
         tracking=1,
-        domain="[('company_id', 'in', (False, company_id))]")
+        check_company=True)
     state = fields.Selection(
         selection=SALE_ORDER_STATE,
         string="Status",
@@ -139,14 +139,14 @@ class SaleOrder(models.Model):
         string="Invoice Address",
         compute='_compute_partner_invoice_id',
         store=True, readonly=False, required=True, precompute=True,
-        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+        check_company=True,
         index='btree_not_null')
     partner_shipping_id = fields.Many2one(
         comodel_name='res.partner',
         string="Delivery Address",
         compute='_compute_partner_shipping_id',
         store=True, readonly=False, required=True, precompute=True,
-        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+        check_company=True,
         index='btree_not_null')
 
     fiscal_position_id = fields.Many2one(
@@ -412,7 +412,7 @@ class SaleOrder(models.Model):
                 from_currency=order.company_id.currency_id,
                 to_currency=order.currency_id,
                 company=order.company_id,
-                date=order.date_order.date(),
+                date=(order.date_order or fields.Datetime.now()).date(),
             )
 
     @api.depends('company_id')
@@ -1026,11 +1026,6 @@ class SaleOrder(models.Model):
         )
 
     def action_lock(self):
-        for order in self:
-            tx = order.sudo().transaction_ids._get_last()
-            if tx and tx.state == 'pending' and tx.provider_id.code == 'custom' and tx.provider_id.custom_mode == 'wire_transfer':
-                tx._set_done()
-                tx.write({'is_post_processed': True})
         self.locked = True
 
     def action_unlock(self):
