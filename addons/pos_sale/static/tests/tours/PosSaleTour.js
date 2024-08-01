@@ -213,6 +213,33 @@ registry.category("web_tour.tours").add("PosOrderDoesNotRemainInList", {
         ].flat(),
 });
 
+registry.category("web_tour.tours").add("PosSettleCustomPrice", {
+    test: true,
+    url: "/pos/ui",
+    steps: () =>
+        [
+            ProductScreen.confirmOpeningPopup(),
+            ProductScreen.clickQuotationButton(),
+            ProductScreen.selectFirstOrder(),
+            ProductScreen.selectedOrderlineHas('product_a', '1', '100'),
+            ProductScreen.clickPartnerButton(),
+            ProductScreen.clickCustomer("Test Partner AAA"),
+            ProductScreen.selectedOrderlineHas('product_a', '1', '100'),
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("PosSettleDraftOrder", {
+    test: true,
+    url: "/pos/ui",
+    steps: () =>
+        [
+            ProductScreen.confirmOpeningPopup(),
+            ProductScreen.clickQuotationButton(),
+            ProductScreen.selectFirstOrder(),
+            ProductScreen.selectedOrderlineHas('Test service product', '1.00', '50.00'),
+        ].flat(),
+});
+
 registry.category("web_tour.tours").add("PoSDownPaymentLinesPerTax", {
     test: true,
     steps: () =>
