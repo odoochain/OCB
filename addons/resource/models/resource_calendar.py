@@ -213,7 +213,7 @@ class ResourceCalendar(models.Model):
             ]
 
             self.two_weeks_calendar = True
-            default_attendance = self.default_get('attendance_ids')['attendance_ids']
+            default_attendance = self.default_get(['attendance_ids'])['attendance_ids']
             for idx, att in enumerate(default_attendance):
                 att[2]["week_type"] = '0'
                 att[2]["sequence"] = idx + 1
@@ -225,7 +225,7 @@ class ResourceCalendar(models.Model):
         else:
             self.two_weeks_calendar = False
             self.attendance_ids.unlink()
-            self.attendance_ids = self.default_get('attendance_ids')['attendance_ids']
+            self.attendance_ids = self.default_get(['attendance_ids'])['attendance_ids']
 
     @api.onchange('attendance_ids')
     def _onchange_attendance_ids(self):
@@ -500,7 +500,7 @@ class ResourceCalendar(models.Model):
 
         return {
             # Round the number of days to the closest 16th of a day.
-            'days': float_round(sum(day_days[day] for day in day_days), precision_rounding=0.01),
+            'days': float_round(sum(day_days[day] for day in day_days), precision_rounding=0.001),
             'hours': sum(day_hours.values()),
         }
 
@@ -514,11 +514,11 @@ class ResourceCalendar(models.Model):
         for start, stop, meta in intervals:
             day_hours[start.date()] += (stop - start).total_seconds() / 3600
 
-        # compute number of days as quarters
+        # compute number of days the hours span over
         days = float_round(sum(
             day_hours[day] / day_total[day] if day_total[day] else 0
             for day in day_hours
-        ), precision_rounding=0.01)
+        ), precision_rounding=0.001)
         return {
             'days': days,
             'hours': sum(day_hours.values()),

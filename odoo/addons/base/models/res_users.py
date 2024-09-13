@@ -43,9 +43,22 @@ class CryptContext:
         # deprecated alias
         return self.hash
 
-    @property
     def copy(self):
-        return self.__obj__.copy
+        """
+            The copy method must create a new instance of the
+            ``CryptContext`` wrapper with the same configuration
+            as the original (``__obj__``).
+
+            There are no need to manage the case where kwargs are
+            passed to the ``copy`` method.
+
+            It is necessary to load the original ``CryptContext`` in
+            the new instance of the original ``CryptContext`` with ``load``
+            to get the same configuration.
+        """
+        other_wrapper = CryptContext(_autoload=False)
+        other_wrapper.__obj__.load(self.__obj__)
+        return other_wrapper
 
     @property
     def hash(self):
@@ -1971,11 +1984,12 @@ class CheckIdentity(models.TransientModel):
             self.create_uid._check_credentials(self.password, {'interactive': True})
         except AccessDenied:
             raise UserError(_("Incorrect Password, try again or click on Forgot Password to reset your password."))
+        finally:
+            self.password = False
 
     def run_check(self):
         assert request, "This method can only be accessed over HTTP"
         self._check_identity()
-        self.password = False
 
         request.session['identity-check-last'] = time.time()
         ctx, model, ids, method = json.loads(self.sudo().request)

@@ -13534,6 +13534,61 @@ QUnit.module("Fields", (hooks) => {
         assert.verifySteps(["onchange partner", "web_save turtle"]);
     });
 
+    QUnit.test(
+        "Boolean toggle in x2many must not be editable if form is not editable",
+        async function (assert) {
+            serverData.views = {
+                "turtle,false,form": `<form>
+                        <field name="turtle_bar" widget="boolean_toggle"/>
+                        <field name="partner_ids">
+                            <tree>
+                                <field name="bar" widget="boolean_toggle"/>
+                            </tree>
+                        </field>
+                    </form>`,
+            };
+
+            await makeView({
+                type: "form",
+                resModel: "partner",
+                serverData,
+                arch: `
+                    <form edit="0">
+                        <field name="turtles">
+                            <tree>
+                                <field name="turtle_bar" widget="boolean_toggle"/>
+                            </tree>
+                        </field>
+                    </form>`,
+                resId: 1,
+            });
+
+            assert.hasClass(target.querySelector(".o_form_renderer"), "o_form_readonly");
+            const booleanToggle = target.querySelector(
+                "[name='turtles'] .o_data_row [name='turtle_bar'] .o_boolean_toggle input"
+            );
+            assert.ok(
+                booleanToggle.disabled,
+                "The boolean toggle should be disabled when the form is readonly"
+            );
+
+            await click(target, ".o_data_cell");
+            assert.containsOnce(target, ".modal-dialog");
+            assert.hasClass(target.querySelector(".o_form_renderer"), "o_form_readonly");
+            const booleanToggleInDialog = target.querySelector(".modal [name='turtle_bar'] input");
+            assert.ok(
+                booleanToggleInDialog.disabled,
+                "The boolean toggle in the form view dialog should be disabled when the main form is readonly"
+            );
+            assert.ok(
+                target.querySelector(
+                    ".modal [name='partner_ids'] .o_data_row [name='bar'] .o_boolean_toggle input"
+                ).disabled,
+                "The boolean toggle in x2m in the form view dialog should be disabled when the main form is readonly"
+            );
+        }
+    );
+
     QUnit.test("create a new record with an x2m invisible", async function (assert) {
         await makeView({
             type: "form",
@@ -13788,6 +13843,44 @@ QUnit.module("Fields", (hooks) => {
         assert.deepEqual(getNodesTextContent(target.querySelectorAll(".o_data_cell")), [
             "first record",
             "second record",
+        ]);
+        assert.containsNone(target, ".o_x2m_control_panel .o_pager");
+    });
+
+    QUnit.test("new record, receive more create commands than limit", async function (assert) {
+        serverData.models.partner.fields.sequence = { type: "integer" };
+        serverData.models.partner.onchanges = {
+            p: function (obj) {
+                obj.p = [
+                    [0, 0, { sequence: 1, display_name: "Record 1" }],
+                    [0, 0, { sequence: 2, display_name: "Record 2" }],
+                    [0, 0, { sequence: 3, display_name: "Record 3" }],
+                    [0, 0, { sequence: 4, display_name: "Record 4" }],
+                ];
+            },
+        };
+        await makeView({
+            type: "form",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <form>
+                    <group>
+                        <field name="p">
+                            <tree limit="2">
+                                <field name="sequence"/>
+                                <field name="display_name"/>
+                            </tree>
+                        </field>
+                    </group>
+                </form>`,
+        });
+
+        assert.deepEqual(getNodesTextContent(target.querySelectorAll(".o_data_cell.o_list_char")), [
+            "Record 1",
+            "Record 2",
+            "Record 3",
+            "Record 4",
         ]);
         assert.containsNone(target, ".o_x2m_control_panel .o_pager");
     });
