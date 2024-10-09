@@ -9,14 +9,15 @@ import re
 import socket
 import threading
 import time
-from email.utils import getaddresses
+import email.utils
+from email.utils import getaddresses as orig_getaddresses
 from urllib.parse import urlparse
 import html as htmllib
 
 import idna
 import markupsafe
 from lxml import etree, html
-from lxml.html import clean
+from lxml.html import clean, defs
 from werkzeug import urls
 
 import odoo
@@ -25,11 +26,22 @@ from odoo.tools import misc
 
 _logger = logging.getLogger(__name__)
 
+
+# disable strict mode when present: we rely on original non-strict
+# parsing, and we know that it isn't reliable, that ok.
+# cfr python/cpython@4a153a1d3b18803a684cd1bcc2cdf3ede3dbae19
+if hasattr(email.utils, 'supports_strict_parsing'):
+    def getaddresses(fieldvalues):
+        return orig_getaddresses(fieldvalues, strict=False)
+else:
+    getaddresses = orig_getaddresses
+
+
 #----------------------------------------------------------
 # HTML Sanitizer
 #----------------------------------------------------------
 
-safe_attrs = clean.defs.safe_attrs | frozenset(
+safe_attrs = defs.safe_attrs | frozenset(
     ['style',
      'data-o-mail-quote', 'data-o-mail-quote-node',  # quote detection
      'data-oe-model', 'data-oe-id', 'data-oe-field', 'data-oe-type', 'data-oe-expression', 'data-oe-translation-initial-sha', 'data-oe-nodeid',
@@ -42,7 +54,7 @@ safe_attrs = clean.defs.safe_attrs | frozenset(
      ])
 SANITIZE_TAGS = {
     # allow new semantic HTML5 tags
-    'allow_tags': clean.defs.tags | frozenset('article bdi section header footer hgroup nav aside figure main'.split() + [etree.Comment]),
+    'allow_tags': defs.tags | frozenset('article bdi section header footer hgroup nav aside figure main'.split() + [etree.Comment]),
     'kill_tags': ['base', 'embed', 'frame', 'head', 'iframe', 'link', 'meta',
                   'noscript', 'object', 'script', 'style', 'title'],
     'remove_tags': ['html', 'body'],
@@ -380,6 +392,15 @@ def html2plaintext(html, body_id=None, encoding='utf-8'):
             link.text = '%s [%s]' % (link.text, i)
             url_index.append(url)
 
+    for img in tree.findall('.//img'):
+        src = img.get('src')
+        if src:
+            i += 1
+            img.tag = 'span'
+            img_name = re.search(r'[^/]+(?=\.[a-zA-Z]+(?:\?|$))', src)
+            img.text = '%s [%s]' % (img_name.group(0) if img_name else 'Image', i)
+            url_index.append(src)
+
     html = ustr(etree.tostring(tree, encoding=encoding))
     # \r char is converted into &#13;, must remove it
     html = html.replace('&#13;', '')
@@ -392,7 +413,7 @@ def html2plaintext(html, body_id=None, encoding='utf-8'):
     html = html.replace('<em>', '/').replace('</em>', '/')
     html = html.replace('<tr>', '\n')
     html = html.replace('</p>', '\n')
-    html = re.sub('<br\s*/?>', '\n', html)
+    html = re.sub(r'<br\s*/?>', '\n', html)
     html = re.sub('<.*?>', ' ', html)
     html = html.replace(' ' * 2, ' ')
     html = html.replace('&gt;', '>')

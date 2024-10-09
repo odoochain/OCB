@@ -51,6 +51,10 @@ class AccountPaymentRegister(models.TransientModel):
     )
     company_currency_id = fields.Many2one('res.currency', string="Company Currency",
         related='company_id.currency_id')
+    qr_code = fields.Html(
+        string="QR Code URL",
+        compute="_compute_qr_code",
+    )
 
     # == Fields given through the context ==
     line_ids = fields.Many2many('account.move.line', 'account_payment_register_move_line_rel', 'wizard_id', 'line_id',
@@ -115,9 +119,6 @@ class AccountPaymentRegister(models.TransientModel):
         copy=False,
         domain="[('deprecated', '=', False)]",
         check_company=True,
-        compute='_compute_writeoff_account_id',
-        store=True,
-        readonly=False,
     )
     writeoff_label = fields.Char(string='Journal Item Label', default='Write-Off',
         help='Change label of the counterpart that will hold the payment difference')
@@ -501,7 +502,7 @@ class AccountPaymentRegister(models.TransientModel):
         moves = batch_result['lines'].mapped('move_id')
         for move in moves:
             if early_payment_discount and move._is_eligible_for_early_payment_discount(move.currency_id, self.payment_date):
-                amount += move.invoice_payment_term_id._get_amount_due_after_discount(move.amount_total, move.amount_tax)#todo currencies
+                amount -= move.direction_sign * move.invoice_payment_term_id._get_amount_due_after_discount(move.amount_total, move.amount_tax)
                 mode = 'early_payment'
             else:
                 for aml in batch_result['lines'].filtered(lambda l: l.move_id.id == move.id):
@@ -616,6 +617,31 @@ class AccountPaymentRegister(models.TransientModel):
         for wizard in self:
             wizard.hide_writeoff_section = wizard.early_payment_discount_mode
 
+    @api.depends('partner_bank_id', 'amount', 'currency_id', 'payment_method_line_id', 'payment_type', 'communication')
+    def _compute_qr_code(self):
+        for pay in self:
+            qr_html = False
+            if pay.partner_bank_id \
+               and pay.partner_bank_id.allow_out_payment \
+               and pay.payment_method_line_id.code == 'manual' \
+               and pay.payment_type == 'outbound' \
+               and pay.amount \
+               and pay.currency_id:
+                b64_qr = pay.partner_bank_id.build_qr_code_base64(
+                    amount=pay.amount,
+                    free_communication=pay.communication,
+                    structured_communication=pay.communication,
+                    currency=pay.currency_id,
+                    debtor_partner=pay.partner_id,
+                )
+                if b64_qr:
+                    qr_html = f'''
+                        <img class="border border-dark rounded" src="{b64_qr}"/>
+                        <br/>
+                        <strong>{_('Scan me with your banking app.')}</strong>
+                    '''
+            pay.qr_code = qr_html
+
     # -------------------------------------------------------------------------
     # LOW-LEVEL METHODS
     # -------------------------------------------------------------------------
@@ -668,7 +694,7 @@ class AccountPaymentRegister(models.TransientModel):
             if len(lines.company_id.root_id) > 1:
                 raise UserError(_("You can't create payments for entries belonging to different companies."))
             if len(set(available_lines.mapped('account_type'))) > 1:
-                raise UserError(_("You can't register payments for journal items being either all inbound, either all outbound."))
+                raise UserError(_("You can't register payments for both inbound and outbound moves at the same time."))
 
             res['line_ids'] = [(6, 0, available_lines.ids)]
 

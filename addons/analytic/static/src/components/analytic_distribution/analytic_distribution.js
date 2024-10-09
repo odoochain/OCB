@@ -48,6 +48,7 @@ export class AnalyticDistribution extends Component {
 
     setup(){
         this.orm = useService("orm");
+        this.batchedOrm = useService("batchedOrm");
 
         this.state = useState({
             showDropdown: false,
@@ -361,7 +362,7 @@ export class AnalyticDistribution extends Component {
             context: [],
         }
         // batched call
-        const records = await this.props.record.model.orm.read("account.analytic.account", domain[0][2], args.fields, {});
+        const records = await this.batchedOrm.read("account.analytic.account", domain[0][2], args.fields, {});
         return Object.assign({}, ...records.map((r) => {
             const {id, ...rest} = r;
             return {[id]: rest};
@@ -604,12 +605,23 @@ export class AnalyticDistribution extends Component {
     }
 
     onWindowClick(ev) {
-        //TODO: dragging the search more dialog should not close the popup either
-        const modal = document.querySelector(".modal");
-        const clickedInSearchMoreDialog = modal && modal.querySelector('.o_list_view') && modal.contains(ev.target);
+        /*
+        Dropdown should be closed only if all these condition are true:
+            - dropdown is open
+            - click is outside widget element (widgetRef)
+            - there is no active modal containing a list/kanban view (search more modal)
+            - there is no popover (click is not in search modal's search bar menu)
+            - click is not targeting document dom element (drag and drop search more modal)
+        */
+
+        const selectors = [
+            ".o_popover",
+            ".modal:not(.o_inactive_modal):not(:has(.o_act_window))",
+        ];
         if (this.isDropdownOpen
             && !this.widgetRef.el.contains(ev.target)
-            && !clickedInSearchMoreDialog
+            && !ev.target.closest(selectors.join(","))
+            && !ev.target.isSameNode(document.documentElement)
            ) {
             this.forceCloseEditor();
         }

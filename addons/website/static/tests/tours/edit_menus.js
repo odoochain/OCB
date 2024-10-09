@@ -95,6 +95,11 @@ wTourUtils.registerWebsitePreviewTour('edit_menus', {
         extra_trigger: ".o_website_preview.editor_enable.editor_has_snippets:not(.o_is_blocked)",
     },
     {
+        content: "navbar shouldn't have any zwnbsp and no o_link_in_selection class",
+        trigger: 'iframe nav.navbar:not(:has(.o_link_in_selection)):not(:contains("\ufeff"))',
+        run: () => {}, // It's a check.
+    },
+    {
         content: "Click on Edit Link",
         trigger: 'iframe .o_edit_menu_popover a.o_we_edit_link',
     },
@@ -290,3 +295,31 @@ wTourUtils.registerWebsitePreviewTour('edit_menus', {
         },
     },
 ]);
+
+wTourUtils.registerWebsitePreviewTour(
+    "edit_menus_delete_parent",
+    {
+        test: true,
+        url: "/",
+    },
+    () => [
+        {
+            content: "Open site menu",
+            extra_trigger: "iframe #wrapwrap",
+            trigger: 'button[data-menu-xmlid="website.menu_site"]',
+        },
+        {
+            content: "Click on Edit Menu",
+            trigger: 'a[data-menu-xmlid="website.menu_edit_menu"]',
+        },
+        {
+            content: "Delete Home menu",
+            trigger: ".modal-body ul li:nth-child(1) button.js_delete_menu",
+        },
+        {
+            content: "Save",
+            trigger: ".modal-footer button:first-child",
+            run: "click",
+        },
+    ]
+);

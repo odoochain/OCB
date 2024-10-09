@@ -57,8 +57,22 @@ function addTables($editable) {
         const table = _createTable(snippet.attributes);
 
         const row = document.createElement('tr');
-        const col = document.createElement('td');
+        let col = document.createElement('td');
         row.appendChild(col);
+        if (snippet.classList.contains('o_basic_theme')) {
+            const div = document.createElement('div');
+            div.classList.add('o_apple_wrapper_padding');
+            col.appendChild(div);
+            col = div;
+            const style = document.createElement('style');
+            // We create a nested media query because it's only supported by a
+            // handful of clients, including Apple Mail, and we actually only
+            // want this for Apple Mail.
+            const padding = '34px'; // This is what's needed to align the content with Apple Mail's header.
+            style.textContent = `@media{@media{.o_basic_theme div.o_apple_wrapper_padding{padding:${snippet.style.padding};}}}` +
+                `@media(min-width:961px){@media{@media{.o_basic_theme div.o_apple_wrapper_padding{padding-left:${padding};}}}}`;
+            div.before(style);
+        }
         table.appendChild(row);
 
         for (const child of [...snippet.childNodes]) {
@@ -411,7 +425,7 @@ function classToStyle($editable, cssRules) {
 
     for (const node of nodeToRules.keys()) {
         const nodeRules = nodeToRules.get(node);
-        const css = nodeRules ? _getMatchedCSSRules(node, nodeRules) : {};
+        const css = nodeRules ? _getMatchedCSSRules(node, nodeRules, true) : {};
         // Flexbox
         for (const styleName of node.style) {
             if (styleName.includes('flex') || `${node.style[styleName]}`.includes('flex')) {
@@ -1449,6 +1463,29 @@ function _getColumnOffsetSize(column) {
     const offsetSize = offsetOptions && (offsetOptions.length === 2 ? +offsetOptions[1] : +offsetOptions[0]) || 0;
     return offsetSize;
 }
+
+
+function isBlacklistedStyle(node, selector, key) {
+    return (
+        node.matches("table, thead, tbody, tfoot, tr, td, th") &&
+        ["table", "thead", "tbody", "tfoot", "tr", "td", "th"].some((elName) => selector.includes(elName)) &&
+        key.includes("color")
+    );
+}
+
+function removeBlacklistedStyles(rule, node, checkBlacklisted) {
+    if (!checkBlacklisted || !rule.style) {
+        return rule.style;
+    }
+    const styles = {};
+    for (const [key, value] of Object.entries(rule.style)) {
+        if (isBlacklistedStyle(node, rule.selector, key)) {
+            continue;
+        }
+        styles[key] = value;
+    }
+    return styles;
+}
 /**
  * Return the CSS rules which applies on an element, tweaked so that they are
  * browser/mail client ok.
@@ -1459,9 +1496,11 @@ function _getColumnOffsetSize(column) {
  *                          specificity: number;}>
  * @returns {Object} {[styleName]: string}
  */
-function _getMatchedCSSRules(node, cssRules) {
+function _getMatchedCSSRules(node, cssRules, checkBlacklisted = false) {
     node.matches = node.matches || node.webkitMatchesSelector || node.mozMatchesSelector || node.msMatchesSelector || node.oMatchesSelector;
-    const styles = cssRules.map((rule) => rule.style).filter(Boolean);
+    const styles = cssRules
+        .map((rule) => removeBlacklistedStyles(rule, node, checkBlacklisted))
+        .filter(Boolean);
 
     // Add inline styles at the highest specificity.
     if (node.style.length) {

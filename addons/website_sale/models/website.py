@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import _, _lt, SUPERUSER_ID, api, fields, models, tools
+from odoo import SUPERUSER_ID, _, _lt, api, fields, models, tools
 from odoo.http import request
 from odoo.osv import expression
 
@@ -285,11 +284,11 @@ class Website(models.Model):
             if available_pricelists and pricelist not in available_pricelists:
                 # If there is at least one pricelist in the available pricelists
                 # and the chosen pricelist is not within them
-                # it then choose the first available pricelist.
+                # it then choose the first available pricelist based on _order of the model.
                 # This can only happen when the pricelist is the public user pricelist and this pricelist is not in the available pricelist for this localization
                 # If the user is signed in, and has a special pricelist (different than the public user pricelist),
                 # then this special pricelist is amongs these available pricelists, and therefore it won't fall in this case.
-                pricelist = available_pricelists[0]
+                pricelist = available_pricelists.sorted()[0]
 
         return pricelist
 
@@ -423,15 +422,23 @@ class Website(models.Model):
         addr = partner_sudo.address_get(['delivery', 'invoice'])
         if not request.website.is_public_user():
             last_sale_order = self.env['sale.order'].sudo().search(
-                [('partner_id', '=', partner_sudo.id)],
+                [('partner_id', '=', partner_sudo.id), ('website_id', '=', self.id)],
                 limit=1,
                 order="date_order desc, id desc",
             )
             if last_sale_order:
-                if last_sale_order.partner_shipping_id.active:  # first = me
-                    addr['delivery'] = last_sale_order.partner_shipping_id.id
-                if last_sale_order.partner_invoice_id.active:
-                    addr['invoice'] = last_sale_order.partner_invoice_id.id
+                partner_shipping = last_sale_order.partner_shipping_id
+                if (
+                    partner_shipping.active
+                    and partner_shipping.commercial_partner_id == partner_sudo
+                ):
+                    addr['delivery'] = partner_shipping.id
+                partner_invoice = last_sale_order.partner_invoice_id
+                if (
+                    partner_invoice.active
+                    and partner_invoice.commercial_partner_id == partner_sudo
+                ):
+                    addr['invoice'] = partner_invoice.id
 
         affiliate_id = request.session.get('affiliate_id')
         salesperson_user_sudo = self.env['res.users'].sudo().browse(affiliate_id).exists()

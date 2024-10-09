@@ -443,6 +443,23 @@ function selectElementInWeSelectWidget(widgetName, elementName, searchNeeded = f
     steps.push(clickOnElement(`${elementName} in the ${widgetName} widget`,
         `we-select[data-name="${widgetName}"] we-button:contains("${elementName}"), ` +
         `we-select[data-name="${widgetName}"] we-button[data-select-label="${elementName}"]`));
+    steps.push({
+        content: "Check we-select is set",
+        trigger: `we-select[data-name=${widgetName}]:contains(${elementName})`,
+        async run() {
+            // TODO: remove this delay when macro.js has been fixed.
+            // This additionnal line fix an underterministic error.
+            // When we-select is used twice a row too fast,
+            // the second we-select may not open.
+            // The first toggle is open, we click on it and almost
+            // at the same time, we click on the second one.
+            // The problem comes from macro.js which does not give
+            // the DOM time to be stable before looking for the trigger.
+            // We add a delay to let the mutations take place and
+            // therefore wait for the DOM to stabilize.
+            await new Promise((resolve) => setTimeout(resolve, 300));
+        }
+    });
     return steps;
 }
 
@@ -467,6 +484,28 @@ function switchWebsite(websiteId, websiteName) {
         // some time
         timeout: 20000,
         trigger: `iframe html[data-website-id="${websiteId}"]`,
+        isCheck: true,
+    }];
+}
+
+/**
+ * Toggles the mobile preview on or off.
+ *
+ * @param {Boolean} toggleOn true to toggle the mobile preview on, false to
+ *     toggle it off.
+ * @returns {Array}
+ */
+function toggleMobilePreview(toggleOn) {
+    const onOrOff = toggleOn ? "on" : "off";
+    const mobileOnSelector = ".o_is_mobile";
+    const mobileOffSelector = ":not(.o_is_mobile)";
+    return [{
+        content: `Toggle the mobile preview ${onOrOff}`,
+        trigger: ".o_we_website_top_actions [data-action='mobile']",
+        extra_trigger: `iframe #wrapwrap${toggleOn ? mobileOffSelector : mobileOnSelector}`,
+    }, {
+        content: `Check that the mobile preview is ${onOrOff}`,
+        trigger: `iframe #wrapwrap${toggleOn ? mobileOnSelector : mobileOffSelector}`,
         isCheck: true,
     }];
 }
@@ -502,4 +541,5 @@ export default {
     selectNested,
     selectSnippetColumn,
     switchWebsite,
+    toggleMobilePreview,
 };

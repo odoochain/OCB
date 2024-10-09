@@ -147,10 +147,10 @@ class SQL:
     @classmethod
     def identifier(cls, name: str, subname: (str | None) = None) -> SQL:
         """ Return an SQL object that represents an identifier. """
-        assert IDENT_RE.match(name), f"{name!r} invalid for SQL.identifier()"
+        assert name.isidentifier() or IDENT_RE.match(name), f"{name!r} invalid for SQL.identifier()"
         if subname is None:
             return cls(f'"{name}"')
-        assert IDENT_RE.match(subname), f"{subname!r} invalid for SQL.identifier()"
+        assert subname.isidentifier() or IDENT_RE.match(subname), f"{subname!r} invalid for SQL.identifier()"
         return cls(f'"{name}"."{subname}"')
 
 
@@ -552,7 +552,7 @@ def drop_view_if_exists(cr, viewname):
 
 
 def escape_psql(to_escape):
-    return to_escape.replace('\\', r'\\').replace('%', '\%').replace('_', '\_')
+    return to_escape.replace('\\', r'\\').replace('%', r'\%').replace('_', r'\_')
 
 
 def pg_varchar(size=0):

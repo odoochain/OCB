@@ -319,14 +319,14 @@ class IrAttachment(models.Model):
                 raw = base64.b64decode(values['datas'])
             if raw:
                 mimetype = guess_mimetype(raw)
-        return mimetype or 'application/octet-stream'
+        return mimetype and mimetype.lower() or 'application/octet-stream'
 
     def _postprocess_contents(self, values):
         ICP = self.env['ir.config_parameter'].sudo().get_param
         supported_subtype = ICP('base.image_autoresize_extensions', 'png,jpeg,bmp,tiff').split(',')
 
         mimetype = values['mimetype'] = self._compute_mimetype(values)
-        _type, _, _subtype = mimetype.partition('/')
+        _type, _match, _subtype = mimetype.partition('/')
         is_image_resizable = _type == 'image' and _subtype in supported_subtype
         if is_image_resizable and (values.get('datas') or values.get('raw')):
             is_raw = values.get('raw')
@@ -340,6 +340,10 @@ class IrAttachment(models.Model):
                         img = ImageProcess(values['raw'], verify_resolution=False)
                     else:  # datas
                         img = ImageProcess(base64.b64decode(values['datas']), verify_resolution=False)
+
+                    if not img.image:
+                        _logger.info('Post processing ignored : Empty source, SVG, or WEBP')
+                        return values
 
                     w, h = img.image.size
                     nw, nh = map(int, max_resolution.split('x'))
@@ -361,7 +365,7 @@ class IrAttachment(models.Model):
         mimetype = values['mimetype'] = self._compute_mimetype(values)
         xml_like = 'ht' in mimetype or ( # hta, html, xhtml, etc.
                 'xml' in mimetype and    # other xml (svg, text/xml, etc)
-                not 'openxmlformats' in mimetype)  # exception for Office formats
+                not mimetype.startswith('application/vnd.openxmlformats'))  # exception for Office formats
         force_text = xml_like and (
             self.env.context.get('attachments_mime_plainxml') or
             not self.env['ir.ui.view'].sudo(False).check_access_rights('write', False))
@@ -520,7 +524,7 @@ class IrAttachment(models.Model):
         # add res_field=False in domain if not present; the arg[0] trick below
         # works for domain items and '&'/'|'/'!' operators too
         disable_binary_fields_attachments = False
-        if not any(arg[0] in ('id', 'res_field') for arg in domain):
+        if not self.env.context.get('skip_res_field_check') and not any(arg[0] in ('id', 'res_field') for arg in domain):
             disable_binary_fields_attachments = True
             domain = [('res_field', '=', False)] + domain
 

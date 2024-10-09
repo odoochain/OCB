@@ -337,26 +337,27 @@ class MrpSubcontractingPurchaseTest(TestMrpSubcontractingCommon):
         po_form.partner_id = self.subcontractor_partner1
         with po_form.order_line.new() as po_line:
             po_line.product_id = self.finished
-            po_line.product_qty = 1
+            po_line.product_qty = 2
             po_line.price_unit = 50   # should be 70
         po = po_form.save()
         po.button_confirm()
 
         action = po.action_view_subcontracting_resupply()
         resupply_picking = self.env[action['res_model']].browse(action['res_id'])
-        resupply_picking.move_ids.quantity = 1
+        resupply_picking.move_ids.quantity = 2
         resupply_picking.move_ids.picked = True
         resupply_picking.button_validate()
 
         action = po.action_view_picking()
         final_picking = self.env[action['res_model']].browse(action['res_id'])
-        final_picking.move_ids.quantity = 1
+        final_picking.move_ids.quantity = 2
         final_picking.move_ids.picked = True
         final_picking.button_validate()
 
         action = po.action_create_invoice()
         invoice = self.env['account.move'].browse(action['res_id'])
         invoice.invoice_date = Date.today()
+        invoice.invoice_line_ids.quantity = 1
         invoice.action_post()
 
         # price diff line should be 100 - 50 - 10 - 20
@@ -869,3 +870,35 @@ class MrpSubcontractingPurchaseTest(TestMrpSubcontractingCommon):
         self.assertEqual(stock_quants.filtered(lambda q: q.location_id == final_loc).quantity, 2.0)
         self.assertEqual(stock_quants.filtered(lambda q: q.location_id == subcontract_loc).quantity, 0.0)
         self.assertEqual(stock_quants.filtered(lambda q: q.location_id == production_loc).quantity, -2.0)
+
+    def test_return_subcontracted_product_to_supplier_location(self):
+        """
+        Test that we can return subcontracted product to the supplier location.
+        """
+        po = self.env['purchase.order'].create({
+            'partner_id': self.subcontractor_partner1.id,
+            'order_line': [Command.create({
+                'name': self.finished.name,
+                'product_id': self.finished.id,
+                'product_qty': 2.0,
+                'product_uom': self.finished.uom_id.id,
+                'price_unit': 10.0,
+            })],
+        })
+
+        po.button_confirm()
+        self.assertEqual(len(po.picking_ids), 1)
+        picking = po.picking_ids
+        picking.button_validate()
+        self.assertEqual(picking.state, 'done')
+        # create a return to the vendor location
+        supplier_location = self.env.ref('stock.stock_location_suppliers')
+        return_form = Form(self.env['stock.return.picking'].with_context(active_id=picking.id, active_model='stock.picking'))
+        wizard = return_form.save()
+        wizard.product_return_moves.quantity = 2.0
+        wizard.location_id = supplier_location
+        return_picking_id, _pick_type_id = wizard._create_returns()
+
+        return_picking = self.env['stock.picking'].browse(return_picking_id)
+        return_picking.button_validate()
+        self.assertEqual(return_picking.state, 'done')

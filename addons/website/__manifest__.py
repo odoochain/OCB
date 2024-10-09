@@ -20,6 +20,9 @@
         'google_recaptcha',
         'utm',
     ],
+    'external_dependencies': {
+        'python': ['geoip2'],
+    },
     'installable': True,
     'data': [
         # security.xml first, data.xml need the group to exist (checking it)
@@ -115,6 +118,8 @@
         'views/neutralize_views.xml',
         'wizard/base_language_install_views.xml',
         'wizard/website_robots.xml',
+        # Replaces a post_init_hook that should be run on upgrade too.
+        'data/update_theme_images.xml',
     ],
     'demo': [
         'data/website_demo.xml',

@@ -27,7 +27,7 @@
                     <separator/>
                     <filter string="Open Tasks" name="open_tasks" domain="[('state', 'in', ['01_in_progress', '02_changes_requested', '03_approved', '04_waiting_normal'])]"/>
                     <filter string="Closed Tasks" name="closed_tasks" domain="[('state', 'in', ['1_done','1_canceled'])]"/>
-                    <filter string="Closed On" name="closed_on" domain="[('state', 'in', ['1_done','1_canceled'])]" date="date_last_stage_update"/>
+                    <filter string="Closed On" name="closed_on" domain="[('state', 'in', ['1_done','1_canceled'])]" date="date_last_stage_update" invisible="1"/>
                     <separator/>
                     <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
                     <group expand="0" string="Group By">
@@ -54,14 +54,14 @@
             <field name="priority">999</field>
             <field name="arch" type="xml">
                 <field name="stage_id" position="after">
-                    <field name="project_id" string="Project"/>
+                    <field name="project_id" string="Project" groups="base.group_user"/>
                 </field>
                 <field name="partner_id" position="after">
                     <field name="company_id" groups="base.group_multi_company"/>
-                    <filter string="My Tasks" name="my_tasks" domain="[('user_ids', 'in', uid)]"/>
+                    <filter string="My Tasks" name="my_tasks" domain="[('user_ids', 'in', uid)]" groups="base.group_user"/>
                 </field>
                 <filter name="stage" position="after">
-                    <filter string="Project" name="project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Project" name="project" context="{'group_by': 'project_id'}" groups="base.group_user"/>
                 </filter>
             </field>
         </record>
@@ -80,7 +80,7 @@
                 <filter name="last_stage_update" position="after">
                     <filter string="Deadline" name="deadline" context="{'group_by': 'date_deadline'}"/>
                     <separator/>
-                    <filter string="Properties" name="group_by_properties" context="{'group_by': 'task_properties'}"/>
+                    <filter string="Properties" name="group_by_properties" context="{'group_by': 'task_properties'}" groups="base.group_user"/>
                 </filter>
             </field>
         </record>
@@ -154,6 +154,7 @@
             <field name="view_mode">kanban,tree,form,calendar,pivot,graph,activity</field>
             <field name="domain">[('project_id', '=', active_id), ('display_in_project', '=', True)]</field>
             <field name="context">{
+                'active_model': 'project.project',
                 'default_project_id': active_id,
                 'show_project_update': True,
                 'search_default_open_tasks': 1,
@@ -491,7 +492,6 @@
             <field name="target">new</field>
             <field name="binding_model_id" ref="model_project_task"/>
             <field name="binding_view_types">form</field>
-            <field name="context">{'dialog_size': 'medium'}</field>
         </record>
 
         <record id="quick_create_task_form" model="ir.ui.view">
@@ -788,6 +788,8 @@
                 <graph string="Tasks" sample="1" js_class="project_task_graph">
                     <field name="project_id" invisible="context.get('default_project_id', False)"/>
                     <field name="stage_id"/>
+                    <field name="working_hours_open" widget="float_time"/>
+                    <field name="working_hours_close" widget="float_time"/>
                     <field name="color" invisible="1"/>
                     <field name="sequence" invisible="1"/>
                     <field name="rating_last_value" string="Rating (/5)"/>
@@ -887,7 +889,7 @@
                     <attribute name="default_group_by"/>
                 </tree>
                 <field name="project_id" position="attributes">
-                    <attribute name="invisible">0</attribute>
+                    <attribute name="column_invisible">0</attribute>
                 </field>
             </field>
         </record>
@@ -1078,8 +1080,8 @@
             <field name="name">Assigned Tasks</field>
             <field name="res_model">project.task</field>
             <field name="view_mode">tree,form,calendar,graph</field>
-            <field name="context">{'search_default_user_ids': [active_id], 'default_user_ids': [(6, 0, [active_id])]}</field>
-            <field name="domain">[('project_id', '!=', False), ('display_in_project', '=', True)]</field>
+            <field name="context">{'default_user_ids': [(6, 0, [active_id])]}</field>
+            <field name="domain">[('project_id', '!=', False), ('display_in_project', '=', True), ('user_ids', 'in', [active_id])]</field>
             <field name="binding_model_id" ref="base.model_res_users"/>
             <field name="binding_view_types">form</field>
         </record>

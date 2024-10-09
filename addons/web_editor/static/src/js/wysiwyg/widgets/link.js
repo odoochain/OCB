@@ -309,6 +309,7 @@ export class Link extends Component {
         }
         var allWhitespace = /\s+/gi;
         var allStartAndEndSpace = /^\s+|\s+$/gi;
+        const isImage = this.props.link && this.props.link.querySelector('img');
         return {
             content: content,
             url: this._correctLink(this.state.url),
@@ -321,6 +322,7 @@ export class Link extends Component {
             oldAttributes: this.state.oldAttributes,
             isNewWindow: isNewWindow,
             doStripDomain: doStripDomain,
+            isImage,
         };
     }
     /**
@@ -471,11 +473,11 @@ export class Link extends Component {
      */
     _updateLinkContent($link, linkInfos, { force = false } = {}) {
         if (force || (this.props.needLabel && (linkInfos.content !== this.state.originalText || linkInfos.url !== this.state.url))) {
-            if (linkInfos.content === this.state.originalText) {
-                $link.html(this.state.originalHTML);
+            if (linkInfos.content === this.state.originalText || linkInfos.isImage) {
+                $link.html(this.state.originalHTML.replaceAll('\u200B', '').replaceAll('\uFEFF', ''));
             } else if (linkInfos.content && linkInfos.content.length) {
                 let contentWrapperEl = $link[0];
-                const text = $link[0].innerText.replaceAll("\u200B", "").trim();
+                const text = $link[0].innerText.replaceAll("\u200B", "").replaceAll("\uFEFF", "").trim();
                 // Update the first not ZWS child element that has the same inner text
                 // as the link with the new content while preserving child
                 // elements within the link. (e.g. the link is bold and italic)
@@ -485,7 +487,7 @@ export class Link extends Component {
                     child = [...contentWrapperEl.children].find(
                         (element) => !element.hasAttribute("data-o-link-zws")
                     );
-                } while (child?.innerText.replaceAll('\u200B', '').trim() === text);
+                } while (child?.innerText.replaceAll('\u200B', '').replaceAll('\uFEFF', '').trim() === text);
                 contentWrapperEl.innerText = linkInfos.content;
             } else {
                 $link.text(linkInfos.url);

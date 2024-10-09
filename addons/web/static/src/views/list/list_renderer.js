@@ -220,6 +220,9 @@ export class ListRenderer extends Component {
             // OWL don't wait the patch for the children components if the children trigger a patch by himself.
             await Promise.resolve();
 
+            if (this.activeElement !== this.uiService.activeElement) {
+                return;
+            }
             const editedRecord = this.props.list.editedRecord;
             if (editedRecord && this.activeRowId !== editedRecord.id) {
                 if (this.cellToFocus && this.cellToFocus.record === editedRecord) {
@@ -286,6 +289,7 @@ export class ListRenderer extends Component {
                 (field) =>
                     field.relatedPropertyField &&
                     field.relatedPropertyField.fieldName === column.name
+                    && field.type !== 'separator'
             )
             .map((propertyField) => {
                 return {
@@ -327,9 +331,6 @@ export class ListRenderer extends Component {
 
         if (!this.columnWidths || !this.columnWidths.length) {
             // no column widths to restore
-
-            table.style.tableLayout = "fixed";
-            const allowedWidth = table.parentNode.getBoundingClientRect().width;
             // Set table layout auto and remove inline style to make sure that css
             // rules apply (e.g. fixed width of record selector)
             table.style.tableLayout = "auto";
@@ -342,7 +343,7 @@ export class ListRenderer extends Component {
 
             // Squeeze the table by applying a max-width on largest columns to
             // ensure that it doesn't overflow
-            this.columnWidths = this.computeColumnWidthsFromContent(allowedWidth);
+            this.columnWidths = this.computeColumnWidthsFromContent();
             table.style.tableLayout = "fixed";
         }
         headers.forEach((th, index) => {
@@ -375,7 +376,7 @@ export class ListRenderer extends Component {
         });
     }
 
-    computeColumnWidthsFromContent(allowedWidth) {
+    computeColumnWidthsFromContent() {
         const table = this.tableRef.el;
 
         // Toggle a className used to remove style that could interfere with the ideal width
@@ -406,6 +407,7 @@ export class ListRenderer extends Component {
         const sortedThs = [...table.querySelectorAll("thead th:not(.o_list_button)")].sort(
             (a, b) => getWidth(b) - getWidth(a)
         );
+        const allowedWidth = table.parentNode.getBoundingClientRect().width;
 
         let totalWidth = getTotalWidth();
         for (let index = 1; totalWidth > allowedWidth; index++) {
@@ -1162,7 +1164,7 @@ export class ListRenderer extends Component {
         }
     }
 
-    async onDeleteRecord(record) {
+    async onDeleteRecord(record, ev) {
         this.keepColumnWidths = true;
         const editedRecord = this.props.list.editedRecord;
         if (editedRecord && editedRecord !== record) {
@@ -1172,6 +1174,14 @@ export class ListRenderer extends Component {
             }
         }
         if (this.activeActions.onDelete) {
+            if (ev) {
+                const element = ev.target.closest(".o_list_record_remove");
+                if (element.dataset.clicked) {
+                    return;
+                }
+                element.dataset.clicked = true;
+            }
+
             this.activeActions.onDelete(record);
         }
     }
@@ -1487,7 +1497,7 @@ export class ListRenderer extends Component {
             case "tab": {
                 const index = list.records.indexOf(record);
                 const lastIndex = topReCreate ? 0 : list.records.length - 1;
-                if (index === lastIndex) {
+                if (index === lastIndex || index === list.records.length - 1) {
                     if (this.displayRowCreates) {
                         if (record.isNew && !record.dirty) {
                             list.leaveEditMode();
