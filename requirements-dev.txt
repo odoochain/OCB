@@ -45,8 +45,8 @@ num2words==0.5.13 ; python_version >= '3.12'
 ofxparse==0.21
 passlib==1.7.4 # min version = 1.7.2 (Focal with security backports)
 Pillow==9.0.1 ; python_version <= '3.10'
-Pillow==9.4.0 ; python_version > '3.10' and python_version < '3.12'
-Pillow==10.2.0 ; python_version >= '3.12'  # (Noble) Mostly to have a wheel package
+Pillow==10.2.0 ; python_version >= '3.11'  # and python_version < '3.12' and stable-diffusion-cpp-python 0.1.8 requires
+#Pillow==10.2.0 ; python_version >= '3.12'  # (Noble) Mostly to have a wheel package
 polib==1.1.1
 psutil==5.9.0 ; python_version <= '3.10' 
 psutil==5.9.4 ; python_version > '3.10' and python_version < '3.12' 
@@ -54,6 +54,8 @@ psutil==5.9.8 ; python_version >= '3.12' # (Noble) Mostly to have a wheel packag
 psycopg2==2.9.2 ; python_version == '3.10' # (Jammy)
 psycopg2==2.9.5 ; python_version == '3.11'
 psycopg2==2.9.9 ; python_version >= '3.12' # (Noble) Mostly to have a wheel package
+pgvector==0.3.4 #
+
 pydot==1.4.2
 pyopenssl==21.0.0 ; python_version < '3.12'
 pyopenssl==24.1.0 ; python_version >= '3.12' # (Noble) min 23.2.0, pinned for compatibility with cryptography==42.0.8 and security patches
@@ -121,9 +123,16 @@ phonemizer ; sys_platform == 'win32'  # for piper
 pyautogen  # for ai calendar
 tenacity==8.2.3  # for langchain-google-community 2.0.0
 
-torch==2.3.0+cu121
+torch==2.2.2 # 2.3.0+cu121 
+torchaudio==2.2.2
+torchvision==0.17.2
 openai==1.50.2
-langchain-community==0.3.1
+langchain-community==0.3.0 # for khoj 0.2.5
+langchain-experimental==0.3.0
+langchain-google-community==2.0.0 # requires langchain-community<0.4.0,>=0.3.0
+#langchain-community==0.3.1 # for pyautogen
+llama-cpp-python==0.2.88
+langchain-openai==0.2.1 # langchain-openai has requirement langchain-core<0.4,>=0.3,
 pytorch-lightning==2.4.0
 pyautogen==0.1.14
 tiktoken==0.4.0
@@ -141,8 +150,21 @@ flask-babel==4.0.0  # need babel>=2.12
 duckduckgo-search==6.2.13  # requirement click>=8.1.7, but you have click 8.1.3.
 omegaconf==2.0.6  # fairseq 0.12.2 hydra-core 1.0.7
 httpcore==0.17.3
-httpx==0.24.1
+httpx==0.24.1 # mistralai 1.1.0 has requirement httpx<0.28.0,>=0.27.0,
 pydantic-core==2.20.1
 pydantic==2.8.2
-#pocketbase==0.12.1 # pocketbase 0.12.1 has requirement httpx<0.25.0,>=0.24.1, but you have httpx 0.27.2.
-mistralai==0.1.7
+pocketbase==0.12.1 # pocketbase 0.12.1 has requirement httpx<0.25.0,>=0.24.1, but you have httpx 0.27.2.
+mistralai==0.1.7 # mistralai 1.1.0 has requirement httpx<0.28.0,>=0.27.0, but you have httpx 0.25.0.
+# 1. To use NVIDIA (CUDA) GPU
+# $env:CMAKE_ARGS = "-DGGML_CUDA=on"
+# 2. Install Khoj
+# py -m pip install khoj
+llama_cpp_python==0.2.88 # for khoj  begin
+defusedxml==0.7.1
+alibabacloud-tea-openapi==0.3.12
+
+jsonschema==4.22.0 # litellm==1.48.10 need
+litellm==1.48.10
+uvicorn==0.30.6 # khoj 1.24.0 requires
+
+chromadb
