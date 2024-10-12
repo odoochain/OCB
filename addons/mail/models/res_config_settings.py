@@ -70,7 +70,13 @@ class ResConfigSettings(models.TransientModel):
         help="A valid Google API key is required to enable message translation. https://cloud.google.com/translate/docs/setup",
         config_parameter="mail.google_translate_api_key",
     )
-
+    google_http_proxy = fields.Char(
+        string='Google Http Proxy',
+        help="""Provide the proxy here""",
+        config_parameter='discuss.google_http_proxy',
+        default="",
+        required=False,
+    )
     def _compute_fail_counter(self):
         previous_date = fields.Datetime.now() - datetime.timedelta(days=30)
 

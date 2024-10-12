@@ -7,10 +7,12 @@ from odoo.http import request, route, Controller
 
 
 class DiscussGifController(Controller):
-    def _request_gifs(self, endpoint):
+    def _request_gifs(self, endpoint, proxies=None):
         response = requests.get(
-            f"https://tenor.googleapis.com/v2/{endpoint}", timeout=3
-        )
+            url=f"https://tenor.googleapis.com/v2/{endpoint}",
+            timeout=3,
+            proxies = proxies,
+            )
         response.raise_for_status()
         return response
 
@@ -60,6 +62,8 @@ class DiscussGifController(Controller):
     def _gif_posts(self, ids):
         # sudo: ir.config_parameter - read keys are hard-coded and values are only used for server requests
         ir_config = request.env["ir.config_parameter"].sudo()
+        proxies = {
+            "https": ir_config.get_param("discuss.google_http_proxy")}
         query_string = werkzeug.urls.urlencode(
             {
                 "ids": ",".join(ids),
@@ -68,7 +72,7 @@ class DiscussGifController(Controller):
                 "media_filter": "tinygif",
             }
         )
-        response = self._request_gifs(f"posts?{query_string}")
+        response = self._request_gifs(f"posts?{query_string}",proxies)
         if response:
             return response.json()["results"]
 
