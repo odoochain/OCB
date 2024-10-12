@@ -5,6 +5,8 @@ import json
 import logging
 import re
 import time
+from urllib.parse import urlencode
+
 import requests
 import uuid
 import werkzeug.exceptions
@@ -796,7 +798,7 @@ class Web_Editor(http.Controller):
             if not attachment:
                 attachment = IrAttachment.with_user(SUPERUSER_ID).create(attachment_data)
             if media[id]['is_dynamic_svg']:
-                colorParams = werkzeug.urls.url_encode(media[id]['dynamic_colors'])
+                colorParams = urlencode(media[id]['dynamic_colors'])
                 attachment['url'] = '/web_editor/shape/illustration/%s?%s' % (slug(attachment), colorParams)
             attachments.append(attachment._get_media_info())
 
