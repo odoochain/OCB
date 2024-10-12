@@ -18,7 +18,7 @@ class DiscussGifController(Controller):
     def search(self, search_term, locale="en", country="US", position=None):
         # sudo: ir.config_parameter - read keys are hard-coded and values are only used for server requests
         ir_config = request.env["ir.config_parameter"].sudo()
-        query_string = werkzeug.urls.url_encode(
+        query_string = werkzeug.urls.urlencode(
             {
                 "q": search_term,
                 "key": ir_config.get_param("discuss.tenor_api_key"),
@@ -39,7 +39,7 @@ class DiscussGifController(Controller):
     def categories(self, locale="en", country="US"):
         # sudo: ir.config_parameter - read keys are hard-coded and values are only used for server requests
         ir_config = request.env["ir.config_parameter"].sudo()
-        query_string = werkzeug.urls.url_encode(
+        query_string = werkzeug.urls.urlencode(
             {
                 "key": ir_config.get_param("discuss.tenor_api_key"),
                 "client_key": request.env.cr.dbname,
@@ -60,7 +60,7 @@ class DiscussGifController(Controller):
     def _gif_posts(self, ids):
         # sudo: ir.config_parameter - read keys are hard-coded and values are only used for server requests
         ir_config = request.env["ir.config_parameter"].sudo()
-        query_string = werkzeug.urls.url_encode(
+        query_string = werkzeug.urls.urlencode(
             {
                 "ids": ",".join(ids),
                 "key": ir_config.get_param("discuss.tenor_api_key"),
