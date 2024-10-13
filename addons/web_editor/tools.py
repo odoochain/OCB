@@ -8,8 +8,8 @@ import re
 import requests
 
 from markupsafe import Markup
-from urllib.parse import parse_qs
-from werkzeug.urls import url_encode
+from urllib.parse import parse_qs, urlencode
+# from werkzeug.urls import url_encode
 
 from odoo import _
 from odoo.exceptions import ValidationError
@@ -129,7 +129,7 @@ def get_video_url_data(video_url, autoplay=False, loop=False, hide_controls=Fals
         embed_url = f'//player.youku.com/embed/{video_id}'
 
     if params:
-        embed_url = f'{embed_url}?{url_encode(params)}'
+        embed_url = f'{embed_url}?{urlencode(params)}'
 
     return {
         'platform': platform,
