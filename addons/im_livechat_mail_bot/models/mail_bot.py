@@ -1,13 +1,14 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from markupsafe import Markup
+
 from odoo import models, _
 
 
 class MailBot(models.AbstractModel):
     _inherit = 'mail.bot'
 
-    def _get_answer(self, record, body, values, command):
+    def _get_answer(self, record, body, values, command=False):
         odoobot_state = self.env.user.odoobot_state
         if self._is_bot_in_private_channel(record):
             if odoobot_state == "onboarding_attachement" and values.get("attachment_ids"):

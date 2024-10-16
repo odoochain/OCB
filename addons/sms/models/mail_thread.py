@@ -211,7 +211,7 @@ class MailThread(models.AbstractModel):
             subtype_id = self.env['ir.model.data']._xmlid_to_res_id('mail.mt_note')
 
         return self.message_post(
-            body=body, partner_ids=partner_ids or [],  # TDE FIXME: temp fix otherwise crash mail_thread.py
+            body=body, partner_ids=partner_ids or [],  # TDE FIXME: temp fix otherwise crash ai_mail_thread.py
             message_type='sms', subtype_id=subtype_id,
             sms_numbers=sms_numbers, sms_pid_to_number=sms_pid_to_number,
             **kwargs
