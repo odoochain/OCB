@@ -76,17 +76,25 @@ export class CallParticipantCard extends Component {
     }
 
     get showConnectionState() {
-        return Boolean(
-            this.isOfActiveCall && !HIDDEN_CONNECTION_STATES.has(this.rtcSession.connectionState)
-        );
+        if (
+            !this.rtcSession ||
+            !this.isOfActiveCall ||
+            HIDDEN_CONNECTION_STATES.has(this.rtcSession.connectionState)
+        ) {
+            return false;
+        }
+        if (this.rtc.state.connectionType === CONNECTION_TYPES.SERVER) {
+            return this.rtcSession.eq(this.rtc?.selfSession);
+        } else {
+            return this.rtcSession.notEq(this.rtc?.selfSession);
+        }
     }
 
+    /**
+     * @deprecated use `showConnectionState` instead
+     */
     get showServerState() {
-        return Boolean(
-            this.rtcSession.channelMember?.persona.eq(this.store.self) &&
-                this.rtc.state.serverState &&
-                this.rtc.state.serverState !== "connected"
-        );
+        return false;
     }
 
     get name() {
@@ -194,6 +202,13 @@ export class CallParticipantCard extends Component {
         };
         document.addEventListener("mouseup", onMouseup);
         document.addEventListener("mousemove", onMousemove);
+    }
+
+    onTouchMove(ev) {
+        if (!this.props.inset) {
+            return;
+        }
+        this.drag(ev);
     }
 
     drag(ev) {

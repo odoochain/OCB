@@ -7,7 +7,7 @@
     'category': 'Sales/Point of Sale',
     'sequence': 40,
     'summary': 'User-friendly PoS interface for shops and restaurants',
-    'depends': ['stock_account', 'barcodes', 'web_editor', 'digest'],
+    'depends': ['stock_account', 'barcodes', 'web_editor', 'digest', 'phone_validation'],
     'uninstall_hook': 'uninstall_hook',
     'data': [
         'security/point_of_sale_security.xml',
@@ -78,6 +78,7 @@
             'point_of_sale/static/src/app/utils/hooks.js',
         ],
         'web.assets_tests': [
+            'barcodes/static/tests/helpers.js',
             'point_of_sale/static/tests/tours/**/*',
         ],
         'web.assets_unit_tests': [
@@ -160,10 +161,9 @@
             'point_of_sale/static/src/**/*',
             ('remove', 'point_of_sale/static/src/backend/**/*'),
             ('remove', 'point_of_sale/static/src/customer_display/**/*'),
+            'point_of_sale/static/src/customer_display/utils.js',
             # main.js boots the pos app, it is only included in the prod bundle as tests mount the app themselves
             ('remove', 'point_of_sale/static/src/app/main.js'),
-            # tour system FIXME: can this be added only in test mode? Are there any onboarding tours in PoS?
-            "web_tour/static/src/tour_pointer/**/*",
             ("include", "point_of_sale.base_tests"),
             # account
             'account/static/src/helpers/*.js',
@@ -203,6 +203,18 @@
         'point_of_sale.customer_display_assets_test': [
             ('include', 'point_of_sale.base_tests'),
             "point_of_sale/static/tests/tours/**/*",
+            "barcodes/static/tests/helpers.js",
+            "web/static/tests/legacy/helpers/utils.js",
+            "web/static/tests/legacy/helpers/cleanup.js",
+        ],
+        'point_of_sale.assets_debug': [
+            'web_tour/static/src/tour_pointer/**/*',
+            'web_tour/static/src/tour_service/**/*',
+            ('remove', 'web_tour/static/src/tour_pointer/**/*.scss'),
+            'web/static/tests/legacy/helpers/utils.js',
+            'web/static/tests/legacy/helpers/cleanup.js',
+            'barcodes/static/tests/helpers.js',
+            'point_of_sale/static/tests/tours/**/*',
         ],
     },
     'license': 'LGPL-3',

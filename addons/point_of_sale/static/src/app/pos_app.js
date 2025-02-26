@@ -7,6 +7,8 @@ import { effect } from "@web/core/utils/reactive";
 import { batched } from "@web/core/utils/timing";
 import { deduceUrl } from "@point_of_sale/utils";
 import { useOwnDebugContext } from "@web/core/debug/debug_context";
+import { useIdleTimer } from "./utils/use_idle_timer";
+import useTours from "./hooks/use_tours";
 
 /**
  * Chrome is the root component of the PoS App.
@@ -17,17 +19,15 @@ export class Chrome extends Component {
     static props = { disableLoader: Function };
     setup() {
         this.pos = usePos();
+        useIdleTimer(this.pos.idleTimeout, () => this.pos.showScreen(this.pos.firstScreen));
         const reactivePos = reactive(this.pos);
         // TODO: Should we continue on exposing posmodel as global variable?
         window.posmodel = reactivePos;
         useOwnDebugContext();
 
-        // prevent backspace from performing a 'back' navigation
-        document.addEventListener("keydown", (ev) => {
-            if (ev.key === "Backspace" && !ev.target.matches("input, textarea")) {
-                ev.preventDefault();
-            }
-        });
+        if (odoo.use_pos_fake_tours) {
+            window.pos_fake_tour = useTours();
+        }
 
         if (this.pos.config.iface_big_scrollbars) {
             const body = document.getElementsByTagName("body")[0];
@@ -50,17 +50,16 @@ export class Chrome extends Component {
                     totalPriceOnScale,
                     isScaleScreenVisible,
                 }) => {
-                    if (
-                        !selectedOrder &&
-                        !scaleData &&
-                        !scaleWeight &&
-                        !scaleTare &&
-                        !totalPriceOnScale &&
-                        !isScaleScreenVisible
-                    ) {
-                        return;
+                    if (selectedOrder) {
+                        const allScaleData = {
+                            ...scaleData,
+                            weight: scaleWeight,
+                            tare: scaleTare,
+                            totalPriceOnScale,
+                            isScaleScreenVisible,
+                        };
+                        this.sendOrderToCustomerDisplay(selectedOrder, allScaleData);
                     }
-                    this.sendOrderToCustomerDisplay(selectedOrder, scaleData);
                 }
             ),
             [this.pos]
@@ -69,7 +68,7 @@ export class Chrome extends Component {
 
     sendOrderToCustomerDisplay(selectedOrder, scaleData) {
         const customerDisplayData = selectedOrder.getCustomerDisplayData();
-        customerDisplayData.isScaleScreenVisible = this.pos.isScaleScreenVisible;
+        customerDisplayData.isScaleScreenVisible = scaleData.isScaleScreenVisible;
         if (scaleData) {
             customerDisplayData.scaleData = {
                 productName: scaleData.productName,
@@ -78,9 +77,9 @@ export class Chrome extends Component {
                 productPrice: scaleData.productPrice,
             };
         }
-        customerDisplayData.weight = this.pos.scaleWeight;
-        customerDisplayData.tare = this.pos.scaleTare;
-        customerDisplayData.totalPriceOnScale = this.pos.totalPriceOnScale;
+        customerDisplayData.weight = scaleData.weight;
+        customerDisplayData.tare = scaleData.tare;
+        customerDisplayData.totalPriceOnScale = scaleData.totalPriceOnScale;
 
         if (this.pos.config.customer_display_type === "local") {
             this.customerDisplayChannel.postMessage(customerDisplayData);
@@ -92,8 +91,8 @@ export class Chrome extends Component {
                 this.pos.config.access_token,
             ]);
         }
-        if (this.pos.config.customer_display_type === "proxy") {
-            const proxyIP = this.pos.getDisplayDeviceIP();
+        const proxyIP = this.pos.getDisplayDeviceIP();
+        if (proxyIP) {
             fetch(`${deduceUrl(proxyIP)}/hw_proxy/customer_facing_display`, {
                 method: "POST",
                 headers: {

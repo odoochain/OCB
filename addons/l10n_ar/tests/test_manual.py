@@ -27,7 +27,7 @@ class TestManual(common.TestAr):
         self.assertEqual(invoice.l10n_latam_document_type_id, self.document_type['invoice_a'], 'selected document type should be Factura A')
         self._post(invoice)
         self.assertEqual(invoice.state, 'posted', 'invoice has not been validate in Odoo')
-        self.assertEqual(invoice.name, 'FA-A %05d-00000002' % self.journal.l10n_ar_afip_pos_number, 'Invoice number is wrong')
+        self.assertEqual(invoice.name, 'FA-A %05d-00000001' % self.journal.l10n_ar_afip_pos_number, 'Invoice number is wrong')
 
     def test_02_fiscal_position(self):
         # ADHOC SA > IVA Responsable Inscripto > Without Fiscal Positon
@@ -38,12 +38,12 @@ class TestManual(common.TestAr):
         invoice = self._create_invoice({'partner': self.partner_cf})
         self.assertFalse(invoice.fiscal_position_id, 'Fiscal position should be set to empty')
 
-        # Cerro Castor > IVA Liberado – Ley Nº 19.640 > Compras / Ventas Zona Franca > IVA Exento
-        invoice = self._create_invoice({'partner': self.res_partner_cerrocastor})
+        # Montana Sur > IVA Liberado - Ley Nº 19.640 > Compras / Ventas Zona Franca > IVA Exento
+        invoice = self._create_invoice({'partner': self.res_partner_montana_sur})
         self.assertEqual(invoice.fiscal_position_id, self._search_fp('Purchases / Sales Free Trade Zone'))
 
-        # Expresso > Cliente / Proveedor del Exterior >  > IVA Exento
-        invoice = self._create_invoice({'partner': self.res_partner_expresso})
+        # Barcelona food > Cliente / Proveedor del Exterior >  > IVA Exento
+        invoice = self._create_invoice({'partner': self.res_partner_barcelona_food})
         self.assertEqual(invoice.fiscal_position_id, self._search_fp('Purchases / Sales abroad'))
 
     def test_03_corner_cases(self):

@@ -1,4 +1,7 @@
+import { convertBrToLineBreak } from "@mail/utils/common/format";
 import { mailDataHelpers } from "@mail/../tests/mock_server/mail_mock_server";
+
+import { markup } from "@odoo/owl";
 
 import {
     Command,
@@ -12,7 +15,6 @@ import { serializeDateTime, today } from "@web/core/l10n/dates";
 import { ensureArray } from "@web/core/utils/arrays";
 import { uniqueId } from "@web/core/utils/functions";
 import { DEFAULT_MAIL_SEARCH_ID, DEFAULT_MAIL_VIEW_ID } from "./constants";
-import { convertBrToLineBreak } from "@mail/utils/common/format";
 
 const { DateTime } = luxon;
 
@@ -393,6 +395,7 @@ export class DiscussChannel extends models.ServerModel {
             res.from_message_id = mailDataHelpers.Store.one(
                 MailMessage.browse(channel.from_message_id)
             );
+            res.group_public_id = channel.group_public_id;
             if (this.env.user) {
                 const message_needaction_counter = MailNotification._filter([
                     ["res_partner_id", "=", this.env.user.partner_id],
@@ -584,7 +587,7 @@ export class DiscussChannel extends models.ServerModel {
                 group_public_id: self.group_public_id,
                 from_message_id: message?.id,
                 name: message
-                    ? convertBrToLineBreak(message.body).substring(0, 30)
+                    ? convertBrToLineBreak(markup(message.body)).substring(0, 30)
                     : name || "New Thread",
                 parent_channel_id: self.id,
             })
@@ -752,6 +755,7 @@ export class DiscussChannel extends models.ServerModel {
                 })
                 .map((channel) => {
                     // expected format
+                    const parentChannel = this.browse(channel.parent_channel_id);
                     return {
                         authorizedGroupFullName: channel.group_public_id
                             ? channel.group_public_id.name
@@ -760,6 +764,9 @@ export class DiscussChannel extends models.ServerModel {
                         id: channel.id,
                         model: "discuss.channel",
                         name: channel.name,
+                        parent_channel_id: parentChannel.length
+                            ? { id: parentChannel[0].id, model: "discuss.channel" }
+                            : false,
                     };
                 });
             // reduce results to max limit

@@ -51,13 +51,17 @@ class AccountFiscalPosition(models.Model):
     zip_to = fields.Char(string='Zip Range To')
     # To be used in hiding the 'Federal States' field('attrs' in view side) when selected 'Country' has 0 states.
     states_count = fields.Integer(compute='_compute_states_count')
-    foreign_vat = fields.Char(string="Foreign Tax ID", help="The tax ID of your company in the region mapped by this fiscal position.")
+    foreign_vat = fields.Char(string="Foreign Tax ID", inverse="_inverse_foreign_vat", help="The tax ID of your company in the region mapped by this fiscal position.")
 
     # Technical field used to display a banner on top of foreign vat fiscal positions,
     # in order to ease the instantiation of foreign taxes when possible.
     foreign_vat_header_mode = fields.Selection(
         selection=[('templates_found', "Templates Found"), ('no_template', "No Template")],
         compute='_compute_foreign_vat_header_mode')
+
+    def _inverse_foreign_vat(self):
+        # Hook for extension
+        pass
 
     def _compute_states_count(self):
         for position in self:
@@ -261,7 +265,7 @@ class AccountFiscalPosition(models.Model):
         if not partner.country_id:
             return self.env['account.fiscal.position']
 
-        # Search for a an auto applied fiscal position matching the partner
+        # Search for a auto applied fiscal position matching the partner
         ranking_subfunctions = self._get_fpos_ranking_functions(delivery)
         def ranking_function(fpos):
             return tuple(rank[1](fpos) for rank in ranking_subfunctions)
@@ -491,6 +495,10 @@ class ResPartner(models.Model):
             else:
                 partner.currency_id = self.env.company.currency_id
 
+    def _default_display_invoice_template_pdf_report_id(self):
+        available_templates_count = self.env['ir.actions.report'].search_count([('is_invoice_report', '=', True)], limit=2)
+        return available_templates_count > 1
+
     name = fields.Char(tracking=True)
     credit = fields.Monetary(compute='_credit_debit_get', search=_credit_search,
         string='Total Receivable', help="Total amount this customer owes you.",
@@ -505,7 +513,8 @@ class ResPartner(models.Model):
         company_dependent=True, copy=False, readonly=False)
     use_partner_credit_limit = fields.Boolean(
         string='Partner Limit', groups='account.group_account_invoice,account.group_account_readonly',
-        compute='_compute_use_partner_credit_limit', inverse='_inverse_use_partner_credit_limit')
+        compute='_compute_use_partner_credit_limit', inverse='_inverse_use_partner_credit_limit',
+        help='Set a value greater than 0.0 to activate a credit limit check')
     show_credit_limit = fields.Boolean(
         default=lambda self: self.env.company.account_use_credit_limit,
         compute='_compute_show_credit_limit', groups='account.group_account_invoice,account.group_account_readonly')
@@ -568,14 +577,15 @@ class ResPartner(models.Model):
         inverse='_inverse_invoice_edi_format',
     )
     invoice_edi_format_store = fields.Char(company_dependent=True)
-    display_invoice_edi_format = fields.Boolean(compute='_compute_display_invoice_edi_format')
+    display_invoice_edi_format = fields.Boolean(default=lambda self: len(self._fields['invoice_edi_format'].selection), store=False)
     invoice_template_pdf_report_id = fields.Many2one(
         comodel_name='ir.actions.report',
+        string='Invoice template',
         domain="[('is_invoice_report', '=', True)]",
         readonly=False,
         store=True,
     )
-    display_invoice_template_pdf_report_id = fields.Boolean(compute='_compute_display_invoice_template_pdf_report_id')
+    display_invoice_template_pdf_report_id = fields.Boolean(default=_default_display_invoice_template_pdf_report_id, store=False)
     # Computed fields to order the partners as suppliers/customers according to the
     # amount of their generated incoming/outgoing account moves
     supplier_rank = fields.Integer(default=0, copy=False)
@@ -592,6 +602,7 @@ class ResPartner(models.Model):
     duplicated_bank_account_partners_count = fields.Integer(
         compute='_compute_duplicated_bank_account_partners_count',
     )
+    is_coa_installed = fields.Boolean(store=False, default=lambda partner: bool(partner.env.company.chart_template))
 
     property_outbound_payment_method_line_id = fields.Many2one(
         comodel_name='account.payment.method.line',
@@ -628,20 +639,13 @@ class ResPartner(models.Model):
         domain = expression.AND([domain, [('partner_id', '!=', self._origin.id)]])
         return self.env['res.partner.bank'].search(domain)
 
-    def _compute_display_invoice_edi_format(self):
-        self.display_invoice_edi_format = len(self._fields['invoice_edi_format'].selection)
-
-    def _compute_display_invoice_template_pdf_report_id(self):
-        available_templates_count = self.env['ir.actions.report'].search_count([('is_invoice_report', '=', True)], limit=2)
-        self.display_invoice_template_pdf_report_id = available_templates_count > 1
-
     @api.depends_context('company')
     def _compute_invoice_edi_format(self):
         for partner in self:
-            if partner.invoice_edi_format_store == 'none':
+            if partner.commercial_partner_id.invoice_edi_format_store == 'none':
                 partner.invoice_edi_format = False
             else:
-                partner.invoice_edi_format = partner.invoice_edi_format_store or partner._get_suggested_invoice_edi_format()
+                partner.invoice_edi_format = partner.commercial_partner_id.invoice_edi_format_store or partner.commercial_partner_id._get_suggested_invoice_edi_format()
 
     def _inverse_invoice_edi_format(self):
         for partner in self:
@@ -791,6 +795,7 @@ class ResPartner(models.Model):
                         n=n,
                     ))
                     self.invalidate_recordset([field])
+                    self.modified([field])
             except (pgerrors.LockNotAvailable, pgerrors.SerializationFailure):
                 _logger.debug('Another transaction already locked partner rows. Cannot update partner ranks.')
 

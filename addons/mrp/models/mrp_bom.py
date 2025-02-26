@@ -71,7 +71,7 @@ class MrpBom(models.Model):
         help="Defines if you can consume more or less components than the quantity defined on the BoM:\n"
              "  * Allowed: allowed for all manufacturing users.\n"
              "  * Allowed with warning: allowed for all manufacturing users with summary of consumption differences when closing the manufacturing order.\n"
-             "  Note that in the case of component Manual Consumption, where consumption is registered manually exclusively, consumption warnings will still be issued when appropriate also.\n"
+             "  Note that in the case of component Highlight Consumption, where consumption is registered manually exclusively, consumption warnings will still be issued when appropriate also.\n"
              "  * Blocked: only a manager can close a manufacturing order when the BoM consumption is not respected.",
         default='warning',
         string='Flexible Consumption',
@@ -107,9 +107,21 @@ class MrpBom(models.Model):
     @api.onchange('product_id')
     def _onchange_product_id(self):
         if self.product_id:
+            warning = (
+                self.bom_line_ids.bom_product_template_attribute_value_ids or
+                self.operation_ids.bom_product_template_attribute_value_ids or
+                self.byproduct_ids.bom_product_template_attribute_value_ids
+            ) and {
+                'warning': {
+                    'title': _("Warning"),
+                    'message': _("Changing the product or variant will permanently reset all previously encoded variant-related data."),
+                }
+            }
             self.bom_line_ids.bom_product_template_attribute_value_ids = False
             self.operation_ids.bom_product_template_attribute_value_ids = False
             self.byproduct_ids.bom_product_template_attribute_value_ids = False
+            if warning:
+                return warning
 
     @api.constrains('active', 'product_id', 'product_tmpl_id', 'bom_line_ids')
     def _check_bom_cycle(self):
@@ -214,6 +226,16 @@ class MrpBom(models.Model):
     @api.onchange('product_tmpl_id')
     def onchange_product_tmpl_id(self):
         if self.product_tmpl_id:
+            warning = (
+                self.bom_line_ids.bom_product_template_attribute_value_ids or
+                self.operation_ids.bom_product_template_attribute_value_ids or
+                self.byproduct_ids.bom_product_template_attribute_value_ids
+            ) and {
+                'warning': {
+                    'title': _("Warning"),
+                    'message': _("Changing the product or variant will permanently reset all previously encoded variant-related data."),
+                }
+            }
             default_uom_id = self.env.context.get('default_product_uom_id')
             # Avoids updating the BoM's UoM in case a specific UoM was passed through as a default value.
             if self.product_uom_id.category_id != self.product_tmpl_id.uom_id.category_id or self.product_uom_id.id != default_uom_id:
@@ -230,6 +252,8 @@ class MrpBom(models.Model):
             number_of_bom_of_this_product = self.env['mrp.bom'].search_count(domain)
             if number_of_bom_of_this_product:  # add a reference to the bom if there is already a bom for this product
                 self.code = _("%(product_name)s (new) %(number_of_boms)s", product_name=self.product_tmpl_id.name, number_of_boms=number_of_bom_of_this_product)
+            if warning:
+                return warning
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -248,7 +272,7 @@ class MrpBom(models.Model):
         relevant_fields = ['bom_line_ids', 'byproduct_ids', 'product_tmpl_id', 'product_id', 'product_qty']
         if any(field_name in vals for field_name in relevant_fields):
             self._set_outdated_bom_in_productions()
-        if 'sequence' in vals and self and self[-1].id == self._prefetch_ids[-1]:
+        if 'sequence' in vals and self and self[-1].id == list(self._prefetch_ids)[-1]:
             self.browse(self._prefetch_ids)._check_bom_cycle()
         return res
 
@@ -397,7 +421,7 @@ class MrpBom(models.Model):
                 continue
 
             line_quantity = current_qty * current_line.product_qty
-            if not current_line.product_id in product_boms:
+            if current_line.product_id not in product_boms:
                 update_product_boms()
                 product_ids.clear()
             bom = product_boms.get(current_line.product_id)
@@ -405,7 +429,7 @@ class MrpBom(models.Model):
                 converted_line_quantity = current_line.product_uom_id._compute_quantity(line_quantity / bom.product_qty, bom.product_uom_id)
                 bom_lines += [(line, current_line.product_id, converted_line_quantity, current_line) for line in bom.bom_line_ids]
                 for bom_line in bom.bom_line_ids:
-                    if not bom_line.product_id in product_boms:
+                    if bom_line.product_id not in product_boms:
                         product_ids.add(bom_line.product_id.id)
                 boms_done.append((bom, {'qty': converted_line_quantity, 'product': current_product, 'original_qty': quantity, 'parent_line': current_line}))
             else:
@@ -563,7 +587,7 @@ class MrpBomLine(models.Model):
     attachments_count = fields.Integer('Attachments Count', compute='_compute_attachments_count')
     tracking = fields.Selection(related='product_id.tracking')
     manual_consumption = fields.Boolean(
-        'Manual Consumption', default=False,
+        'Highlight Consumption', default=False,
         readonly=False, store=True, copy=True,
         help="When activated, then the registration of consumption for that component is recorded manually exclusively.\n"
              "If not activated, and any of the components consumption is edited manually on the manufacturing order, Odoo assumes manual consumption also.")
@@ -633,7 +657,7 @@ class MrpBomLine(models.Model):
                 - always and dynamic: match_all_variant_values()
         """
         self.ensure_one()
-        if product._name == 'product.template':
+        if not product or product._name == 'product.template':
             return False
 
         # attributes create_variant 'always' and 'dynamic'
@@ -764,7 +788,7 @@ class MrpByProduct(models.Model):
         custom control.
         """
         self.ensure_one()
-        if product._name == 'product.template':
+        if not product or product._name == 'product.template':
             return False
         return not product._match_all_variant_values(self.bom_product_template_attribute_value_ids)
 

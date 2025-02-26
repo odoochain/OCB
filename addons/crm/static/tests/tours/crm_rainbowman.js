@@ -4,7 +4,6 @@ import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
 
 registry.category("web_tour.tours").add("crm_rainbowman", {
-    test: true,
     url: "/odoo",
     steps: () => [
         stepUtils.showAppsMenuItem(),
@@ -90,7 +89,10 @@ registry.category("web_tour.tours").add("crm_rainbowman", {
             content: "move lead to won stage",
             run: "click",
         },
-        ...stepUtils.saveForm(),
+        {
+            content: "wait for save completion",
+            trigger: ".o_form_readonly, .o_form_saved",
+        },
         {
             trigger: ".o_reward_rainbow",
         },
@@ -104,7 +106,10 @@ registry.category("web_tour.tours").add("crm_rainbowman", {
             content: "click button mark won",
             run: "click",
         },
-        ...stepUtils.saveForm(),
+        {
+            content: "wait for save completion",
+            trigger: ".o_form_readonly, .o_form_saved",
+        },
         {
             trigger: ".o_reward_rainbow",
         },

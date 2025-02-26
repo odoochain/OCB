@@ -50,7 +50,7 @@ class DriverController(http.Controller):
     def check_certificate(self):
         """
         This route is called when we want to check if certificate is up-to-date
-        Used in iot-box cron.daily, deprecated since image 24_08 but needed for compatibility with the image 24_01
+        Used in iot-box cron.daily, deprecated since image 24_10 but needed for compatibility with the image 24_01
         """
         helpers.get_certificate_status()
 
@@ -82,13 +82,11 @@ class DriverController(http.Controller):
         """
         Downloads the log file
         """
-        log_path = tools.config['logfile']
-        if not log_path:
-            raise InternalServerError("Log file configuration is not set")
+        log_path = tools.config['logfile'] or "/var/log/odoo/odoo-server.log"
         try:
             stat = os.stat(log_path)
         except FileNotFoundError:
-            raise InternalServerError("Log file has not been found")
+            raise InternalServerError("Log file has not been found. Check your Log file configuration.")
         check = adler32(log_path.encode())
         log_file_name = f"iot-odoo-{gethostname()}-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
         # intentionally don't use Stream.from_path as the path used is not in the addons path

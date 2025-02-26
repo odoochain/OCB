@@ -266,7 +266,9 @@ class Website(models.Model):
             pricelists |= partner_pricelist
 
         # This method is cached, must not return records! See also #8795
-        return pricelists.ids
+        # sudo is needed to ensure no records rules are applied during the sorted call,
+        # we only want to reorder the records on hand, not filter them.
+        return pricelists.sudo().sorted().ids
 
     def get_pricelist_available(self, show_visible=False):
         """ Return the list of pricelists that can be used on website for the current user.
@@ -283,7 +285,9 @@ class Website(models.Model):
         is_user_public = self.env.user._is_public()
         if not is_user_public:
             last_order_pricelist = partner_sudo.last_website_so_id.pricelist_id
-            partner_pricelist = partner_sudo.property_product_pricelist
+            # Don't needlessly trigger `depends_context` recompute
+            ctx = {'country_code': country_code} if country_code else {}
+            partner_pricelist = partner_sudo.with_context(**ctx).property_product_pricelist
         else:  # public user: do not compute partner pl (not used)
             last_order_pricelist = self.env['product.pricelist']
             partner_pricelist = self.env['product.pricelist']

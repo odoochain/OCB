@@ -9,7 +9,6 @@ const demoCssModif = '// demo_edition';
 registerWebsitePreviewTour('html_editor_multiple_templates', {
     url: '/generic',
     edition: true,
-    test: true,
 },
     () => [
         {
@@ -87,7 +86,6 @@ registerWebsitePreviewTour('html_editor_multiple_templates', {
 
 registerWebsitePreviewTour('test_html_editor_scss', {
     url: '/contactus',
-    test: true,
 },
     () => [
         // 1. Open Html Editor and select a scss file
@@ -98,7 +96,7 @@ registerWebsitePreviewTour('test_html_editor_scss', {
             trigger: ":iframe h1:contains(contact us)",
         },
         {
-            trigger: ":iframe input[name=company]:value(yourcompany)",
+            trigger: ":iframe input[name=company]",
         },
         {
             content: "open site menu",
@@ -186,13 +184,15 @@ registerWebsitePreviewTour('test_html_editor_scss', {
 
 registerWebsitePreviewTour('test_html_editor_scss_2', {
     url: '/',
-    test: true,
 },
     () => [
         // This part of the test ensures that a restricted user can still use
         // the HTML Editor if someone else made a customization previously.
 
         // 4. Open Html Editor and select a scss file
+        {
+            trigger: "[is-ready=true]:iframe #wrapwrap",
+        },
         {
             content: "open site menu",
             trigger: 'button[data-menu-xmlid="website.menu_site"]',
@@ -261,9 +261,11 @@ registerWebsitePreviewTour(
     {
         // TODO: enable debug mode when failing tests have been fixed (props validation)
         url: "/",
-        test: true,
     },
     () => [
+        {
+            trigger: ":iframe #wrapwrap",
+        },
         {
             content: "Open Site menu",
             trigger: 'button[data-menu-xmlid="website.menu_site"]',
@@ -271,7 +273,7 @@ registerWebsitePreviewTour(
         },
         {
             content: "Open HTML / CSS Editor",
-            trigger: 'a[data-menu-xmlid="website.menu_ace_editor"]',
+            trigger: '.o_popover a[data-menu-xmlid="website.menu_ace_editor"]:contains(/^HTML/)',
             run: "click",
         },
         {

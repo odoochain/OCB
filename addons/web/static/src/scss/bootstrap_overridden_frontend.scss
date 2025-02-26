@@ -63,6 +63,11 @@ $link-decoration: none !default;
 // colors are a color close to the body text color: the text becomes invisible.
 // We disable this behavior by not forcing a text color for tables.
 $table-color: inherit !default;
+// With BS5.3, $table-bg is set $body-bg by default, and we want it transparent.
+$table-bg: transparent !default;
+
+// Buttons
+$btn-hover-bg-shade-amount: 15% !default;
 
 // Forms
 
@@ -90,6 +95,9 @@ $form-range-thumb-border: $border-width solid $primary !default;
 $form-range-thumb-bg: $body-bg !default;
 $form-range-thumb-active-bg: $primary !default;
 $form-range-thumb-disabled-bg: $input-disabled-bg !default;
+
+$form-file-button-bg: mix($input-color, $input-bg, $btn-hover-bg-shade-amount * 0.3) !default;
+$form-file-button-hover-bg: mix($input-color, $input-bg, $btn-hover-bg-shade-amount) !default;
 
 // Figures
 

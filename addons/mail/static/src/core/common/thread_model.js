@@ -44,15 +44,20 @@ export class Thread extends Record {
     static new() {
         const thread = super.new(...arguments);
         Record.onChange(thread, ["state"], () => {
+            if (
+                thread.state === "folded" ||
+                (thread.state === "open" &&
+                    this.store.env.services.ui.isSmall &&
+                    this.store.env.services["im_livechat.livechat"])
+            ) {
+                const cw = this.store.ChatWindow?.insert({ thread });
+                thread.store.chatHub.folded.delete(cw);
+                thread.store.chatHub.folded.unshift(cw);
+            }
             if (thread.state === "open" && !this.store.env.services.ui.isSmall) {
                 const cw = this.store.ChatWindow?.insert({ thread });
                 thread.store.chatHub.opened.delete(cw);
                 thread.store.chatHub.opened.unshift(cw);
-            }
-            if (thread.state === "folded") {
-                const cw = this.store.ChatWindow?.insert({ thread });
-                thread.store.chatHub.folded.delete(cw);
-                thread.store.chatHub.folded.unshift(cw);
             }
         });
         return thread;
@@ -72,6 +77,7 @@ export class Thread extends Record {
     });
     /** @type {boolean} */
     areAttachmentsLoaded = false;
+    group_public_id = Record.one("res.groups");
     attachments = Record.many("Attachment", {
         /**
          * @param {import("models").Attachment} a1
@@ -161,7 +167,9 @@ export class Thread extends Record {
         compute() {
             return (
                 this.is_pinned ||
-                (["channel", "group"].includes(this.channel_type) && this.hasSelfAsMember)
+                (["channel", "group"].includes(this.channel_type) &&
+                    this.hasSelfAsMember &&
+                    !this.parent_channel_id)
             );
         },
         onUpdate() {
@@ -190,8 +198,8 @@ export class Thread extends Record {
         if (this.model === "mail.box") {
             return this.counter;
         }
-        if (this.isChatChannel) {
-            return this.selfMember?.message_unread_counter || this.message_needaction_counter;
+        if (this.isChatChannel && this.selfMember?.message_unread_counter) {
+            return this.selfMember.totalUnreadMessageCounter;
         }
         return this.message_needaction_counter;
     }
@@ -560,7 +568,7 @@ export class Thread extends Record {
     }
 
     get showUnreadBanner() {
-        return this.selfMember?.localMessageUnreadCounter > 0;
+        return !this.selfMember?.hideUnreadBanner && this.selfMember?.localMessageUnreadCounter > 0;
     }
 
     get rpcParams() {
@@ -655,12 +663,12 @@ export class Thread extends Record {
         try {
             const { data, messages } = await this.fetchMessagesData({ after, around, before });
             this.store.insert(data, { html: true });
-            this.isLoaded = true;
             return this.store.Message.insert(messages.reverse());
         } catch (e) {
             this.hasLoadingFailed = true;
             throw e;
         } finally {
+            this.isLoaded = true;
             this.status = "ready";
         }
     }
@@ -929,6 +937,8 @@ export class Thread extends Record {
         this.store.chatHub.opened.unshift(cw);
         if (!isMobileOS()) {
             cw.focus();
+        } else {
+            this.markAsRead();
         }
         this.state = "open";
         cw.notifyState();
