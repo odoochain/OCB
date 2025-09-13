@@ -3,12 +3,19 @@
 # ruff: noqa: F821
 # (ruff don't see read variables from release.py)
 
+# pyright: reportMissingModuleSource=false
 from setuptools import find_namespace_packages, setup
 from os.path import join, dirname
 
 
 exec(open(join(dirname(__file__), 'odoo', 'release.py'), 'rb').read())  # Load release variables
 lib_name = 'odoo'
+
+# 更新分类器以解决许可证警告
+updated_classifiers = []
+for c in classifiers.split('\n'):
+    if c and 'License :: OSI Approved :: GNU Lesser General Public License v3' not in c:
+        updated_classifiers.append(c)
 
 setup(
     name='odoo',
@@ -18,7 +25,11 @@ setup(
     url=url,
     author=author,
     author_email=author_email,
-    classifiers=[c for c in classifiers.split('\n') if c],
+    classifiers=[c for c in updated_classifiers if c] + [
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'Development Status :: 5 - Production/Stable',
+        'Programming Language :: Python'
+    ],
     license=license,
     scripts=['setup/odoo'],
     packages=find_namespace_packages(),

@@ -1,0 +1,58 @@
+[project]
+name = "odoo19"
+version = "0.1.0"
+description = "Odoo Server"
+readme = "README.md"
+license = {text = "LGPL-3"}
+requires-python = ">=3.10"
+dependencies = [
+    "asn1crypto",
+    "babel >= 1.0",
+    "cbor2",
+    "chardet",
+    "cryptography",
+    "docutils",
+    "geoip2",
+    "gevent",
+    "greenlet",
+    "idna",
+    "Jinja2",
+    "lxml",  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
+    "lxml_html_clean",
+    "libsass",
+    "MarkupSafe",
+    "num2words",
+    "ofxparse",
+    "openpyxl",
+    "passlib",
+    "pillow",  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
+    "polib",
+    "psutil",  # windows binary code.google.com/p/psutil/downloads/list
+    "psycopg2 >= 2.2",
+    "pyopenssl",
+    "PyPDF2",
+    "pyserial",
+    "python-dateutil",
+    "python-stdnum",
+    "pytz",
+    "pyusb >= 1.0.0b1",
+    "qrcode",
+    "reportlab",  # windows binary pypi.python.org/pypi/reportlab
+    "rjsmin",
+    "requests",
+    "urllib3",
+    "vobject",
+    "werkzeug",
+    "xlrd",
+    "xlsxwriter",
+    "xlwt",
+    "zeep",
+]
+dynamic = ["authors", "classifiers"]
+
+[project.optional-dependencies]
+ldap = ["python-ldap"]
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
