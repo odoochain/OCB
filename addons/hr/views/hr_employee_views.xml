@@ -112,7 +112,7 @@
                         </div>
                         <div class="row flex-column flex-sm-row align-items-center">
                             <div class="o_employee_avatar ms-2 p-0 h-100 mw-25 align-self-start align-self-sm-center">
-                                <field name="image_1920" widget='image' class="m-0" options='{"zoom": true, "preview_image":"avatar_128"}'/>
+                                <field name="image_1920" widget='image' class="m-0" options='{"size": [128,158], "zoom": true, "preview_image":"avatar_128"}'/>
                                 <field name="show_hr_icon_display" invisible="1" />
                             </div>
                             <div class="align-self-start o_employee_form_header_info">
@@ -341,6 +341,7 @@
                                         <div class="o_row" name="wage">
                                             <field name="wage" class="oe_inline o_hr_narrow_field" nolabel="1"/>
                                         </div>
+                                        <field name="employee_type"/>
                                         <field name="contract_type_id" string="Contract Type" placeholder="Contract Type"/>
                                         <field name="structure_type_id" string="Pay Category" placeholder="Pay Category"
                                                 domain="['|', ('country_id', '=', False), ('country_id', '=', company_country_id)]"/>
