@@ -7,6 +7,7 @@ import inspect
 import logging
 import pprint
 import re
+import sys
 import uuid
 
 _logger = logging.getLogger(__name__)
@@ -465,7 +466,10 @@ actual arch.
                             loaded_view_ids = {id_ for id_, in self.env.execute_query(sql)}
                         else:
                             # 如果没有已初始化的模块，记录警告并返回空集合
-                            _logger.warning("Warning: No initialized modules found when checking view inheritance in %s model. This might indicate an issue during module loading process.", self._name)
+                            # 只在第一次遇到这种情况时记录警告，避免重复记录
+                            if not hasattr(self.pool, '_init_modules_warning_shown'):
+                                _logger.warning("Warning: No initialized modules found when checking view inheritance in %s model. This is expected during early stages of module upgrade.", self._name)
+                                self.pool._init_modules_warning_shown = True
                             loaded_view_ids = set()
                         loaded_view_ids.update({
                             id

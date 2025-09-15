@@ -4,7 +4,25 @@
     ],
     "exclude": [
         "**/node_modules",
-        "**/__pycache__"
+        "**/__pycache__",
+        "**/.*",
+        "**/addons/l10n_*",
+        "**/addons/test_*",
+        "**/addons/web_tests_*",
+        "**/doc",
+        "**/debian",
+        "**/setup",
+        "**/.git",
+        "**/.github",
+        "**/odoo/addons/test_*",
+        "**/odoo/tests",
+        "**/odoo/tools/test_*",
+        "**/addons/*/tests",
+        "**/addons/*/test_*",
+        "**/addons/*/doc",
+        "**/addons/*/i18n",
+        "**/addons/*/static/lib",
+        "**/addons/*/static/src/libs"
     ],
     "pythonVersion": "3.13",
     "pythonPlatform": "Windows",
@@ -17,5 +35,6 @@
             ]
         }
     ],
-    "reportMissingModuleSource": "none"
+    "reportMissingModuleSource": "none",
+    "typeCheckingMode": "basic"
 }
