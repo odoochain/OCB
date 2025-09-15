@@ -9,6 +9,8 @@ import pprint
 import re
 import uuid
 
+_logger = logging.getLogger(__name__)
+
 from lxml import etree
 from lxml.etree import LxmlError
 from lxml.builder import E
@@ -28,7 +30,7 @@ from odoo.tools.template_inheritance import apply_inheritance_specs, locate_node
 from odoo.tools.translate import xml_translate, TRANSLATED_ATTRS
 from odoo.tools.view_validation import valid_view, get_domain_value_names, get_expression_field_names, get_dict_asts
 
-_logger = logging.getLogger(__name__)
+# _logger = logging.getLogger(__name__)
 
 MOVABLE_BRANDING = ['data-oe-model', 'data-oe-id', 'data-oe-field', 'data-oe-xpath', 'data-oe-source-id']
 VIEW_MODIFIERS = ('column_invisible', 'invisible', 'readonly', 'required')
@@ -457,8 +459,14 @@ actual arch.
                     # fully upgraded already.
                     if self.pool._init and sibling_primary_views:
                         query = sibling_primary_views._get_filter_xmlid_query()
-                        sql = SQL(query, res_ids=tuple(sibling_primary_views.ids), modules=tuple(self.pool._init_modules))
-                        loaded_view_ids = {id_ for id_, in self.env.execute_query(sql)}
+                        # 避免空模块列表导致的SQL语法错误
+                        if self.pool._init_modules:
+                            sql = SQL(query, res_ids=tuple(sibling_primary_views.ids), modules=tuple(self.pool._init_modules))
+                            loaded_view_ids = {id_ for id_, in self.env.execute_query(sql)}
+                        else:
+                            # 如果没有已初始化的模块，记录警告并返回空集合
+                            _logger.warning("Warning: No initialized modules found when checking view inheritance in %s model. This might indicate an issue during module loading process.", self._name)
+                            loaded_view_ids = set()
                         loaded_view_ids.update({
                             id
                             for id, xid in (sibling_primary_views - views.browse(loaded_view_ids)).get_external_id().items()
