@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bisect import bisect_left
 from collections import defaultdict
 import contextlib
