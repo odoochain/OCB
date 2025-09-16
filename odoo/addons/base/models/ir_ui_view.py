@@ -427,6 +427,7 @@ actual arch.
     def _check_xml(self):
         # Sanity checks: the view should not break anything upon rendering!
         # Any exception raised below will cause a transaction rollback.
+        global loaded_view_ids
         partial_validation = self.env.context.get('ir_ui_view_partial_validation')
         views = self.with_context(validate_view_ids=(self._ids if partial_validation else True))
 
@@ -466,11 +467,40 @@ actual arch.
                             loaded_view_ids = {id_ for id_, in self.env.execute_query(sql)}
                         else:
                             # 如果没有已初始化的模块，记录警告并返回空集合
-                            # 只在第一次遇到这种情况时记录警告，避免重复记录
-                            if not hasattr(self.pool, '_init_modules_warning_shown'):
-                                _logger.warning("Warning: No initialized modules found when checking view inheritance in %s model. This is expected during early stages of module upgrade.", self._name)
-                                self.pool._init_modules_warning_shown = True
-                            loaded_view_ids = set()
+                            # 获取当前视图的xml_id
+                            current_xml_id = self.get_external_id().get(self.id, '')
+                            
+                            # 如果xml_id以"base."开头，使用原有的全局警告抑制
+                            if current_xml_id.startswith('base.'):
+                                warning_key = f'_init_modules_warning_shown_base_{self._name}_{current_xml_id}'
+                                if not hasattr(self.pool, warning_key):
+                                    _logger.warning(
+                                        "Warning: When use Base Module, No initialized modules found when checking view inheritance. "
+                                        "Model: %s, XML ID: %s, Expected modules: %s, Pool init modules: %s. "
+                                        "This is expected during early stages of module upgrade or when no modules are loaded.",
+                                        self._name,
+                                        current_xml_id,
+                                        getattr(self.pool, '_init_modules', []),
+                                        hasattr(self.pool, '_init_modules')
+                                    )
+                                    setattr(self.pool, warning_key, True)
+                                sql = SQL(query, res_ids=tuple(sibling_primary_views.ids),modules=tuple(['base']))
+                                loaded_view_ids = {id_ for id_, in self.env.execute_query(sql)}
+                            else:
+                                # 对于其他模块的视图，为每个模型单独记录警告
+                                warning_key = f'_init_modules_warning_shown_{self._name}_{current_xml_id}'
+                                if not hasattr(self.pool, warning_key):
+                                    _logger.warning(
+                                        "Warning: No initialized modules found when checking view inheritance. "
+                                        "Model: %s, XML ID: %s, Expected modules: %s, Pool init modules: %s. "
+                                        "This is expected during early stages of module upgrade or when no modules are loaded.",
+                                        self._name,
+                                        current_xml_id,
+                                        getattr(self.pool, '_init_modules', []),
+                                        hasattr(self.pool, '_init_modules')
+                                    )
+                                    setattr(self.pool, warning_key, True)
+                                loaded_view_ids = set()
                         loaded_view_ids.update({
                             id
                             for id, xid in (sibling_primary_views - views.browse(loaded_view_ids)).get_external_id().items()
