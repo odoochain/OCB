@@ -300,7 +300,7 @@ class ResUsers(models.Model):
         assert self._crypt_context().identify(pw) != 'plaintext'
 
         self.env.cr.execute(
-            'UPDATE res_users SET password=%s WHERE id=%s',
+            'UPDATE res_users SET password = %s WHERE id=%s',
             (pw, uid)
         )
         self.browse(uid).invalidate_recordset(['password'])
