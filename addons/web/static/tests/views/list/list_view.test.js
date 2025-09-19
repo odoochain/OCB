@@ -4718,6 +4718,32 @@ test(`monetary aggregates in grouped list (!= currencies in same group, delete)`
     expect(`.o_group_header:last`).toHaveText("Yes (0)\n 0.00");
 });
 
+test(`list with monetary field with attribute column_invisible="1"`, async () => {
+    await mountView({
+        resModel: "foo",
+        type: "list",
+        arch: `
+            <list>
+                <field name="foo"/>
+                <field name="qux" widget="monetary" sum="Sum" column_invisible="1"/>
+                <field name="currency_id"/>
+            </list>
+        `,
+    });
+
+    expect(`.o_data_row`).toHaveCount(4);
+    expect(queryAllTexts(`.o_data_cell`)).toEqual([
+        "yop",
+        "EUR",
+        "blip",
+        "USD",
+        "gnap",
+        "USD",
+        "blip",
+        "USD",
+    ]);
+});
+
 test(`handle false values in aggregates`, async () => {
     Foo._fields.false_amount = fields.Monetary({ currency_field: "currency_test" });
     Foo._fields.currency_test = fields.Many2one({ relation: "res.currency", default: 1 });
@@ -16809,6 +16835,10 @@ test(`Properties: char`, async () => {
     await contains(`.o_list_button_save`).click();
     expect(`.o_field_cell.o_char_cell:eq(0)`).toHaveText("TEST");
     expect.verifySteps(["web_save"]);
+
+    expect(
+        `.o_list_renderer th[data-name='properties.property_char'] .o_list_sortable_icon`
+    ).not.toHaveClass("d-none"); // sortable
 });
 
 test(`Properties: boolean`, async () => {

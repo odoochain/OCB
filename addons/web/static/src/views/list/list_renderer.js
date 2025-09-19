@@ -191,6 +191,7 @@ export class ListRenderer extends Component {
             this.debugOpenView = exprToBoolean(browser.localStorage.getItem(this.keyDebugOpenView));
             this.columns = this.getActiveColumns();
             this.withHandleColumn = this.columns.some((col) => col.widget === "handle");
+            this.aggregates = this.computeAggregates();
         });
         this.multiCurrencyPopover = usePopover(MultiCurrencyPopover, {
             position: "right",
@@ -414,7 +415,6 @@ export class ListRenderer extends Component {
                     type: "field",
                     hasLabel: true,
                     label: propertyField.string,
-                    sortable: false,
                     attrs: ["integer", "float"].includes(propertyField.type)
                         ? { sum: propertyField.string }
                         : {},
@@ -675,7 +675,7 @@ export class ListRenderer extends Component {
         }
     }
 
-    get aggregates() {
+    computeAggregates() {
         let values;
         if (this.props.list.selection.length) {
             values = this.props.list.selection.map((r) => r.data);
@@ -685,7 +685,7 @@ export class ListRenderer extends Component {
             values = this.props.list.records.map((r) => r.data);
         }
         const aggregates = {};
-        for (const column of this.allColumns) {
+        for (const column of this.columns) {
             if (column.type !== "field") {
                 continue;
             }

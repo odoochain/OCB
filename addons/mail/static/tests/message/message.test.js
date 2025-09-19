@@ -18,7 +18,7 @@ import {
 } from "@mail/../tests/mail_test_helpers";
 import { LONG_PRESS_DELAY } from "@mail/utils/common/hooks";
 import { describe, expect, test } from "@odoo/hoot";
-import { animationFrame, leave, pointerDown, press, queryFirst } from "@odoo/hoot-dom";
+import { animationFrame, leave, pointerDown, press, queryFirst, waitFor } from "@odoo/hoot-dom";
 import { advanceTime, mockDate, mockTouch, mockUserAgent, tick } from "@odoo/hoot-mock";
 import {
     asyncStep,
@@ -776,10 +776,9 @@ test("Can quickly add a reaction", async () => {
     await click("[title='Add a Reaction']");
     await click(".o-mail-QuickReactionMenu button", { text: "😅" });
     await contains(".o-mail-MessageReaction", { text: "😅1" });
-    await hover(".o-mail-MessageReactions");
-    await click("button[title='Add Reaction']");
-    await click(".o-Emoji", { text: "😏" });
-    await contains(".o-mail-MessageReaction", { text: "😏1" });
+    await click(".o-mail-MessageReactions button[title='Add a Reaction']");
+    await click(".o-mail-QuickReactionMenu button", { text: "🤣" });
+    await contains(".o-mail-MessageReaction", { text: "🤣1" });
 });
 
 test("Reaction summary", async () => {
@@ -810,9 +809,12 @@ test("Reaction summary", async () => {
         const userId = pyEnv["res.users"].create({ partner_id });
         pyEnv["res.partner"].create({ name, user_ids: [Command.link(userId)] });
         await withUser(userId, async () => {
-            await click("[title='Add a Reaction']");
+            await click(".o-mail-Message-actions [title='Add a Reaction']");
             await click(".o-mail-QuickReactionMenu button", { text: "😅" });
-            await contains(".o-mail-MessageReaction", { text: `😅${idx + 1}` });
+            await waitFor(`.o-mail-MessageReaction:contains(/^😅 ${idx + 1}$/)`, {
+                exact: true,
+                timeout: 3000,
+            });
             await hover(".o-mail-MessageReaction");
             await contains(".o-mail-MessageReactionList-preview", {
                 text: `${expectedSummaries[idx]}`,
@@ -836,10 +838,10 @@ test("Select already reacted emoji from quick reaction removes the reaction on m
     });
     await start();
     await openDiscuss(channelId);
-    await click("[title='Add a Reaction']");
+    await click(".o-mail-Message-actions [title='Add a Reaction']");
     await click(".o-mail-QuickReactionMenu button", { text: "😅" });
     await contains(".o-mail-MessageReaction", { text: "😅1" });
-    await click("[title='Add a Reaction']");
+    await click(".o-mail-Message-actions [title='Add a Reaction']");
     await click(".o-mail-QuickReactionMenu button", { text: "😅" });
     await contains(".o-mail-MessageReaction", { count: 0 });
 });
@@ -2148,4 +2150,29 @@ test("Prettify message links", async () => {
     await contains(".o-mail-Message", { text: "TestPartner" });
     await contains(".o-mail-Message .fa.fa-comment");
     await contains(".o-mail-Message", { text: url(`/mail/message/100`) });
+});
+
+test("should delete link preview along with message", async () => {
+    const pyEnv = await startServer();
+    const linkPreviewId = pyEnv["mail.link.preview"].create({
+        og_title: "Test Link",
+        og_description: "Should be removed with the message.",
+        og_type: "article",
+        source_url: "https://www.odoo.com",
+    });
+    const channelId = pyEnv["discuss.channel"].create({ name: "PreviewTest" });
+    pyEnv["mail.message"].create({
+        body: "<a href='https://www.odoo.com'>https://www.odoo.com</a>",
+        message_link_preview_ids: [Command.create({ link_preview_id: linkPreviewId })],
+        message_type: "comment",
+        model: "discuss.channel",
+        res_id: channelId,
+    });
+    await start();
+    await openDiscuss(channelId);
+    await contains(".o-mail-LinkPreviewCard");
+    await click(".o-mail-Message [title='Expand']");
+    await click(".o-dropdown-item:contains('Delete')");
+    await click(".modal button", { text: "Delete" });
+    await contains(".o-mail-LinkPreviewCard", { count: 0 });
 });
