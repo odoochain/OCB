@@ -3,7 +3,7 @@
 <template id="contact_name">
     <div t-if="'name' in fields">
         <t t-if="object.name">
-            <span itemprop="name" t-esc="name"/>
+            <span itemprop="name" t-out="name"/>
         </t>
         <t t-if="not object.name and object.parent_name">
             <span itemprop="name" t-esc="object.parent_name"/>
