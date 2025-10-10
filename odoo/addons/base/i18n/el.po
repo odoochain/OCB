@@ -10,13 +10,14 @@
 # Kostas Goutoudis <goutoudis@gmail.com>, 2019
 # George Tarasidis <george_tarasidis@yahoo.com>, 2019
 # "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
+# "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server saas~11.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-12 13:52+0000\n"
-"PO-Revision-Date: 2025-09-16 17:05+0000\n"
-"Last-Translator: \"Tiffany Chang (tic)\" <tic@odoo.com>\n"
+"POT-Creation-Date: 2025-10-09 12:16+0000\n"
+"PO-Revision-Date: 2025-09-24 19:22+0000\n"
+"Last-Translator: \"Dylan Kiss (dyki)\" <dyki@odoo.com>\n"
 "Language-Team: Greek <https://translate.odoo.com/projects/odoo-19/base/el/>\n"
 "Language: el\n"
 "MIME-Version: 1.0\n"
@@ -379,6 +380,14 @@ msgid ""
 msgstr ""
 
 #. module: base
+#: model:ir.module.module,description:base.module_pos_imin
+msgid ""
+"\n"
+"\n"
+"Use iMin ePOS Printers without the IoT Box in the Point of Sale\n"
+msgstr ""
+
+#. module: base
 #: model:ir.module.module,summary:base.module_l10n_eg_edi_eta
 msgid ""
 "\n"
@@ -481,6 +490,13 @@ msgid ""
 msgstr ""
 
 #. module: base
+#: model:ir.module.module,description:base.module_l10n_ar_reports_simple
+msgid ""
+"\n"
+"* Add export of IVA Simple Tax Report.\n"
+msgstr ""
+
+#. module: base
 #: model:ir.module.module,description:base.module_ai_app
 msgid ""
 "\n"
@@ -524,6 +540,13 @@ msgid ""
 "- Register as a PEPPOL participant\n"
 "- Send and receive documents via PEPPOL network in Peppol BIS Billing 3.0 "
 "format\n"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,description:base.module_l10n_dk_nemhandel
+msgid ""
+"\n"
+"- Send and receive documents via Nemhandel network in OIOUBL 2.1 format\n"
 msgstr ""
 
 #. module: base
@@ -1705,6 +1728,13 @@ msgid ""
 msgstr ""
 
 #. module: base
+#: model:ir.module.module,description:base.module_l10n_se_returns
+msgid ""
+"\n"
+"Accounting returns for Sweden\n"
+msgstr ""
+
+#. module: base
 #: model:ir.module.module,description:base.module_mrp_subcontracting_account_enterprise
 msgid ""
 "\n"
@@ -2477,6 +2507,66 @@ msgid ""
 "    encode in in the payroll Settings, with the .pem file and the related "
 "password, if any.\n"
 "\n"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,description:base.module_l10n_be_hr_payroll_dimona_auto
+msgid ""
+"\n"
+"Automatic DIMONA declarations\n"
+"=============================\n"
+"\n"
+"Prerequisites:\n"
+"--------------\n"
+"\n"
+"- You need a Belgian Government Compliant Digital Certificate, delivered by "
+"Global\n"
+"  Sign. See: https://shop.globalsign.com/en/belgian-government-services\n"
+"\n"
+"- Generate certificate files from your SSL certificate (.pfx file) that are "
+"needed to create\n"
+"  a technical user (.cer file) and to authenticate remotely to the ONSS "
+"(.pfx) file. On a UNIX\n"
+"  system, you may use the following commands:\n"
+"\n"
+"  - PFX -> CRT: openssl pkcs12 -in my_cert.pfx -out my_cert.crt -nokeys "
+"-clcerts\n"
+"\n"
+"  - CRT -> CER: openssl x509 -inform pem -in my_cert.crt -outform der -out "
+"my_cert.cer\n"
+"\n"
+"- Before you can use the social security REST web service, you must create "
+"an account\n"
+"  for yourself or for your client and configure the security. (The whole "
+"procedure is\n"
+"  available at https://www.socialsecurity.be/site_fr/employer/applics/dimona/"
+"introduction/webservice.htm)\n"
+"\n"
+"  - User account management: Follow the Procedure https://"
+"www.socialsecurity.be/site_fr/general/helpcentre/rest/documents/pdf/"
+"procedure_pour_gestion_des_acces_UMan_FR.pdf\n"
+"\n"
+"  - Create a technical user: Your client must now create a technical user in "
+"the Access management\n"
+"    online service. The follow this procedure: https://www.socialsecurity.be/"
+"site_fr/general/helpcentre/rest/documents/pdf/"
+"webservices_creer_le_canal_FR.pdf\n"
+"\n"
+"  - Activate a web service channel: Once the technical user has been "
+"created, your client must\n"
+"    activate the web service channel in Access Management. The following "
+"manual explains the\n"
+"    steps to follow to activate the channel: https://www.socialsecurity.be/"
+"site_fr/general/helpcentre/rest/documents/pdf/"
+"webservices_ajouter_le_canal_FR.pdf\n"
+"\n"
+"  - At the end of the procedure, you should receive a \"ONSS Expeditor "
+"Number\", you may\n"
+"    encode in in the payroll Settings, with the .pem file and the related "
+"password, if any.\n"
+"\n"
+"- Configuration note: The .pfx certificate should be set on the payroll "
+"configuration.\n"
 msgstr ""
 
 #. module: base
@@ -5388,6 +5478,14 @@ msgid ""
 msgstr ""
 
 #. module: base
+#: model:ir.module.module,description:base.module_website_sale_mrp
+msgid ""
+"\n"
+"Manage the inventory of your Kit products and display their availability "
+"status in your eCommerce store.\n"
+msgstr ""
+
+#. module: base
 #: model:ir.module.module,description:base.module_website_sale_stock
 msgid ""
 "\n"
@@ -6527,8 +6625,8 @@ msgid ""
 "\n"
 "- Chart of Accounts\n"
 "- Taxes\n"
-"- Vat Filling Report\n"
-"- Withholding Tax Report\n"
+"- VAT Return\n"
+"- Withholding Return\n"
 "- Fiscal Positions\n"
 msgstr ""
 
@@ -6554,6 +6652,15 @@ msgid ""
 "- Unpaid leaves\n"
 "- WPS\n"
 "- Master Payroll Export\n"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,description:base.module_l10n_sa_withholding_tax
+msgid ""
+"\n"
+"Saudi Arabia Withholding Tax Module\n"
+"\n"
+"Force the installation of the Withholding Tax on Payment module\n"
 msgstr ""
 
 #. module: base
@@ -9984,7 +10091,7 @@ msgstr "- μέγεθος ="
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__base_enable_profiling_wizard__duration__days_1
 msgid "1 Day"
-msgstr ""
+msgstr "1 Μέρα"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__base_enable_profiling_wizard__duration__hours_1
@@ -9994,7 +10101,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__base_enable_profiling_wizard__duration__months_1
 msgid "1 Month"
-msgstr ""
+msgstr "1 Μήνας"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_us_1099
@@ -10014,6 +10121,11 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_hr_appraisal_survey
 msgid "360 Feedback"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_3pl_logistic_company
+msgid "3PL Logistic Company"
 msgstr ""
 
 #. module: base
@@ -10176,6 +10288,15 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.view_users_form
 #: model_terms:ir.ui.view,arch_db:base.view_users_form_simple_modif
 msgid "<i class=\"fa fa-fw fa-envelope text-primary\" title=\"Email\"/>"
+msgstr ""
+
+#. module: base
+#: model_terms:ir.ui.view,arch_db:base.view_users_form
+msgid ""
+"<i class=\"fa fa-fw fa-envelope text-primary\" title=\"Login / Email\" "
+"invisible=\"login != email\"/>\n"
+"                                    <i class=\"fa fa-fw fa-key text-"
+"primary\" title=\"Login\" invisible=\"login == email\"/>"
 msgstr ""
 
 #. module: base
@@ -11201,7 +11322,7 @@ msgstr "Κάτοχος λογαριασμού"
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner_bank__acc_holder_name
 msgid "Account Holder Name"
-msgstr ""
+msgstr "Όνομα Κατόχου Λογαριασμού"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_invoice_extract
@@ -11254,6 +11375,8 @@ msgid ""
 "Account holder name, in case it is different than the name of the Account "
 "Holder"
 msgstr ""
+"Όνομα κατόχου λογαριασμού, σε περίπτωση που είναι διαφορετικό από το όνομα "
+"του Κατόχου του Λογαριασμού"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_accounting
@@ -11453,7 +11576,7 @@ msgstr "Ενέργειες"
 #: model_terms:ir.ui.view,arch_db:base.module_view_kanban
 #: model_terms:ir.ui.view,arch_db:base.res_lang_tree
 msgid "Activate"
-msgstr ""
+msgstr "Ενεργοποίηση"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_cron__active
@@ -11511,7 +11634,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_base_language_install
 msgid "Add"
-msgstr ""
+msgstr "Προσθήκη"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_users_form
@@ -12364,7 +12487,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_asset__directive__after
 msgid "After"
-msgstr ""
+msgstr "Μετά"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_country__name_position__after
@@ -12437,6 +12560,8 @@ msgid ""
 "All our contractual relations will be governed exclusively by United States "
 "law."
 msgstr ""
+"Όλες οι συμβατικές μας σχέσεις θα διέπονται αποκλειστικά από το δίκαιο των "
+"Ηνωμένων Πολιτειών."
 
 #. module: base
 #. odoo-python
@@ -12492,6 +12617,8 @@ msgstr ""
 #: model:ir.module.module,summary:base.module_website_sale_comparison
 msgid "Allow shoppers to compare products based on their attributes"
 msgstr ""
+"Επιτρέψτε στους αγοραστές να συγκρίνουν τα είδη βάσει των χαρακτηριστικών "
+"τους"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_website_sale_wishlist
@@ -13765,7 +13892,7 @@ msgstr "Εφαρμογή Προγραμματισμένων Ενημερώσεω
 #. module: base
 #: model:ir.module.category,name:base.module_category_services_appointment
 msgid "Appointment"
-msgstr ""
+msgstr "Ραντεβού"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_appointment_google_calendar
@@ -13817,7 +13944,7 @@ msgstr ""
 #: model:ir.module.category,name:base.module_category_human_resources_appraisals
 #: model:ir.module.module,shortdesc:base.module_hr_appraisal
 msgid "Appraisals"
-msgstr ""
+msgstr "Αξιολογήσεις"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_documents_approvals
@@ -13907,7 +14034,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_partner_bank_form
 msgid "Archive"
-msgstr ""
+msgstr "Αρχειοθέτηση"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.edit_menu_access_search
@@ -13970,6 +14097,11 @@ msgstr ""
 #: model:ir.module.module,description:base.module_l10n_ar_stock
 #: model:ir.module.module,shortdesc:base.module_l10n_ar_stock
 msgid "Argentinean - Stock"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_l10n_ar_reports_simple
+msgid "Argentinean Accounting IVA Simple Export"
 msgstr ""
 
 #. module: base
@@ -14544,7 +14676,7 @@ msgstr ""
 #. module: base
 #: model:ir.model,name:base.model_ir_asset
 msgid "Asset"
-msgstr ""
+msgstr "Πάγιo"
 
 #. module: base
 #: model:ir.actions.act_window,name:base.action_asset
@@ -14554,7 +14686,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.asset_view_search
 #: model_terms:ir.ui.view,arch_db:base.asset_view_tree
 msgid "Assets"
-msgstr ""
+msgstr "Πάγια"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_asset
@@ -15007,7 +15139,7 @@ msgstr "Οδηγός Αυτόματης συγχώνευσης"
 #. module: base
 #: model:ir.model,name:base.model_ir_autovacuum
 msgid "Automatic Vacuum"
-msgstr ""
+msgstr "Αυτόματη Εκκένωση"
 
 #. module: base
 #: model:ir.module.module,description:base.module_ai_crm_livechat
@@ -15085,7 +15217,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_res_users__avatar_1920
 #: model_terms:ir.ui.view,arch_db:base.view_res_users_kanban
 msgid "Avatar"
-msgstr ""
+msgstr "Άβαταρ"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_avatar_mixin__avatar_1024
@@ -15245,7 +15377,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_company__layout_background_image
 msgid "Background Image"
-msgstr ""
+msgstr "Εικόνα φόντου"
 
 #. module: base
 #. odoo-python
@@ -15380,6 +15512,8 @@ msgstr "Τραπεζικός λογαριασμός"
 msgid ""
 "Bank account type: Normal or IBAN. Inferred from the bank account number."
 msgstr ""
+"Τύπος τραπεζικού λογαριασμού: Κανονικός ή IBAN. Εξάγεται από τον αριθμό του "
+"τραπεζικού λογαριασμού."
 
 #. module: base
 #: model:ir.actions.act_window,name:base.action_res_bank_form
@@ -15570,7 +15704,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_batch_payment
 msgid "Batch Payment"
-msgstr ""
+msgstr "Μαζική Πληρωμή"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_delivery_stock_picking_batch
@@ -15610,7 +15744,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_asset__directive__before
 msgid "Before"
-msgstr ""
+msgstr "Πριν"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_country__name_position__before
@@ -15703,6 +15837,11 @@ msgid "Belgium - Payroll - Dimona"
 msgstr ""
 
 #. module: base
+#: model:ir.module.module,shortdesc:base.module_l10n_be_hr_payroll_dimona_auto
+msgid "Belgium - Payroll - Dimona - Automation"
+msgstr ""
+
+#. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_be_hr_payroll_acerta
 msgid "Belgium - Payroll - Export to Acerta"
 msgstr ""
@@ -15753,6 +15892,8 @@ msgid ""
 "Below text serves as a suggestion and doesn’t engage Odoo S.A. "
 "responsibility."
 msgstr ""
+"Το παρακάτω κείμενο χρησιμεύει ως πρόταση και δεν εμπλέκει την ευθύνη της "
+"Odoo S.A."
 
 #. module: base
 #: model:res.country,name:base.bj
@@ -15879,7 +16020,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_blog
 msgid "Blog"
-msgstr ""
+msgstr "Ιστολόγιο"
 
 #. module: base
 #: model:res.currency,currency_unit_label:base.VEF
@@ -16556,7 +16697,7 @@ msgstr ""
 #. module: base
 #: model:res.country,name:base.ca
 msgid "Canada"
-msgstr "Canada"
+msgstr "Καναδάς"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_ca
@@ -16701,7 +16842,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_module_filter
 msgid "Categories"
-msgstr ""
+msgstr "Κατηγορίες"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_module_module__category_id
@@ -16966,7 +17107,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.category,name:base.module_category_accounting_localizations_check
 msgid "Check"
-msgstr ""
+msgstr "Επιταγή"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_check_printing
@@ -17211,7 +17352,7 @@ msgstr "Πελάτης"
 #: model:ir.model,name:base.model_ir_actions_client
 #: model_terms:ir.ui.view,arch_db:base.view_client_action_form
 msgid "Client Action"
-msgstr ""
+msgstr "Client Action"
 
 #. module: base
 #: model:ir.actions.act_window,name:base.ir_client_actions_report
@@ -17276,6 +17417,11 @@ msgstr "Cocos (Keeling) Islands"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_be_codabox
 msgid "CodaBox"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_l10n_be_codaclean
+msgid "Codaclean"
 msgstr ""
 
 #. module: base
@@ -17391,7 +17537,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_res_partner_category__color
 #: model_terms:ir.ui.view,arch_db:base.res_partner_category_view_search
 msgid "Color"
-msgstr ""
+msgstr "Χρώμα"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner__color
@@ -17436,7 +17582,7 @@ msgstr "Comm10E 25  105 x 241 mm, U.S. Common 10 Envelope"
 #. odoo-python
 #: code:addons/base/models/ir_qweb_fields.py:0
 msgid "Comma"
-msgstr ""
+msgstr "Κόμμα"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_ir_mail_server__from_filter
@@ -17741,7 +17887,7 @@ msgstr ""
 #. module: base
 #: model:ir.model,name:base.model_res_config_settings
 msgid "Config Settings"
-msgstr ""
+msgstr "Ρυθμίσεις διαμόρφωσης"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.config_wizard_step_view_form
@@ -17784,7 +17930,7 @@ msgstr "Επιβεβαίωση"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.res_users_identitycheck_view_form
 msgid "Confirm Password"
-msgstr ""
+msgstr "Επιβεβαίωση Κωδικού Πρόσβασης"
 
 #. module: base
 #: model:res.country,name:base.cd
@@ -17810,6 +17956,11 @@ msgstr ""
 #: model:ir.module.module,summary:base.module_iot_drivers
 msgid "Connect the Web Client to Hardware Peripherals"
 msgstr "Σύνδεση του Web Client σε περιφερειακά εξαρτήματα"
+
+#. module: base
+#: model:ir.module.module,description:base.module_l10n_be_codaclean
+msgid "Connect to Codaclean and automatically import CODA statements."
+msgstr ""
 
 #. module: base
 #: model:ir.module.module,summary:base.module_l10n_gr_edi
@@ -18008,7 +18159,7 @@ msgstr "Context Value"
 msgid "Context dictionary as Python expression, empty by default (Default: {})"
 msgstr ""
 "Λεξικό περιεχόμενου ως έκφραση της Python, ως προεπιλογή κενό (Προεπιλογή: "
-"{ })"
+"{})"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_hr_sign
@@ -18073,6 +18224,11 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_theme_buzzy
 msgid "Corporate, Services, Technology, Shapes, Illustrations"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_cosmetics_store
+msgid "Cosmetics Store"
 msgstr ""
 
 #. module: base
@@ -18204,7 +18360,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 #: model_terms:ir.ui.view,arch_db:base.view_rule_search
 msgid "Create"
-msgstr ""
+msgstr "Δημιουργία"
 
 #. module: base
 #. odoo-python
@@ -18263,7 +18419,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_res_partner_bank_account_form
 msgid "Create a Bank Account"
-msgstr ""
+msgstr "Δημιουργία Τραπεζικού Λογαριασμού"
 
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_partner_category_form
@@ -18308,7 +18464,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_partner_customer_form
 msgid "Create a new customer in your address book"
-msgstr ""
+msgstr "Δημιουργήστε έναν νέο πελάτη στο βιβλίο διευθύνσεων σας"
 
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_partner_supplier_form
@@ -18848,6 +19004,11 @@ msgid "Custom Shortcuts"
 msgstr "Προσαρμοσμένες συντομεύσεις"
 
 #. module: base
+#: model:ir.module.module,shortdesc:base.module_theme_test_custo
+msgid "Custom Theme (Testing suite)"
+msgstr ""
+
+#. module: base
 #: model:ir.model.fields,field_description:base.field_ir_actions_server__selection_value
 #: model:ir.model.fields,field_description:base.field_ir_cron__selection_value
 #: model_terms:ir.ui.view,arch_db:base.view_server_action_form
@@ -18900,7 +19061,7 @@ msgstr "Πελάτες"
 #. module: base
 #: model:ir.module.category,name:base.module_category_customizations
 msgid "Customizations"
-msgstr ""
+msgstr "Προσαρμογές"
 
 #. module: base
 #: model:ir.actions.act_window,name:base.action_ui_view_custom
@@ -19042,7 +19203,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.category,name:base.module_category_productivity_dashboard
 msgid "Dashboard"
-msgstr ""
+msgstr "Ταμπλό"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_board
@@ -19184,7 +19345,7 @@ msgstr ""
 #: model:ir.actions.act_window,name:base.action_decimal_precision_form
 #: model:ir.ui.menu,name:base.menu_decimal_precision_form
 msgid "Decimal Accuracy"
-msgstr ""
+msgstr "Ακρίβεια Δεκαδικών"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_currency__decimal_places
@@ -19196,7 +19357,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.view_decimal_precision_form
 #: model_terms:ir.ui.view,arch_db:base.view_decimal_precision_tree
 msgid "Decimal Precision"
-msgstr ""
+msgstr "Ακρίβεια Δεκαδικών"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_lang__decimal_point
@@ -19277,7 +19438,7 @@ msgstr ""
 #. module: base
 #: model:ir.model,name:base.model_ir_default
 msgid "Default Values"
-msgstr ""
+msgstr "Προεπιλεγμένες τιμές"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_embedded_actions__default_view_mode
@@ -19339,7 +19500,7 @@ msgstr "Ορισμός"
 #: model_terms:ir.ui.view,arch_db:base.res_users_apikeys_view_kanban
 #: model_terms:ir.ui.view,arch_db:base.view_rule_search
 msgid "Delete"
-msgstr ""
+msgstr "Διαγραφή"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_apikeys
@@ -19368,7 +19529,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:base.selection__res_partner__type__delivery
 #: model:ir.module.category,name:base.module_category_sales_delivery
 msgid "Delivery"
-msgstr ""
+msgstr "Παράδοση"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_stock_delivery
@@ -19379,7 +19540,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/res_partner.py:0
 msgid "Delivery Address"
-msgstr ""
+msgstr "Διεύθυνση Παράδοσης"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_delivery
@@ -19476,6 +19637,11 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_dk_saft_import
 msgid "Denmark - SAF-T Import"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_l10n_dk_nemhandel
+msgid "Denmark EDI - Nemhandel"
 msgstr ""
 
 #. module: base
@@ -19601,7 +19767,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.view_users_form
 #: model_terms:ir.ui.view,arch_db:base.view_users_form_simple_modif
 msgid "Devices"
-msgstr ""
+msgstr "Συσκευές"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_digest_enterprise
@@ -19629,7 +19795,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_decimal_precision__digits
 msgid "Digits"
-msgstr ""
+msgstr "Ψηφία"
 
 #. module: base
 #: model:res.currency,currency_unit_label:base.BHD
@@ -19954,7 +20120,7 @@ msgstr "Πρότυπο Εγγράφου"
 #: model:ir.module.category,name:base.module_category_productivity_documents
 #: model:ir.module.module,shortdesc:base.module_documents
 msgid "Documents"
-msgstr ""
+msgstr "Έγγραφα"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_documents_account
@@ -20179,7 +20345,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_actions_act_url__target__download
 msgid "Download"
-msgstr ""
+msgstr "Λήψη"
 
 #. module: base
 #: model:res.currency,currency_unit_label:base.AMD
@@ -20240,7 +20406,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_ir_profile__duration
 #: model:ir.model.fields,field_description:base.field_res_users_apikeys_description__duration
 msgid "Duration"
-msgstr ""
+msgstr "Διάρκεια"
 
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_E
@@ -20618,7 +20784,7 @@ msgstr "Υπάλληλος"
 #. module: base
 #: model:ir.module.category,name:base.module_category_services_employee_hourly_cost
 msgid "Employee Hourly Cost"
-msgstr ""
+msgstr "Ωριαίο Κόστος Εργαζομένου"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_hr_hourly_cost
@@ -20886,13 +21052,13 @@ msgstr "Eritrea"
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_demo_failure__error
 msgid "Error"
-msgstr ""
+msgstr "Σφάλμα"
 
 #. module: base
 #. odoo-python
 #: code:addons/base/models/ir_module.py:0
 msgid "Error ! You cannot create recursive categories."
-msgstr ""
+msgstr "Λάθος! Δεν μπορείτα να δημιουργήσετε αναδρομικές κατηγορίες"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_ir_model_constraint__message
@@ -21729,7 +21895,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_res_users_apikeys__expiration_date
 #: model:ir.model.fields,field_description:base.field_res_users_apikeys_description__expiration_date
 msgid "Expiration Date"
-msgstr ""
+msgstr "Ημερ. Λήξης"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.res_users_apikeys_view_kanban
@@ -21884,7 +22050,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_server_action_form
 msgid "Expression"
-msgstr ""
+msgstr "Έκφραση"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_voip_ai
@@ -22044,7 +22210,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_users_deletion__state__fail
 msgid "Failed"
-msgstr ""
+msgstr "Αποτυχία"
 
 #. module: base
 #: model:ir.actions.server,name:base.demo_failure_action
@@ -22542,7 +22708,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_ir_module_module__icon_flag
 #: model:ir.model.fields,field_description:base.field_res_country__image_url
 msgid "Flag"
-msgstr ""
+msgstr "Σημαία"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_lang__flag_image_url
@@ -22553,7 +22719,7 @@ msgstr ""
 #: model:ir.module.category,name:base.module_category_human_resources_fleet
 #: model:ir.module.module,shortdesc:base.module_fleet
 msgid "Fleet"
-msgstr ""
+msgstr "Στόλος"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_hr_fleet
@@ -22622,7 +22788,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_company__font
 msgid "Font"
-msgstr ""
+msgstr "Γραμματοσειρά"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_theme_food
@@ -22734,7 +22900,7 @@ msgstr "Φόρμα"
 #. odoo-python
 #: code:addons/base/models/ir_qweb_fields.py:0
 msgid "Format"
-msgstr ""
+msgstr "Διαμόρφωση"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_res_partner__email_formatted
@@ -23180,13 +23346,13 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_res_partner__partner_latitude
 #: model:ir.model.fields,field_description:base.field_res_users__partner_latitude
 msgid "Geo Latitude"
-msgstr ""
+msgstr "Γεωγραφικό Πλάτος"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner__partner_longitude
 #: model:ir.model.fields,field_description:base.field_res_users__partner_longitude
 msgid "Geo Longitude"
-msgstr ""
+msgstr "Γεωγραφικό Μήκος"
 
 #. module: base
 #: model:res.country,name:base.ge
@@ -23346,7 +23512,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_google_map
 msgid "Google Maps"
-msgstr ""
+msgstr "Χάρτες Google"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_google_account
@@ -23714,7 +23880,7 @@ msgstr ""
 #. module: base
 #: model:ir.model,name:base.model_ir_http
 msgid "HTTP Routing"
-msgstr ""
+msgstr "HTTP Routing"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_hvac_services
@@ -23823,7 +23989,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/ir_qweb_fields.py:0
 msgid "Height"
-msgstr ""
+msgstr "Ύψος"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_client_action_form
@@ -24056,6 +24222,11 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_partner__tz__hongkong
 msgid "Hongkong"
+msgstr ""
+
+#. module: base
+#: model:ir.module.category,name:base.module_category_hospitaility
+msgid "Hospitaility"
 msgstr ""
 
 #. module: base
@@ -24317,7 +24488,7 @@ msgstr "Κωδικός"
 #: model:ir.model.fields,help:base.field_ir_actions_server__xml_id
 #: model:ir.model.fields,help:base.field_ir_cron__xml_id
 msgid "ID of the action if defined in a XML file"
-msgstr ""
+msgstr "Ο κωδικός της δράσης αν ορίζεται σε XML αρχείο"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_ir_model_data__res_id
@@ -24343,7 +24514,7 @@ msgstr "Δίαυλος ΙΜ"
 #: model:ir.model.fields,field_description:base.field_res_device__ip_address
 #: model:ir.model.fields,field_description:base.field_res_device_log__ip_address
 msgid "IP Address"
-msgstr ""
+msgstr "Διεύθυνση IP"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.ir_profile_view_form
@@ -24374,6 +24545,11 @@ msgstr ""
 #: model:res.partner.industry,name:base.res_partner_industry_J
 msgid "IT/Communication"
 msgstr "Πληροφορική / Επικοινωνίες"
+
+#. module: base
+#: model:ir.module.module,summary:base.module_l10n_ar_reports_simple
+msgid "IVA Simple Reporting for Argentinean Localization"
+msgstr ""
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_iap_extract
@@ -24708,7 +24884,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_base_import_language
 msgid "Import"
-msgstr ""
+msgstr "Εισαγωγή"
 
 #. module: base
 #: model:ir.ui.menu,name:base.menu_translation_export
@@ -25376,7 +25552,7 @@ msgstr "Εσωτερικοί Χρήστες"
 #: model_terms:ir.ui.view,arch_db:base.view_partner_bank_form
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 msgid "Internal notes..."
-msgstr ""
+msgstr "Εσωτερικές σημειώσεις..."
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_lang__grouping__[3,0]
@@ -25490,7 +25666,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/ir_default.py:0
 msgid "Invalid field %(model)s.%(field)s"
-msgstr ""
+msgstr "Μη έγκυρο πεδίο %(model)s.%(field)s"
 
 #. module: base
 #. odoo-python
@@ -25579,7 +25755,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/ir_default.py:0
 msgid "Invalid value for %(model)s.%(field)s: %(value)s"
-msgstr ""
+msgstr "Μη έγκυρη τιμή για %(model)s.%(field)s: %(value)s"
 
 #. module: base
 #. odoo-python
@@ -25648,7 +25824,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/res_partner.py:0
 msgid "Invoice Address"
-msgstr ""
+msgstr "Διεύθυνση Τιμολόγησης"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_account
@@ -26202,6 +26378,11 @@ msgid "Kiribati"
 msgstr "Kiribati"
 
 #. module: base
+#: model:ir.module.module,shortdesc:base.module_website_sale_mrp
+msgid "Kit Availability"
+msgstr ""
+
+#. module: base
 #: model:ir.module.module,summary:base.module_sale_mrp_renting
 msgid "Kits rental"
 msgstr ""
@@ -26210,7 +26391,7 @@ msgstr ""
 #: model:ir.module.category,name:base.module_category_productivity_knowledge
 #: model:ir.module.module,shortdesc:base.module_knowledge
 msgid "Knowledge"
-msgstr ""
+msgstr "Γνωσιακή Βάση"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_knowledge
@@ -26432,12 +26613,12 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_res_device__last_activity
 #: model:ir.model.fields,field_description:base.field_res_device_log__last_activity
 msgid "Last Activity"
-msgstr ""
+msgstr "Τελευταία Δραστηριότητα"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_cron__lastcall
 msgid "Last Execution Date"
-msgstr ""
+msgstr "Τελευταία Ημερομηνία Εκτέλεσης"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.res_device_view_form
@@ -26447,7 +26628,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_currency_tree
 msgid "Last Update"
-msgstr ""
+msgstr "Τελευταία Ενημέρωση"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_base_enable_profiling_wizard__write_uid
@@ -26840,6 +27021,11 @@ msgid "Liberia"
 msgstr "Liberia"
 
 #. module: base
+#: model:ir.module.module,shortdesc:base.module_library
+msgid "Library"
+msgstr ""
+
+#. module: base
 #: model:ir.module.module,summary:base.module_theme_bookstore
 msgid "Library, Books, Magazines, Literature, Musics, Media, Store"
 msgstr ""
@@ -27021,7 +27207,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:base.selection__ir_ui_view__type__list
 #: model_terms:ir.ui.view,arch_db:base.view_view_search
 msgid "List"
-msgstr ""
+msgstr "Λίστα"
 
 #. module: base
 #. odoo-python
@@ -27179,6 +27365,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_users__login
 #: model_terms:ir.ui.view,arch_db:base.view_res_users_kanban
+#: model_terms:ir.ui.view,arch_db:base.view_users_form
 msgid "Login"
 msgstr "Σύνδεση"
 
@@ -27411,6 +27598,8 @@ msgid ""
 "Mail delivery failed via SMTP server '%(server)s'.\n"
 "%(exception_name)s: %(message)s"
 msgstr ""
+"Παράδοση mail απέτυχε μέσω SMTP server '%(server)s'.\n"
+"%(exception_name)s: %(message)s"
 
 #. module: base
 #: model:ir.ui.menu,name:base.menu_module_tree
@@ -27563,6 +27752,11 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_hr_recruitment_integration_website
 msgid "Manage Job board integrations with website"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,summary:base.module_website_sale_mrp
+msgid "Manage Kit product inventory & availability"
 msgstr ""
 
 #. module: base
@@ -28043,7 +28237,7 @@ msgstr ""
 #: model:ir.module.module,shortdesc:base.module_mrp_mps
 #: model:ir.module.module,summary:base.module_mrp_mps
 msgid "Master Production Schedule"
-msgstr ""
+msgstr "Κύριο Πρόγραμμα Παραγωγής"
 
 #. module: base
 #: model_terms:res.partner,website_description:base.res_partner_2
@@ -28099,14 +28293,9 @@ msgid "Meeting Rooms"
 msgstr ""
 
 #. module: base
-#: model:ir.model.fields.selection,name:base.selection__res_users__role__group_user
-msgid "Member"
-msgstr ""
-
-#. module: base
 #: model:res.company,partnership_label:base.main_company
 msgid "Members"
-msgstr ""
+msgstr "Μέλη"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_members_club
@@ -28142,7 +28331,7 @@ msgstr "Μενού"
 #. module: base
 #: model:ir.actions.act_window,name:base.action_partner_merge
 msgid "Merge"
-msgstr ""
+msgstr "Συνένωση"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.base_partner_merge_automatic_wizard_form
@@ -29033,7 +29222,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/ir_qweb_fields.py:0
 msgid "Narrow"
-msgstr ""
+msgstr "στενό"
 
 #. module: base
 #: model:res.country,name:base.nr
@@ -29232,6 +29421,11 @@ msgid "Nigeria - Accounting Reports"
 msgstr ""
 
 #. module: base
+#: model:ir.module.module,shortdesc:base.module_night_clubs
+msgid "Night Clubs"
+msgstr ""
+
+#. module: base
 #: model:res.country,name:base.nu
 msgid "Niue"
 msgstr "Niue"
@@ -29351,7 +29545,7 @@ msgstr "Κανένα"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_non_profit_organization
-msgid "Nonprofit Organization"
+msgid "Nonprofit organization"
 msgstr ""
 
 #. module: base
@@ -30707,12 +30901,12 @@ msgstr ""
 #. module: base
 #: model:res.partner.category,name:base.res_partner_category_12
 msgid "Office Supplies"
-msgstr ""
+msgstr "Γραφική Ύλη"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.demo_failures_dialog
 msgid "Ok"
-msgstr ""
+msgstr "ΟΚ"
 
 #. module: base
 #: model:res.country,name:base.om
@@ -30860,7 +31054,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.constraint,message:base.constraint_decimal_precision_name_uniq
 msgid "Only one value can be defined for each given usage!"
-msgstr ""
+msgstr "Μόνο μια αξία μπορεί να καθοριστεί για κάθε χρήση που δίνεται!"
 
 #. module: base
 #. odoo-python
@@ -30884,7 +31078,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_profile__speedscope_url
 msgid "Open"
-msgstr ""
+msgstr "Ανοιχτό"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_base_module_update
@@ -31003,7 +31197,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_model__order
 msgid "Order"
-msgstr ""
+msgstr "Παραγγελία"
 
 #. module: base
 #: model:res.currency,currency_subunit_label:base.DKK
@@ -31242,12 +31436,12 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_partner__type__other
 msgid "Other"
-msgstr ""
+msgstr "Άλλο"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_extra
 msgid "Other Extra Rights"
-msgstr ""
+msgstr "Άλλα Πρόσθετα Δικαιώματα"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_module_module__license__other_osi_approved_licence
@@ -31571,6 +31765,11 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_pos_urban_piper_ubereats
 msgid "POS UrbanPiper - Uber Eats"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_pos_imin
+msgid "POS iMin"
 msgstr ""
 
 #. module: base
@@ -31942,7 +32141,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_ir_model_inherit__parent_id
 #: model:ir.model.fields,field_description:base.field_res_company__parent_ids
 msgid "Parent"
-msgstr ""
+msgstr "Μητρικός"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_actions_server__parent_id
@@ -31978,7 +32177,7 @@ msgstr "Υπερκείμενο Μενού"
 #: model:ir.model.fields,field_description:base.field_res_company__parent_path
 #: model:ir.model.fields,field_description:base.field_res_partner_category__parent_path
 msgid "Parent Path"
-msgstr ""
+msgstr "Μητρική διαδρομή"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner__parent_name
@@ -32176,7 +32375,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.category,name:base.module_category_accounting_payment
 msgid "Payment"
-msgstr ""
+msgstr "Πληρωμή"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_payment
@@ -32301,7 +32500,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.category,name:base.module_category_accounting_payment_providers
 msgid "Payment Providers"
-msgstr ""
+msgstr "Πάροχοι Πληρωμών"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_website_payment
@@ -32600,7 +32799,7 @@ msgstr ""
 #: model:ir.module.category,name:base.module_category_human_resources_planning
 #: model:ir.module.module,shortdesc:base.module_planning
 msgid "Planning"
-msgstr ""
+msgstr "Σχεδιασμός"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_planning_hr_skills
@@ -32992,7 +33191,7 @@ msgstr "Προτεραιότητα"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_privacy_lookup
 msgid "Privacy"
-msgstr ""
+msgstr "Μυστικότητα"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_groups__privilege_id
@@ -33026,7 +33225,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_sale_stock
 msgid "Product Availability"
-msgstr ""
+msgstr "Διαθεσιμότητα Προϊόντος"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_sale_comparison_wishlist
@@ -33068,7 +33267,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.category,name:base.module_category_productivity
 msgid "Productivity"
-msgstr ""
+msgstr "Παραγωγικότητα"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_product
@@ -33696,7 +33895,7 @@ msgstr ""
 #: model:ir.module.category,name:base.module_category_supply_chain_quality
 #: model:ir.module.module,shortdesc:base.module_quality_control
 msgid "Quality"
-msgstr ""
+msgstr "Ποιότητα"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_quality_control_picking_batch
@@ -34142,7 +34341,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_model_fields__relation
 msgid "Related Model"
-msgstr ""
+msgstr "Σχετικό Μοντέλο"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_users__partner_id
@@ -34195,7 +34394,7 @@ msgstr "Επαναφόρτωση από συνημμένο"
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_cron_progress__remaining
 msgid "Remaining"
-msgstr ""
+msgstr "Εναπομείναντα"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_human_resources_remote_work
@@ -34211,7 +34410,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_asset__directive__remove
 msgid "Remove"
-msgstr ""
+msgstr "Αφαίρεση"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_server_action_form
@@ -34258,7 +34457,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.category,name:base.module_category_supply_chain_repair
 msgid "Repair"
-msgstr ""
+msgstr "Επισκευή"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_repair
@@ -34273,7 +34472,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_repair
 msgid "Repairs"
-msgstr ""
+msgstr "Επισκευές"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_ir_cron__interval_number
@@ -34301,7 +34500,7 @@ msgstr "Αναφορά"
 #. module: base
 #: model:ir.model,name:base.model_ir_actions_report
 msgid "Report Action"
-msgstr ""
+msgstr "Αναφορά δράσης"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_actions_report__report_file
@@ -34385,7 +34584,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_users_identitycheck__request
 msgid "Request"
-msgstr ""
+msgstr "Αίτηση"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_model_fields__required
@@ -34570,11 +34769,6 @@ msgid "Role / Administrator"
 msgstr ""
 
 #. module: base
-#: model:res.groups,name:base.group_user
-msgid "Role / Member"
-msgstr ""
-
-#. module: base
 #: model:res.groups,name:base.group_portal
 msgid "Role / Portal"
 msgstr ""
@@ -34582,6 +34776,11 @@ msgstr ""
 #. module: base
 #: model:res.groups,name:base.group_public
 msgid "Role / Public"
+msgstr ""
+
+#. module: base
+#: model:res.groups,name:base.group_user
+msgid "Role / User"
 msgstr ""
 
 #. module: base
@@ -34689,7 +34888,7 @@ msgstr ""
 #. module: base
 #: model:ir.model,name:base.model_ir_rule
 msgid "Rule"
-msgstr ""
+msgstr "Κανόνας"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_rule_form
@@ -34716,7 +34915,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_server_action_form
 msgid "Run"
-msgstr ""
+msgstr "Εκτέλεση"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.ir_cron_view_form
@@ -34915,7 +35114,7 @@ msgstr ""
 #. module: base
 #: model_terms:res.company,invoice_terms_html:base.main_company
 msgid "STANDARD TERMS AND CONDITIONS OF SALE"
-msgstr ""
+msgstr "ΤΥΠΙΚΟΙ ΌΡΟΙ ΚΑΙ ΠΡΟΫΠΟΘΕΣΕΙΣ ΠΩΛΗΣΗΣ"
 
 #. module: base
 #: model:res.country,name:base.bl
@@ -35191,7 +35390,7 @@ msgstr ""
 #: model:ir.module.module,shortdesc:base.module_sales_team
 #: model:ir.module.module,summary:base.module_sales_team
 msgid "Sales Teams"
-msgstr ""
+msgstr "Ομάδες Πωλήσεων"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_sale_timesheet
@@ -35349,6 +35548,11 @@ msgid "Saudi Arabia - Point of Sale"
 msgstr ""
 
 #. module: base
+#: model:ir.module.module,shortdesc:base.module_l10n_sa_withholding_tax
+msgid "Saudi Arabia - Withholding Tax"
+msgstr ""
+
+#. module: base
 #: model:ir.model.fields,field_description:base.field_ir_actions_report__attachment
 msgid "Save as Attachment Prefix"
 msgstr "Αποθήκευση ως πρόθεμα συνημμένου"
@@ -35430,7 +35634,7 @@ msgstr "Επιστήμονες"
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_users_apikeys__scope
 msgid "Scope"
-msgstr ""
+msgstr "Πεδίο εφαρμογής"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.res_users_apikeys_view_kanban
@@ -35681,7 +35885,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner_bank__allow_out_payment
 msgid "Send Money"
-msgstr ""
+msgstr "Πληρωμή"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_sms_twilio
@@ -36028,13 +36232,13 @@ msgstr ""
 #: model:ir.module.category,name:base.module_category_theme_services
 #: model:res.partner.category,name:base.res_partner_category_11
 msgid "Services"
-msgstr ""
+msgstr "Υπηρεσίες"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_profile__session
 #: model_terms:ir.ui.view,arch_db:base.ir_profile_view_search
 msgid "Session"
-msgstr ""
+msgstr "Συνεδρία"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_device__session_identifier
@@ -36241,7 +36445,7 @@ msgstr "Sierra Leone"
 #: model:ir.module.category,name:base.module_category_sales_sign
 #: model:ir.module.module,shortdesc:base.module_sign
 msgid "Sign"
-msgstr ""
+msgstr "Υπογραφή"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_sign_ai
@@ -36483,7 +36687,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_social_media
 msgid "Social Media"
-msgstr ""
+msgstr "Κοινωνικά Δίκτυα"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_social_push_notifications
@@ -36622,10 +36826,15 @@ msgid "South Sudan"
 msgstr ""
 
 #. module: base
+#: model:ir.module.module,shortdesc:base.module_spa_resort
+msgid "Spa Resort"
+msgstr ""
+
+#. module: base
 #. odoo-python
 #: code:addons/base/models/ir_qweb_fields.py:0
 msgid "Space"
-msgstr ""
+msgstr "Κενό"
 
 #. module: base
 #: model:res.country,name:base.es
@@ -36810,7 +37019,7 @@ msgstr ""
 #: model:ir.module.module,summary:base.module_spreadsheet_dashboard_website_sale_slides
 #: model:ir.module.module,summary:base.module_spreadsheet_edition
 msgid "Spreadsheet"
-msgstr ""
+msgstr "Υπολογιστικό φύλλο"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_spreadsheet_account
@@ -37107,7 +37316,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_stock_accountant
 msgid "Stock Accounting"
-msgstr ""
+msgstr "Κοστολόγηση Αποθεμάτων"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_stock_barcode_barcodelookup
@@ -37300,7 +37509,7 @@ msgstr ""
 #: model:ir.module.category,name:base.module_category_sales_subscriptions
 #: model:ir.module.module,shortdesc:base.module_sale_subscription
 msgid "Subscriptions"
-msgstr ""
+msgstr "Συνδρομές"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_sale_subscription_partnership
@@ -37407,6 +37616,11 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_se_reports
 msgid "Sweden - Accounting Reports"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_l10n_se_returns
+msgid "Sweden - Accounting Returns"
 msgstr ""
 
 #. module: base
@@ -37669,13 +37883,13 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_asset__target
 msgid "Target"
-msgstr ""
+msgstr "Στόχος"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_actions_server__crud_model_name
 #: model:ir.model.fields,field_description:base.field_ir_cron__crud_model_name
 msgid "Target Model Name"
-msgstr ""
+msgstr "Όνομα Υποδείγματος Στόχου"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_actions_act_window__target
@@ -37706,7 +37920,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_res_partner__vat
 #: model:ir.model.fields,field_description:base.field_res_users__vat
 msgid "Tax ID"
-msgstr ""
+msgstr "Α.Φ.Μ."
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner__vat_label
@@ -37842,7 +38056,7 @@ msgstr ""
 #: model_terms:res.company,sign_terms:base.main_company
 #: model_terms:res.company,sign_terms_html:base.main_company
 msgid "Terms &amp; Conditions"
-msgstr ""
+msgstr "Όροι &amp; Προϋποθέσεις"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_test_base_automation
@@ -38073,6 +38287,11 @@ msgid "Text your Contacts on WhatsApp"
 msgstr ""
 
 #. module: base
+#: model:ir.module.module,shortdesc:base.module_textile_manufacturing
+msgid "Textile Manufacturing"
+msgstr ""
+
+#. module: base
 #: model:res.country,name:base.th
 msgid "Thailand"
 msgstr "Thailand"
@@ -38219,6 +38438,10 @@ msgid ""
 "order to be valid, any derogation must be expressly agreed to in advance in "
 "writing."
 msgstr ""
+"Ο πελάτης αποποιείται ρητά τους δικούς του γενικούς όρους και προϋποθέσεις, "
+"ακόμη και αν αυτοί καταρτίστηκαν μεταγενέστερα από τους παρόντες όρους "
+"πώλησης. Για να είναι έγκυρη οποιαδήποτε απόκλιση, πρέπει να έχει συμφωνηθεί "
+"ρητά εκ των προτέρων εγγράφως."
 
 #. module: base
 #: model:ir.model.constraint,message:base.constraint_res_country_code_uniq
@@ -38309,7 +38532,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,help:base.field_res_users__company_id
 msgid "The default company for this user."
-msgstr ""
+msgstr "Η προεπιλεγμένη εταιρεία αυτού του χρήστη."
 
 #. module: base
 #. odoo-python
@@ -38554,7 +38777,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/res_users.py:0
 msgid "The new password and its confirmation must be identical."
-msgstr ""
+msgstr "Ο νέος κωδικός και η επιβεβαίωση του πρέπει να είναι ακριβώς ίδιοι."
 
 #. module: base
 #. odoo-python
@@ -38840,6 +39063,11 @@ msgstr ""
 #: model:ir.ui.menu,name:base.menu_theme_store
 #: model:ir.ui.menu,name:base.theme_store
 msgid "Theme Store"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_test_themes
+msgid "Themes Testing Module"
 msgstr ""
 
 #. module: base
@@ -39379,6 +39607,11 @@ msgid "This module is used for Online bank synchronization."
 msgstr ""
 
 #. module: base
+#: model:ir.module.module,summary:base.module_l10n_dk_nemhandel
+msgid "This module is used to send/receive documents with Nemhandel"
+msgstr ""
+
+#. module: base
 #: model:ir.module.module,summary:base.module_account_peppol
 msgid "This module is used to send/receive documents with PEPPOL"
 msgstr ""
@@ -39398,6 +39631,17 @@ msgstr ""
 msgid ""
 "This module lets you use the full power of certifications within your "
 "courses."
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,description:base.module_test_themes
+msgid ""
+"This module will help you to quickly test all the Odoo\n"
+"    themes without having to switch from one theme to another on your "
+"website.\n"
+"    It will simply create a new website for each Odoo theme and install "
+"every\n"
+"    theme on one website."
 msgstr ""
 
 #. module: base
@@ -39438,6 +39682,11 @@ msgid "Thousands Separator"
 msgstr "Διαχωριστικό Χιλιάδων"
 
 #. module: base
+#: model:ir.module.module,shortdesc:base.module_thrift_store
+msgid "Thrift Store"
+msgstr ""
+
+#. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_lang__week_start__4
 msgid "Thursday"
 msgstr "Πέμπτη"
@@ -39466,7 +39715,7 @@ msgstr "Μορφή Ώρας"
 #: model:ir.module.category,name:base.module_category_human_resources_time_off
 #: model:ir.module.module,shortdesc:base.module_hr_holidays
 msgid "Time Off"
-msgstr ""
+msgstr "Άδεια"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_hr_payroll_holidays
@@ -39492,7 +39741,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_timer
 msgid "Timer"
-msgstr ""
+msgstr "Χρονομετρήτης"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_test_timer
@@ -39876,7 +40125,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_partner__tz__turkey
 msgid "Turkey"
-msgstr ""
+msgstr "Turkey"
 
 #. module: base
 #: model:res.country,name:base.tm
@@ -40267,6 +40516,8 @@ msgid ""
 "Unable to process module \"%(module)s\" because an external dependency is "
 "not met: %(dependency)s"
 msgstr ""
+"Αδυναμία επεξεργασίας αρθρώματος «%(module)s» επειδή μια εξωτερική εξάρτηση "
+"δεν ικανοποιείται: %(dependency)s"
 
 #. module: base
 #. odoo-python
@@ -40820,6 +41071,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_res_users_apikeys__user_id
 #: model:ir.model.fields,field_description:base.field_res_users_deletion__user_id
 #: model:ir.model.fields,field_description:base.field_res_users_settings__user_id
+#: model:ir.model.fields.selection,name:base.selection__res_users__role__group_user
 #: model_terms:ir.ui.view,arch_db:base.ir_cron_view_search
 #: model_terms:ir.ui.view,arch_db:base.ir_default_search_view
 #: model_terms:ir.ui.view,arch_db:base.ir_filters_view_search
@@ -40858,7 +41110,7 @@ msgstr "Σύνδεση Χρήστη"
 #. module: base
 #: model:ir.model,name:base.model_res_users_settings
 msgid "User Settings"
-msgstr ""
+msgstr "Ρυθμίσεις Χρήστη"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_users__device_ids
@@ -41092,7 +41344,7 @@ msgstr ""
 #. module: base
 #: model:res.partner.category,name:base.res_partner_category_0
 msgid "Vendor"
-msgstr ""
+msgstr "Προμηθευτής"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_3way_match
@@ -41118,6 +41370,11 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/ir_qweb_fields.py:0
 msgid "Vertical bar"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_veterinary_clinic
+msgid "Veterinary Clinic"
 msgstr ""
 
 #. module: base
@@ -41268,7 +41525,7 @@ msgstr "Virgin Islands (USA)"
 #: model_terms:ir.ui.view,arch_db:base.edit_menu_access
 #: model_terms:ir.ui.view,arch_db:base.view_window_action_form
 msgid "Visibility"
-msgstr ""
+msgstr "Ορατότητα"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_module_category__visible
@@ -41341,7 +41598,7 @@ msgstr "Προσοχή"
 #: code:addons/base/models/decimal_precision.py:0
 #: code:addons/base/models/res_currency.py:0
 msgid "Warning for %s"
-msgstr ""
+msgstr "Προειδοποίηση για %s"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_ui_view__warning_info
@@ -41528,7 +41785,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:base.field_res_partner__website
 #: model:ir.model.fields,field_description:base.field_res_users__website
 msgid "Website Link"
-msgstr ""
+msgstr "Σύνδεσμος Ιστότοπου"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_livechat
@@ -41829,7 +42086,7 @@ msgstr "Χονδρικές / Λιανικές Πωλήσεις"
 #. odoo-python
 #: code:addons/base/models/ir_qweb_fields.py:0
 msgid "Width"
-msgstr ""
+msgstr "Πλάτος"
 
 #. module: base
 #: model:ir.actions.act_window,name:base.ir_action_window
@@ -41885,12 +42142,13 @@ msgstr ""
 #: code:addons/base/models/ir_actions_report.py:0
 msgid "Wkhtmltopdf failed (error code: %(error_code)s). Message: %(message)s"
 msgstr ""
+"Το Wkhtmltopdf απέτυχε (αριθμός λάθους: %(error_code)s). Μήνυμα: %(message)s"
 
 #. module: base
 #: model:res.currency,currency_unit_label:base.KPW
 #: model:res.currency,currency_unit_label:base.KRW
 msgid "Won"
-msgstr ""
+msgstr "Κερδισμένη"
 
 #. module: base
 #: model:res.partner,website_short_description:base.res_partner_1
@@ -41927,7 +42185,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_worksheet
 msgid "Worksheet"
-msgstr ""
+msgstr "Φύλλο εργασίας"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_maintenance_worksheet
@@ -42323,6 +42581,8 @@ msgstr "Θα πρέπει να δοκιμάσετε άλλα κριτήρια α
 #: model_terms:res.company,invoice_terms_html:base.main_company
 msgid "You should update this document to reflect your T&amp;C."
 msgstr ""
+"Θα πρέπει να ενημερώσετε αυτό το έγγραφο ώστε να αντικατοπτρίζει τους δικούς "
+"σας Όρους & Προϋποθέσεις."
 
 #. module: base
 #. odoo-python
@@ -42348,6 +42608,8 @@ msgid ""
 "You will be able to define additional access rights by editing the newly "
 "created user under the Settings / Users menu."
 msgstr ""
+"Θα μπορείτε να καθορίσετε επιπρόσθετα δικαιώματα εισόδου τροποποιώντας τους "
+"χρήστες που δημιουργήθηκαν πρόσφατα στο μενού Ρυθμίσεις / Χρήστες."
 
 #. module: base
 #: model_terms:res.company,sign_terms:base.main_company
@@ -42361,6 +42623,8 @@ msgid ""
 "Your lunch has been delivered.\n"
 "Enjoy your meal!"
 msgstr ""
+"Το μεσημεριανό σας παραδόθηκε.\n"
+"Καλή σας όρεξη!"
 
 #. module: base
 #. odoo-python
@@ -42458,7 +42722,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_asset__active
 msgid "active"
-msgstr ""
+msgstr "ενεργός"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_ai_fields
@@ -42547,7 +42811,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/ir_qweb_fields.py:0
 msgid "day"
-msgstr ""
+msgstr "ημέρα"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_delivery_mondialrelay
@@ -42630,13 +42894,13 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.view_users_form
 #: model_terms:ir.ui.view,arch_db:base.view_users_simple_form
 msgid "e.g. John Doe"
-msgstr ""
+msgstr "π.χ. John Doe"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 #: model_terms:ir.ui.view,arch_db:base.view_partner_simple_form
 msgid "e.g. Lumber Inc"
-msgstr ""
+msgstr "e.g. Lumber Inc"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_company_form
@@ -42674,7 +42938,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.view_partner_address_form
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 msgid "e.g. https://www.odoo.com"
-msgstr ""
+msgstr "π.χ. https://www.odoo.com"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_sale
@@ -42720,6 +42984,11 @@ msgstr ""
 #: model:ir.module.category,name:base.module_category_website_elearning
 #: model:ir.module.module,shortdesc:base.module_website_slides
 msgid "eLearning"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_elearning_platform
+msgid "eLearning Platform"
 msgstr ""
 
 #. module: base
@@ -42785,6 +43054,11 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_actions_server__value_field_to_show__html_value
 msgid "html_value"
+msgstr ""
+
+#. module: base
+#: model:ir.module.module,summary:base.module_pos_imin
+msgid "iMin ePOS Printers in PoS"
 msgstr ""
 
 #. module: base
@@ -42874,7 +43148,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/ir_qweb_fields.py:0
 msgid "month"
-msgstr ""
+msgstr "μήνας"
 
 #. module: base
 #. odoo-python
@@ -42982,7 +43256,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.category,name:base.module_category_services_sales
 msgid "sales"
-msgstr ""
+msgstr "πωλήσεις"
 
 #. module: base
 #. odoo-python
@@ -43147,7 +43421,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base/models/ir_qweb_fields.py:0
 msgid "week"
-msgstr ""
+msgstr "εβδομάδα"
 
 #. module: base
 #. odoo-python

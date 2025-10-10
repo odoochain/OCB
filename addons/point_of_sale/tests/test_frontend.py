@@ -669,9 +669,10 @@ class TestUi(TestPointOfSaleHttpCommon):
             Command.set([ self.small_shelf.id ])
         ]})
 
-        self.letter_tray.write({'pos_optional_product_ids': [
-            Command.set([ self.configurable_chair.id ])
-        ]})
+        self.letter_tray.write({
+            'pos_optional_product_ids': [Command.set([self.configurable_chair.id])],
+            'barcode': 'lettertray'
+        })
 
         self.main_pos_config.with_user(self.pos_user).open_ui()
         self.start_pos_tour('test_optional_product')
@@ -2395,6 +2396,14 @@ class TestUi(TestPointOfSaleHttpCommon):
         self.assertAlmostEqual(lines[3].balance, 352.59)
         self.assertAlmostEqual(lines[4].balance, 7771.01)
 
+    def test_ctrl_number_ignored(self):
+        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'test_ctrl_number_ignored', login="pos_user")
+
+    def test_click_all_orders_keep_customer(self):
+        """Verify that clicking on 'All Orders' keeps the customer selected."""
+        self.main_pos_config.with_user(self.pos_user).open_ui()
+        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'test_click_all_orders_keep_customer', login="pos_user")
+
     def test_quantity_package_of_non_basic_unit(self):
         test_uom_unit = self.env['uom.uom'].create({
             "name": "test unit uom",
@@ -2706,6 +2715,13 @@ class TestUi(TestPointOfSaleHttpCommon):
         self.assertIn(children_categs[1].id, category_id, "Child category is available and should appear in the POS")
 
     def test_pos_order_shipping_date(self):
+        self.env['res.partner'].create({
+            'name': 'Partner Test with Address',
+            'street': 'test street',
+            'zip': '1234',
+            'city': 'test city',
+            'country_id': self.env.ref('base.us').id
+        })
         self.main_pos_config.write({'ship_later': True})
         self.main_pos_config.with_user(self.pos_user).open_ui()
         self.start_tour(
@@ -3017,6 +3033,17 @@ class TestUi(TestPointOfSaleHttpCommon):
         })
         self.main_pos_config.with_user(self.pos_user).open_ui()
         self.start_pos_tour('test_preset_customer_selection')
+
+    def test_pos_large_amount_confirmation_dialog(self):
+        """Test that the Large amount confirmation dialog appears
+        and closes properly after clicking 'OK'."""
+        self.env['product.product'].create({
+            'name': 'Overpay Test Product',
+            'list_price': 1.0,
+            'available_in_pos': True,
+        })
+        self.main_pos_config.with_user(self.pos_user).open_ui()
+        self.start_pos_tour('test_pos_large_amount_confirmation_dialog')
 
 
 # This class just runs the same tests as above but with mobile emulation

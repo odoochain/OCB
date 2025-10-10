@@ -6,7 +6,11 @@ import { useAutofocus, useService } from '@web/core/utils/hooks';
 import { _t } from "@web/core/l10n/translation";
 import { WebsiteDialog } from '@website/components/dialog/dialog';
 import { Switch } from '@html_editor/components/switch/switch';
-import { applyTextHighlight } from "@website/js/text_processing";
+import {
+    applyTextHighlight,
+    removeTextHighlight,
+    getObservedEls,
+} from "@website/js/highlight_utils";
 import { useRef, useState, useSubEnv, Component, onWillStart, onMounted, status } from "@odoo/owl";
 import { onceAllImagesLoaded } from "@website/utils/images";
 
@@ -90,6 +94,13 @@ class AddPageTemplatePreview extends Component {
         this.iframeRef = useRef("iframe");
         this.previewRef = useRef("preview");
         this.holderRef = useRef("holder");
+        this.resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const targetEl = entry.target.querySelector(".o_text_highlight") || entry.target;
+                removeTextHighlight(targetEl);
+                applyTextHighlight(targetEl);
+            }
+        });
 
         onMounted(async () => {
             const holderEl = this.holderRef.el;
@@ -216,14 +227,11 @@ class AddPageTemplatePreview extends Component {
             if (this.props.isCustom) {
                 this.adaptCustomTemplate(wrapEl);
             }
-            // We need this to correctly compute the highlights size (the
-            // `ResizeObserver` that adapts the effects when a custom font
-            // is applied is not available), for now, we need a setTimeout.
-            setTimeout(() => {
-                for (const textEl of iframeEl.contentDocument?.querySelectorAll(".o_text_highlight") || []) {
-                    applyTextHighlight(textEl);
+            for (const textEl of iframeEl.contentDocument?.querySelectorAll(".o_text_highlight") || []) {
+                for (const elToObserve of getObservedEls(textEl)) {
+                    this.resizeObserver.observe(elToObserve);
                 }
-            }, 200);
+            }
         });
     }
 
@@ -250,6 +258,12 @@ class AddPageTemplatePreview extends Component {
         const templateId = this.props.template.key;
         for (const previewEl of wrapEl.querySelectorAll(".o_new_page_snippet_preview, .s_dialog_preview")) {
             previewEl.remove();
+        }
+        this.resizeObserver.disconnect();
+        // Remove highlighted text content from the cloned page. The full
+        // highlight structure will be restored on page load.
+        for (const textHighlightEl of wrapEl.querySelectorAll(".o_text_highlight")) {
+            removeTextHighlight(textHighlightEl);
         }
         this.env.addPage(wrapEl.innerHTML, this.props.template.name && _t("Copy of %s", this.props.template.name), templateId);
     }
@@ -326,7 +340,9 @@ class AddPageTemplates extends Component {
     }
 
     async preparePages() {
-        const loadTemplates = rpc("/website/get_new_page_templates", { context: { website_id: this.website.currentWebsiteId}}, { cache: true, silent: true });
+        // Fetch templates without client-side caching to reflect recent changes
+        // to custom templates within the same session.
+        const loadTemplates = rpc("/website/get_new_page_templates", { context: { website_id: this.website.currentWebsiteId}}, { silent: true });
 
         // Forces the correct website if needed before fetching the templates.
         // Displaying the correct images in the previews also relies on the
@@ -498,7 +514,7 @@ export class AddPageDialog extends Component {
         if (!this.cssLinkEls) {
             this.cssLinkEls = new Promise((resolve) => {
                 const container = document.querySelector(".o_website_preview .o_iframe_container");
-                const iframe = container?.lastElementChild;
+                const iframe = container?.querySelector('iframe:not([src="/website/iframefallback"])');
                 if (iframe?.contentDocument.body.getAttribute("is-ready") === "true") {
                     // If there is a fully loaded website preview, use it.
                     resolve(iframe.contentDocument.head.querySelectorAll("link[type='text/css']"));

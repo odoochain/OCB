@@ -7,13 +7,14 @@
 # Ryoko Tsuda <ryoko@quartile.co>, 2023
 # Andy Yiu, 2023
 # "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Junko Augias (juau)" <juau@odoo.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-11 14:02+0000\n"
-"PO-Revision-Date: 2025-09-14 21:08+0000\n"
-"Last-Translator: \"Dylan Kiss (dyki)\" <dyki@odoo.com>\n"
+"POT-Creation-Date: 2025-10-08 18:37+0000\n"
+"PO-Revision-Date: 2025-10-09 13:43+0000\n"
+"Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/"
 "stock_account/ja/>\n"
 "Language: ja\n"
@@ -134,17 +135,13 @@ msgid "Adjusted on %(date)s by %(user)s"
 msgstr ""
 
 #. module: stock_account
-#: model:ir.model.fields,field_description:stock_account.field_account_account__account_stock_expense_id
-msgid "Adjustment Account"
-msgstr ""
-
-#. module: stock_account
 #: model:ir.model.fields,help:stock_account.field_res_config_settings__module_stock_landed_costs
 #: model_terms:ir.ui.view,arch_db:stock_account.res_config_settings_view_form
 msgid ""
 "Affect landed costs on reception operations and split them among products to "
 "update their cost price."
-msgstr "入荷オペレーション時の陸揚費に作用してプロダクトに分配し、原価を更新する。"
+msgstr ""
+"入荷オペレーション時の陸揚費に作用してプロダクトに分配し、原価を更新する。"
 
 #. module: stock_account
 #. odoo-javascript
@@ -279,6 +276,11 @@ msgstr "原価"
 #: model:ir.model.fields,field_description:stock_account.field_stock_quant__cost_method
 msgid "Cost Method"
 msgstr "原価計算法"
+
+#. module: stock_account
+#: model_terms:ir.ui.view,arch_db:stock_account.view_location_form_inherit
+msgid "Cost of Production"
+msgstr ""
 
 #. module: stock_account
 #: model:ir.model.fields,field_description:stock_account.field_product_category__property_cost_method
@@ -418,6 +420,11 @@ msgid "Everything is correctly closed"
 msgstr ""
 
 #. module: stock_account
+#: model:ir.model.fields,field_description:stock_account.field_account_account__account_stock_expense_id
+msgid "Expense Account"
+msgstr ""
+
+#. module: stock_account
 #: model:ir.model.fields.selection,name:stock_account.selection__product_category__property_cost_method__fifo
 #: model:ir.model.fields.selection,name:stock_account.selection__product_template__cost_method__fifo
 #: model:ir.model.fields.selection,name:stock_account.selection__res_company__cost_method__fifo
@@ -491,6 +498,12 @@ msgid "Initial Balance"
 msgstr ""
 
 #. module: stock_account
+#. odoo-python
+#: code:addons/stock_account/models/product.py:0
+msgid "Invalid search on valuation"
+msgstr ""
+
+#. module: stock_account
 #: model:ir.model,name:stock_account.model_stock_inventory_adjustment_name
 msgid "Inventory Adjustment Reference / Reason"
 msgstr ""
@@ -520,6 +533,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:stock_account.view_category_property_form_stock
 msgid "Inventory Valuation"
 msgstr "在庫評価"
+
+#. module: stock_account
+#: model_terms:ir.ui.view,arch_db:stock_account.view_location_form_inherit
+msgid "Inventory Variation"
+msgstr ""
 
 #. module: stock_account
 #: model:ir.model.fields,field_description:stock_account.field_stock_move__is_dropship
@@ -595,7 +613,7 @@ msgstr "ロット/シリアル"
 #. module: stock_account
 #: model_terms:ir.ui.view,arch_db:stock_account.res_config_settings_view_form
 msgid "Lots & Serial numbers will appear on the invoice"
-msgstr "ロット/シリアル番号が請求書に表示されます"
+msgstr "ロット/シリアル番号を請求書に表示"
 
 #. module: stock_account
 #: model:ir.model.fields.selection,name:stock_account.selection__res_company__inventory_period__manual
@@ -617,9 +635,8 @@ msgid ""
 "        "
 msgstr ""
 "手動: 在庫を評価するための会計仕訳は自動的に計上されません。\n"
-"自動: "
-"プロダクトの入出庫時に、在庫を評価するための会計項目が自動的に作成されます。"
-"\n"
+"自動: プロダクトの入出庫時に、在庫を評価するための会計項目が自動的に作成され"
+"ます。\n"
 "        "
 
 #. module: stock_account
@@ -634,7 +651,7 @@ msgstr ""
 
 #. module: stock_account
 #: model_terms:ir.ui.view,arch_db:stock_account.view_account_form
-msgid "None"
+msgid "None (only useful for continental)"
 msgstr ""
 
 #. module: stock_account
@@ -661,6 +678,19 @@ msgstr ""
 #: model:ir.model,name:stock_account.model_stock_picking_type
 msgid "Picking Type"
 msgstr "ピッキングタイプ"
+
+#. module: stock_account
+#. odoo-python
+#: code:addons/stock_account/models/res_company.py:0
+msgid "Please set the Journal for Inventory Valuation in the settings."
+msgstr ""
+
+#. module: stock_account
+#. odoo-python
+#: code:addons/stock_account/models/res_company.py:0
+msgid ""
+"Please set the Valuation Account for Inventory Valuation in the settings."
+msgstr ""
 
 #. module: stock_account
 #: model:ir.model.fields,field_description:stock_account.field_product_category__property_price_difference_account_id
@@ -787,9 +817,8 @@ msgid ""
 msgstr ""
 "原価法: 設定された原価は棚卸資産の評価額となります。\n"
 "        平均原価法 (AVCO): 加重平均原価は棚卸資産の評価額となります。\n"
-"        先入先出法 (FIFO): "
-"先に仕入れた棚卸資産から順に販売していくと仮定し、棚卸資産額が評価されます。"
-"\n"
+"        先入先出法 (FIFO): 先に仕入れた棚卸資産から順に販売していくと仮定し、"
+"棚卸資産額が評価されます。\n"
 "        "
 
 #. module: stock_account
@@ -858,7 +887,8 @@ msgstr ""
 msgid ""
 "Technical field to correctly show the currently selected company's currency "
 "that corresponds to the totaled value of the product's valuation layers"
-msgstr "プロダクトの評価レイヤの合計値に対応する、現在選択されている企業の通貨を正し"
+msgstr ""
+"プロダクトの評価レイヤの合計値に対応する、現在選択されている企業の通貨を正し"
 "く表示するための技術的なフィールド。"
 
 #. module: stock_account
@@ -883,8 +913,9 @@ msgstr ""
 msgid ""
 "This operation might lead in a loss of data. Valuation will be identical for "
 "all lots/SN. Do you want to proceed ? "
-msgstr "この操作により、データが失われる可能性があります。 "
-"評価額は全ロット/シリアル番号で同一です。 続行しますか? "
+msgstr ""
+"この操作により、データが失われる可能性があります。 評価額は全ロット/シリアル"
+"番号で同一です。 続行しますか? "
 
 #. module: stock_account
 #: model:ir.model.fields,field_description:stock_account.field_stock_avco_report__total_quantity
@@ -906,6 +937,7 @@ msgstr "残在庫価値合計"
 #: model:ir.model.fields,field_description:stock_account.field_stock_avco_report__total_value
 #: model:ir.model.fields,field_description:stock_account.field_stock_lot__total_value
 #: model_terms:ir.ui.view,arch_db:stock_account.product_product_stock_tree_inherit_stock_account
+#: model_terms:ir.ui.view,arch_db:stock_account.product_product_view_list_at_date
 #: model_terms:ir.ui.view,arch_db:stock_account.view_stock_quant_tree_editable_inherit
 msgid "Total Value"
 msgstr "合計金額"
@@ -925,7 +957,9 @@ msgstr "関連する販売オーダ/購買オーダの配送済/入荷数量の�
 
 #. module: stock_account
 #: model_terms:ir.ui.view,arch_db:stock_account.product_product_stock_tree_inherit_stock_account
+#: model_terms:ir.ui.view,arch_db:stock_account.product_product_view_list_at_date
 #: model_terms:ir.ui.view,arch_db:stock_account.stock_avco_report_view_list
+#: model_terms:ir.ui.view,arch_db:stock_account.stock_move_view_list_valuation
 msgid "Unit Cost"
 msgstr "単位原価"
 
@@ -1008,9 +1042,8 @@ msgid ""
 "        Used to compute margins on sale orders."
 msgstr ""
 "ロットの価値(AVCO で自動的に計算される)。\n"
-"　"
-"仕入原価が不明な場合(在庫調整など)に、プロダクトの価値を算出するために使用さ"
-"れます。\n"
+"　仕入原価が不明な場合(在庫調整など)に、プロダクトの価値を算出するために使用"
+"されます。\n"
 "　販売オーダのマージンを計算するために使用されます。"
 
 #. module: stock_account
@@ -1032,7 +1065,8 @@ msgstr ""
 msgid ""
 "When automated inventory valuation is enabled on a product, this account "
 "will hold the current value of the products."
-msgstr "プロダクトの自動在庫評価が有効になっている場合、このアカウントはプロダクトの"
+msgstr ""
+"プロダクトの自動在庫評価が有効になっている場合、このアカウントはプロダクトの"
 "現在価値を保持します。"
 
 #. module: stock_account
@@ -1040,7 +1074,8 @@ msgstr "プロダクトの自動在庫評価が有効になっている場合、
 msgid ""
 "When doing automated inventory valuation, this is the Accounting Journal in "
 "which entries will be automatically posted when stock moves are processed."
-msgstr "自動在庫評価を行う場合、在庫移動が処理されると、この仕訳帳に仕訳が自動的に計"
+msgstr ""
+"自動在庫評価を行う場合、在庫移動が処理されると、この仕訳帳に仕訳が自動的に計"
 "上されます。"
 
 #. module: stock_account

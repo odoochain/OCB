@@ -459,7 +459,7 @@ actual arch.
 
                     # During an upgrade, we can only use the views that have been
                     # fully upgraded already.
-                    if self.pool._init and sibling_primary_views:
+                    if self.pool._init and sibling_primary_views and self.pool._init_modules:
                         query = sibling_primary_views._get_filter_xmlid_query()
                         # 避免空模块列表导致的SQL语法错误
                         if self.pool._init_modules:
@@ -769,7 +769,7 @@ actual arch.
         where_clause = query.where_clause
         assert query.from_clause == SQL.identifier('ir_ui_view'), f"Unexpected from clause: {query.from_clause}"
 
-        field_names = [f.name for f in self._fields.values() if f.prefetch is True]
+        field_names = [f.name for f in self._fields.values() if f.prefetch is True and not f.groups]
         aliased_names = SQL(', ').join(
             SQL("%s AS %s", self._field_to_sql('ir_ui_view', name), SQL.identifier(name))
             for name in field_names
