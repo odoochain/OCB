@@ -10,7 +10,7 @@ import { SetupEditorPlugin } from "@html_builder/core/setup_editor_plugin";
 import { Plugin } from "@html_editor/plugin";
 import { withSequence } from "@html_editor/utils/resource";
 import { defineMailModels, startServer } from "@mail/../tests/mail_test_helpers";
-import { after, describe } from "@odoo/hoot";
+import { describe } from "@odoo/hoot";
 import { advanceTime, animationFrame, click, queryOne, tick, waitFor } from "@odoo/hoot-dom";
 import {
     contains,
@@ -21,6 +21,7 @@ import {
     mountWithCleanup,
     onRpc,
     patchWithCleanup,
+    waitUntilIdle,
 } from "@web/../tests/web_test_helpers";
 import { loadBundle } from "@web/core/assets";
 import { isBrowserFirefox } from "@web/core/browser/feature_detection";
@@ -33,6 +34,7 @@ import { WebsiteBuilderClientAction } from "@website/client_actions/website_prev
 import { WebsiteSystrayItem } from "@website/client_actions/website_preview/website_systray_item";
 import { mockImageRequests } from "./image_test_helpers";
 import { getWebsiteSnippets } from "./snippets_getter.hoot";
+import { WebsiteBuilder } from "@website/builder/website_builder";
 
 class Website extends models.Model {
     _name = "website";
@@ -100,7 +102,7 @@ export async function setupWebsiteBuilder(
     registry.category("services").remove("website_edit");
     let editor;
     let editableContent;
-    await mountWithCleanup(WebClient);
+    const comp = await mountWithCleanup(WebClient);
     let originalIframeLoaded;
     let resolveIframeLoaded = () => {};
     const bodyHTML = `${beforeWrapwrapContent}
@@ -195,11 +197,13 @@ export async function setupWebsiteBuilder(
     });
 
     let lastUpdatePromise;
-    const waitDomUpdated = async () => {
+    const waitSidebarUpdated = async () => {
+        await editor.shared.operation.next();
         // The tick ensures that lastUpdatePromise has correctly been assigned
         await tick();
         await lastUpdatePromise;
         await animationFrame();
+        await waitUntilIdle([comp.__owl__.app]);
     };
     patchWithCleanup(Builder.prototype, {
         setup() {
@@ -258,7 +262,7 @@ export async function setupWebsiteBuilder(
         getEditor: () => editor,
         getEditableContent: () => editableContent,
         openBuilderSidebar: async () => await openBuilderSidebar(editAssetsLoaded),
-        waitDomUpdated,
+        waitSidebarUpdated,
     };
 }
 
@@ -280,10 +284,13 @@ async function openBuilderSidebar(editAssetsLoaded) {
     await animationFrame();
 }
 
-export function addPlugin(Plugin) {
-    registry.category("website-plugins").add(Plugin.id, Plugin);
-    after(() => {
-        registry.category("website-plugins").remove(Plugin.id);
+export function addPlugin(...Plugin) {
+    patchWithCleanup(WebsiteBuilder.prototype, {
+        get builderProps() {
+            const props = super.builderProps;
+            props.Plugins.push(...Plugin);
+            return props;
+        },
     });
 }
 
@@ -315,10 +322,7 @@ export function addOption({
         title,
         reloadTarget,
     });
-    registry.category("website-plugins").add(pluginId, Class);
-    after(() => {
-        registry.category("website-plugins").remove(pluginId);
-    });
+    addPlugin(Class);
 }
 function makeOptionPlugin({
     pluginId,
@@ -367,10 +371,7 @@ export function addActionOption(actions = {}) {
             builder_actions: actions,
         };
     }
-    registry.category("website-plugins").add(pluginId, P);
-    after(() => {
-        registry.category("website-plugins").remove(P);
-    });
+    addPlugin(P);
 }
 
 export function addDropZoneSelector(selector) {
@@ -382,11 +383,7 @@ export function addDropZoneSelector(selector) {
             dropzone_selector: [selector],
         };
     }
-
-    registry.category("website-plugins").add(pluginId, P);
-    after(() => {
-        registry.category("website-plugins").remove(P);
-    });
+    addPlugin(P);
 }
 
 export async function setupWebsiteBuilderWithDummySnippet(content) {

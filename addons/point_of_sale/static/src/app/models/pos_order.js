@@ -5,7 +5,7 @@ import { roundCurrency } from "@point_of_sale/app/models/utils/currency";
 import { computeComboItems } from "./utils/compute_combo_items";
 import { accountTaxHelpers } from "@account/helpers/account_tax";
 import { localization } from "@web/core/l10n/localization";
-import { formatDate, deserializeDate, serializeDateTime } from "@web/core/l10n/dates";
+import { formatDate, serializeDateTime } from "@web/core/l10n/dates";
 
 const { DateTime } = luxon;
 
@@ -331,7 +331,8 @@ export class PosOrder extends Base {
                 this.last_order_preparation_change.lines[line.preparationKey] = {
                     attribute_value_names: line.attribute_value_ids.map((a) => a.name),
                     uuid: line.uuid,
-                    isCombo: line.combo_item_id?.id,
+                    isCombo: Boolean(line?.combo_line_ids?.length),
+                    combo_parent_uuid: line?.combo_parent_id?.uuid,
                     product_id: line.getProduct().id,
                     name: line.getFullProductName(),
                     basic_name: line.getProduct().name,
@@ -848,11 +849,7 @@ export class PosOrder extends Base {
     /* ---- Ship later --- */
     //FIXME remove this
     setShippingDate(shippingDate) {
-        if (shippingDate) {
-            this.shipping_date = serializeDateTime(deserializeDate(shippingDate), { zone: "utc" });
-        } else {
-            this.shipping_date = shippingDate;
-        }
+        this.shipping_date = shippingDate;
     }
     //FIXME remove this
     getShippingDate() {

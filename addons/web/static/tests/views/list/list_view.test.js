@@ -10934,6 +10934,48 @@ test(`list daterange with empty start date and end date`, async () => {
     ]);
 });
 
+test(`list daterange in form: open/close picker`, async () => {
+    Foo._fields.foo_o2m = fields.One2many({ relation: "foo" });
+    Foo._fields.date_end = fields.Date();
+
+    await mountView({
+        resModel: "foo",
+        type: "form",
+        arch: `
+            <form>
+                <sheet>
+                    <field name="foo_o2m">
+                        <list editable="bottom">
+                            <field name="date" widget="daterange" options="{'end_date_field': 'date_end', 'always_range': '1'}"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        `,
+        resId: 1,
+    });
+
+    await contains(`.o_field_x2many_list_row_add a`).click();
+    await contains(".o_field_daterange[name=date]").click();
+    await animationFrame();
+    await animationFrame();
+    expect(".o_datetime_picker").toBeDisplayed();
+    expect("input[data-field=date]").toBeFocused();
+
+    await contains(getPickerCell("15")).click();
+    await contains(getPickerCell("20")).click();
+
+    // Close picker
+    await pointerDown(`.o_view_controller`);
+    await animationFrame();
+    expect(".o_datetime_picker").toHaveCount(0);
+
+    // Wait to check if the picker is still closed
+    await animationFrame();
+    await animationFrame();
+    expect(".o_datetime_picker").toHaveCount(0);
+});
+
 test.tags("desktop");
 test(`editable list view: contexts are correctly sent`, async () => {
     serverState.userContext = { someKey: "some value" };
@@ -19198,4 +19240,57 @@ test(`multi edition: many2many_tags add few tags in one time`, async () => {
     expect(`.modal .o_field_many2many_tags .badge:eq(0)`).toHaveText("Value 3", {
         message: "should have display_name in badge",
     });
+});
+
+test.tags("mobile");
+test("scroll position is restored when coming back to list view", async () => {
+    Foo._views = {
+        kanban: `
+            <kanban>
+                <templates>
+                    <t t-name="card">
+                        <field name="foo"/>
+                    </t>
+                </templates>
+            </kanban>`,
+        list: `<list><field name="foo"/></list>`,
+        search: `<search />`,
+    };
+
+    for (let i = 1; i < 30; i++) {
+        Foo._records.push({ id: 100 + i, foo: `Record ${i}` });
+    }
+
+    let def;
+    onRpc("web_search_read", () => def);
+    await mountWithCleanup(WebClient);
+    await getService("action").doAction({
+        res_model: "foo",
+        type: "ir.actions.act_window",
+        views: [
+            [false, "kanban"],
+            [false, "list"],
+        ],
+    });
+
+    expect(".o_kanban_view").toHaveCount(1);
+    await getService("action").switchView("list");
+    expect(".o_list_view").toHaveCount(1);
+
+    // simulate a scroll in the list view
+    queryOne(".o_list_view").scrollTop = 200;
+
+    await getService("action").switchView("kanban");
+    expect(".o_kanban_view").toHaveCount(1);
+
+    // the list is "lazy", so it displays the control panel directly, and the renderer later with
+    // the data => simulate this and check that the scroll position is correctly restored
+    def = new Deferred();
+    await getService("action").switchView("list");
+    expect(".o_list_view").toHaveCount(1);
+    expect(".o_list_renderer").toHaveCount(0);
+    def.resolve();
+    await animationFrame();
+    expect(".o_list_renderer").toHaveCount(1);
+    expect(".o_list_view").toHaveProperty("scrollTop", 200);
 });
