@@ -30,7 +30,7 @@ dependencies = [
     "psutil", # windows binary code.google.com/p/psutil/downloads/list
     "psycopg2 >= 2.2",
     "pyopenssl",
-    "PyPDF2",
+    "pypdf2==2.12.1",
     "pyserial",
     "python-dateutil",
     "python-stdnum",
@@ -56,3 +56,6 @@ ldap = ["python-ldap"]
 [build-system]
 requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.uv.pip]
+index-url = "https://mirrors.aliyun.com/pypi/simple"
