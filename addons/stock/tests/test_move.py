@@ -2008,6 +2008,46 @@ class TestStockMove(TestStockCommon):
         move_partial._action_assign()
         self.assertEqual(move_partial.state, 'assigned')
 
+    def test_availability_10(self):
+        """ test the reservation is taken into account when updating the quantity on a move."""
+        # make some stock
+        lot1, lot2, lot3 = self.env['stock.lot'].create([{
+            'name': 'lot%s' % str(i),
+            'product_id': self.product_lot.id,
+        } for i in range(1, 4)])
+        pack = self.env['stock.package'].create({'name': 'pack'})
+        self.env['stock.quant']._update_available_quantity(self.product_lot, self.shelf_1, 3, lot_id=lot1)
+        self.env['stock.quant']._update_available_quantity(self.product_lot, self.shelf_2, 3, lot_id=lot2)
+        self.env['stock.quant']._update_available_quantity(self.product_lot, self.shelf_1, 1, lot_id=lot3)
+        self.env['stock.quant']._update_available_quantity(self.product_lot, self.shelf_2, 3, lot_id=lot2, package_id=pack)
+
+        move = self.env['stock.move'].create({
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.customer_location.id,
+            'product_id': self.product_lot.id,
+            'product_uom': self.product_lot.uom_id.id,
+            'product_uom_qty': 1.0,
+        })
+
+        move._action_confirm()
+        move._action_assign()
+        self.assertRecordValues(move.move_line_ids, [
+            {'quantity': 1.0, 'location_id': self.shelf_1.id, 'lot_id': lot1.id, 'package_id': False},
+        ])
+
+        move.quantity = 8.0
+        self.assertRecordValues(move.move_line_ids, [
+            {'quantity': 3.0, 'location_id': self.shelf_1.id, 'lot_id': lot1.id, 'package_id': False},
+            {'quantity': 3.0, 'location_id': self.shelf_2.id, 'lot_id': lot2.id, 'package_id': False},
+            {'quantity': 1.0, 'location_id': self.shelf_1.id, 'lot_id': lot3.id, 'package_id': False},
+            {'quantity': 1.0, 'location_id': self.shelf_2.id, 'lot_id': lot2.id, 'package_id': pack.id},
+        ])
+
+        move.quantity = 3.0
+        self.assertRecordValues(move.move_line_ids, [
+            {'quantity': 3.0, 'location_id': self.shelf_1.id, 'lot_id': lot1.id, 'package_id': False},
+        ])
+
     def test_past_quantity(self):
         """Test the quantity is correct when looking in the past."""
         # make some stock
@@ -6524,3 +6564,31 @@ class TestStockMove(TestStockCommon):
             {'quantity': 149.97, 'quantity_product_uom': 5.29},
             {'quantity': 0.03, 'quantity_product_uom': 0},
         ])
+
+    def test_move_state_after_split(self):
+        """Test that move states are correctly recomputed after splitting a picking."""
+        picking = self.env['stock.picking'].create({
+            'picking_type_id': self.env.ref('stock.picking_type_out').id,
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.supplier_location.id,
+            'move_ids': [Command.create({
+                'product_id': self.product.id,
+                'product_uom_qty': 10,
+                'location_id': self.stock_location.id,
+                'location_dest_id': self.supplier_location.id,
+            })]
+        })
+        self.product.is_storable = True
+        self.env['stock.quant']._update_available_quantity(self.product, self.stock_location, 10)
+        picking.action_confirm()
+        self.assertEqual(picking.move_ids.state, 'assigned')
+        picking.move_ids.quantity = 4
+        self.assertEqual(picking.move_ids.state, 'partially_available')
+        picking.action_split_transfer()
+        self.assertEqual(len(picking.move_ids), 1)
+        self.assertEqual(picking.move_ids.product_uom_qty, 4)
+        self.assertEqual(picking.move_ids.state, 'assigned')
+        backorder = picking.backorder_ids
+        self.assertEqual(backorder.move_ids.product_uom_qty, 6)
+        self.assertEqual(backorder.move_ids.quantity, 6)
+        self.assertEqual(backorder.move_ids.state, 'assigned')
