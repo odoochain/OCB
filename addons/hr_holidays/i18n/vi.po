@@ -15,9 +15,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-07 18:35+0000\n"
-"PO-Revision-Date: 2025-11-08 19:08+0000\n"
-"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"POT-Creation-Date: 2025-11-21 18:35+0000\n"
+"PO-Revision-Date: 2025-12-02 14:48+0000\n"
+"Last-Translator: \"Thi Huong Nguyen (thng)\" <thng@odoo.com>\n"
 "Language-Team: Vietnamese <https://translate.odoo.com/projects/odoo-19/"
 "hr_holidays/vi/>\n"
 "Language: vi\n"
@@ -25,7 +25,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.12.2\n"
+"X-Generator: Weblate 5.14.3\n"
 
 #. module: hr_holidays
 #. odoo-python
@@ -428,6 +428,9 @@ msgid ""
 "are displayed in the employee's work timezone</span>\n"
 "                                ("
 msgstr ""
+"<span>Nhân viên có múi giờ khác với bạn! Ở đây, ngày và giờ được hiển thị "
+"theo múi giờ làm việc của nhân viên</span>\n"
+"("
 
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.report_holidayssummary
@@ -3786,6 +3789,20 @@ msgid "Small Unemployment"
 msgstr "Thất nghiệp ngắn hạn"
 
 #. module: hr_holidays
+#. odoo-python
+#: code:addons/hr_holidays/wizard/hr_leave_generate_multi_wizard.py:0
+msgid ""
+"Some employees already have time off requests in hours that overlap with the "
+"selected period, Odoo cannot automatically adjust or split hourly leaves "
+"during batch generation. Conflicting time off:\n"
+"%s"
+msgstr ""
+"Một số nhân viên đã có đơn nghỉ phép theo giờ trùng với khoảng thời gian đã "
+"chọn, Odoo không thể tự động điều chỉnh hoặc chia tách đơn nghỉ phép theo "
+"giờ trong quá trình tạo hàng loạt. Đơn nghỉ phép xung đột:\n"
+"%s"
+
+#. module: hr_holidays
 #. odoo-javascript
 #: code:addons/hr_holidays/static/src/dashboard/time_off_card.xml:0
 msgid "Some leaves cannot be linked to any allocation. To see those leaves,"
@@ -5174,21 +5191,13 @@ msgstr ""
 
 #. module: hr_holidays
 #. odoo-python
-#: code:addons/hr_holidays/models/hr_leave_allocation.py:0
-msgid ""
-"You cannot refuse this allocation request since the employee has already "
-"taken leaves for it. Please refuse or delete those leaves first."
-msgstr ""
-"Bạn không thể từ chối đơn phân bổ này vì nhân viên đã nhận nghỉ phép. Hãy từ "
-"chối hoặc xóa các đơn nghỉ phép đó trước."
-
-#. module: hr_holidays
-#. odoo-python
 #: code:addons/hr_holidays/models/hr_leave.py:0
 msgid ""
 "You do not have any allocation for this time off type.\n"
 "Please request an allocation before submitting your time off request."
 msgstr ""
+"Bạn không có quyền phân bổ cho loại nghỉ phép này.\n"
+"Vui lòng yêu cầu phân bổ trước khi gửi đơn nghỉ phép."
 
 #. module: hr_holidays
 #. odoo-python
@@ -5541,6 +5550,13 @@ msgstr "hợp lệ cho đến"
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_leave_report_calendar_view_search
 msgid "validate"
 msgstr "xác thực"
+
+#~ msgid ""
+#~ "You cannot refuse this allocation request since the employee has already "
+#~ "taken leaves for it. Please refuse or delete those leaves first."
+#~ msgstr ""
+#~ "Bạn không thể từ chối đơn phân bổ này vì nhân viên đã nhận nghỉ phép. Hãy "
+#~ "từ chối hoặc xóa các đơn nghỉ phép đó trước."
 
 #~ msgid " days"
 #~ msgstr "ngày"

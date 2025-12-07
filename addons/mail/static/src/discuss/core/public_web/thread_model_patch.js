@@ -1,5 +1,6 @@
 import { Thread } from "@mail/core/common/thread_model";
 import { fields } from "@mail/model/misc";
+import { compareDatetime } from "@mail/utils/common/misc";
 import { rpc } from "@web/core/network/rpc";
 
 import { patch } from "@web/core/utils/patch";
@@ -33,15 +34,11 @@ const threadPatch = {
         });
         this.sub_channel_ids = fields.Many("Thread", {
             inverse: "parent_channel_id",
-            sort: (a, b) => b.id - a.id,
+            sort: (a, b) => compareDatetime(b.lastInterestDt, a.lastInterestDt) || b.id - a.id,
         });
         this.displayInSidebar = fields.Attr(false, {
             compute() {
-                return (
-                    this.displayToSelf ||
-                    this.isLocallyPinned ||
-                    this.sub_channel_ids.some((t) => t.displayInSidebar)
-                );
+                return this._computeDisplayInSidebar();
             },
         });
         this.loadSubChannelsDone = false;
@@ -50,6 +47,13 @@ const threadPatch = {
     },
     get canLeave() {
         return !this.parent_channel_id && super.canLeave;
+    },
+    _computeDisplayInSidebar() {
+        return (
+            this.displayToSelf ||
+            this.isLocallyPinned ||
+            this.sub_channel_ids.some((t) => t.displayInSidebar)
+        );
     },
     _computeDiscussAppCategory() {
         if (this.parent_channel_id) {

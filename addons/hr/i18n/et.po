@@ -27,7 +27,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-14 18:35+0000\n"
+"POT-Creation-Date: 2025-12-05 18:36+0000\n"
 "PO-Revision-Date: 2025-11-08 19:14+0000\n"
 "Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Estonian <https://translate.odoo.com/projects/odoo-19/hr/et/"
@@ -2053,6 +2053,11 @@ msgid "Document"
 msgstr "Dokument"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.view_employee_form
+msgid "Documents"
+msgstr ""
+
+#. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__driving_license
 msgid "Driving License"
 msgstr "Juhiload"
@@ -2260,6 +2265,12 @@ msgstr "Töötaja pangakontod kuhu maksta töötasud"
 #. module: hr
 #: model_terms:hr.job,website_description:hr.job_cto
 msgid "Employee development is a core focus"
+msgstr ""
+
+#. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_contract_template_form_view
+#: model_terms:ir.ui.view,arch_db:hr.view_employee_form
+msgid "Employee will be excluded from Pay Runs"
 msgstr ""
 
 #. module: hr
@@ -2607,6 +2618,7 @@ msgid "Full-Time"
 msgstr "Täistööaeg"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_version_search_view
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_filter
 msgid "Future Activities"
 msgstr "Tulevased tegevused"
@@ -3158,6 +3170,7 @@ msgid "Last Updated on"
 msgstr "Viimati uuendatud"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_version_search_view
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_filter
 msgid "Late Activities"
 msgstr "Hilinenud tegevused"
@@ -3540,6 +3553,11 @@ msgid "No dumb managers, no stupid tools to use, no rigid working hours"
 msgstr "Ei mingeid rumalaid juhte ega tööriistu ega jäika tööaega"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.view_employee_form
+msgid "No user linked"
+msgstr ""
+
+#. module: hr
 #: model_terms:hr.job,website_description:hr.job_consultant
 #: model_terms:hr.job,website_description:hr.job_developer
 #: model_terms:hr.job,website_description:hr.job_hrm
@@ -3553,11 +3571,6 @@ msgstr "Ei raisata aega ettevõtte protsessides, kohustustes ja autonoomias"
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
 msgid "Not Employed"
 msgstr "Ei ole palgatud"
-
-#. module: hr
-#: model_terms:ir.ui.view,arch_db:hr.view_employee_form
-msgid "Not linked to an user"
-msgstr "Ei ole seotud kasutajaga"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_department__note
@@ -4434,6 +4447,11 @@ msgid "Show Hr Icon Display"
 msgstr "Show Hr Icon Display"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_version_search_view
+msgid "Show all records whose next activity date is past"
+msgstr ""
+
+#. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__birthday_public_display
 msgid "Show to all employees"
 msgstr "Näita kõikidele töötajatele"
@@ -4860,6 +4878,7 @@ msgstr ""
 "leaves, ...), you should create another employee in the new company instead."
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_version_search_view
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_filter
 msgid "Today Activities"
 msgstr "Tänased tegevused"
@@ -5623,6 +5642,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr.field_hr_employee__work_permit_name
 msgid "work_permit_name"
 msgstr "work_permit_name"
+
+#~ msgid "Not linked to an user"
+#~ msgstr "Ei ole seotud kasutajaga"
 
 #~ msgid "%(activity)s, assigned to %(name)s, due on the %(deadline)s"
 #~ msgstr "%(activity)s, määratud kasutajale %(name)s, tähtajaga %(deadline)s"

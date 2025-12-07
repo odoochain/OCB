@@ -19,7 +19,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-07 18:35+0000\n"
+"POT-Creation-Date: 2025-11-28 18:35+0000\n"
 "PO-Revision-Date: 2025-11-04 13:41+0000\n"
 "Last-Translator: \"Malaz Siddig Elsayed Abuidris (msea)\" <msea@odoo.com>\n"
 "Language-Team: Arabic <https://translate.odoo.com/projects/odoo-19/account/"
@@ -218,18 +218,6 @@ msgstr "%(ref)s (%(currency_amount)s)"
 #: code:addons/account/models/account_account_tag.py:0
 msgid "%(tag)s (%(country_code)s)"
 msgstr "%(tag)s (%(country_code)s)"
-
-#. module: account
-#. odoo-python
-#: code:addons/account/models/account_tax.py:0
-msgid ""
-"%(tax_account)s (%(account_name)s) should be an account of type \"%"
-"(receivable)s\" or \"%(payable)s\" with both options \"%"
-"(allow_reconciliation)s\" and \"%(non_trade)s\" enabled."
-msgstr ""
-"الحساب %(tax_account)s (%(account_name)s) يجب أن يكون نوعه إما \"%"
-"(receivable)s\" أو \"%(payable)s\" مع تفعيل كلا الخيارين \"%"
-"(allow_reconciliation)s\" و \"%(non_trade)s\"."
 
 #. module: account
 #. odoo-python
@@ -2664,12 +2652,6 @@ msgid "Account Move Count"
 msgstr "عدد حركات الحساب"
 
 #. module: account
-#: model:ir.model.fields,field_description:account.field_account_bank_statement_line__line_ids
-#: model:ir.model.fields,field_description:account.field_account_move__line_ids
-msgid "Account Move Line Items"
-msgstr "عناصر بند حركة الحساب"
-
-#. module: account
 #: model:ir.model,name:account.model_account_move_reversal
 msgid "Account Move Reversal"
 msgstr "عكس حركة الحساب"
@@ -3291,8 +3273,6 @@ msgid "Add a rounding line"
 msgstr "إضافة بند تقريب"
 
 #. module: account
-#. odoo-javascript
-#: code:addons/account/static/src/components/section_and_note_fields_backend/section_and_note_fields_backend.xml:0
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "Add a section"
 msgstr "إضافة قسم"
@@ -4371,8 +4351,8 @@ msgstr "لا يمكن أن تساوي النسبة المئوية للرصيد 0
 #. odoo-python
 #: code:addons/account/models/account_journal.py:0
 #: code:addons/account/models/chart_template.py:0
-#: model:account.account,name:account.1_bank_journal_default_account_44
-#: model:account.account,name:account.2_bank_journal_default_account_149
+#: model:account.account,name:account.1_bank_journal_default_account_45
+#: model:account.account,name:account.2_bank_journal_default_account_150
 #: model:account.journal,name:account.1_bank
 #: model:account.journal,name:account.2_bank
 #: model:ir.model.fields,field_description:account.field_account_journal__bank_id
@@ -5101,7 +5081,7 @@ msgstr "الترحيل لـ"
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_journal.py:0
-#: model:account.account,name:account.1_cash_journal_default_account_160
+#: model:account.account,name:account.1_cash_journal_default_account_161
 #: model:ir.model.fields.selection,name:account.selection__account_journal__type__cash
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_filter
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_line_filter
@@ -5114,12 +5094,12 @@ msgid "Cash Account"
 msgstr "حساب نقدي"
 
 #. module: account
-#: model:account.account,name:account.1_cash_journal_default_account_157
+#: model:account.account,name:account.1_cash_journal_default_account_158
 msgid "Cash Bakery"
 msgstr "الدفع النقدي في المخبز"
 
 #. module: account
-#: model:account.account,name:account.1_cash_journal_default_account_159
+#: model:account.account,name:account.1_cash_journal_default_account_160
 msgid "Cash Bar"
 msgstr "حانة الدفع النقدي"
 
@@ -5161,7 +5141,7 @@ msgid "Cash Basis Transition Account"
 msgstr "الحساب الانتقالي للأساس النقدي"
 
 #. module: account
-#: model:account.account,name:account.1_cash_journal_default_account_156
+#: model:account.account,name:account.1_cash_journal_default_account_157
 msgid "Cash Clothes Shop"
 msgstr "متجر ملابس (الدفع النقدي)"
 
@@ -5223,7 +5203,7 @@ msgid "Cash Discount Write-Off Loss Account"
 msgstr "حساب خسائر شطب الخصم النقدي"
 
 #. module: account
-#: model:account.account,name:account.1_cash_journal_default_account_155
+#: model:account.account,name:account.1_cash_journal_default_account_156
 msgid "Cash Furn. Shop"
 msgstr "متجر أثاث (الدفع النقدي)"
 
@@ -5234,7 +5214,7 @@ msgid "Cash Registers"
 msgstr "آلات تسجيل النقد"
 
 #. module: account
-#: model:account.account,name:account.1_cash_journal_default_account_158
+#: model:account.account,name:account.1_cash_journal_default_account_159
 msgid "Cash Restaurant"
 msgstr "مطعم يتعامل بالنقد"
 
@@ -9332,6 +9312,11 @@ msgid "Has Iban Warning"
 msgstr "يحتوي على تحذير Iban"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_move_line__has_invalid_analytics
+msgid "Has Invalid Analytics"
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement__journal_has_invalid_statements
 #: model:ir.model.fields,field_description:account.field_account_journal__has_invalid_statements
 msgid "Has Invalid Statements"
@@ -9417,6 +9402,8 @@ msgstr ""
 "البريد الإلكتروني الذي استخدمته يقبل الفواتير الجديدة فقط:"
 
 #. module: account
+#. odoo-javascript
+#: code:addons/account/static/src/components/section_and_note_fields_backend/section_and_note_fields_backend.xml:0
 #: model:ir.model.fields,field_description:account.field_account_move_line__collapse_composition
 msgid "Hide Composition"
 msgstr "إخفاء التركيب"
@@ -9428,6 +9415,8 @@ msgid "Hide Post Button"
 msgstr "إخفاء زر الترحيل"
 
 #. module: account
+#. odoo-javascript
+#: code:addons/account/static/src/components/section_and_note_fields_backend/section_and_note_fields_backend.xml:0
 #: model:ir.model.fields,field_description:account.field_account_move_line__collapse_prices
 msgid "Hide Prices"
 msgstr "إخفاء الأسعار"
@@ -11058,8 +11047,8 @@ msgstr "بطاقة عنوان عنصر اليومية"
 #: model:ir.actions.act_window,name:account.action_account_moves_all_grouped_matching
 #: model:ir.actions.act_window,name:account.action_account_moves_all_tree
 #: model:ir.actions.act_window,name:account.action_move_line_select
-#: model:ir.model.fields,field_description:account.field_account_bank_statement_line__journal_line_ids
-#: model:ir.model.fields,field_description:account.field_account_move__journal_line_ids
+#: model:ir.model.fields,field_description:account.field_account_bank_statement_line__line_ids
+#: model:ir.model.fields,field_description:account.field_account_move__line_ids
 #: model:ir.ui.menu,name:account.menu_action_account_moves_all
 #: model_terms:ir.ui.view,arch_db:account.account_journal_dashboard_kanban_view
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
@@ -11067,6 +11056,12 @@ msgstr "بطاقة عنوان عنصر اليومية"
 #: model_terms:ir.ui.view,arch_db:account.view_move_line_tree
 msgid "Journal Items"
 msgstr "عناصر اليومية"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_bank_statement_line__journal_line_ids
+#: model:ir.model.fields,field_description:account.field_account_move__journal_line_ids
+msgid "Journal Items (DEPRECATED)"
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_journal__name
@@ -16090,6 +16085,12 @@ msgid "Show Accounting Features - Readonly"
 msgstr "إظهار الخصائص المحاسبية - للقراءة فقط"
 
 #. module: account
+#. odoo-javascript
+#: code:addons/account/static/src/components/section_and_note_fields_backend/section_and_note_fields_backend.xml:0
+msgid "Show Composition"
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_res_partner__show_credit_limit
 #: model:ir.model.fields,field_description:account.field_res_users__show_credit_limit
 msgid "Show Credit Limit"
@@ -16161,6 +16162,12 @@ msgstr "إظهار فرق الدفع"
 #: model:ir.model.fields,field_description:account.field_account_move__show_payment_term_details
 msgid "Show Payment Term Details"
 msgstr "إظهار تفاصيل شروط الدفع"
+
+#. module: account
+#. odoo-javascript
+#: code:addons/account/static/src/components/section_and_note_fields_backend/section_and_note_fields_backend.xml:0
+msgid "Show Prices"
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__show_reset_to_draft_button
@@ -16471,6 +16478,11 @@ msgstr "تم إكمال الخطوة بنجاح!"
 #: model:account.account,name:account.1_stock_valuation
 msgid "Stock Valuation"
 msgstr "تقييم المخزون"
+
+#. module: account
+#: model:account.account,name:account.1_stock_variation
+msgid "Stock Variation"
+msgstr ""
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
@@ -17327,6 +17339,12 @@ msgid ""
 "The Availability is set to 'Country Matches' but the field Country is not "
 "set."
 msgstr "تم تعيين التوفر على 'تطابق الدولة' ولكن لم يتم تعيين حقل 'الدولة'."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "The Bill/Refund date is required to validate this document."
+msgstr "تاريخ الفاتورة/استرداد الأموال ضروري لتصديق هذا المستند. "
 
 #. module: account
 #. odoo-python
@@ -18724,8 +18742,8 @@ msgstr "سيتم ترحيل هذخ الحركة الدورية حتى وفي ه�
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
-msgid "This setting cannot be changed after an invoice is created."
-msgstr "لا يمكن تغيير هذا الإعداد بعد إنشاء الفاتورة."
+msgid "This setting locks once a journal entry is created."
+msgstr ""
 
 #. module: account
 #. odoo-python
@@ -21503,6 +21521,21 @@ msgstr ""
 "{{ object.company_id.name }} الفاتورة الذاتية (المرجع {{ object.name or 'n/"
 "a' }})"
 
+#~ msgid "This setting cannot be changed after an invoice is created."
+#~ msgstr "لا يمكن تغيير هذا الإعداد بعد إنشاء الفاتورة."
+
+#~ msgid ""
+#~ "%(tax_account)s (%(account_name)s) should be an account of type \"%"
+#~ "(receivable)s\" or \"%(payable)s\" with both options \"%"
+#~ "(allow_reconciliation)s\" and \"%(non_trade)s\" enabled."
+#~ msgstr ""
+#~ "الحساب %(tax_account)s (%(account_name)s) يجب أن يكون نوعه إما \"%"
+#~ "(receivable)s\" أو \"%(payable)s\" مع تفعيل كلا الخيارين \"%"
+#~ "(allow_reconciliation)s\" و \"%(non_trade)s\"."
+
+#~ msgid "Account Move Line Items"
+#~ msgstr "عناصر بند حركة الحساب"
+
 #~ msgid ""
 #~ "Accrual entry created on %(date)s: %(accrual_entry)s.                    "
 #~ "And its reverse entry: %(reverse_entry)s."
@@ -22947,9 +22980,6 @@ msgstr ""
 #~ "سوف تحتاج إلى مسح %(model)s %(sequence_field)s حتى تتمكن من الاستمرار.\n"
 #~ "بفعل ذلك، قد ترغب في إعادة تسلسل قيودك حتى تتمكن من الحفاظ على التسلسل "
 #~ "المستمر المبني على التاريخ. "
-
-#~ msgid "The Bill/Refund date is required to validate this document."
-#~ msgstr "تاريخ الفاتورة/استرداد الأموال ضروري لتصديق هذا المستند. "
 
 #~ msgid "The Months and Days of the Payment Terms lines must be positive."
 #~ msgstr "يجب أن تكون الشهور والأيام لبنود شروط الدفع موجبة. "

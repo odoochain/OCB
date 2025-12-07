@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server saas~18.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-07 18:36+0000\n"
-"PO-Revision-Date: 2025-11-08 21:59+0000\n"
-"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"POT-Creation-Date: 2025-12-05 18:36+0000\n"
+"PO-Revision-Date: 2025-12-02 14:55+0000\n"
+"Last-Translator: \"Kwanghee Park (kwpa)\" <kwpa@odoo.com>\n"
 "Language-Team: Korean <https://translate.odoo.com/projects/odoo-19/"
 "account_edi_ubl_cii/ko/>\n"
 "Language: ko\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.12.2\n"
+"X-Generator: Weblate 5.14.3\n"
 
 #. module: account_edi_ubl_cii
 #. odoo-python
@@ -553,6 +553,12 @@ msgstr "Indirizzo di Posta Elettronica Certificata"
 
 #. module: account_edi_ubl_cii
 #. odoo-python
+#: code:addons/account_edi_ubl_cii/models/account_move_send.py:0
+msgid "Install Chorus Pro"
+msgstr "Chorus Pro 설치"
+
+#. module: account_edi_ubl_cii
+#. odoo-python
 #: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 msgid "Intra-Community supply"
 msgstr "커뮤니티 내 공급"
@@ -773,6 +779,13 @@ msgid ""
 "XML file."
 msgstr ""
 "완전한 XML 파일을 생성하려면 회사 부가가치세 및 Peppol 주소를 입력하세요."
+
+#. module: account_edi_ubl_cii
+#. odoo-python
+#: code:addons/account_edi_ubl_cii/models/account_move_send.py:0
+msgid ""
+"Please install the french Chorus pro module to have all the specific rules."
+msgstr ""
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__peppol_eas__9945
@@ -1008,7 +1021,8 @@ msgstr ""
 msgid ""
 "The reason why the amount is exempted from VAT or why no VAT is being "
 "charged, used for electronic invoicing purposes."
-msgstr "부가가치세가 면제되거나 부가가치세가 부과되지 않는 이유는 전자 청구서 발행을 "
+msgstr ""
+"부가가치세가 면제되거나 부가가치세가 부과되지 않는 이유는 전자 청구서 발행을 "
 "목적으로 사용됩니다."
 
 #. module: account_edi_ubl_cii
@@ -1089,63 +1103,72 @@ msgstr "VATEX-EU-132 - 이사회 지침 2006/112/EC 132조에 따라 면제됩�
 msgid ""
 "VATEX-EU-132-1A - Exempt based on article 132, section 1 (a) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1A - 이사회 지침 2006/112/EC 132조 1항 (a)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1A - 이사회 지침 2006/112/EC 132조 1항 (a)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1b
 msgid ""
 "VATEX-EU-132-1B - Exempt based on article 132, section 1 (b) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1B - 이사회 지침 2006/112/EC 132조 1항 (b)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1B - 이사회 지침 2006/112/EC 132조 1항 (b)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1c
 msgid ""
 "VATEX-EU-132-1C - Exempt based on article 132, section 1 (c) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1C - 이사회 지침 2006/112/EC 132조 1항 (c)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1C - 이사회 지침 2006/112/EC 132조 1항 (c)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1d
 msgid ""
 "VATEX-EU-132-1D - Exempt based on article 132, section 1 (d) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1D - 이사회 지침 2006/112/EC 132조 1항 (d)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1D - 이사회 지침 2006/112/EC 132조 1항 (d)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1e
 msgid ""
 "VATEX-EU-132-1E - Exempt based on article 132, section 1 (e) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1E - 이사회 지침 2006/112/EC 132조 1항 (e)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1E - 이사회 지침 2006/112/EC 132조 1항 (e)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1f
 msgid ""
 "VATEX-EU-132-1F - Exempt based on article 132, section 1 (f) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1F - 이사회 지침 2006/112/EC 132조 1항 (f)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1F - 이사회 지침 2006/112/EC 132조 1항 (f)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1g
 msgid ""
 "VATEX-EU-132-1G - Exempt based on article 132, section 1 (g) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1G - 이사회 지침 2006/112/EC 132조 1항 (g)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1G - 이사회 지침 2006/112/EC 132조 1항 (g)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1h
 msgid ""
 "VATEX-EU-132-1H - Exempt based on article 132, section 1 (h) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1H - 이사회 지침 2006/112/EC 132조 1항 (h)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1H - 이사회 지침 2006/112/EC 132조 1항 (h)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1i
 msgid ""
 "VATEX-EU-132-1I - Exempt based on article 132, section 1 (i) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1I - 이사회 지침 2006/112/EC 132조 1항 (i)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1I - 이사회 지침 2006/112/EC 132조 1항 (i)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1j
@@ -1159,7 +1182,8 @@ msgstr "VATEX-EU-132-1J - 이사회 지침 2006/112/EC 132조 1항 (j)에 따라
 msgid ""
 "VATEX-EU-132-1K - Exempt based on article 132, section 1 (k) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1K - 이사회 지침 2006/112/EC 132조 1항 (k)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1K - 이사회 지침 2006/112/EC 132조 1항 (k)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1l
@@ -1187,21 +1211,24 @@ msgstr "VATEX-EU-132-1N - 이사회 지침 2006/112/EC 132조 1항 (n)에 따라
 msgid ""
 "VATEX-EU-132-1O - Exempt based on article 132, section 1 (o) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1O - 이사회 지침 2006/112/EC 132조 1항 (o)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1O - 이사회 지침 2006/112/EC 132조 1항 (o)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1p
 msgid ""
 "VATEX-EU-132-1P - Exempt based on article 132, section 1 (p) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1P - 이사회 지침 2006/112/EC 132조 1항 (p)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1P - 이사회 지침 2006/112/EC 132조 1항 (p)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-132-1q
 msgid ""
 "VATEX-EU-132-1Q - Exempt based on article 132, section 1 (q) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-132-1Q - 이사회 지침 2006/112/EC 132조 1항 (q)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-132-1Q - 이사회 지침 2006/112/EC 132조 1항 (q)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-143
@@ -1214,14 +1241,16 @@ msgstr "VATEX-EU-143 - 이사회 지침 2006/112/EC 제143조에 따라 면제�
 msgid ""
 "VATEX-EU-143-1A - Exempt based on article 143, section 1 (a) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-143-1A - 이사회 지침 2006/112/EC 143조 1항 (a)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-143-1A - 이사회 지침 2006/112/EC 143조 1항 (a)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-143-1b
 msgid ""
 "VATEX-EU-143-1B - Exempt based on article 143, section 1 (b) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-143-1B - 이사회 지침 2006/112/EC 143조 1항 (b)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-143-1B - 이사회 지침 2006/112/EC 143조 1항 (b)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-143-1c
@@ -1242,7 +1271,8 @@ msgstr "VATEX-EU-143-1D - 이사회 지침 2006/112/EC 143조 1항 (d)에 따라
 msgid ""
 "VATEX-EU-143-1E - Exempt based on article 143, section 1 (e) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-143-1E - 이사회 지침 2006/112/EC 143조 1항 (e)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-143-1E - 이사회 지침 2006/112/EC 143조 1항 (e)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-143-1f
@@ -1256,14 +1286,16 @@ msgstr "VATEX-EU-143-1F - 이사회 지침 2006/112/EC 143조 1항 (f)에 따라
 msgid ""
 "VATEX-EU-143-1FA - Exempt based on article 143, section 1 (fa) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-143-1FA - 이사회 지침 2006/112/EC 143조 1항 (fa)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-143-1FA - 이사회 지침 2006/112/EC 143조 1항 (fa)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-143-1g
 msgid ""
 "VATEX-EU-143-1G - Exempt based on article 143, section 1 (g) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-143-1G - 이사회 지침 2006/112/EC 143조 1항 (g)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-143-1G - 이사회 지침 2006/112/EC 143조 1항 (g)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-143-1h
@@ -1277,28 +1309,32 @@ msgstr "VATEX-EU-143-1H - 이사회 지침 2006/112/EC 143조 1항 (h)에 따라
 msgid ""
 "VATEX-EU-143-1I - Exempt based on article 143, section 1 (i) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-143-1I - 이사회 지침 2006/112/EC 143조 1항 (i)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-143-1I - 이사회 지침 2006/112/EC 143조 1항 (i)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-143-1j
 msgid ""
 "VATEX-EU-143-1J - Exempt based on article 143, section 1 (j) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-143-1J - 이사회 지침 2006/112/EC 143조 1항 (j)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-143-1J - 이사회 지침 2006/112/EC 143조 1항 (j)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-143-1k
 msgid ""
 "VATEX-EU-143-1K - Exempt based on article 143, section 1 (k) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-143-1K - 이사회 지침 2006/112/EC 143조 1항 (k)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-143-1K - 이사회 지침 2006/112/EC 143조 1항 (k)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-143-1l
 msgid ""
 "VATEX-EU-143-1L - Exempt based on article 143, section 1 (l) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-143-1L - 이사회 지침 2006/112/EC 143조 1항 (l)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-143-1L - 이사회 지침 2006/112/EC 143조 1항 (l)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-148
@@ -1366,7 +1402,8 @@ msgstr "VATEX-EU-151 - 이사회 지침 2006/112/EC 151조에 근거하여 면�
 msgid ""
 "VATEX-EU-151-1A - Exempt based on article 151, section 1 (a) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-151-1A - 이사회 지침 2006/112/EC 151조 1항 (a)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-151-1A - 이사회 지침 2006/112/EC 151조 1항 (a)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-151-1aa
@@ -1380,14 +1417,16 @@ msgstr "VATEX-EU-151-1AA - 이사회 지침 2006/112/EC 151조 1항 (aa)에 따�
 msgid ""
 "VATEX-EU-151-1B - Exempt based on article 151, section 1 (b) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-151-1B - 이사회 지침 2006/112/EC 151조 1항 (b)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-151-1B - 이사회 지침 2006/112/EC 151조 1항 (b)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-151-1c
 msgid ""
 "VATEX-EU-151-1C - Exempt based on article 151, section 1 (c) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-151-1C - 이사회 지침 2006/112/EC 151조 1항 (c)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-151-1C - 이사회 지침 2006/112/EC 151조 1항 (c)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-151-1d
@@ -1401,7 +1440,8 @@ msgstr "VATEX-EU-151-1D - 이사회 지침 2006/112/EC 151조 1항 (d)에 따라
 msgid ""
 "VATEX-EU-151-1E - Exempt based on article 151, section 1 (e) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-151-1E - 이사회 지침 2006/112/EC 151조 1항 (e)에 근거하여 면제"
+msgstr ""
+"VATEX-EU-151-1E - 이사회 지침 2006/112/EC 151조 1항 (e)에 근거하여 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-309
@@ -1464,8 +1504,8 @@ msgid ""
 "VATEX-FR-CNWVAT - France domestic Credit Notes without VAT, due to supplier "
 "forfeit of VAT for discount"
 msgstr ""
-"VATEX-FR-CNWVAT - 부가가치세가 없는 프랑스 국내 신용장, 할인을 위한 "
-"공급업체의 부가가치세 포기로 인해 부가가치세 면제"
+"VATEX-FR-CNWVAT - 부가가치세가 없는 프랑스 국내 신용장, 할인을 위한 공급업체"
+"의 부가가치세 포기로 인해 부가가치세 면제"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-fr-franchise
@@ -1510,11 +1550,6 @@ msgstr ""
 "서 명세 (BG-25)는 VAT 카테고리 코드 (BT-151)의 청구서 항목으로 분류됩니다."
 
 #. module: account_edi_ubl_cii
-#: model_terms:ir.ui.view,arch_db:account_edi_ubl_cii.view_partner_property_form
-msgid "Your endpoint"
-msgstr "사용자 엔드포인트"
-
-#. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_category_code__z
 msgid "Z - Zero rated goods"
 msgstr "Z - 무등급 상품"
@@ -1539,6 +1574,9 @@ msgstr "fx"
 #: model_terms:ir.ui.view,arch_db:account_edi_ubl_cii.account_invoice_pdfa_3_facturx_metadata
 msgid "urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#"
 msgstr "urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#"
+
+#~ msgid "Your endpoint"
+#~ msgstr "사용자 엔드포인트"
 
 #~ msgid "Format used to import the invoice: %s"
 #~ msgstr "청구서 가져오기에서 사용된 양식: %s"

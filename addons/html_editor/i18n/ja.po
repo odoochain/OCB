@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-07 18:36+0000\n"
-"PO-Revision-Date: 2025-11-12 05:40+0000\n"
+"POT-Creation-Date: 2025-12-05 18:36+0000\n"
+"PO-Revision-Date: 2025-11-24 12:09+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/"
 "html_editor/ja/>\n"
@@ -418,9 +418,9 @@ msgstr "コード"
 
 #. module: html_editor
 #. odoo-javascript
-#: code:addons/html_editor/static/src/others/embedded_components/plugins/syntax_highlighting_plugin/code_toolbar.xml:0
+#: code:addons/html_editor/static/src/others/embedded_components/backend/syntax_highlighting/code_toolbar.xml:0
 msgid "Code copied to the clipboard."
-msgstr ""
+msgstr "コードがクリップボードにコピーされました。"
 
 #. module: html_editor
 #. odoo-javascript
@@ -466,15 +466,9 @@ msgstr "列に変換"
 
 #. module: html_editor
 #. odoo-javascript
-#: code:addons/html_editor/static/src/others/embedded_components/plugins/syntax_highlighting_plugin/code_toolbar.xml:0
+#: code:addons/html_editor/static/src/others/embedded_components/backend/syntax_highlighting/code_toolbar.xml:0
 msgid "Copy"
 msgstr "コピー"
-
-#. module: html_editor
-#. odoo-javascript
-#: code:addons/html_editor/static/src/main/link/link_popover.xml:0
-msgid "Copy Link"
-msgstr "リンクをコピー"
 
 #. module: html_editor
 #. odoo-javascript
@@ -616,6 +610,7 @@ msgstr "エラー: メディアライブラリーからURLをダウンロード�
 #. module: html_editor
 #. odoo-javascript
 #: code:addons/html_editor/static/src/fields/x2many_field/x2many_image_field.xml:0
+#: code:addons/html_editor/static/src/main/link/link_popover.xml:0
 msgid "Edit"
 msgstr "編集"
 
@@ -1105,6 +1100,12 @@ msgstr "リンク"
 
 #. module: html_editor
 #. odoo-javascript
+#: code:addons/html_editor/static/src/main/link/link_popover.xml:0
+msgid "Link Popover"
+msgstr ""
+
+#. module: html_editor
+#. odoo-javascript
 #: code:addons/html_editor/static/src/main/link/link_popover.js:0
 msgid "Link copied to clipboard."
 msgstr "リンクはクリップボードにコピーされました。"
@@ -1184,6 +1185,12 @@ msgstr "中セクション見出し"
 #: code:addons/html_editor/static/src/others/embedded_components/core/file/readonly_file.js:0
 msgid "Missing File"
 msgstr "ファイルが見つかりません"
+
+#. module: html_editor
+#. odoo-javascript
+#: code:addons/html_editor/static/src/main/powerbox/powerbox_plugin.js:0
+msgid "Modules"
+msgstr ""
 
 #. module: html_editor
 #. odoo-javascript
@@ -1684,6 +1691,18 @@ msgstr "メディアを選択"
 
 #. module: html_editor
 #. odoo-javascript
+#: code:addons/html_editor/static/src/main/link/link_popover.xml:0
+msgid "Select button shape"
+msgstr ""
+
+#. module: html_editor
+#. odoo-javascript
+#: code:addons/html_editor/static/src/main/link/link_popover.xml:0
+msgid "Select button size"
+msgstr ""
+
+#. module: html_editor
+#. odoo-javascript
 #: code:addons/html_editor/static/src/main/font/font_family_plugin.js:0
 msgid "Select font family"
 msgstr "フォントファミリーを選択"
@@ -1744,12 +1763,6 @@ msgstr "形を設定: サムネイル"
 
 #. module: html_editor
 #. odoo-javascript
-#: code:addons/html_editor/static/src/main/link/link_popover.xml:0
-msgid "Shape"
-msgstr "形状"
-
-#. module: html_editor
-#. odoo-javascript
 #: code:addons/html_editor/static/src/main/media/media_dialog/file_selector.xml:0
 msgid "Show optimized images"
 msgstr "最適化済画像を表示"
@@ -1771,7 +1784,6 @@ msgstr ""
 #. module: html_editor
 #. odoo-javascript
 #: code:addons/html_editor/static/src/main/font/gradient_picker/gradient_picker.xml:0
-#: code:addons/html_editor/static/src/main/link/link_popover.xml:0
 msgid "Size"
 msgstr "サイズ"
 
@@ -1897,8 +1909,8 @@ msgid ""
 "The document was already saved from someone with a different history for "
 "model \"%(model)s\", field \"%(field)s\" with id \"%(id)d\"."
 msgstr ""
-"ドキュメントはモデル\"%(model)s\", フィールド \"%(field)s\" 、id \"%(id)d\""
-"用に異なる履歴を持つ他の誰かによって既に保存されています。"
+"ドキュメントはモデル\"%(model)s\", フィールド \"%(field)s\" 、id \"%(id)d\"用"
+"に異なる履歴を持つ他の誰かによって既に保存されています。"
 
 #. module: html_editor
 #. odoo-javascript
@@ -2229,8 +2241,9 @@ msgstr "はい"
 msgid ""
 "You can not replace a field by this image. If you want to use this image, "
 "first save it on your computer and then upload it here."
-msgstr "この画像をフィールドに置き換えることはできません。この画像を使用したい場合は"
-"、まずコンピュータに保存してから、こちらにアップロードして下さい。"
+msgstr ""
+"この画像をフィールドに置き換えることはできません。この画像を使用したい場合"
+"は、まずコンピュータに保存してから、こちらにアップロードして下さい。"
 
 #. module: html_editor
 #. odoo-javascript
@@ -2355,6 +2368,12 @@ msgstr "px"
 
 #. module: html_editor
 #. odoo-javascript
+#: code:addons/html_editor/static/src/main/font/font_plugin.js:0
+msgid "title"
+msgstr ""
+
+#. module: html_editor
+#. odoo-javascript
 #: code:addons/html_editor/static/src/main/media/media_dialog/video_selector.xml:0
 msgid "videos"
 msgstr "動画"
@@ -2363,6 +2382,12 @@ msgstr "動画"
 #: model:ir.model,name:html_editor.model_ir_websocket
 msgid "websocket message handling"
 msgstr "WebSocketメッセージ処理"
+
+#~ msgid "Copy Link"
+#~ msgstr "リンクをコピー"
+
+#~ msgid "Shape"
+#~ msgstr "形状"
 
 #~ msgid "Hide Dailymotion logo"
 #~ msgstr "Dailymotionロゴを非表示"

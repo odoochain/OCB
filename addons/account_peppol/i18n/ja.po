@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server saas~18.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-07 18:36+0000\n"
-"PO-Revision-Date: 2025-11-13 08:15+0000\n"
+"POT-Creation-Date: 2025-12-05 18:36+0000\n"
+"PO-Revision-Date: 2025-12-05 06:19+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/"
 "account_peppol/ja/>\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.12.2\n"
+"X-Generator: Weblate 5.14.3\n"
 
 #. module: account_peppol
 #. odoo-python
@@ -64,17 +64,6 @@ msgid "%s has requested electronic invoices reception on Peppol."
 msgstr "%s Peppolでの電子請求書受領をリクエストしました。"
 
 #. module: account_peppol
-#: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
-msgid ""
-".<br/>\n"
-"                            But you are receiving your e-invoices via this "
-"Access Point:"
-msgstr ""
-".<br/>\n"
-"                            しかし、このアクセスポイント経由で電子顧客請求書"
-"を受け取っています。"
-
-#. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.mail_notification_layout_with_responsible_signature_and_peppol
 msgid ""
 "<br/>\n"
@@ -84,6 +73,14 @@ msgstr ""
 "<br/>\n"
 "                                ベルギーでは電子請求が <u>2026年1月より義務化"
 "</u>されます。 - 今すぐご登録ください。"
+
+#. module: account_peppol
+#: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
+msgid ""
+"<br/>\n"
+"                            But you are receiving your e-invoices via this "
+"Access Point:"
+msgstr ""
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
@@ -444,17 +441,17 @@ msgstr "Peppolを有効化 (テスト)"
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_peppol_config_wizard__peppol_activate_self_billing
 msgid "Activate self-billing"
-msgstr ""
+msgstr "自己請求を有効にする"
 
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_res_company__peppol_activate_self_billing_sending
 msgid "Activate self-billing sending"
-msgstr ""
+msgstr "自己請求送信を有効化"
 
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_peppol_registration__active_parent_company
 msgid "Active Parent Company"
-msgstr ""
+msgstr "有効な親会社"
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
@@ -602,6 +599,8 @@ msgid ""
 "Any self-billed invoices / credit notes received via Peppol will be created "
 "in draft in this journal. Defaults to the first sale journal."
 msgstr ""
+"Peppol経由で受信した自己請求書 / クレジットノートは、この仕訳帳にドラフトとし"
+"て作成されます。デフォルトでは最初の売上仕訳帳が使用されます。"
 
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_res_partner__available_peppol_edi_formats
@@ -625,7 +624,7 @@ msgstr ""
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_peppol_registration__can_use_parent_connection
 msgid "Can Use Parent Connection"
-msgstr ""
+msgstr "親の接続を使用可能"
 
 #. module: account_peppol
 #: model:ir.model.fields.selection,name:account_peppol.selection__res_company__account_peppol_proxy_state__receiver
@@ -657,11 +656,6 @@ msgstr "PEPPOLをキャンセル"
 #: code:addons/account_peppol/models/account_move.py:0
 msgid "Cannot cancel an entry that has already been sent to PEPPOL"
 msgstr "PEPPOLに送信済みのエントリをキャンセルすることはできません。"
-
-#. module: account_peppol
-#: model:ir.model.fields.selection,name:account_peppol.selection__res_partner__peppol_verification_state__not_valid_format
-msgid "Cannot receive this format"
-msgstr "このフォーマットを受信できません"
 
 #. module: account_peppol
 #. odoo-python
@@ -804,13 +798,13 @@ msgstr "終了"
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid "Disconnect this database"
-msgstr ""
+msgstr "このデータベースを切断します"
 
 #. module: account_peppol
 #. odoo-python
 #: code:addons/account_peppol/models/res_config_settings.py:0
 msgid "Disconnected this branch company peppol configuration from %s."
-msgstr ""
+msgstr "%s からこの支店のPeppol設定を切断しました。"
 
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_account_edi_common__display_name
@@ -908,6 +902,10 @@ msgid ""
 "please go to Settings > Accounting > Peppol Settings and click on 'Reconnect "
 "this database'."
 msgstr ""
+"Peppolアクセスポイントへの接続に失敗しました。バックアップからデータベースを"
+"復元した場合や、中立化せずにコピーした場合に発生することがあります。解決する"
+"には、管理設定 > 会計 > Peppol設定から、「このデータベースを再接続」をクリッ"
+"クします。"
 
 #. module: account_peppol
 #. odoo-javascript
@@ -947,11 +945,15 @@ msgstr "ID"
 
 #. module: account_peppol
 #: model:ir.model.fields,help:account_peppol.field_peppol_config_wizard__peppol_activate_self_billing
+#, fuzzy
 msgid ""
 "If activated, you will be able to send and receive self-billed invoices via "
 "Peppol.You can still disable reception by disabling the self-billing "
 "document types below."
 msgstr ""
+"有効化すると、Peppol経由で自己請求書を送受信できるようになります。以下の自己"
+"請求書ドキュメントの種類を無効化することで、受信機能を無効にすることも可能で"
+"す。"
 
 #. module: account_peppol
 #: model:ir.model.fields,help:account_peppol.field_res_company__peppol_activate_self_billing_sending
@@ -959,6 +961,8 @@ msgid ""
 "If activated, you will be able to send vendor bills as self-billed invoices "
 "via Peppol."
 msgstr ""
+"有効化されると、Peppol経由で仕入先請求書を自己請求書として送信できるようにな"
+"ります。"
 
 #. module: account_peppol
 #. odoo-python
@@ -981,7 +985,7 @@ msgstr "顧客請求書送付中"
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_peppol_registration__is_branch_company
 msgid "Is Branch Company"
-msgstr ""
+msgstr "支店会社"
 
 #. module: account_peppol
 #: model:ir.model.fields,help:account_peppol.field_peppol_config_wizard__service_json
@@ -1075,19 +1079,9 @@ msgstr ""
 "ありません。"
 
 #. module: account_peppol
-#: model:ir.model.fields.selection,name:account_peppol.selection__res_partner__peppol_verification_state__not_valid
-msgid "Not on Peppol"
-msgstr "Peppolに登録されていません"
-
-#. module: account_peppol
 #: model:ir.model.fields.selection,name:account_peppol.selection__res_company__account_peppol_proxy_state__not_registered
 msgid "Not registered"
 msgstr "登録されていません"
-
-#. module: account_peppol
-#: model:ir.model.fields.selection,name:account_peppol.selection__res_partner__peppol_verification_state__not_verified
-msgid "Not verified yet"
-msgstr "まだ検証されていません"
 
 #. module: account_peppol
 #: model:mail.template,description:account_peppol.mail_template_peppol_registration
@@ -1174,10 +1168,25 @@ msgid "PEPPOL: webhook keep alive"
 msgstr "PEPPOL: ウェブフック"
 
 #. module: account_peppol
+#: model:ir.model.fields.selection,name:account_peppol.selection__res_partner__peppol_verification_state__not_valid_format
+msgid "Partner cannot receive format"
+msgstr ""
+
+#. module: account_peppol
 #. odoo-python
 #: code:addons/account_peppol/wizard/account_move_send_wizard.py:0
 msgid "Partner doesn't have a valid Peppol configuration."
 msgstr "取引先に有効なPeppol設定がありません。"
+
+#. module: account_peppol
+#: model:ir.model.fields.selection,name:account_peppol.selection__res_partner__peppol_verification_state__not_valid
+msgid "Partner is not on Peppol"
+msgstr ""
+
+#. module: account_peppol
+#: model:ir.model.fields.selection,name:account_peppol.selection__res_partner__peppol_verification_state__valid
+msgid "Partner is on Peppol"
+msgstr ""
 
 #. module: account_peppol
 #: model:ir.model.fields.selection,name:account_peppol.selection__account_move__peppol_move_state__processing
@@ -1298,12 +1307,6 @@ msgid "Peppol e-address (EAS)"
 msgstr "Peppol e-address (EAS)"
 
 #. module: account_peppol
-#: model:ir.model.fields,field_description:account_peppol.field_res_partner__peppol_verification_state
-#: model:ir.model.fields,field_description:account_peppol.field_res_users__peppol_verification_state
-msgid "Peppol endpoint verification"
-msgstr "Peppolエンドポイント検証"
-
-#. module: account_peppol
 #. odoo-python
 #: code:addons/account_peppol/models/account_edi_proxy_user.py:0
 msgid "Peppol error: %s"
@@ -1321,6 +1324,8 @@ msgid "Peppol meta updated at"
 msgstr ""
 
 #. module: account_peppol
+#: model:ir.model.fields,field_description:account_peppol.field_res_partner__peppol_verification_state
+#: model:ir.model.fields,field_description:account_peppol.field_res_users__peppol_verification_state
 #: model_terms:ir.ui.view,arch_db:account_peppol.account_peppol_view_account_invoice_filter
 msgid "Peppol status"
 msgstr "Peppolステータス"
@@ -1911,6 +1916,8 @@ msgid ""
 "the proxy server. It is set to True when the token needs to be refreshed or "
 "updated."
 msgstr ""
+"このフィールドは、edi ユーザトークンがプロキシサーバと同期していないことを示"
+"します。トークンの更新が必要な場合は True に設定されます。"
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.mail_notification_layout_with_responsible_signature_and_peppol
@@ -1955,7 +1962,7 @@ msgstr "完全な電子顧客請求書を作成するには、この取引先の
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_res_config_settings__account_is_token_out_of_sync
 msgid "Token Out of Sync"
-msgstr ""
+msgstr "トークンの同期が取れていません"
 
 #. module: account_peppol
 #: model:ir.model,name:account_peppol.model_account_edi_xml_ubl_20
@@ -1967,6 +1974,11 @@ msgstr "UBL 2.0"
 #: code:addons/account_peppol/exceptions.py:0
 msgid "Unable to verify the digest value."
 msgstr "ダイジェスト値を検証できませんでした。"
+
+#. module: account_peppol
+#: model:ir.model.fields.selection,name:account_peppol.selection__res_partner__peppol_verification_state__not_verified
+msgid "Unchecked"
+msgstr ""
 
 #. module: account_peppol
 #. odoo-python
@@ -2000,11 +2012,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:account_peppol.field_peppol_registration__use_parent_connection_selection
 msgid "Use Parent Connection Selection"
 msgstr ""
-
-#. module: account_peppol
-#: model:ir.model.fields.selection,name:account_peppol.selection__res_partner__peppol_verification_state__valid
-msgid "Valid"
-msgstr "有効"
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_partner_form_account_peppol
@@ -2196,11 +2203,6 @@ msgid ""
 msgstr ""
 
 #. module: account_peppol
-#: model_terms:ir.ui.view,arch_db:account_peppol.peppol_registration_form
-msgid "Your endpoint"
-msgstr "エンドポイント"
-
-#. module: account_peppol
 #. odoo-python
 #: code:addons/account_peppol/exceptions.py:0
 msgid "Your identification has not been approved for this action yet"
@@ -2266,6 +2268,33 @@ msgstr "請求書を送信するには、しかし、この請求書は"
 #: model_terms:ir.ui.view,arch_db:account_peppol.mail_notification_layout_with_responsible_signature_and_peppol
 msgid "uses"
 msgstr "ユーザー"
+
+#~ msgid ""
+#~ ".<br/>\n"
+#~ "                            But you are receiving your e-invoices via "
+#~ "this Access Point:"
+#~ msgstr ""
+#~ ".<br/>\n"
+#~ "                            しかし、このアクセスポイント経由で電子顧客請求"
+#~ "書を受け取っています。"
+
+#~ msgid "Cannot receive this format"
+#~ msgstr "このフォーマットを受信できません"
+
+#~ msgid "Not on Peppol"
+#~ msgstr "Peppolに登録されていません"
+
+#~ msgid "Not verified yet"
+#~ msgstr "まだ検証されていません"
+
+#~ msgid "Peppol endpoint verification"
+#~ msgstr "Peppolエンドポイント検証"
+
+#~ msgid "Valid"
+#~ msgstr "有効"
+
+#~ msgid "Your endpoint"
+#~ msgstr "エンドポイント"
 
 #~ msgid "Please verify partner configuration in partner settings."
 #~ msgstr "取引先設定で取引先の設定を確認して下さい。"

@@ -17,8 +17,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-14 18:35+0000\n"
-"PO-Revision-Date: 2025-11-13 14:24+0000\n"
+"POT-Creation-Date: 2025-12-05 18:36+0000\n"
+"PO-Revision-Date: 2025-11-24 12:08+0000\n"
 "Last-Translator: \"Marianna Ciofani (cima)\" <cima@odoo.com>\n"
 "Language-Team: Italian <https://translate.odoo.com/projects/odoo-19/hr/it/>\n"
 "Language: it\n"
@@ -2193,6 +2193,11 @@ msgid "Document"
 msgstr "Documento"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.view_employee_form
+msgid "Documents"
+msgstr ""
+
+#. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__driving_license
 msgid "Driving License"
 msgstr "Patente di guida"
@@ -2411,6 +2416,12 @@ msgstr "Conti correnti dipendenti per il pagamento degli stipendi"
 #: model_terms:hr.job,website_description:hr.job_cto
 msgid "Employee development is a core focus"
 msgstr "Lo sviluppo del dipendente è un elemento chiave"
+
+#. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_contract_template_form_view
+#: model_terms:ir.ui.view,arch_db:hr.view_employee_form
+msgid "Employee will be excluded from Pay Runs"
+msgstr "Il dipendente sarà escluso dalle elaborazioni"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_res_users__employee_bank_account_ids
@@ -2763,6 +2774,7 @@ msgid "Full-Time"
 msgstr "Tempo pieno"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_version_search_view
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_filter
 msgid "Future Activities"
 msgstr "Attività future"
@@ -3317,6 +3329,7 @@ msgid "Last Updated on"
 msgstr "Ultimo aggiornamento il"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_version_search_view
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_filter
 msgid "Late Activities"
 msgstr "Attività in ritardo"
@@ -3701,6 +3714,11 @@ msgstr ""
 "lavoro rigidi"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.view_employee_form
+msgid "No user linked"
+msgstr ""
+
+#. module: hr
 #: model_terms:hr.job,website_description:hr.job_consultant
 #: model_terms:hr.job,website_description:hr.job_developer
 #: model_terms:hr.job,website_description:hr.job_hrm
@@ -3716,11 +3734,6 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
 msgid "Not Employed"
 msgstr "Non impiegato"
-
-#. module: hr
-#: model_terms:ir.ui.view,arch_db:hr.view_employee_form
-msgid "Not linked to an user"
-msgstr "Non collegato a un utente"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_department__note
@@ -4610,6 +4623,11 @@ msgid "Show Hr Icon Display"
 msgstr "Mostra l'icona HR"
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_version_search_view
+msgid "Show all records whose next activity date is past"
+msgstr "Mostra tutti i record la cui data di prossima attività è passata"
+
+#. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__birthday_public_display
 msgid "Show to all employees"
 msgstr "Mostra a tutti i dipendenti"
@@ -5063,6 +5081,7 @@ msgstr ""
 "nuova azienda."
 
 #. module: hr
+#: model_terms:ir.ui.view,arch_db:hr.hr_version_search_view
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_filter
 msgid "Today Activities"
 msgstr "Attività odierne"
@@ -5854,6 +5873,9 @@ msgstr "lavoro"
 #: model:ir.model.fields,field_description:hr.field_hr_employee__work_permit_name
 msgid "work_permit_name"
 msgstr "work_permit_name"
+
+#~ msgid "Not linked to an user"
+#~ msgstr "Non collegato a un utente"
 
 #~ msgid ""
 #~ "<span class=\"col-8 text-uppercase fw-bolder small\"> Contract Overview </"

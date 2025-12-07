@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server saas~18.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-07 18:36+0000\n"
-"PO-Revision-Date: 2025-11-11 08:59+0000\n"
+"POT-Creation-Date: 2025-12-05 18:36+0000\n"
+"PO-Revision-Date: 2025-12-04 14:04+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/"
 "account_edi_ubl_cii/ja/>\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.12.2\n"
+"X-Generator: Weblate 5.14.3\n"
 
 #. module: account_edi_ubl_cii
 #. odoo-python
@@ -456,7 +456,7 @@ msgstr "ドキュメントをインポートする際に使用される形式: %
 #. odoo-python
 #: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 msgid "Format: %s"
-msgstr ""
+msgstr "フォーマット%s"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__invoice_edi_format__facturx
@@ -554,6 +554,12 @@ msgstr "Indirizzo di Posta Elettronica Certificata"
 
 #. module: account_edi_ubl_cii
 #. odoo-python
+#: code:addons/account_edi_ubl_cii/models/account_move_send.py:0
+msgid "Install Chorus Pro"
+msgstr "Chorus Pro をインストール"
+
+#. module: account_edi_ubl_cii
+#. odoo-python
 #: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 msgid "Intra-Community supply"
 msgstr "域内供給"
@@ -567,7 +573,7 @@ msgstr "Odooで作成された請求書"
 #. odoo-python
 #: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 msgid "Invoice imported"
-msgstr ""
+msgstr "インボイスをインポートしました"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__peppol_eas__9935
@@ -774,6 +780,13 @@ msgid ""
 "XML file."
 msgstr ""
 "完全なXMLファイルを生成するには、VATまたはPeppolアドレスをご記入ください。"
+
+#. module: account_edi_ubl_cii
+#. odoo-python
+#: code:addons/account_edi_ubl_cii/models/account_move_send.py:0
+msgid ""
+"Please install the french Chorus pro module to have all the specific rules."
+msgstr ""
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__peppol_eas__9945
@@ -1310,7 +1323,8 @@ msgstr "VATEX-EU-148 - 欧州理事会指令2006/112/EC第148条に基づく免�
 msgid ""
 "VATEX-EU-148-A - Exempt based on article 148, section (a) of Council "
 "Directive 2006/112/EC"
-msgstr "VATEX-EU-148-A - 欧州理事会指令2006/112/EC第148条セクション(a)に基づく免税"
+msgstr ""
+"VATEX-EU-148-A - 欧州理事会指令2006/112/EC第148条セクション(a)に基づく免税"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-eu-148-b
@@ -1462,9 +1476,9 @@ msgstr "VATEX-EU-O - VATの課税対象外"
 msgid ""
 "VATEX-FR-CNWVAT - France domestic Credit Notes without VAT, due to supplier "
 "forfeit of VAT for discount"
-msgstr "VATEX-FR-CNWVAT - "
-"フランス国内クレジットノート(VATなし)、割引に対するサプライヤーのVAT放棄によ"
-"る"
+msgstr ""
+"VATEX-FR-CNWVAT - フランス国内クレジットノート(VATなし)、割引に対するサプライ"
+"ヤーのVAT放棄による"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_exemption_reason_code__vatex-fr-franchise
@@ -1510,11 +1524,6 @@ msgstr ""
 "れなければなりません。"
 
 #. module: account_edi_ubl_cii
-#: model_terms:ir.ui.view,arch_db:account_edi_ubl_cii.view_partner_property_form
-msgid "Your endpoint"
-msgstr "エンドポイント"
-
-#. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__account_tax__ubl_cii_tax_category_code__z
 msgid "Z - Zero rated goods"
 msgstr "Z - ゼロ税品目"
@@ -1539,6 +1548,9 @@ msgstr "fx"
 #: model_terms:ir.ui.view,arch_db:account_edi_ubl_cii.account_invoice_pdfa_3_facturx_metadata
 msgid "urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#"
 msgstr "urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#"
+
+#~ msgid "Your endpoint"
+#~ msgstr "エンドポイント"
 
 #~ msgid "Australia BIS Billing 3.0 A-NZ"
 #~ msgstr "Australia BIS Billing 3.0 A-NZ"

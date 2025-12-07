@@ -1102,8 +1102,7 @@
                                             <field name="currency_id"
                                                    readonly="state != 'draft'"
                                                    class="oe_inline"
-                                                   options="{'no_create': True}"
-                                                   context="{'search_default_active': 1, 'search_default_inactive': 1}"/>
+                                                   options="{'no_create': True}"/>
                                             <widget name="account_pick_currency_date" invisible="state != 'draft' or currency_id == company_currency_id"/>
                                         </div>
                                         <div name="currency_conversion_div"
@@ -1192,12 +1191,12 @@
                                                options="{'no_create': True}"
                                                optional="show"/>
                                         <field name="deductible_amount"
-                                               column_invisible="parent.move_type not in ('in_invoice', 'in_refund')"
+                                               column_invisible="parent.move_type not in ('in_invoice', 'in_refund', 'in_receipt')"
                                                string="Professional %"
                                                optional="hide"
                                                groups="!account.group_partial_purchase_deductibility"/>
                                         <field name="deductible_amount"
-                                               column_invisible="parent.move_type not in ('in_invoice', 'in_refund')"
+                                               column_invisible="parent.move_type not in ('in_invoice', 'in_refund', 'in_receipt')"
                                                string="Professional %"
                                                optional="show"
                                                groups="account.group_partial_purchase_deductibility"/>
@@ -1513,6 +1512,7 @@
                                         <field name="auto_post_until"
                                                invisible="auto_post in ('no', 'at_date')"
                                                readonly="state != 'draft'"/>
+                                        <field name="checked"/>
                                     </group>
                                 </group>
                             </page>

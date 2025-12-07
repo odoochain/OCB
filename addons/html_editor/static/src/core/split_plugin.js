@@ -24,6 +24,7 @@ import { isProtected, isProtecting } from "@html_editor/utils/dom_info";
  */
 
 /**
+ * @typedef {(({element: HTMLElement, secondPart: HTMLElement}) => void)[]} after_split_element_handlers
  * @typedef {(() => void)[]} before_split_block_handlers
  *
  * @typedef {((params: { targetNode: Node, targetOffset: number, blockToSplit: HTMLElement | null }) => void | true)[]} split_element_block_overrides
@@ -243,6 +244,7 @@ export class SplitPlugin extends Plugin {
      * @returns { Node }
      */
     splitAroundUntil(elements, limitAncestor) {
+        this.dispatchTo("before_split_around_until_handlers", limitAncestor);
         elements = Array.isArray(elements) ? elements : [elements];
         const firstNode = elements[0];
         const lastNode = elements[elements.length - 1];
