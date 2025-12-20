@@ -10,7 +10,7 @@ from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models, _, SUPERUSER_ID
 from odoo.exceptions import UserError
 from odoo.fields import Command, Domain
-from odoo.tools import ormcache
+from odoo.tools import ormcache, float_is_zero
 from odoo.tools.intervals import Intervals
 
 
@@ -442,8 +442,8 @@ class HrVersion(models.Model):
                     if version.date_generated_from != version.date_generated_to:
                         domain_to_nullify |= Domain([
                             ('version_id', '=', version.id),
-                            ('date', '>', version_stop),
-                            ('date', '<=', date_stop),
+                            ('date', '>', version_stop.astimezone(tz)),
+                            ('date', '<=', date_stop.astimezone(tz)),
                             ('state', '!=', 'validated'),
                         ])
                 if date_start > version_stop or date_stop < version_start:
@@ -451,6 +451,12 @@ class HrVersion(models.Model):
                 date_start_work_entries = max(date_start, version_start)
                 date_stop_work_entries = min(date_stop, version_stop)
                 if force:
+                    domain_to_nullify |= Domain([
+                        ('version_id', '=', version.id),
+                        ('date', '>=', date_start_work_entries.astimezone(tz).date()),
+                        ('date', '<=', date_stop_work_entries.astimezone(tz).date()),
+                        ('state', '!=', 'validated'),
+                    ])
                     intervals_to_generate[date_start_work_entries, date_stop_work_entries] |= version
                     continue
 
@@ -471,8 +477,9 @@ class HrVersion(models.Model):
             date_from, date_to = interval
             vals_list.extend(versions._get_work_entries_values(date_from, date_to))
 
-        work_entries_to_nullify = self.env['hr.work.entry'].search(domain_to_nullify)
-        work_entries_to_nullify.write(work_entry_null_vals)
+        if domain_to_nullify != Domain.FALSE:
+            work_entries_to_nullify = self.env['hr.work.entry'].search(domain_to_nullify)
+            work_entries_to_nullify.write(work_entry_null_vals)
 
         if not vals_list:
             return self.env['hr.work.entry']
@@ -592,6 +599,8 @@ class HrVersion(models.Model):
         # Now merge similar work entries on the same day
         merged_vals = {}
         for vals in vals_list:
+            if float_is_zero(vals['duration'], 3):
+                continue
             key = (
                 vals['date'],
                 vals.get('work_entry_type_id', False),

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
+from datetime import timedelta
 from freezegun import freeze_time
 
 from odoo.addons.stock_account.tests.common import TestStockValuationCommon
@@ -277,19 +277,22 @@ class TestAccountMove(TestStockValuationCommon):
         receipts.action_confirm()
         receipt_done.button_validate()
         # Check that the purchase, sale and tax lock dates do not impose any restrictions
-        lock_date_setting = self.env['account.change.lock.date'].create({
+        self.env.company.write({
             'sale_lock_date': lock_date,
             'purchase_lock_date': lock_date,
             'tax_lock_date': lock_date,
         })
-        lock_date_setting.change_lock_date()
         # Receipts can be backdated
         receipt.scheduled_date = prior_to_lock_date
         receipt_done.date_done = prior_to_lock_date
 
         # Check that the fiscal year lock date imposes restrictions
-        lock_date_setting.fiscalyear_lock_date = lock_date
-        lock_date_setting.change_lock_date()
+        self.env.company.write({
+            'sale_lock_date': False,
+            'purchase_lock_date': False,
+            'tax_lock_date': False,
+            'fiscalyear_lock_date': lock_date,
+        })
         # Receipts can not be backdated prior to lock date
         receipt.scheduled_date = post_to_lock_date
         receipt_done.date_done = post_to_lock_date
@@ -299,11 +302,10 @@ class TestAccountMove(TestStockValuationCommon):
             receipt_done.date_done = prior_to_lock_date
 
         # Check that the hard lock date imposes restrictions
-        lock_date_setting.write({
+        self.env.company.write({
             'fiscalyear_lock_date': False,
             'hard_lock_date': lock_date,
         })
-        lock_date_setting.change_lock_date()
         # Receipts can not be backdated prior to lock date
         receipt.scheduled_date = post_to_lock_date
         receipt_done.date_done = post_to_lock_date
@@ -311,3 +313,40 @@ class TestAccountMove(TestStockValuationCommon):
             receipt.scheduled_date = prior_to_lock_date
         with self.assertRaises(UserError):
             receipt_done.date_done = prior_to_lock_date
+
+    def test_closing_same_day(self):
+        product = self.product_avco
+        product.standard_price = 10.0
+        self._use_inventory_location_accounting()
+        with freeze_time(fields.Datetime.now() - timedelta(seconds=10)):
+            self._make_in_move(product, 10, location_id=self.inventory_location.id)
+            mail_context = {
+                'tracking_disable': False,
+                'mail_create_nolog': False,
+                'mail_create_nosubscribe': False,
+                'mail_notrack': False,
+            }
+            action = self.company.with_context(mail_context).action_close_stock_valuation()
+            closing = self.env['account.move'].with_context(mail_context).browse(action['res_id'])
+            # First flush to clean precommit data
+            self.env.cr.flush()
+            closing._post()
+            # Second flush to post the tracking values
+            self.env.cr.flush()
+            # Update the tracking value create_date since it used the cursor one and not the frozen time
+            am_state_field = self.env['ir.model.fields'].search(
+                [('model', '=', 'account.move'), ('name', '=', 'state')], limit=1)
+            state_tracking = closing.message_ids.tracking_value_ids.filtered(
+                lambda t: t.field_id == am_state_field)
+            state_tracking.create_date = fields.Datetime.now()
+            self.assertRecordValues(closing.line_ids, [
+                {'account_id': self.account_inventory.id, 'debit': 0.0, 'credit': 100.0},
+                {'account_id': self.account_stock_valuation.id, 'debit': 100.0, 'credit': 0.0},
+            ])
+
+        self._make_in_move(product, 10, location_id=self.inventory_location.id)
+        closing = self._close()
+        self.assertRecordValues(closing.line_ids, [
+            {'account_id': self.account_inventory.id, 'debit': 0.0, 'credit': 100.0},
+            {'account_id': self.account_stock_valuation.id, 'debit': 100.0, 'credit': 0.0},
+        ])
