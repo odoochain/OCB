@@ -13,6 +13,7 @@ registry.category("web_tour.tours").add("PaymentScreenTour", {
     steps: () =>
         [
             Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
             OfflineUtil.setOfflineMode(),
             ProductScreen.addOrderline("Letter Tray", "10"),
             ProductScreen.clickPayButton(),
@@ -168,7 +169,7 @@ registry.category("web_tour.tours").add("InvoiceShipLaterAccessRight", {
             ProductScreen.clickHomeCategory(),
             ProductScreen.addOrderline("Whiteboard Pen", "1"),
             ProductScreen.clickPartnerButton(),
-            ProductScreen.clickCustomer("Deco Addict"),
+            ProductScreen.clickCustomer("Acme Corporation"),
             ProductScreen.clickPayButton(),
 
             PaymentScreen.clickPaymentMethod("Cash"),
@@ -215,7 +216,7 @@ registry.category("web_tour.tours").add("test_add_money_button_with_different_de
     steps: () =>
         [
             Chrome.startPoS(),
-            Dialog.confirm("Ouvrir la caisse"),
+            Dialog.confirm("Open Register"),
             ProductScreen.addOrderline("Whiteboard Pen", "1"),
             ProductScreen.clickPayButton(),
             PaymentScreen.clickPaymentMethod("Bank"),

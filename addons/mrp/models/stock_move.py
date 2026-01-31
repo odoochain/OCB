@@ -124,6 +124,8 @@ class StockMove(models.Model):
 
         for move in self:
             if not move.description_picking_manual and move.bom_line_id.id in bom_line_description:
+                if move.description_picking == move.product_id.display_name:
+                    move.description_picking = ''
                 move.description_picking += ('\n' if move.description_picking else '') + bom_line_description.get(move.bom_line_id.id)
 
     @api.depends('raw_material_production_id.priority')
@@ -239,7 +241,8 @@ class StockMove(models.Model):
         """
         if self.env.context.get('force_manual_consumption'):
             for vals in vals_list:
-                vals['manual_consumption'] = True
+                if 'quantity' in vals:
+                    vals['manual_consumption'] = True
                 vals['picked'] = True
         mo_id_to_mo = defaultdict(lambda: self.env['mrp.production'])
         product_id_to_product = defaultdict(lambda: self.env['product.product'])
@@ -314,7 +317,7 @@ class StockMove(models.Model):
         for move in self:
             if move.product_uom.compare(move.product_uom_qty - old_qties.get(move.id, 0), 0) < 0\
                     and move.procure_method == 'make_to_order'\
-                    and all(m.state == 'done' for m in move.move_orig_ids):
+                    and move.move_orig_ids and all(m.state == 'done' for m in move.move_orig_ids):
                 continue
             if move.product_uom.compare(move.product_uom_qty, 0) > 0:
                 if move._should_bypass_reservation() \
@@ -324,8 +327,9 @@ class StockMove(models.Model):
 
             if move.procure_method == 'make_to_order' or move.rule_id.procure_method == 'mts_else_mto':
                 procurement_qty = move.product_uom_qty - old_qties.get(move.id, 0)
-                possible_reduceable_qty = -sum(move.move_orig_ids.filtered(lambda m: m.state not in ('done', 'cancel') and m.product_uom_qty).mapped('product_uom_qty'))
-                procurement_qty = max(procurement_qty, possible_reduceable_qty)
+                if move.move_orig_ids:
+                    possible_reduceable_qty = -sum(move.move_orig_ids.filtered(lambda m: m.state not in ('done', 'cancel') and m.product_uom_qty).mapped('product_uom_qty'))
+                    procurement_qty = max(procurement_qty, possible_reduceable_qty)
                 values = move._prepare_procurement_values()
                 procurements.append(self.env['stock.rule'].Procurement(
                     move.product_id, procurement_qty, move.product_uom,
@@ -380,11 +384,7 @@ class StockMove(models.Model):
             else:
                 factor = move.product_uom._compute_quantity(move.product_uom_qty, bom.product_uom_id) / bom.product_qty
             _dummy, lines = bom.sudo().explode(move.product_id, factor, picking_type=bom.picking_type_id, never_attribute_values=move.never_product_template_attribute_value_ids)
-            for bom_line, line_data in lines:
-                if move.product_uom.is_zero(move.product_uom_qty) or self.env.context.get('is_scrap'):
-                    phantom_moves_vals_list += move._generate_move_phantom(bom_line, 0, line_data['qty'])
-                else:
-                    phantom_moves_vals_list += move._generate_move_phantom(bom_line, line_data['qty'], 0)
+            phantom_moves_vals_list += move._generate_all_phantom_moves(lines)
             # delete the move with original product which is not relevant anymore
             moves_ids_to_unlink.add(move.id)
 
@@ -452,6 +452,19 @@ class StockMove(models.Model):
             'bom_line_id': bom_line.id,
             'description_picking': self.product_id.display_name,
         }
+
+    def _generate_all_phantom_moves(self, exploded_lines_data):
+        self.ensure_one()
+        phantom_moves_vals_list = []
+        for bom_line, line_data in exploded_lines_data:
+            if self.product_uom.is_zero(self.product_uom_qty) or self.env.context.get('is_scrap'):
+                vals = self._generate_move_phantom(bom_line, 0, line_data['qty'])
+            else:
+                vals = self._generate_move_phantom(bom_line, line_data['qty'], 0)
+            for val in vals:
+                val['cost_share'] = line_data.get('line_cost_share', 0.0)
+            phantom_moves_vals_list += vals
+        return phantom_moves_vals_list
 
     def _generate_move_phantom(self, bom_line, product_qty, quantity_done):
         vals = []

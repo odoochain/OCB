@@ -1863,6 +1863,7 @@ class IrModelConstraint(models.Model):
                     JOIN pg_class cl
                     ON (cs.conrelid = cl.oid)
                     WHERE cs.contype IN %s AND cs.conname = %s AND cl.relname = %s
+                    AND cl.relnamespace = current_schema::regnamespace
                     """, ('c', 'u', 'x') if typ == 'u' else (typ,), hname, table
                 )):
                     self.env.execute_query(SQL(
