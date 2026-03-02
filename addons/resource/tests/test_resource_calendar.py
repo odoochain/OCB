@@ -2,6 +2,7 @@
 import pytz
 from datetime import datetime
 
+from odoo.tests import Form
 from odoo.tests.common import TransactionCase
 
 
@@ -77,51 +78,116 @@ class TestResourceCalendar(TransactionCase):
         self.assertTrue(start_dt <= result_per_resource_id[0]._items[0][0], "First attendance interval should not start before start_dt")
         self.assertTrue(end_dt >= result_per_resource_id[0]._items[4][1], "Last attendance interval should not end after end_dt")
 
-    def test_working_time_holiday_multicompany(self):
-        """
-        This test checks that there is no issue computing the "working time to assign" even if a holiday has been set
-        for this moment, but on another company.
-        """
-        company_0, company_1 = self.env['res.company'].create([
-            {
-                "name": "Test company 0",
-            },
-            {
-                "name": "Test company 1",
-            },
-        ])
-
+    def test_public_holiday_calendar_no_company(self):
         self.env['resource.calendar.leaves'].create([{
-            'name': "Public Holiday for company 0",
-            'calendar_id': company_1.resource_calendar_ids.id,
-            'company_id': company_1.id,
-            'date_from': datetime(2019, 6, 27, 0, 0, 0),
-            'date_to': datetime(2019, 6, 27, 23, 0, 0),
-            'resource_id': False,
-            'time_type': "leave",
-        }, {
-            'name': "Public Holiday without company",
-            'calendar_id': False,
-            'company_id': False,
-            'date_from': datetime(2019, 6, 29, 0, 0, 0),
-            'date_to': datetime(2019, 6, 29, 23, 59, 59),
+            'name': "Public Holiday for company",
+            'company_id': self.env.company.id,
+            'date_from': datetime(2019, 5, 29, 0, 0, 0),
+            'date_to': datetime(2019, 5, 30, 0, 0, 0),
             'resource_id': False,
             'time_type': "leave",
         }])
-        duration_company_0 = company_0.resource_calendar_ids.with_company(company_0).get_work_duration_data(
-            datetime(2019, 6, 27, 0, 0, 0),
-            datetime(2019, 6, 29, 23, 59, 59),
-            compute_leaves=True)
-        self.assertEqual(
-            duration_company_0,
-            {'days': 2.0, 'hours': 16.0},
-            "The public holiday for company_1 should not have been taken into account",
-        )
-        duration_company_1 = company_1.resource_calendar_ids.with_company(company_1).get_work_duration_data(
-            datetime(2019, 6, 27, 0, 0, 0),
-            datetime(2019, 6, 29, 23, 59, 59),
-            compute_leaves=True)
-        self.assertEqual(
-            duration_company_1,
-            {'days': 1.0, 'hours': 8.0},
-        )
+        calendar = self.env['resource.calendar'].create({
+            'name': '40 hours/week',
+            'hours_per_day': 8,
+            'full_time_required_hours': 40,
+        })
+        calendar.company_id = False
+        date_from = datetime(2019, 5, 27, 0, 0, 0).astimezone(pytz.UTC)
+        date_to = datetime(2019, 5, 31, 23, 59, 59).astimezone(pytz.UTC)
+        days = calendar._get_unusual_days(date_from, date_to, self.env.company)
+        expected_res = {
+            '2019-05-27': False,
+            '2019-05-28': False,
+            '2019-05-29': True,
+            '2019-05-30': False,
+            '2019-05-31': False,
+        }
+        self.assertEqual(days, expected_res)
+
+    def test_resource_calendar_form_view(self):
+        calendar = self.env['resource.calendar'].create({
+            'name': 'Test calendar',
+            'attendance_ids': [(5, 0, 0),
+                               (0, 0, {
+                                   'name': 'Monday',
+                                   'hour_from': 8,
+                                   'hour_to': 16,
+                                   'day_period': 'full_day',
+                                   'dayofweek': '0',
+                               }),
+                               (0, 0, {
+                                   'name': 'Tuesday',
+                                   'hour_from': 8,
+                                   'hour_to': 16,
+                                   'day_period': 'full_day',
+                                   'dayofweek': '1',
+                               }),
+                               (0, 0, {
+                                   'name': 'Wednesday',
+                                   'hour_from': 8,
+                                   'hour_to': 16,
+                                   'day_period': 'full_day',
+                                   'dayofweek': '2',
+                               })],
+        })
+        calendar_form = Form(calendar)
+
+        self.assertEqual(calendar_form.hours_per_day, 8)
+        self.assertEqual(calendar_form.hours_per_week, 24)
+
+        with calendar_form.attendance_ids.edit(0) as line_form:
+            line_form.hour_from = 11
+        line_form.save()
+
+        # The calendar form values should be recomputed
+        self.assertEqual(calendar_form.hours_per_day, 7)
+        self.assertEqual(calendar_form.hours_per_week, 21)
+
+        calendar_form.save()
+        self.assertEqual(calendar.hours_per_day, 7)
+        self.assertEqual(calendar.hours_per_week, 21)
+
+    def test_resource_calendar_form_view_duration_based(self):
+        calendar = self.env['resource.calendar'].create({
+            'name': 'Test calendar',
+            'attendance_ids': [(5, 0, 0),
+                               (0, 0, {
+                                   'name': 'Monday',
+                                   'hour_from': 8,
+                                   'hour_to': 16,
+                                   'day_period': 'full_day',
+                                   'dayofweek': '0',
+                               }),
+                               (0, 0, {
+                                   'name': 'Tuesday',
+                                   'hour_from': 8,
+                                   'hour_to': 16,
+                                   'day_period': 'full_day',
+                                   'dayofweek': '1',
+                               }),
+                               (0, 0, {
+                                   'name': 'Wednesday',
+                                   'hour_from': 8,
+                                   'hour_to': 16,
+                                   'day_period': 'full_day',
+                                   'dayofweek': '2',
+                               })],
+        })
+        calendar.duration_based = True
+        calendar_form = Form(calendar)
+
+        self.assertEqual(calendar_form.hours_per_day, 8)
+        self.assertEqual(calendar_form.hours_per_week, 24)
+
+        with calendar_form.attendance_ids.edit(0) as line_form:
+            line_form.duration_hours = 5
+        line_form.save()
+
+        # The calendar form values should be recomputed
+        self.assertEqual(calendar_form.hours_per_day, 7)
+        self.assertEqual(calendar_form.hours_per_week, 21)
+
+        calendar_form.save()
+        self.assertEqual(calendar.hours_per_day, 7)
+        self.assertEqual(calendar.hours_per_week, 21)

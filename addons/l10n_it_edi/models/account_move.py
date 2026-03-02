@@ -9,6 +9,7 @@ from datetime import datetime
 from lxml import etree
 from odoo.addons.base.models.ir_qweb_fields import Markup, nl2br, nl2br_enclose
 from odoo.exceptions import LockError, UserError
+from odoo.fields import Domain
 from odoo.tools import cleanup_xml_node, float_compare, float_is_zero, float_repr, float_round, html2plaintext
 from odoo.tools.sql import column_exists, create_column
 
@@ -744,8 +745,8 @@ class AccountMove(models.Model):
             grouping_key = values['grouping_key']
             if grouping_key is False:
                 continue
-            importo_totale_documento += values['base_amount_currency']
-            importo_totale_documento += values['tax_amount_currency']
+            importo_totale_documento += values['base_amount']
+            importo_totale_documento += values['tax_amount']
 
         company = self.company_id._l10n_it_get_edi_company()
         partner = self.commercial_partner_id
@@ -767,7 +768,7 @@ class AccountMove(models.Model):
         # Reference line for finding the conversion rate used in the document
         conversion_rate = float_repr(
             abs(self.amount_total / self.amount_total_signed), precision_digits=5,
-        ) if convert_to_euros and self.invoice_line_ids else None
+        ) if convert_to_euros and self.invoice_line_ids and not self.currency_id.is_zero(self.amount_total_signed) else None
 
         # Aggregated linked invoices
         linked_moves = (self._get_reconciled_invoices() | self.reversed_entry_id).filtered(lambda move: move.date <= self.date)
@@ -1556,11 +1557,13 @@ class AccountMove(models.Model):
                     message_to_log += self._l10n_it_edi_import_line(element, move_line, extra_info)
 
             for element in tree.xpath('.//Allegati'):
-                self.l10n_it_edi_attachment_name = get_text(element, './/NomeAttachment')
-                self.l10n_it_edi_attachment_file = b64decode(get_text(element, './/Attachment'))
+                raw_name = get_text(element, './/NomeAttachment') or ''
+                raw_ext = get_text(element, './/FormatoAttachment') or ''
+                self.l10n_it_edi_attachment_name = f"{raw_name}.{raw_ext}" if raw_ext else raw_name
+                self.l10n_it_edi_attachment_file = get_text(element, './/Attachment')
                 self.sudo().message_post(
                     body=(_("Attachment from XML")),
-                    attachments=[(self.l10n_it_edi_attachment_name, self.l10n_it_edi_attachment_file)],
+                    attachments=[(self.l10n_it_edi_attachment_name, b64decode(self.l10n_it_edi_attachment_file))],
                 )
 
             global_enasarco_lines = []
@@ -1611,23 +1614,28 @@ class AccountMove(models.Model):
         move_line.name = " ".join(get_text(element, './/Descrizione').split())
 
         # Product.
+        company_domain = self.env['res.company']._check_company_domain(company)
         if elements_code := element.xpath('.//CodiceArticolo'):
             for element_code in elements_code:
                 type_code = element_code.xpath('.//CodiceTipo')[0]
                 code = element_code.xpath('.//CodiceValore')[0]
-                product = self.env['product.product'].search([('barcode', '=', code.text)])
+                product = self.env['product.product'].search(Domain.AND([company_domain, Domain('barcode', '=', code.text)]))
                 if (product and type_code.text == 'EAN'):
                     move_line.product_id = product
                     break
                 if partner:
-                    product_supplier = self.env['product.supplierinfo'].search([('partner_id', '=', partner.id), ('product_code', '=', code.text)], limit=2)
+                    product_supplier = self.env['product.supplierinfo'].search(Domain.AND([
+                        company_domain,
+                        Domain('partner_id', '=', partner.id),
+                        Domain('product_code', '=', code.text),
+                    ]), limit=2)
                     if product_supplier and len(product_supplier) == 1 and product_supplier.product_id:
                         move_line.product_id = product_supplier.product_id
                         break
             if not move_line.product_id:
                 for element_code in elements_code:
                     code = element_code.xpath('.//CodiceValore')[0]
-                    product = self.env['product.product'].search([('default_code', '=', code.text)], limit=2)
+                    product = self.env['product.product'].search(Domain.AND([company_domain, Domain('default_code', '=', code.text)]), limit=2)
                     if product and len(product) == 1:
                         move_line.product_id = product
                         break

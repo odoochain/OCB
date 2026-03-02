@@ -299,11 +299,14 @@ class Account_Edi_Proxy_ClientUser(models.Model):
                     "type": "binary",
                     "mimetype": "application/xml",
                 })
-                vals_to_ack = edi_user._peppol_import_invoice(attachment, content["state"], uuid)
-                if move_to_ack := vals_to_ack.get('move'):
-                    created_moves |= move_to_ack
-                if uuid_to_ack := vals_to_ack.get('uuid'):
-                    uuids_to_ack.append(uuid_to_ack)
+                try:
+                    vals_to_ack = edi_user._peppol_import_invoice(attachment, content["state"], uuid)
+                    if move_to_ack := vals_to_ack.get('move'):
+                        created_moves |= move_to_ack
+                    if uuid_to_ack := vals_to_ack.get('uuid'):
+                        uuids_to_ack.append(uuid_to_ack)
+                except Exception as e:  # noqa: BLE001
+                    _logger.error('Error while processing the Peppol document with uuid %s: %s', uuid, e)
 
             if not (modules.module.current_test or tools.config['test_enable']):
                 self.env.cr.commit()
@@ -377,7 +380,7 @@ class Account_Edi_Proxy_ClientUser(models.Model):
             if edi_user.proxy_type != 'peppol':
                 continue
             try:
-                proxy_user = edi_user._make_request(f"{self._get_server_url()}/api/peppol/2/participant_status")
+                proxy_user = edi_user._make_request(f"{edi_user._get_server_url()}/api/peppol/2/participant_status")
             except AccountEdiProxyError as e:
                 if e.code == 'client_gone':
                     # reset the connection if it was archived/deleted on IAP side

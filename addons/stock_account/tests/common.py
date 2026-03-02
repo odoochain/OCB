@@ -1,6 +1,7 @@
 import re
 from dateutil.relativedelta import relativedelta
 
+
 from odoo import Command, fields
 from odoo.tools.misc import clean_context
 from odoo.tests import Form
@@ -22,7 +23,7 @@ class TestStockValuationCommon(BaseCommon):
         invoice_vals = {
             "partner_id": self.vendor.id,
             "move_type": move_type,
-            "invoice_date": fields.Date.today(),
+            "invoice_date": kwargs.get('invoice_date', fields.Date.today()),
             "invoice_line_ids": [],
         }
         if kwargs.get('reversed_entry_id'):
@@ -407,14 +408,14 @@ class TestStockValuationCommon(BaseCommon):
             'property_valuation': 'real_time',
         })
 
-        # Clean context to avoid magic behavior later (e.g. copy with create_product_product to false)
         product_common_vals = {
             "standard_price": 10.0,
             "list_price": 20.0,
             "uom_id": cls.uom.id,
             "is_storable": True,
         }
-        cls.product = cls.env['product.product'].create({**product_common_vals, 'name': 'Storable Product'}).with_context(clean_context(cls.env.context))
+        cls.product = cls.env['product.product'].create(
+            {**product_common_vals, 'name': 'Storable Product'}).with_context(clean_context(cls.env.context))
         cls.product_standard = cls.env['product.product'].create({
             **product_common_vals,
             'name': 'Standard Product',

@@ -64,6 +64,7 @@ class HrExpense(models.Model):
         string="Employee",
         compute='_compute_employee_id', precompute=True, store=True, readonly=False,
         required=True,
+        index=True,
         default=_default_employee_id,
         check_company=True,
         domain=[('filter_for_expense', '=', True)],
@@ -193,7 +194,7 @@ class HrExpense(models.Model):
         string="Unit Price",
         compute='_compute_price_unit', precompute=True, store=True, required=True, readonly=True,
         copy=True,
-        digits='Product Price',
+        min_display_digits='Product Price',
     )
     currency_id = fields.Many2one(
         comodel_name='res.currency',
@@ -1744,7 +1745,7 @@ class HrExpense(models.Model):
 
         # expense account of the product then the product category
         if self.product_id:
-            account = self.product_id.product_tmpl_id._get_product_accounts()['expense']
+            account = self.product_id.with_company(self.company_id).product_tmpl_id._get_product_accounts()['expense']
         else:
             account = self.env.company.expense_account_id
 

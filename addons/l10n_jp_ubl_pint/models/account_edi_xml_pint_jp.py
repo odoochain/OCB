@@ -60,15 +60,9 @@ class AccountEdiXmlPint_Jp(models.AbstractModel):
 
         return tax_subtotal_node
 
-    def _add_invoice_tax_total_nodes(self, document_node, vals):
-        # EXTENDS account.edi.xml.ubl_bis3
-        document_node['cac:TaxTotal'] = [
-            self._ubl_get_tax_total_node(vals, tax_total)
-            for tax_total in vals['_ubl_values']['tax_totals_currency'].values()
-        ] + [
-            self._ubl_get_tax_total_node(vals, tax_total)
-            for tax_total in vals['_ubl_values']['tax_totals'].values()
-        ]
+    def _ubl_tax_totals_node_grouping_key(self, base_line, tax_data, vals, currency):
+        # OVERRIDE
+        return self.env['account.edi.ubl']._ubl_tax_totals_node_grouping_key(base_line, tax_data, vals, currency)
 
     def _add_invoice_header_nodes(self, document_node, vals):
         invoice = vals['invoice']
@@ -83,13 +77,14 @@ class AccountEdiXmlPint_Jp(models.AbstractModel):
             'cbc:EndDate': {'_text': invoice.invoice_date},
         }
 
-    def _get_address_node(self, vals):
-        address_node = super()._get_address_node(vals)
-        address_node['cbc:CountrySubentityCode'] = None
-        return address_node
+    def _ubl_add_party_legal_entity_nodes(self, vals):
+        # EXTENDS account.edi.ubl_bis3
+        super()._ubl_add_party_legal_entity_nodes(vals)
+        nodes = vals['party_node']['cac:PartyLegalEntity']
+        partner = vals['party_vals']['partner']
+        commercial_partner = partner.commercial_partner_id
 
-    def _get_party_node(self, vals):
-        party_node = super()._get_party_node(vals)
         # optional, if set: scheme_id should be taken from ISO/IEC 6523 list
-        party_node['cac:PartyLegalEntity']['cbc:CompanyID'] = None
-        return party_node
+        if commercial_partner.country_code == 'JP':
+            for node in nodes:
+                node['cbc:CompanyID'] = None

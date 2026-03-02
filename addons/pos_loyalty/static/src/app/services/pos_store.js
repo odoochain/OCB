@@ -365,6 +365,10 @@ patch(PosStore.prototype, {
             );
         });
     },
+    async applyDiscount(percent, order = this.getOrder()) {
+        await super.applyDiscount(...arguments);
+        await this.updatePrograms();
+    },
     async addLineToCurrentOrder(vals, opt = {}, configure = true) {
         if (!vals.product_tmpl_id && vals.product_id) {
             vals.product_tmpl_id = vals.product_id.product_tmpl_id;
@@ -561,9 +565,7 @@ patch(PosStore.prototype, {
 
         this.partnerId2CouponIds = {};
 
-        this.computeDiscountProductIdsForAllRewards({
-            ids: this.data.models["product.product"].getAllIds(),
-        });
+        this.computeDiscountProductIdsForAllRewards();
 
         this.models["product.product"].addEventListener(
             "create",
@@ -582,7 +584,8 @@ patch(PosStore.prototype, {
     },
 
     computeDiscountProductIdsForAllRewards(data) {
-        const products = this.models["product.product"].readMany(data.ids);
+        const productModel = this.models["product.product"].toRaw(); // Limit the number of reactivity proxy instances
+        const products = data ? productModel.readMany(data.ids) : productModel.getAll();
         for (const reward of this.models["loyalty.reward"].getAll()) {
             this.computeDiscountProductIds(reward, products);
         }

@@ -516,7 +516,6 @@ class ResourceCalendar(models.Model):
             ('resource_id', 'in', [False] + [r.id for r in resources_list]),
             ('date_from', '<=', end_dt.astimezone(utc).replace(tzinfo=None)),
             ('date_to', '>=', start_dt.astimezone(utc).replace(tzinfo=None)),
-            ('company_id', 'in', [False] + ([r.company_id.id for r in resources_list if r.company_id] or [self.company_id.id])),
         ]
 
         # retrieve leave intervals in (start_dt, end_dt)
@@ -693,7 +692,7 @@ class ResourceCalendar(models.Model):
         self.ensure_one()
         hour_count = 0.0
         for attendance in self._get_global_attendances():
-            hour_count += attendance.hour_to - attendance.hour_from
+            hour_count += attendance.duration_hours
         return hour_count / 2 if self.two_weeks_calendar else hour_count
 
     def _get_hours_per_day(self):
