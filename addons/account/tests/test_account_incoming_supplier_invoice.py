@@ -253,7 +253,14 @@ class TestAccountInvoiceImportMixin:
                 case _:
                     raise ValueError(f"Unknown origin: {origin}")
 
-        return attachment_capturer.records, message_capturer.records, move_capturer.records
+        attachments_created = attachment_capturer.records
+        moves = move_capturer.records
+        # if account_edi_ubl_cii is installed and used as decoder, an attachment is linked to the imported bill with res_field = ubl_cii_xml_file
+        # Therefore it is not detected in the attachment_capturer (because res_field is not specified in domain used to search, see `_search` method override in ir.attachment)
+        # So we need to catch it as some tests check that it has been created
+        if 'ubl_cii_xml_id' in moves._fields:
+            attachments_created |= moves.ubl_cii_xml_id
+        return attachments_created, message_capturer.records, moves
 
     def _get_raw_mail_message_str(self, attachments_vals, email_to, message_id=None):
         """
@@ -1017,6 +1024,7 @@ class TestAccountIncomingSupplierInvoice(AccountTestInvoicingCommon, TestAccount
         self.assertEqual(self.env['account.move'].browse(move_id).attachment_ids, attachment)
 
     def test_import_xml_with_embedded_pdf(self):
+        self.ensure_installed('account_edi_ubl_cii')
         with file_open("account/tests/test_files/xml_with_embedded_pdf.xml", 'rb') as file:
             xml_vals = {'name': 'invoice.xml', 'raw': file.read(), 'mimetype': 'application/xml'}
 
@@ -1045,6 +1053,7 @@ class TestAccountIncomingSupplierInvoice(AccountTestInvoicingCommon, TestAccount
             expected_invoices={
                 1: {
                     'invoice.xml': {
+                        'on_invoice': True,
                         'on_message': True,
                         'is_decoded': True,
                         'is_new': True,

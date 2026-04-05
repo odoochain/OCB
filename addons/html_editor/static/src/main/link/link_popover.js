@@ -47,6 +47,7 @@ export class LinkPopover extends Component {
         allowCustomStyle: { type: Boolean, optional: true },
         allowTargetBlank: { type: Boolean, optional: true },
         allowStripDomain: { type: Boolean, optional: true },
+        publicAttachments: { type: Boolean, optional: true },
         formatColor: { type: Function, optional: true },
     };
     static defaultProps = {
@@ -98,6 +99,14 @@ export class LinkPopover extends Component {
 
         const computedStyle = this.props.document.defaultView.getComputedStyle(linkElement);
         const currentRelValues = linkElement.rel.split(" ");
+        const hasButtonSizeOrShapeOrCustom = this.props.linkElement.className.match(
+            /btn-(lg|sm|xs|custom)|rounded-circle|(?:^|\\s)(outline|fill|flat)(?:\\s|$)/
+        );
+        const buttonType = hasButtonSizeOrShapeOrCustom
+            ? "custom"
+            : this.props.linkElement.className
+                  .match(/btn(-[a-z0-9_-]*)(primary|secondary)/)
+                  ?.pop() || "";
         this.state = useState({
             editing: this.props.LinkPopoverState.editing,
             // `.getAttribute("href")` instead of `.href` to keep relative url
@@ -112,10 +121,7 @@ export class LinkPopover extends Component {
             urlDescription: "",
             linkPreviewName: "",
             imgSrc: "",
-            type:
-                this.props.type ||
-                linkElement.className.match(/btn(-[a-z0-9_-]*)(primary|secondary|custom)/)?.pop() ||
-                "",
+            type: this.props.type || buttonType,
             linkTarget: linkElement.target === "_blank" ? "_blank" : "",
             directDownload: true,
             isDocument: false,
@@ -668,7 +674,7 @@ export class LinkPopover extends Component {
     async uploadFile() {
         const { upload, getURL } = this.uploadService;
         const { resModel, resId } = this.props.recordInfo;
-        const [attachment] = await upload({ resModel, resId, accessToken: true });
+        const [attachment] = await upload({ resModel, resId }, { accessToken: true });
         if (!attachment) {
             // No file selected or upload failed
             return;

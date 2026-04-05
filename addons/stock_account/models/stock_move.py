@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from odoo import api, fields, models, _, Command
 from odoo.fields import Domain
-from odoo.tools import OrderedSet
+from odoo.tools import float_is_zero, OrderedSet
 from odoo.exceptions import UserError
 
 VALUATION_DICT = {
@@ -251,8 +251,13 @@ class StockMove(models.Model):
         total_qty = sum(m._get_valued_qty() for m in self)
         if not total_qty:
             return 0
-        return sum(self.mapped('value')) / total_qty if self.product_id.cost_method == 'fifo' or \
-            (self.product_id.lot_valuated and self.product_id.cost_method == 'average') else self.product_id.standard_price
+        valued_consigned_qty = self._get_valued_consigned_qty()
+        total_qty += valued_consigned_qty
+        if self.product_id.cost_method == 'fifo' or valued_consigned_qty or\
+            (self.product_id.lot_valuated and self.product_id.cost_method == 'average'):
+            return sum(self.mapped('value')) / total_qty
+        else:
+            return self.product_id.standard_price
 
     @api.model
     def _get_valued_types(self):
@@ -453,8 +458,9 @@ class StockMove(models.Model):
     def _get_value_from_returns(self, quantity, at_date=None):
         if self.origin_returned_move_id and self.origin_returned_move_id.is_out:
             origin_move = self.origin_returned_move_id
+            origin_valued_qty = origin_move._get_valued_qty()
             return {
-                'value': origin_move.value * quantity / origin_move._get_valued_qty(),
+                'value': 0 if self.product_uom.is_zero(origin_valued_qty) else origin_move.value * quantity / origin_valued_qty,
                 'quantity': quantity,
                 'description': _('Value based on original move %(reference)s', reference=origin_move.reference),
             }
@@ -617,6 +623,7 @@ class StockMove(models.Model):
         self.ensure_one()
         return self.product_id.is_storable and self.is_valued\
         and (self.location_dest_id.valuation_account_id or self.location_id.valuation_account_id)\
+        and not float_is_zero(self.quantity, precision_rounding=self.product_uom.rounding)\
         and self.product_id.valuation == 'real_time'
 
     def _should_exclude_for_valuation(self):
@@ -640,3 +647,27 @@ class StockMove(models.Model):
         if valued_type == 'out':
             return self.location_dest_id and self.location_dest_id.usage == 'supplier'
         return bool(self.picking_id.return_picking_id)
+
+    def _get_valued_consigned_qty(self):
+        return sum(self.move_line_ids.filtered(lambda l: l._is_consigned_valued_line()).mapped('quantity_product_uom'))
+
+    def _get_price_unit_delivery(self):
+        """ Computes the unit price for a set of moves, using a weighted average between
+        dropshipped and non dropshipped moves.
+        """
+        dropship_moves = self.filtered(lambda m: m._is_dropshipped() or m._is_dropshipped_returned())
+        dropship_quantity = sum(m._get_valued_qty() for m in dropship_moves)
+        dropship_price_unit = dropship_moves._get_price_unit_dropshipped()
+        regular_moves = self - dropship_moves
+        regular_quantity = sum(m._get_valued_qty() for m in regular_moves)
+        regular_price_unit = regular_moves._get_price_unit()
+        total_quantity = dropship_quantity + regular_quantity
+        if not total_quantity:
+            return self._get_price_unit()
+        return (dropship_quantity * dropship_price_unit + regular_quantity * regular_price_unit) / total_quantity
+
+    def _get_price_unit_dropshipped(self):
+        """ Returns the unit price to value the dropshipped moves."""
+        total_value = sum(m._get_value() for m in self)
+        total_qty = sum(m._get_valued_qty() for m in self)
+        return total_value / total_qty if total_qty else 0
