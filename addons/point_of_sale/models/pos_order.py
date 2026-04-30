@@ -524,7 +524,7 @@ class PosOrder(models.Model):
                 company=order.company_id,
                 cash_rounding=cash_rounding,
             )
-            refund_factor = -1 if (order.amount_total < 0.0) else 1
+            refund_factor = -1 if (order.is_refund or order.amount_total < 0.0) else 1
             order.amount_tax = refund_factor * tax_totals['tax_amount_currency']
             order.amount_total = refund_factor * tax_totals['total_amount_currency']
             order.amount_difference = order.amount_paid - order.amount_total
@@ -898,7 +898,7 @@ class PosOrder(models.Model):
         fiscal_position = self.fiscal_position_id
         pos_config = self.config_id
         move_type = 'out_invoice' if not any(
-            order.is_refund or order.amount_total < 0 for order in self
+            order.is_refund or order.amount_total < 0.0 for order in self
         ) else 'out_refund'
         invoice_payment_term_id = (
             self.partner_id.property_payment_term_id.id
@@ -1219,7 +1219,10 @@ class PosOrder(models.Model):
 
     @staticmethod
     def _get_order_log_representation(order):
-        return dict((k, order.get(k)) for k in ("name", "uuid"))
+        return {k: order.get(k) for k in ("name", "pos_reference", "uuid")}
+
+    def _should_log_order_data(self):
+        return self.env['ir.config_parameter'].sudo().get_param('point_of_sale.log_order_data', default='False') == 'True'
 
     @api.model
     def sync_from_ui(self, orders):
@@ -1240,7 +1243,8 @@ class PosOrder(models.Model):
 
         for order in orders:
             order_log_name = self._get_order_log_representation(order)
-            _logger.debug("PoS synchronisation #%d processing order %s order full data: %s", sync_token, order_log_name, pformat(order))
+            if self._should_log_order_data():
+                _logger.info("PoS synchronisation #%d processing order %s order full data:\n%s", sync_token, order_log_name, pformat(order))
 
             refunded_orders = self._get_refunded_orders(order)
             if len(refunded_orders) > 1:
@@ -1888,7 +1892,7 @@ class PosOrderLine(models.Model):
         if fiscal_position:
             account = fiscal_position.map_account(account)
 
-        is_refund_order = line.order_id.amount_total < 0.0
+        is_refund_order = line.order_id.is_refund or line.order_id.amount_total < 0.0
         is_refund_line = line.qty * line.price_unit < 0
 
         lang = line.order_id.partner_id.lang or self.env.user.lang
@@ -1932,7 +1936,7 @@ class PosOrderLine(models.Model):
 
     def _get_discount_amount(self):
         self.ensure_one()
-        original_price = self.tax_ids.compute_all(self.price_unit, self.currency_id, self.qty, product=self.product_id, partner=self.order_id.partner_id)['total_included']
+        original_price = self.tax_ids_after_fiscal_position.compute_all(self.price_unit, self.currency_id, self.qty, product=self.product_id, partner=self.order_id.partner_id)['total_included']
         return original_price - self.price_subtotal_incl
 
 

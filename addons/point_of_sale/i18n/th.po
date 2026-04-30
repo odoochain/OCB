@@ -20,8 +20,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-10 18:37+0000\n"
-"PO-Revision-Date: 2026-04-09 11:24+0000\n"
+"POT-Creation-Date: 2026-04-24 17:35+0000\n"
+"PO-Revision-Date: 2026-04-13 20:48+0000\n"
 "Last-Translator: Odoo Translation Bot <c3p@odoo.com>\n"
 "Language-Team: Thai <https://translate.odoo.com/projects/odoo-19/"
 "point_of_sale/th/>\n"
@@ -227,37 +227,6 @@ msgstr "กางเกงยีนส์ 5 กระเป๋า ผ้าเ�
 
 #. module: point_of_sale
 #: model:mail.template,body_html:point_of_sale.email_template_pos_receipt
-#, fuzzy
-#| msgid ""
-#| "<div style=\"margin: 0; padding: 0; font-size: 14px;\">\n"
-#| "                    <t t-set=\"client_name\" t-"
-#| "value=\"object.partner_id.name\"/>\n"
-#| "                    <t t-set=\"store_name\" t-"
-#| "value=\"object.config_id.name\"/>\n"
-#| "                    <t t-set=\"tz\" t-value=\"object.env.user.tz\"/>\n"
-#| "                    <t t-set=\"lg\" t-value=\"object.partner_id.lang or "
-#| "user.lang\"/>\n"
-#| "                    <div>\n"
-#| "                        <t t-if=\"client_name\">Hello <t t-"
-#| "out=\"client_name\">Client name</t>,</t>\n"
-#| "                        <t t-else=\"\">Hello,</t>\n"
-#| "                    </div>\n"
-#| "                    <br/>\n"
-#| "                    <div>Thank you for purchasing from <t t-"
-#| "out=\"store_name\">Store name</t>!</div>\n"
-#| "                    <div>Attached, you will find your receipt for the "
-#| "purchase of <span><t t-out=\"format_datetime(dt=object.date_order, tz=tz, "
-#| "dt_format=&quot;EEEE d MMMM&quot;,                          lang_code=lg) "
-#| "or ''\">date</t> <t t-out=\"format_time(time=object.date_order, tz=tz, "
-#| "time_format='short',                          lang_code=lg)\">time</t>.</"
-#| "span>\n"
-#| "                    </div>\n"
-#| "                    <br/>\n"
-#| "                    <div>With kind regards,</div>\n"
-#| "                    <br/>\n"
-#| "                    <t t-out=\"store_name\">Store name</t>\n"
-#| "                </div>\n"
-#| "            "
 msgid ""
 "<div style=\"margin: 0; padding: 0; font-size: 14px;\">\n"
 "                    <t t-set=\"client_name\" t-"
@@ -290,35 +259,6 @@ msgid ""
 "                </div>\n"
 "            "
 msgstr ""
-"<div style=\"margin: 0; padding: 0; font-size: 14px;\">\n"
-"                    <t t-set=\"client_name\" t-"
-"value=\"object.partner_id.name\"/>\n"
-"                    <t t-set=\"store_name\" t-"
-"value=\"object.config_id.name\"/>\n"
-"                    <t t-set=\"tz\" t-value=\"object.env.user.tz\"/>\n"
-"                    <t t-set=\"lg\" t-value=\"object.partner_id.lang or "
-"user.lang\"/>\n"
-"                    <div>\n"
-"                        <t t-if=\"client_name\">สวัสดีค่ะ <t t-"
-"out=\"client_name\">ชื่อลูกค้า</t>,</t>\n"
-"                        <t t-else=\"\">สวัสดีค่ะ</t>\n"
-"                    </div>\n"
-"                    <br/>\n"
-"                    <div>ขอขอบคุณที่ซื้อสินค้าจาก <t t-out=\"store_name\">ชื่อร้านค้า</"
-"t>!</div>\n"
-"                    <div>แนบใบเสร็จรับเงินสำหรับการซื้อของคุณ<span><t t-"
-"out=\"format_datetime(dt=object.date_order, tz=tz, dt_format=&quot;EEEE d "
-"MMMM&quot;,                          lang_code=lg) or ''\">date</t> <t t-"
-"out=\"format_time(time=object.date_order, tz=tz, "
-"time_format='short',                          lang_code=lg)\">time</t>.</"
-"span>\n"
-"                    </div>\n"
-"                    <br/>\n"
-"                    <div>ด้วยความนับถือ,</div>\n"
-"                    <br/>\n"
-"                    <t t-out=\"store_name\">ชื่อร้าน</t>\n"
-"                </div>\n"
-"            "
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
@@ -2849,6 +2789,12 @@ msgstr ""
 #: model:ir.ui.menu,name:point_of_sale.menu_pos_dashboard
 msgid "Dashboard"
 msgstr "แดชบอร์ด"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/models/utils/indexed_db.js:0
+msgid "Database Connection Lost"
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -7783,6 +7729,12 @@ msgstr "เซสชันที่เกี่ยวข้อง: %(link)s"
 
 #. module: point_of_sale
 #. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/models/utils/indexed_db.js:0
+msgid "Reload"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/components/navbar/navbar.js:0
 #: code:addons/point_of_sale/static/src/app/components/navbar/navbar.xml:0
 #: code:addons/point_of_sale/static/src/app/components/popups/confirmation_dialog/confirmation_dialog.js:0
@@ -9114,6 +9066,14 @@ msgstr "กลยุทธ์การปัดเศษเงินสดขอ
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_config.py:0
 msgid "The company must have a fiscal country set."
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/models/utils/indexed_db.js:0
+msgid ""
+"The connection to the local database was lost. Reloading the page will "
+"restore it and prevent any loss of unsaved orders."
 msgstr ""
 
 #. module: point_of_sale
