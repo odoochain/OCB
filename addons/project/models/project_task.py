@@ -425,7 +425,7 @@ class ProjectTask(models.Model):
 
     @api.onchange('project_id')
     def _onchange_project_id(self):
-        if self.state != '04_waiting_normal':
+        if self.state != '04_waiting_normal' and self.state not in CLOSED_STATES:
             self.state = '01_in_progress'
         if not self.project_id and not self.user_ids:
             self.user_ids = self.env.user
@@ -1347,7 +1347,7 @@ class ProjectTask(models.Model):
                         task.state = '04_waiting_normal'
                 task.date_last_stage_update = now
         elif 'project_id' in vals:
-            self.filtered(lambda t: t.state != '04_waiting_normal').state = '01_in_progress'
+            self.filtered(lambda t: t.state != '04_waiting_normal' and t.state not in CLOSED_STATES).state = '01_in_progress'
 
         # Do not recompute the state when changing the parent (to avoid resetting the state)
         if 'parent_id' in vals:
@@ -2080,6 +2080,24 @@ class ProjectTask(models.Model):
         if child_tasks:
             child_tasks.action_archive()
         return super().action_archive()
+
+    def _get_access_action(self, access_uid=None, force_website=False):
+        self.ensure_one()
+        user = self.env['res.users'].sudo().browse(access_uid) if access_uid else self.env.user
+        if (
+            user
+            and user._is_portal()
+            and self.with_user(user).has_access('read')
+            and self.project_id
+            and self.project_id.with_user(user).has_access('read')
+            and self.project_id._check_project_sharing_access()
+        ):
+            return {
+                'type': 'ir.actions.act_url',
+                'url': f'/my/projects/{self.project_id.id}/project_sharing/{self.id}',
+                'target': 'self',
+            }
+        return super()._get_access_action(access_uid, force_website)
 
     # ---------------------------------------------------
     # Rating business

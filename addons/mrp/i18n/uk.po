@@ -8,24 +8,25 @@
 # "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
 # Weblate <noreply-mt-weblate@weblate.org>, 2025.
 # Lohushchenko <nadiia.lohushchenko@self-erp.com>, 2026.
+# Vlad Patenko <vlad.patenko@gmail.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-10 18:37+0000\n"
-"PO-Revision-Date: 2026-04-01 09:33+0000\n"
-"Last-Translator: Lohushchenko <nadiia.lohushchenko@self-erp.com>\n"
-"Language-Team: Ukrainian <https://translate.odoo.com/projects/odoo-19/mrp/uk/"
-">\n"
+"PO-Revision-Date: 2026-05-07 15:11+0000\n"
+"Last-Translator: Vlad Patenko <vlad.patenko@gmail.com>\n"
+"Language-Team: Ukrainian <https://translate.odoo.com/projects/odoo-19/mrp/"
+"uk/>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != "
-"11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % "
-"100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || "
-"(n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
-"X-Generator: Weblate 5.16.2\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != 11 "
+"? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > "
+"14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % "
+"100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
+"X-Generator: Weblate 5.17\n"
 
 #. module: mrp
 #: model:ir.model.fields,help:mrp.field_mrp_production__state
@@ -280,7 +281,7 @@ msgstr ""
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.stock_production_type_kanban
 msgid "<span class=\"col-6\">In Progress</span>"
-msgstr ""
+msgstr "<span class=\"col-6\">В процесі</span>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.stock_production_type_kanban
@@ -290,12 +291,12 @@ msgstr "<span class=\"col-6\">Протерміновані</span>"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.stock_production_type_kanban
 msgid "<span class=\"col-6\">To Close</span>"
-msgstr ""
+msgstr "<span class=\"col-6\">До закриття</span>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.stock_production_type_kanban
 msgid "<span class=\"col-6\">Waiting</span>"
-msgstr ""
+msgstr "<span class=\"col-6\">В очікуванні</span>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_bom_form_view
@@ -461,6 +462,7 @@ msgstr ""
 msgid ""
 "<span name=\"to_produce\" class=\"fw-bold text-nowrap\">To Produce</span>"
 msgstr ""
+"<span name=\"to_produce\" class=\"fw-bold text-nowrap\">Виготовити</span>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.report_mrp_production_components
@@ -1004,7 +1006,7 @@ msgid ""
 "number\" button is used."
 msgstr ""
 "Автоматичний друк етикетки партії/серійного номера, коли використовується "
-"кнопка «Створити новий серійний номер/номер партії»."
+"кнопка «Створити новий серійний номер або партію»."
 
 #. module: mrp
 #. odoo-javascript
@@ -2130,7 +2132,7 @@ msgstr ""
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.res_config_settings_view_form
 msgid "Delegate part of the production process to subcontractors"
-msgstr ""
+msgstr "Передайте частину виробничого процесу субпідрядникам"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_production__delivery_count
@@ -2415,7 +2417,7 @@ msgstr "Оцінено %s"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.exception_on_mo
 msgid "Exception(s) occurred on the manufacturing order(s):"
-msgstr "Виняток(и) відбувався на замовленні(ях) на виробництво"
+msgstr "Виняток(и) відбувався на замовленні(ях) на виробництво:"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.exception_on_mo
@@ -3241,7 +3243,7 @@ msgstr "Місцезнаходження, де система шукатиме �
 #. module: mrp
 #: model:ir.model.fields,help:mrp.field_mrp_production__location_dest_id
 msgid "Location where the system will stock the finished products."
-msgstr "Розташування, де система буде зберігати готові товари"
+msgstr "Розташування, де система буде зберігати готові товари."
 
 #. module: mrp
 #: model:ir.model.fields,help:mrp.field_mrp_unbuild__location_dest_id
@@ -5648,7 +5650,7 @@ msgstr "Технічне поле для перегляду робочого ц�
 #: model:ir.model.fields,help:mrp.field_mrp_production__show_produce_all
 msgid "Technical field to check if produce all button can be shown"
 msgstr ""
-"Технічне поле, щоб перевірити, чи можна показати кнопку «Виготовити все»."
+"Технічне поле, щоб перевірити, чи можна показати кнопку «Виготовити все»"
 
 #. module: mrp
 #: model:ir.model.fields,help:mrp.field_mrp_production__show_produce
@@ -6130,7 +6132,7 @@ msgstr "Загальна тривалість"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_routing_workcenter_tree_view
 msgid "Total Duration (minutes)"
-msgstr ""
+msgstr "Загальна тривалість (хвилини)"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workcenter__workorder_late_count
@@ -6457,12 +6459,14 @@ msgid ""
 "View and allocate production quantities to customer orders or other "
 "manufacturing orders"
 msgstr ""
+"Перегляд та розподіл обсягів виробництва між замовленнями клієнтів або "
+"іншими виробничими замовленнями"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_bom_form_view
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_workcenter_view
 msgid "Visible to all"
-msgstr ""
+msgstr "Видно всім"
 
 #. module: mrp
 #: model:ir.model.fields.selection,name:mrp.selection__mrp_production__reservation_state__confirmed

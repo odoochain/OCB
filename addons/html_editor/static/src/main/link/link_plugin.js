@@ -373,7 +373,8 @@ export class LinkPlugin extends Plugin {
                     const selectionData = this.dependencies.selection.getSelectionData();
                     return (
                         selectionData.documentSelectionIsInEditable &&
-                        isHtmlContentSupported(selectionData.editableSelection)
+                        isHtmlContentSupported(selectionData.editableSelection) &&
+                        this.isLinkAllowedOnSelection()
                     );
                 },
             }
@@ -460,8 +461,9 @@ export class LinkPlugin extends Plugin {
     }
 
     isLinkAllowedOnSelection() {
-        if (this.getResource("link_compatible_selection_predicates").some((p) => p())) {
-            return true;
+        const isLinkCompatible = this.checkPredicates("link_compatible_selection_predicates");
+        if (isLinkCompatible !== undefined) {
+            return isLinkCompatible;
         }
         const targetedNodes = this.dependencies.selection.getTargetedNodes();
         const targetedBlocks = targetedNodes.filter(isBlock);
@@ -471,7 +473,8 @@ export class LinkPlugin extends Plugin {
             // Prevent a link across sibling blocks:
             targetedBlocks.every((node) =>
                 targetedNodes.every((other) => node.contains(other) || other.contains(node))
-            )
+            ) &&
+            targetedNodes.some(this.dependencies.selection.isNodeEditable)
         );
     }
 
@@ -510,7 +513,7 @@ export class LinkPlugin extends Plugin {
             linkElement = this.createLink(undefined, selection.textContent());
         }
 
-        const selectionTextContent = selection?.textContent();
+        const selectionTextContent = cleanZWChars(selection?.textContent());
         const isImage = !!findInSelection(selection, "img, .fa");
 
         const applyCallback = (
@@ -1212,11 +1215,17 @@ export class LinkPlugin extends Plugin {
             // In case of multiple matches, only the last one will be converted.
             const match = [...potentialUrl.matchAll(new RegExp(URL_REGEX, "g"))].pop();
 
-            if (match && !EMAIL_REGEX.test(match[0])) {
+            if (match) {
                 const nodeForSelectionRestore = selection.anchorNode.splitText(
                     selection.anchorOffset
                 );
-                const url = match[2] ? match[0] : "https://" + match[0];
+                let url;
+                if (!EMAIL_REGEX.test(match[0])) {
+                    url = match[2] ? match[0] : "https://" + match[0];
+                } else {
+                    url = "mailto:" + match[0];
+                }
+
                 const startOffset = selection.anchorOffset - potentialUrl.length + match.index;
                 const text = selection.anchorNode.textContent.slice(
                     startOffset,
