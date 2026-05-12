@@ -1,4 +1,5 @@
 import {
+    advanceTime,
     animationFrame,
     click,
     describe,
@@ -104,7 +105,7 @@ test("default opacity should get applied when applying background color to icon"
     await expectElementCount(".o-we-toolbar", 1);
     expect(".o_font_color_selector").toHaveCount(0); // selector closed
     expect(getContent(el)).toBe(
-        `<p><font style="background-color: rgba(255, 0, 0, 0.6);">[ab</font><font style="background-color: rgba(255, 0, 0, 0.6);">\ufeff<span class="fa fa-glass" contenteditable="false">\u200b</span>\ufeff</font><font style="background-color: rgba(255, 0, 0, 0.6);">cd]</font></p>`
+        `<p><font style="background-color: rgba(255, 0, 0, 0.6);">[ab</font>\ufeff<span class="fa fa-glass" contenteditable="false" style="background-color: rgba(255, 0, 0, 0.6);">\u200b</span>\ufeff<font style="background-color: rgba(255, 0, 0, 0.6);">cd]</font></p>`
     );
 });
 
@@ -1368,6 +1369,9 @@ test("Should not close the color picker on icon color change", async () => {
     await waitFor('[data-color="o-color-1"]');
     await hover('[data-color="o-color-1"]');
     expectElementCount('[data-color="o-color-1"]', 1);
+    await advanceTime(200);
+    await animationFrame();
+    await waitFor('.o_font_color_selector [data-color="o-color-2"]');
     await hover('[data-color="o-color-2"]');
     // Color picker should stay open
     expectElementCount('[data-color="o-color-2"]', 1);

@@ -74,6 +74,7 @@ class AccountMove(models.Model):
             ('accepted_by_pa_partner_after_expiry', 'SdI Accepted, PA Partner Expired Terms'),
         ],
         copy=False, tracking=True,
+        inverse="_inverse_l10n_it_edi_state",
         help="This state is updated by default, but you can force the value. ",
     )
     l10n_it_edi_header = fields.Html(
@@ -334,6 +335,11 @@ class AccountMove(models.Model):
         # EXTENDS 'account'
         self.with_context(skip_is_manually_modified=True).write({'l10n_it_edi_header': False})
         return super()._post(soft)
+
+    def _inverse_l10n_it_edi_state(self):
+        for move in self:
+            if move.is_move_sent and move.l10n_it_edi_state in ('rejected', 'rejected_by_pa_partner'):
+                move.is_move_sent = False
 
     def _get_fields_to_detach(self):
         # EXTENDS account
@@ -1255,7 +1261,14 @@ class AccountMove(models.Model):
             proxy_acks.append(id_transaction)
 
         if attachment_vals:
-            self._l10n_it_edi_process_downloads_attachments(proxy_user.company_id, attachment_vals)
+            moves = self._l10n_it_edi_process_downloads_attachments(proxy_user.company_id, attachment_vals)
+            file_name_to_transaction_id = {data['filename'].rsplit('.', 1)[0]: transaction_id for transaction_id, data in invoices_data.items()}
+            for move in moves:
+                # FatturaPA filenames follow FATTURAPA_FILENAME_RE:
+                #   <identifier>_<progressivo>.<ext>
+                # An extra suffix (e.g. '_2') might be added by _unwrap_attachments before the last '.'.
+                # Taking the first two components retrieves the original filename.
+                move.l10n_it_edi_transaction = file_name_to_transaction_id.get("_".join(move.l10n_it_edi_attachment_name.rsplit('.', 1)[0].split('_')[:2]))
 
         return {"retrigger": retrigger, "proxy_acks": proxy_acks}
 
@@ -1426,7 +1439,10 @@ class AccountMove(models.Model):
                 ([('l10n_it_pension_fund_type', '=', pension_fund_type)]
                  + type_tax_use_domain))
             if pension_fund_tax:
-                pension_fund_taxes[vat_tax_factor_percent] = pension_fund_tax
+                if vat_tax_factor_percent not in pension_fund_taxes:
+                    pension_fund_taxes[vat_tax_factor_percent] = pension_fund_tax
+                else:
+                    pension_fund_taxes[vat_tax_factor_percent] |= pension_fund_tax
             else:
                 message_to_log.append(Markup("%s<br/>%s") % (
                     _("Pension Fund tax not found"),
@@ -2428,10 +2444,19 @@ class AccountMove(models.Model):
         """
         pension_fund_map = extra_info.get('pension_fund_taxes', {})
         tax_rate = get_float(element, './/AliquotaIVA')
-        if not tax_rate:
+        l10n_it_exemption_reason = get_text(element, "Natura")
+
+        if not tax_rate and not l10n_it_exemption_reason:
             return None
 
-        pension_fund_tax = pension_fund_map.get(tax_rate)
+        pension_fund_tax_candidates = pension_fund_map.get(tax_rate)
+        if not pension_fund_tax_candidates:
+            return None
+
+        if l10n_it_exemption_reason and len(pension_fund_tax_candidates) > 1:
+            pension_fund_tax_candidates = pension_fund_tax_candidates.filtered(lambda t: t.l10n_it_exempt_reason == l10n_it_exemption_reason)
+        pension_fund_tax = pension_fund_tax_candidates[:1]
+
         if not pension_fund_tax:
             return None
 

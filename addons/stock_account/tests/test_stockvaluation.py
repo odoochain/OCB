@@ -2712,6 +2712,35 @@ class TestStockValuation(TestStockValuationCommon):
         self.assertEqual(move.state, "done")
         self.assertEqual(product.qty_available, 0)
 
+    def test_product_value_with_internal_location_without_warehouse(self):
+        """
+        Check the influence of internal locations without warehouse (e.g. subcontracting/rental)
+        on product valuation.
+        """
+        product = self.product_avco_auto
+        location = self.env['stock.location'].create({
+            'name': 'Internal no warehouse',
+            'usage': 'internal',
+        })
+        self.assertFalse(location.warehouse_id)
+        self.assertTrue(location._should_be_valued())
+        self.env['stock.quant']._update_available_quantity(product, self.warehouse.lot_stock_id, 2)
+        self.env['stock.quant']._update_available_quantity(product, location, 3)
+
+        quants = self.env['stock.quant'].search([('product_id', '=', product.id), ('location_id.usage', '=', 'internal')], order='id')
+        self.assertRecordValues(quants, [
+            {'location_id': self.warehouse.lot_stock_id.id, 'quantity': 2.0, 'value': 20.0},
+            {'location_id': location.id, 'quantity': 3.0, 'value': 30.0},
+        ])
+        # Check all warehouse stock report value
+        self.assertRecordValues(product.with_context(warehouse_id=False), [
+            {'avg_cost': 10.0, 'total_value': 50.0, 'qty_available': 2.0},
+        ])
+        # Check specific warehouse stock report value
+        self.assertRecordValues(product.with_context(warehouse_id=self.warehouse.id), [
+            {'avg_cost': 10.0, 'total_value': 20.0, 'qty_available': 2.0},
+        ])
+
     def test_action_done_with_state_already_done(self):
         """ This test ensure that calling _action_done on a move already done
         has no effect on the valuation.
@@ -3244,3 +3273,134 @@ class TestStockValuation(TestStockValuationCommon):
         self.company.with_user(accounting_user).action_close_stock_valuation(at_date=Date.today(), auto_post=True)
         report = self.env['stock_account.stock.valuation.report'].with_user(accounting_user)._get_report_data(date=Date.today())
         self.assertTrue(report)
+
+    def test_avg_cost_partially_consigned(self):
+        """Ensures the avg_cost is correctly computed when the product is partially
+        consigned (the consigned products are not taken into account in the computation).
+        """
+        self._make_in_move(self.product_avco, 1, 10)
+        self._make_in_move(self.product_avco, 1, 20, owner_id=self.vendor)
+        self.assertEqual(self.product_avco.avg_cost, 10)
+
+    def test_quants_values_partially_consigned(self):
+        """Ensures the value of the quants are correctly computed when the product is partially
+        consigned (the consigned products are not taken into account in the computation).
+        """
+        self._make_in_move(self.product_avco, 1, 10)
+        self._make_in_move(self.product_avco, 1, 20, owner_id=self.vendor)
+        quants = self.product_avco.stock_quant_ids
+        regular_quant = quants.filtered(lambda q: q.location_id == self.stock_location and not q.owner_id)
+        consigned_quant = quants.filtered(lambda q: q.location_id == self.stock_location and q.owner_id)
+        self.assertEqual(regular_quant.value, 10)
+        self.assertEqual(consigned_quant.value, 0)
+
+    def test_standard_price_with_lot_valuated_fifo(self):
+        lot_product = self.env['product.product'].create([
+            {
+                'name': 'Product LOT',
+                'is_storable': True,
+                'tracking': 'lot',
+                'categ_id': self.category_fifo.id,
+                'lot_valuated': True,
+                'standard_price': 10,
+            }
+        ])
+
+        lot = self.env['stock.lot'].create({
+            'name': 'lot',
+            'product_id': lot_product.id,
+            'product_qty': 0,
+            'total_value': 0,
+            'standard_price': 5,
+        })
+        self.assertEqual(lot.standard_price, 5)
+
+        # Move out to make product quantity negative
+        move_out = self.env['stock.move'].create({
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.customer_location.id,
+            'product_id': lot_product.id,
+            'product_uom': self.uom.id,
+            'product_uom_qty': 30.0,
+            'lot_ids': [Command.set([lot.id])],
+        })
+        move_out._action_confirm()
+        move_out._action_assign()
+        move_out.move_line_ids.quantity = 30.0
+        move_out.picked = True
+        move_out._action_done()
+
+        # Purchase 1 unit
+        move_in = self.env['stock.move'].create({
+            'location_id': self.supplier_location.id,
+            'location_dest_id': self.stock_location.id,
+            'product_id': lot_product.id,
+            'product_uom': self.uom.id,
+            'product_uom_qty': 1.0,
+            'price_unit': 15.50,
+            'lot_ids': [Command.set([lot.id])],
+            'is_in': True,
+        })
+        move_in._action_confirm()
+        move_in._action_assign()
+        move_in.move_line_ids.quantity = 1.0
+        move_in.picked = True
+        move_in._action_done()
+
+        # Old code would have set the standard price to the product's standard price (10)
+        self.assertEqual(lot.standard_price, 5)
+
+    def test_archived_location_valuation(self):
+        # Ensure that an archive location is still considered as valued when computing the total_value and avg_cost
+        location = self.env['stock.location'].create({
+            'name': 'Sub Loc 1',
+            'usage': 'internal',
+            'location_id': self.stock_location.id,
+        })
+        # Receipt
+        m1 = self._make_in_move(self.product_avco, 2, 10, location_dest_id=location.id)
+        # Internal
+        m2 = self._make_out_move(self.product_avco, 1, location_id=location.id, location_dest_id=self.stock_location.id)
+        # Delivery
+        m3 = self._make_out_move(self.product_avco, 1)
+
+        # Archive receipt dest location
+        location.active = False
+
+        self.assertTrue(m1.is_in)
+        self.assertFalse(m2.is_in or m2.is_out)
+        self.assertTrue(m3.is_out)
+
+        date_1 = Date.today() + timedelta(days=1)
+        date_2 = Date.today() + timedelta(days=2)
+        with freeze_time(date_2):
+            # Check current values 2 days later
+            self.assertEqual(self.product_avco.total_value, 10)
+            self.assertEqual(self.product_avco.avg_cost, 10)
+
+            # Check values 1 day after the moves
+            self.assertEqual(self.product_avco.with_context(to_date=date_1).avg_cost, 10)
+            self.assertEqual(self.product_avco.with_context(to_date=date_1).total_value, 10)
+
+    def test_generate_entry_multi_company(self):
+        """ Check that closing is correct (i.e. focuses only on main company) when multiple companies are selected
+        """
+        # 2 in @ 10 in main company
+        self._make_in_move(self.product_avco_auto, 2, unit_cost=10)
+
+        # 2 in @ 50 in other company
+        self.product_avco_auto.with_company(self.other_company).categ_id.property_cost_method = 'average'
+        self.product_avco_auto.with_company(self.other_company).categ_id.property_valuation = 'real_time'
+        self._make_in_move(self.product_avco_auto, 2, unit_cost=50, company=self.other_company)
+
+        # Bill 1 @ 10 in main company
+        self._create_bill(self.product_avco_auto, 1, 10, post=True)
+
+        # closing amount for self.company should be 20 (value in inventory in
+        # self.company) - 10 (amount in stock valuation account in self.company) = 10
+        closing = self.company.with_context(allowed_company_ids=[self.company.id, self.other_company.id]).action_close_stock_valuation()
+        closing_lines = self.env['account.move'].browse(closing['res_id']).line_ids
+        self.assertRecordValues(closing_lines.sorted('debit'), [
+            {'account_id': self.product_avco_auto.categ_id.account_stock_variation_id.id, 'debit': 0, 'credit': 10},
+            {'account_id': self.product_avco_auto.categ_id.property_stock_valuation_account_id.id, 'debit': 10, 'credit': 0}
+        ])

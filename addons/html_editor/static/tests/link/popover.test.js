@@ -1183,6 +1183,12 @@ describe("shortcut", () => {
         await animationFrame();
         expect(".o_we_discard_link").toBeFocused();
     });
+    test("should not create a link via shortcut for partial selection inside contenteditable false", async () => {
+        await setupEditor(`<p contenteditable="false">T[e]st</p>`);
+        await press(["ctrl", "k"]);
+        await animationFrame();
+        expect('.o_command span[title="Create link"]').toHaveCount(0);
+    });
 });
 
 describe("link preview", () => {
