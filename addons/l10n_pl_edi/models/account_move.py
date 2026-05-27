@@ -136,6 +136,12 @@ class AccountMove(models.Model):
                 return False
             return vat[:2].upper()
 
+        def get_vat_number(vat):
+            vat_country, vat_number = self.env['res.partner']._split_vat(vat)
+            if vat_country == 'PL':
+                return compact(vat)
+            return vat_number
+
         def get_address(partner):
             return re.sub(r'\n+', r' ', partner._display_address(True))
 
@@ -255,7 +261,7 @@ class AccountMove(models.Model):
             'float_repr': float_repr,
             'float_is_zero': float_is_zero,
             'get_vat_country': get_vat_country,
-            'get_vat_number': compact,
+            'get_vat_number': get_vat_number,
             'get_amounts_from_tag': get_amounts_from_tag,
             'get_amounts_from_tag_in_PLN_currency': get_amounts_from_tag_in_PLN_currency,
             'invoice_type': ksef_type,
@@ -520,7 +526,9 @@ class AccountMove(models.Model):
             }
 
         def get_ksef_bill_vals(data):
-            partner_vat_domain_vals = (data['vendor_nip'], f"{data['vendor_country']}{data['vendor_nip']}")
+            nip = data['vendor_nip']
+            vat = f"PL{nip}"
+            partner_vat_domain_vals = (nip, vat)
             partner = self.env['res.partner'].search(
                 [
                     ('vat', 'in', partner_vat_domain_vals),
@@ -534,7 +542,7 @@ class AccountMove(models.Model):
                 partner = self.env['res.partner'].create(
                     {
                         'name': data['vendor_name'],
-                        'vat': data['vendor_nip'],
+                        'vat': vat,
                         'country_id': self.env['res.country'].search([('code', '=', data['vendor_country'])]).id,
                     },
                 )

@@ -772,13 +772,16 @@ class SaleOrderLine(models.Model):
             combo_prices[combo_line.product_template_id.sudo().combo_ids[-1]] += combo_price_delta
         # Add the extra price of this combo item, as well as the extra prices of any `no_variant`
         # attributes to the combo price.
-        return (
-            combo_prices[self.combo_item_id.combo_id]
-            + self.combo_item_id.extra_price
-            + self.product_id._get_no_variant_attributes_price_extra(
-                self.product_no_variant_attribute_value_ids
-            )
+        extra_price = self.combo_item_id.currency_id._convert(
+            from_amount=self.combo_item_id.extra_price
+                        + self.product_id._get_no_variant_attributes_price_extra(
+                            self.product_no_variant_attribute_value_ids
+                        ),
+            to_currency=self.currency_id,
+            company=self.company_id,
+            date=self.order_id.date_order,
         )
+        return (combo_prices[self.combo_item_id.combo_id] + extra_price)
 
     @api.depends('product_id', 'product_uom_id', 'product_uom_qty')
     def _compute_discount(self):
@@ -787,7 +790,7 @@ class SaleOrderLine(models.Model):
             if not line.product_id or line.display_type:
                 line.discount = 0.0
 
-            if not (line.order_id.pricelist_id and discount_enabled):
+            if not (line.order_id.pricelist_id and discount_enabled and line.product_uom_id):
                 continue
 
             if line.combo_item_id:
@@ -998,7 +1001,7 @@ class SaleOrderLine(models.Model):
         for line in self:
             for invoice_line in line._get_invoice_lines():
                 if invoice_line.move_id.state != 'cancel' or invoice_line.move_id.payment_state == 'invoicing_legacy':
-                    invoice_qty = invoice_line.product_uom_id._compute_quantity(invoice_line.quantity, line.product_uom_id)
+                    invoice_qty = invoice_line.product_uom_id._compute_quantity(invoice_line.quantity, line.product_uom_id, round=False)
                     if invoice_line.move_id.move_type == 'out_invoice':
                         invoiced_qties[line] += invoice_qty
                     elif invoice_line.move_id.move_type == 'out_refund':

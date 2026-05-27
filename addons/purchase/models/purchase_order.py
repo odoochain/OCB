@@ -895,7 +895,7 @@ class PurchaseOrder(models.Model):
                 oldest_rfq.message_post(body=oldest_rfq_message)
 
                 rfqs.filtered(lambda r: r.state != 'cancel').button_cancel()
-                oldest_rfq._merge_alternative_po(rfqs)
+                oldest_rfq._merge_po_post_process(rfqs)
 
                 # Keep the oldest RFQ IDs
                 merged_rfq_ids.append(oldest_rfq.id)
@@ -912,6 +912,9 @@ class PurchaseOrder(models.Model):
             action['name'] = _("Merged RFQs")
             action['domain'] = [('id', 'in', merged_rfq_ids)]
         return action
+
+    def _merge_po_post_process(self, rfqs):
+        pass
 
     def _merge_alternative_po(self, rfqs):
         pass
@@ -1206,7 +1209,7 @@ class PurchaseOrder(models.Model):
         seller = product._select_seller(
             partner_id=self.partner_id,
             quantity=None,
-            date=self.date_order and self.date_order.date(),
+            date=fields.Date.context_today(self, timestamp=self.date_order),
             uom_id=product.uom_id,
             ordered_by='min_qty',
             params=params

@@ -15,8 +15,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-24 17:35+0000\n"
-"PO-Revision-Date: 2026-04-24 11:59+0000\n"
+"POT-Creation-Date: 2026-05-22 17:40+0000\n"
+"PO-Revision-Date: 2026-05-23 09:44+0000\n"
 "Last-Translator: \"Larissa Manderfeld (lman)\" <lman@odoo.com>\n"
 "Language-Team: German <https://translate.odoo.com/projects/odoo-19/"
 "point_of_sale/de/>\n"
@@ -1807,6 +1807,11 @@ msgid "Cash Rounding (PoS)"
 msgstr "Bargeldrundung (Kassensystem)"
 
 #. module: point_of_sale
+#: model_terms:ir.ui.view,arch_db:point_of_sale.pos_session_sales_details
+msgid "Cash Rounding:"
+msgstr "Bargeldrundung:"
+
+#. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Cash Roundings"
 msgstr "Bargeldrundungen"
@@ -2912,7 +2917,7 @@ msgstr "Dashboard"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/models/utils/indexed_db.js:0
 msgid "Database Connection Lost"
-msgstr ""
+msgstr "Datenbankverbindung unterbrochen"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -3389,6 +3394,18 @@ msgstr "Möchten Sie die Kundenliste öffnen, um einen Kunden auszuwählen?"
 #: code:addons/point_of_sale/static/src/app/components/popups/retry_print_popup/retry_print_popup.xml:0
 msgid "Download"
 msgstr "Herunterladen"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/utils/debug/debug_widget.xml:0
+msgid "Download IDB Errors"
+msgstr "IDB-Fehler herunterladen"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/utils/debug/debug_widget.xml:0
+msgid "Download IndexedDB error logs from localStorage"
+msgstr "IndexedDB-Fehlerprotokolle aus localStorage herunterladen"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -8003,7 +8020,7 @@ msgstr "Verknüpfte Sitzung: %(link)s"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/models/utils/indexed_db.js:0
 msgid "Reload"
-msgstr ""
+msgstr "Neu laden"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -9386,6 +9403,9 @@ msgid ""
 "The connection to the local database was lost. Reloading the page will "
 "restore it and prevent any loss of unsaved orders."
 msgstr ""
+"Die Verbindung zur lokalen Datenbank wurde unterbrochen. Durch das Neuladen "
+"der Seite wird sie wiederhergestellt und der Verlust ungespeicherter "
+"Aufträge bzw. Bestellungen verhindert."
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -10759,6 +10779,7 @@ msgstr "MwSt."
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/components/popups/product_info_popup/product_info_popup.js:0
+#: model_terms:ir.ui.view,arch_db:point_of_sale.pos_session_sales_details
 msgid "VAT:"
 msgstr "USt."
 
@@ -10767,6 +10788,17 @@ msgstr "USt."
 #: code:addons/point_of_sale/static/src/app/screens/payment_screen/payment_screen.xml:0
 msgid "Validate"
 msgstr "Validieren"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_payment_method.py:0
+msgid ""
+"Validation Error: You cannot assign the same Cash payment method to multiple "
+"POS Shops. Please create a separate Cash payment method for each shop."
+msgstr ""
+"Validierungsfehler: Sie können nicht dieselbe Zahlungsmethode „Bar“ mehreren "
+"Kassensystemen zuweisen. Bitte erstellen Sie für jeden Shop eine separate "
+"Zahlungsmethode „Bar“."
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_bill__value
@@ -11230,6 +11262,12 @@ msgid ""
 msgstr ""
 "Sie sind nicht berechtigt, auf das Abschlusskontrolldatum des Kassensystems "
 "zuzugreifen."
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "You don't have the access rights to perform a cash in/out."
+msgstr "Sie sind nicht berechtigt, eine Ein- oder Auszahlung durchzuführen."
 
 #. module: point_of_sale
 #. odoo-python
