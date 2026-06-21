@@ -3,6 +3,20 @@ revision = 3
 requires-python = ">=3.10, <3.14"
 
 [[package]]
+name = "anyio"
+version = "4.13.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
+    { name = "idna" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/19/14/2c5dd9f512b66549ae92767a9c7b330ae88e1932ca57876909410251fe13/anyio-4.13.0.tar.gz", hash = "sha256:334b70e641fd2221c1505b3890c69882fe4a2df910cba14d97019b90b24439dc", size = 231622, upload-time = "2026-03-24T12:59:09.671Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/42/e921fccf5015463e32a3cf6ee7f980a6ed0f395ceeaa45060b61d86486c2/anyio-4.13.0-py3-none-any.whl", hash = "sha256:08b310f9e24a9594186fd75b4f73f4a4152069e3853f1ed8bfbf58369f4ad708", size = 114353, upload-time = "2026-03-24T12:59:08.246Z" },
+]
+
+[[package]]
 name = "asn1crypto"
 version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
@@ -215,6 +229,24 @@ wheels = [
 ]
 
 [[package]]
+name = "codebuddy-agent-sdk"
+version = "0.3.176"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "typing-extensions" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/36/295bdf04f2f0f92554c7e6430fbce91c25336593f9cd142d37f001b655be/codebuddy_agent_sdk-0.3.176-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:1e859b30e629ce490f4c2e8b663b5834efb95edddcad520051981cbb840fab7f", size = 34996996, upload-time = "2026-06-13T10:49:27.314Z" },
+    { url = "https://files.pythonhosted.org/packages/73/41/ed6b47a2d4ca072e9aa8ad7db7bc9c73fd73bcc3bcf7ed13aa0e70aba4f1/codebuddy_agent_sdk-0.3.176-py3-none-macosx_11_0_arm64.whl", hash = "sha256:67217314fd6d8140e5d15a03c4a1d0b6f12bed7215d5469fa5fd4e8313951a6d", size = 32506880, upload-time = "2026-06-13T10:49:41.444Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/b6/5671b40e9e1e872d13326e16a52b614fc270d0e90f41767b2553d4b4b162/codebuddy_agent_sdk-0.3.176-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:06984a8d183d48a8e2010f4ebf5a8f8d1cb8ee02300e785d01b5d30fab9f721d", size = 47376130, upload-time = "2026-06-13T10:49:57.789Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/d6/aea044c6d7966f047b82700c67043081d41ac12d37f48ebc64b7b7859aaa/codebuddy_agent_sdk-0.3.176-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:ad3072775a023804aae5eb8ad11235ab94dac8b9a36b4812f81838af778514b0", size = 47815990, upload-time = "2026-06-13T10:50:14.471Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/5f/20aa43423a9daa7a629b36db27c3d15d6d666a3eb830c30a3fe33b915146/codebuddy_agent_sdk-0.3.176-py3-none-musllinux_1_1_aarch64.whl", hash = "sha256:902259a4839af86dfe523f762c81cc76dbcf09e266392c80087d9c6f990c4875", size = 45496801, upload-time = "2026-06-13T10:50:29.357Z" },
+    { url = "https://files.pythonhosted.org/packages/86/0d/ef90d7576edf36cad405a81020a4678f32858b6d7f30ee4cb907057ebada/codebuddy_agent_sdk-0.3.176-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:b953e6e7c0d65898a71aad992a077dfa61fd6d185210c7780f943b0c1f706baf", size = 45662632, upload-time = "2026-06-13T10:50:45.449Z" },
+    { url = "https://files.pythonhosted.org/packages/43/96/9830b76b281d6a8fb5826ed3b66c355dcaf50ff51a2aeeecf4a76087b23f/codebuddy_agent_sdk-0.3.176-py3-none-win_amd64.whl", hash = "sha256:95eba993cbb4587863759a9ca28dcb8bb6b879407530742b7743ac84c534c7a9", size = 51545133, upload-time = "2026-06-13T10:51:02.827Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -292,6 +324,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d3/38/af70d7ab1ae9d4da450eeec1fa3918940a5fafb9055e934af8d6eb0c2313/et_xmlfile-2.0.0.tar.gz", hash = "sha256:dab3f4764309081ce75662649be815c4c9081e88f0837825f90fd28317d4da54", size = 17234, upload-time = "2024-10-25T17:25:40.039Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/8b/5fe2cc11fee489817272089c4203e679c63b570a5aaeb18d852ae3cbba6a/et_xmlfile-2.0.0-py3-none-any.whl", hash = "sha256:7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa", size = 18059, upload-time = "2024-10-25T17:25:39.051Z" },
+]
+
+[[package]]
+name = "exceptiongroup"
+version = "1.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8a/0e/97c33bf5009bdbac74fd2beace167cab3f978feb69cc36f1ef79360d6c4e/exceptiongroup-1.3.1-py3-none-any.whl", hash = "sha256:a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598", size = 16740, upload-time = "2025-11-21T23:01:53.443Z" },
 ]
 
 [[package]]
@@ -684,6 +728,7 @@ dependencies = [
     { name = "babel" },
     { name = "cbor2" },
     { name = "chardet" },
+    { name = "codebuddy-agent-sdk" },
     { name = "cryptography" },
     { name = "docutils" },
     { name = "geoip2" },
@@ -735,6 +780,7 @@ requires-dist = [
     { name = "babel", specifier = ">=1.0" },
     { name = "cbor2" },
     { name = "chardet" },
+    { name = "codebuddy-agent-sdk", specifier = ">=0.3.176" },
     { name = "cryptography" },
     { name = "docutils" },
     { name = "geoip2" },
