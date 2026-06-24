@@ -49,6 +49,7 @@ dependencies = [
     "zeep",
     "pywin32>=311",
     "codebuddy-agent-sdk>=0.3.176",
+    "pdfminer-six",
 ]
 dynamic = ["authors", "classifiers"]
 
@@ -61,3 +62,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.uv.pip]
 index-url = "https://mirrors.aliyun.com/pypi/simple"
+
+[dependency-groups]
+dev = [
+    "playwright>=1.60.0",
+]

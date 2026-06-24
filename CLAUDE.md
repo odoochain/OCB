@@ -46,14 +46,16 @@ Odoo 19 的 `odoo/tools/osutil.py` 在 Windows 上无条件 `import win32service
 
 ### 配置文件 `odoo.conf` 要点
 
-- `db_name = baraka`，`db_user = odoo`，密码 `odoo`，本机 PostgreSQL
+- `db_name = forjoy`，`db_user = odoo`，密码 `odoo`，本机 PostgreSQL
+  （`db_port = 5433`，不是默认 5432）
 - `list_db = True` — 数据库不存在时访问任意页面会触发 db manager
-- `addons_path` 链了 4 个外部目录（位置可能因机器而异，按需调整）：
-  - `D:\addons19\oca-knowledge`
-  - `D:\addons19\oca-ai`
-  - `D:\addons19\lawpad-social-im`
-  - `D:\addons19\odoo-lawpad`
-- GeoIP 数据：`D:\mydata\GeoIP\GeoLite2-{Country,City}.mmdb`
+- `addons_path` 链了 5 个外部目录（位置可能因机器而异，按需调整）：
+  - `D:\odoochain\addons19\enterprise_addons`（含 `web_studio` 等 Enterprise 模块，多为 uninstalled）
+  - `D:\odoochain\addons19\oca-knowledge`
+  - `D:\odoochain\addons19\oca-ai`
+  - `D:\odoochain\addons19\lawpad-social-im`
+  - `D:\odoochain\addons19\odoo-lawpad`
+- GeoIP 数据：`D:\odoochain\addons19\adata\GeoIP\GeoLite2-{Country,City}.mmdb`
 - `http_interface =` 字段为空 → Odoo 默认绑定 0.0.0.0（19.0 起会给 warning，
   20.0 起会默认改为 127.0.0.1）。明确写一下避免歧义。
 
