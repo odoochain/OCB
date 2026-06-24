@@ -40,6 +40,7 @@ class CodeBuddyConfig:
     max_turns: int = 10
     permission_mode: str = "bypassPermissions"
     auto_refresh: bool = True
+    tls_verify: bool = True           # False 时禁用 HTTPS 证书校验（仅限内网逃生舱）
 
 
 def load_config() -> CodeBuddyConfig:
@@ -52,6 +53,7 @@ def load_config() -> CodeBuddyConfig:
         creds_dir=Path(os.getenv("CODEBUDDY_CREDS_DIR", str(DEFAULT_CREDS_DIR))),
         model=os.getenv("CODEBUDDY_MODEL", "glm-5.1"),
         auto_refresh=os.getenv("CODEBUDDY_AUTO_REFRESH", "true").lower() == "true",
+        tls_verify=os.getenv("CODEBUDDY_TLS_VERIFY", "true").lower() == "true",
     )
 
 
@@ -174,7 +176,7 @@ class CodeBuddyAuth:
         url = f"{self.state_endpoint}?platform=CLI&nonce={nonce}"
         headers = self._get_auth_headers()
 
-        async with httpx.AsyncClient(verify=False) as client:
+        async with httpx.AsyncClient(verify=self.config.tls_verify) as client:
             resp = await client.post(url, json={"nonce": nonce}, headers=headers, timeout=30)
 
         if resp.status_code == 200:
@@ -196,7 +198,7 @@ class CodeBuddyAuth:
         headers = self._get_auth_headers(include_state=True)
         start = time.time()
 
-        async with httpx.AsyncClient(verify=False) as client:
+        async with httpx.AsyncClient(verify=self.config.tls_verify) as client:
             while time.time() - start < timeout:
                 resp = await client.get(url, headers=headers, timeout=30)
                 if resp.status_code == 200:
@@ -276,7 +278,7 @@ class CodeBuddyAuth:
         """使用 refresh_token 刷新"""
         url = f"{self.base_url}/v2/plugin/auth/refresh"
         headers = self._get_auth_headers()
-        async with httpx.AsyncClient(verify=False) as client:
+        async with httpx.AsyncClient(verify=self.config.tls_verify) as client:
             resp = await client.post(url, json={"refreshToken": refresh_token}, headers=headers, timeout=30)
         if resp.status_code == 200:
             result = resp.json()
@@ -341,7 +343,7 @@ class CodeBuddyHTTPClient:
         else:
             self.api_url = f"{self.base_url}/v2/chat/completions"
 
-    def _get_auth(self) -> Dict[str, str]:
+    def _get_auth(self) -> Optional[Dict[str, str]]:
         """获取认证信息"""
         api_key = self.config.api_key
         bearer_token = self.config.bearer_token
@@ -415,7 +417,7 @@ class CodeBuddyHTTPClient:
             "X-Domain": domain,
             "User-Agent": "CLI/1.0.7 CodeBuddy/1.0.7",
             "X-Product": "SaaS",
-            "X-User-Id": auth.get("user_id", "b5be3a67-237e-4ee6-9b9a-0b9ecd7b454b"),
+            "X-User-Id": auth.get("user_id", "anonymous"),
         }
 
         auth_type = auth["type"]
@@ -451,7 +453,7 @@ class CodeBuddyHTTPClient:
         # 清理 payload 中的 surrogate 字符
         payload = _sanitize_payload(payload)
 
-        async with httpx.AsyncClient(timeout=httpx.Timeout(300.0)) as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(300.0), verify=self.config.tls_verify) as client:
             async with client.stream("POST", self.api_url, json=payload, headers=headers) as response:
                 if response.status_code == 429 and _retry and self.config.auto_refresh:
                     # 429 = 限流，先重试一次（退避）
@@ -597,8 +599,8 @@ class CodeBuddyClient:
             return "http"
         if self.config.auth_mode == "api_key":
             return "http"
-        # auto: 有凭证文件或明确了 HTTP 参数就用 HTTP，否则尝试 SDK
-        if self.config.creds_dir and (self.config.creds_dir / "*.json").name:
+        # auto: 有凭证文件就用 HTTP，否则尝试 SDK
+        if self.config.creds_dir and self.config.creds_dir.exists():
             creds = load_credentials(self.config.creds_dir)
             if creds:
                 return "http"
