@@ -1224,14 +1224,20 @@ export class PosStore extends WithLazyGetterTrap {
                     l.product_template_value_ids.length === 1
             );
 
-            if (hasSingleValueDynamic) {
+            const dynamicValueIds = productTemplate.attribute_line_ids
+                .filter((l) => l.attribute_id.create_variant === "dynamic")
+                .flatMap((l) => l.product_template_value_ids.map((v) => v.id));
+            const currentValueIds = values.product_id.product_template_attribute_value_ids.map(
+                (v) => v.id
+            );
+            const variantAlreadyCreated = dynamicValueIds.every((id) =>
+                currentValueIds.includes(id)
+            );
+
+            if (hasSingleValueDynamic && !variantAlreadyCreated) {
                 const allAttributeValueIds = productTemplate.attribute_line_ids.flatMap((l) =>
                     l.product_template_value_ids.map((v) => v.id)
                 );
-
-                const dynamicValueIds = productTemplate.attribute_line_ids
-                    .filter((l) => l.attribute_id.create_variant === "dynamic")
-                    .flatMap((l) => l.product_template_value_ids.map((v) => v.id));
 
                 let candidate = productTemplate.product_variant_ids.find((variant) => {
                     const attributeIds = variant.product_template_attribute_value_ids.map(
@@ -1691,15 +1697,25 @@ export class PosStore extends WithLazyGetterTrap {
         const order = this.getOrder();
         // check back-end method `get_product_info_pos` to see what it returns
         // We do this so it's easier to override the value returned and use it in the component template later
-        const productInfo = await this.data.call("product.template", "get_product_info_pos", [
-            [productTemplate?.id],
-            productTemplate.getPrice(order.pricelist_id, quantity, priceExtra, false),
-            quantity,
-            this.config.id,
-            productProduct?.id,
-        ]);
+        const productInfo = await this.data.call(
+            "product.template",
+            "get_product_info_pos",
+            [
+                [productTemplate?.id],
+                productTemplate.getPrice(order.pricelist_id, quantity, priceExtra, false),
+                quantity,
+                this.config.id,
+                productProduct?.id,
+            ],
+            { context: { fiscal_position_id: order.fiscal_position_id?.id ?? false } }
+        );
 
-        const productTaxDetails = productTemplate.getTaxDetails();
+        const productTaxDetails = productTemplate.getTaxDetails({
+            overridedValues: {
+                pricelist: order.pricelist_id,
+                fiscalPosition: order.fiscal_position_id,
+            },
+        });
         const priceWithoutTax = productTaxDetails.total_excluded;
         const margin = priceWithoutTax - productTemplate.standard_price;
         const orderPriceWithoutTax = order.priceExcl;
@@ -1714,7 +1730,10 @@ export class PosStore extends WithLazyGetterTrap {
         const taxAmount = this.env.utils.formatCurrency(
             productTaxDetails.taxes_data.reduce((sum, d) => sum + d.tax_amount_currency, 0)
         );
-        const taxName = productTemplate.taxes_id.map((t) => t.name)?.join(", ");
+        const taxes = order.fiscal_position_id
+            ? order.fiscal_position_id.getTaxesAfterFiscalPosition(productTemplate.taxes_id)
+            : productTemplate.taxes_id;
+        const taxName = taxes.map((t) => t.name)?.join(", ");
 
         const costCurrency = this.env.utils.formatCurrency(productTemplate.standard_price);
         const marginCurrency = this.env.utils.formatCurrency(margin);
@@ -2605,7 +2624,6 @@ export class PosStore extends WithLazyGetterTrap {
         existingLots = existingLots.filter(
             (lot) => lot.product_qty > (usedLotsQty[lot.name]?.total || 0)
         );
-
         // Check if the input lot/serial name is already used in another order
         const isLotNameUsed = (itemValue) => {
             const totalQty = existingLots.find((lt) => lt.name == itemValue)?.product_qty || 0;
@@ -2615,10 +2633,25 @@ export class PosStore extends WithLazyGetterTrap {
             return usedQty ? usedQty >= totalQty : false;
         };
 
-        const existingLotsName = existingLots.map((l) => l.name);
-        if (!packLotLinesToEdit.length && existingLotsName.length === 1) {
-            // If there's only one existing lot/serial number, automatically assign it to the order line
-            return { newPackLotLines: [{ lot_name: existingLotsName[0] }] };
+        if (!packLotLinesToEdit.length) {
+            const removalStrategy = product.categ_id?.removal_strategy_id?.method;
+            if (existingLots.length === 1) {
+                // If there's only one existing lot/serial number, automatically assign it to the order line
+                return { newPackLotLines: [{ lot_name: existingLots[0].name }] };
+            } else if (removalStrategy && existingLots.length > 1) {
+                // Auto-select the appropriate lot for new order lines based on the product's
+                // FIFO, LIFO removal strategy.
+                switch (removalStrategy) {
+                    case "fifo":
+                        return {
+                            newPackLotLines: [{ lot_name: existingLots[0].name }],
+                        };
+                    case "lifo":
+                        return {
+                            newPackLotLines: [{ lot_name: existingLots.at(-1).name }],
+                        };
+                }
+            }
         }
         const payload = await makeAwaitable(this.dialog, SelectLotPopup, {
             title: _t("Lot/Serial number(s) required for"),

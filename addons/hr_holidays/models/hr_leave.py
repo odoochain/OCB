@@ -601,13 +601,17 @@ Versions:
                 # For flexible employees, if it's a single day leave, we force it to the real duration since the virtual intervals might not match reality on that day, especially for custom hours
                 # sudo as is_flexible is on version model and employee does not have access to it.
                 if leave.employee_id.sudo().is_flexible and leave.request_date_to == leave.request_date_from:
-                    public_holidays = self.env['resource.calendar.leaves'].search([
+                    # Only subtract public holidays if the leave type does NOT include public holidays in duration.
+                    # When include_public_holidays_in_duration is True ("Public Holiday Included" enabled),
+                    # the leave should count the full day even if it falls on a public holiday.
+                    resource_calendar_leaves = self.env['resource.calendar.leaves']
+                    public_holidays = resource_calendar_leaves.search([
                         ('resource_id', '=', False),
                         ('date_from', '<', leave.date_to),
                         ('date_to', '>', leave.date_from),
                         ('calendar_id', 'in', [False, calendar.id]),
                         ('company_id', '=', leave.company_id.id)
-                    ])
+                    ]) if not leave.holiday_status_id.include_public_holidays_in_duration else resource_calendar_leaves
                     if public_holidays:
                         public_holidays_intervals = Intervals([(ph.date_from, ph.date_to, ph) for ph in public_holidays])
                         leave_intervals = Intervals([(leave.date_from, leave.date_to, leave)])
@@ -781,7 +785,9 @@ Versions:
                         raise ValidationError(_("You do not have any allocation for this time off type.\n"
                                                 "Please request an allocation before submitting your time off request."))
                     if leave_data[employee] and leave_data[employee][0][1]['virtual_remaining_leaves'] < -max_excess:
-                        raise ValidationError(_("There is no valid allocation to cover that request."))
+                        raise ValidationError(_(
+                            "%(name)s does not have a valid allocation for the leave type %(leave_type)s to cover that request.",
+                            name=employee.name, leave_type=leave_type.name))
                 continue
 
             previous_leave_data = leave_type.with_context(
@@ -796,7 +802,9 @@ Versions:
                 if not previous_emp_data and not emp_data:
                     continue
                 if previous_emp_data != emp_data and len(emp_data) >= len(previous_emp_data):
-                    raise ValidationError(_("There is no valid allocation to cover that request."))
+                    raise ValidationError(_(
+                        "%(name)s does not have a valid allocation for the leave type %(leave_type)s to cover that request.",
+                        name=employee.name, leave_type=leave_type.name))
         is_leave_user = self.env.user.has_group('hr_holidays.group_hr_holidays_user')
         if not is_leave_user and any(leave.has_mandatory_day for leave in self):
             raise ValidationError(_('You are not allowed to request time off on a Mandatory Day'))

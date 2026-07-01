@@ -66,13 +66,14 @@ class SaleOrder(models.Model):
             'domain': [('id', 'in', linked_orders.ids)],
         }
 
-    @api.depends('transaction_ids.state', 'transaction_ids.amount', 'order_line', 'amount_total', 'order_line.invoice_lines.parent_state', 'order_line.invoice_lines.price_total', 'order_line.pos_order_line_ids')
+    @api.depends('transaction_ids.state', 'transaction_ids.amount', 'order_line', 'amount_total', 'order_line.invoice_lines.parent_state', 'order_line.invoice_lines.price_total', 'order_line.pos_order_line_ids', 'order_line.pos_order_line_ids.refund_orderline_ids')
     def _compute_amount_unpaid(self):
         for sale_order in self:
             online_payments_invoices = sale_order.transaction_ids.filtered(lambda tx_move: tx_move.state in ('authorized', 'done')).mapped('invoice_ids')
             invoice_lines = sale_order.order_line.invoice_lines.filtered(lambda l: l.parent_state in ('draft', 'posted') and l.move_id not in online_payments_invoices)
             total_invoices_paid = sum(invoice_lines.mapped(lambda l: math.copysign(l.price_total, -l.balance)))
             pos_order_lines = sale_order.order_line.filtered(lambda l: not l.display_type).mapped('pos_order_line_ids')
+            pos_order_lines = pos_order_lines | pos_order_lines.mapped('refund_orderline_ids')
             total_pos_paid = sum(
                 -pol.price_subtotal_incl if pol.order_id.is_refund else pol.price_subtotal_incl
                 for pol in pos_order_lines
@@ -84,8 +85,13 @@ class SaleOrder(models.Model):
         super()._compute_amount_to_invoice()
         for order in self:
             # We need to account for all amount paid in POS with and without invoice
-            order_amount = sum(order.sudo().pos_order_line_ids.mapped('price_subtotal_incl'))
-            order.amount_to_invoice -= order_amount
+            pos_lines = order.sudo().pos_order_line_ids
+            downpayment_lines = pos_lines.filtered(lambda pol: pol.sale_order_line_id.is_downpayment)
+            already_invoiced = downpayment_lines.filtered(
+                lambda pol: any(aml.move_id.state == 'posted' for aml in pol.sale_order_line_id.invoice_lines)
+            )
+            pos_lines -= already_invoiced
+            order.amount_to_invoice -= sum(pos_lines.mapped('price_subtotal_incl'))
 
     @api.depends('order_line.pos_order_line_ids')
     def _compute_amount_invoiced(self):
@@ -161,7 +167,7 @@ class SaleOrderLine(models.Model):
                 delivered_qties[sale_line] += refund_qty
         return delivered_qties
 
-    @api.depends('pos_order_line_ids.qty', 'pos_order_line_ids.order_id.state')
+    @api.depends('pos_order_line_ids.qty', 'pos_order_line_ids.order_id.state', 'pos_order_line_ids.refund_orderline_ids.order_id.state')
     def _compute_qty_invoiced(self):
         super()._compute_qty_invoiced()
 
@@ -171,6 +177,10 @@ class SaleOrderLine(models.Model):
             pos_lines = sale_line.sudo().pos_order_line_ids.filtered(lambda order_line: order_line.order_id.state not in ['cancel', 'draft'])
             invoiced_qties[sale_line] += sum((
                 self._convert_qty(sale_line, pos_line.qty, 'p2s') for pos_line in pos_lines
+            ), 0)
+            refund_lines = sale_line.sudo().pos_order_line_ids.refund_orderline_ids.filtered(lambda order_line: order_line.order_id.state not in ['cancel', 'draft'])
+            invoiced_qties[sale_line] += sum((
+                self._convert_qty(sale_line, pos_line.qty, 'p2s') for pos_line in refund_lines
             ), 0)
         return invoiced_qties
 

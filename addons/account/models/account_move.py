@@ -1400,7 +1400,7 @@ class AccountMove(models.Model):
                         untaxed_amount = invoice.amount_untaxed_signed
                     invoice_payment_terms = invoice.invoice_payment_term_id._compute_terms(
                         date_ref=invoice.invoice_date or invoice.date or fields.Date.context_today(invoice),
-                        currency=invoice.currency_id,
+                        currency=invoice.currency_id or invoice.journal_id.currency_id or invoice.company_currency_id,
                         tax_amount_currency=tax_amount_currency,
                         tax_amount=tax_amount,
                         untaxed_amount_currency=untaxed_amount_currency,
@@ -2242,7 +2242,8 @@ class AccountMove(models.Model):
             draft_invoices = self.browse()
         else:
             draft_invoices = self.filtered(lambda m:
-                m.is_purchase_document()
+                m.id
+                and m.is_purchase_document()
                 and m.state == 'draft'
                 and m.amount_total
                 and not (m.partner_id.ignore_abnormal_invoice_date and m.partner_id.ignore_abnormal_invoice_amount)
@@ -3268,7 +3269,7 @@ class AccountMove(models.Model):
         fake_base_line = AccountTax._prepare_base_line_for_taxes_computation(None)
 
         def get_base_lines(move):
-            return move.line_ids.filtered(lambda line: line.display_type in ('product', 'epd', 'rounding', 'cogs', 'non_deductible_product'))
+            return move.line_ids.filtered(lambda line: line.display_type in ('product', 'epd', 'rounding', 'non_deductible_product'))
 
         def get_tax_lines(move):
             return move.line_ids.filtered('tax_repartition_line_id')
@@ -3569,6 +3570,15 @@ class AccountMove(models.Model):
     @contextmanager
     def _sync_dynamic_line(self, existing_key_fname, needed_vals_fname, needed_dirty_fname, line_type, container):
         def existing():
+            if line_type == 'epd':
+                # Keep keyless EPD lines in the sync map so they can be cleaned/rebuilt
+                # when invoice lines/taxes are overwritten (e.g. PO auto-complete on OCR bills).
+                return {
+                    line: (line[existing_key_fname] or frozendict({'epd_line_id': line.id}))
+                    for line in container['records'].line_ids
+                    if line.display_type == 'epd'
+                    if line[existing_key_fname] or line.id
+                }
             return {
                 line: line[existing_key_fname]
                 for line in container['records'].line_ids
@@ -3853,6 +3863,8 @@ class AccountMove(models.Model):
     def _get_protected_vals(self, vals, records):
         protected = set()
         for fname in vals:
+            if fname == 'tax_totals':
+                continue  # Skip protecting tax_totals since it is updated explicitly after create/write
             field = records._fields[fname]
             if field.inverse or (field.compute and not field.readonly):
                 protected.update(self.pool.field_computed.get(field, [field]))
@@ -5953,9 +5965,11 @@ class AccountMove(models.Model):
                     fiscal_position=line.move_id.fiscal_position_id,
                     product_taxes_after_fp=new_taxes,
                 )
-        lines_to_recompute._compute_price_unit()
-        self.invoice_line_ids._compute_tax_ids()
-        self.line_ids._compute_account_id()
+        container = {'records': self}
+        with self._check_balanced(container), self._sync_dynamic_lines(container):
+            self.env.add_to_compute(lines_to_recompute._fields['price_unit'], lines_to_recompute)
+            self.env.add_to_compute(self.invoice_line_ids._fields['tax_ids'], self.invoice_line_ids)
+            self.env.add_to_compute(self.line_ids._fields['account_id'], self.line_ids)
 
     def open_created_caba_entries(self):
         self.ensure_one()
@@ -6372,12 +6386,13 @@ class AccountMove(models.Model):
                 if not move:
                     continue
                 move._post()
-                self.env['ir.cron']._commit_progress(1)
             except UserError as e:
                 self.env.cr.rollback()
                 msg = _('The move could not be posted for the following reason: %(error_message)s', error_message=e)
                 move.message_post(body=msg, message_type='comment')
-                self.env['ir.cron']._commit_progress()
+                move.auto_post = 'no'
+            finally:
+                self.env['ir.cron']._commit_progress(1)
 
     @api.model
     def _cron_account_move_send(self, job_count=10):
@@ -6824,6 +6839,14 @@ class AccountMove(models.Model):
             file_name = safe_eval(report.print_report_name, {'object': self})
         else:
             file_name = self.name
+        return f"{file_name.replace('/', '_')}.{extension}"
+
+    def _get_invoice_mail_template_dynamic_report_filename(self, report, extension='pdf'):
+        """ Get the filename of the generated invoice report for a dynamic report. """
+        self.ensure_one()
+        if not report.print_report_name:
+            return False
+        file_name = safe_eval(report.print_report_name, {'object': self})
         return f"{file_name.replace('/', '_')}.{extension}"
 
     def _get_invoice_proforma_pdf_report_filename(self):
@@ -7297,7 +7320,7 @@ class AccountMove(models.Model):
             return []
 
         if self.is_purchase_document(include_receipts=True):
-            attachment = self.message_main_attachment_id
+            attachment = self.message_main_attachment_id.sudo()
             return [{
                 'filename': attachment.name,
                 'filetype': attachment.mimetype,
