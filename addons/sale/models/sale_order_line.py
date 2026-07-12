@@ -1230,7 +1230,8 @@ class SaleOrderLine(models.Model):
     @api.depends_context('accrual_entry_date')
     def _compute_amount_to_invoice_at_date(self):
         for line in self:
-            line.amount_to_invoice_at_date = (line.qty_delivered_at_date - line.qty_invoiced_at_date) * line._get_gross_price_unit()
+            qty_to_invoice = line.product_uom_id._compute_quantity(line.qty_delivered_at_date - line.qty_invoiced_at_date, line.product_id.uom_id)
+            line.amount_to_invoice_at_date = qty_to_invoice * line._get_gross_price_unit()
 
     @api.depends('order_id.partner_id', 'product_id')
     def _compute_analytic_distribution(self):
@@ -1319,6 +1320,7 @@ class SaleOrderLine(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        combo_item_ids = []
         for vals in vals_list:
             if vals.get('display_type') or self.default_get(['display_type']).get('display_type'):
                 vals['product_uom_qty'] = 0.0
@@ -1329,7 +1331,16 @@ class SaleOrderLine(models.Model):
                 # because technical_price_unit is set.
                 vals.pop('technical_price_unit')
 
+            if self.env.context.get("import_file"):
+                combo_item_ids.append(vals.pop("combo_item_id", False))
+
         lines = super().create(vals_list)
+
+        if self.env.context.get("import_file"):
+            for line, combo_item_id in zip(lines, combo_item_ids):
+                if combo_item_id:
+                    line.combo_item_id = combo_item_id
+
         for line in lines:
             linked_line = line._get_linked_line()
             if linked_line:

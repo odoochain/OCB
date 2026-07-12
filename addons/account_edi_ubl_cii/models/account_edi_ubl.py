@@ -140,7 +140,7 @@ class AccountEdiUBL(models.AbstractModel):
                     percent = tax.amount if not tax.has_negative_factor else 0.0
                 return {
                     'tax_category_code': tax_category_code,
-                    **self._get_tax_exemption_reason(customer.commercial_partner_id, supplier, tax),
+                    **self.with_context(tax_exemption_reason_invoice=vals.get('invoice'))._get_tax_exemption_reason(customer.commercial_partner_id, supplier, tax),
                     'percent': percent,
                     'scheme_id': scheme_id,
                     'is_withholding': tax.amount < 0.0,
@@ -922,7 +922,7 @@ class AccountEdiUBL(models.AbstractModel):
         item_node = vals['item_node']
         base_line = vals['line_vals']['base_line']
 
-        line_name = name = base_line.get('name', '')  # Regular business line.
+        line_name = name = base_line.get('name') or ''  # Regular business line.
         description = None
         if product := base_line['product_id']:
             name = product.display_name
@@ -3114,7 +3114,7 @@ class AccountEdiUBL(models.AbstractModel):
         line_extension_amount = line_extension_amount_str and float(line_extension_amount_str) * file_document_sign
         price_amount = price_amount_str and float(price_amount_str)
         invoiced_quantity = invoiced_quantity_str and float(invoiced_quantity_str) * file_document_sign
-        base_quantity = base_quantity_str and float(base_quantity_str) * file_document_sign
+        base_quantity = base_quantity_str and float(base_quantity_str)
 
         total_allowances = sum(allowance['amount'] for allowance in collected_values['allowances'])
         total_charges = sum(charge['amount'] for charge in collected_values['charges'])
