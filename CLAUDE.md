@@ -140,3 +140,99 @@ uv pip list
 - ❌ 不要再用 micromamba 的 odoo 环境 —— 已废弃
 - ❌ 不要改 `requirements.txt`（Odoo 上游文件）作为依赖源，本项目以 `pyproject.toml` 为准
 - ❌ 不要去掉 `requires-python` 的 `<3.14` 上限，除非 psycopg2 出了 3.14 的 Windows wheel
+
+## Odoo 开发规则
+
+> 摘选自 odoo-ai（`D:\odoochain\odoo-ai`）的 RULES.md，本地化到本仓库（Odoo **19.0**）。
+> 写任何 addon 代码前先过一遍这几条。
+
+### R1 — 版本检测（写代码前必做）
+
+动手写 Odoo 代码前：
+
+1. 读目标模块的 `__manifest__.py`，确认版本号（如 `19.0.1.0` → Odoo 19）
+2. 看 `license` 判断 edition：`OEEL-1` → Enterprise；`LGPL-3` / `AGPL-3` / `OPL-1` → Community
+3. 没有 `__manifest__.py` → 先问，不要猜
+
+**永远不假设版本。不要给 19 的项目写 18 的代码。** 本仓库已知有一批 manifest 还停在 18.0.x
+被自动标记 `installable=False`（见上文"已知不兼容"列表），改这些模块时先 bump 版本号并修 API 差异。
+
+### R4 — 新模型必须有 ACL
+
+每个新 `models.Model` 必须：
+
+- 在 `security/ir.model.access.csv` 有对应条目
+- 至少给 `base.group_user` 一个 `read` 权限
+
+否则模块装不上，或者用户看不到记录。**commit 前自查：有新模型吗？有 ACL 吗？**
+
+### R5 — 改视图 XML 时写 pre-migrate
+
+**触发条件**：同一 commit 里 `__manifest__.py` 版本号 bump + 修改了视图 `.xml`。
+
+**动作**：建 `migrations/<version>/pre-migrate.py`：
+
+```python
+# -*- coding: utf-8 -*-
+def migrate(cr, version):
+    cr.execute("""
+        DELETE FROM ir_ui_view
+        WHERE name IN ('被改视图的 name')
+          AND model = '对应的模型'
+    """)
+```
+
+`name` 对应 XML 里 `<record model="ir.ui.view">` 的 `<field name="name">`。
+不写这个脚本，`-u` 升级时旧视图定义残留会报错。
+
+### R6 — 先搜再写（不重复造轮子）
+
+开发新功能前按顺序找现成实现（**Enterprise First**）：
+
+1. Enterprise 源码：`D:\odoochain\addons19\enterprise_addons`（含 web_studio 等）
+2. Community：本仓库 `odoo\addons`
+3. OCA：本仓库已链的 `oca-knowledge`、`oca-ai`，或 `https://github.com/OCA?q=<keyword>`
+4. 都没有再从零写
+
+Enterprise 有结果就是定论，不用再翻 Community。用 `codegraph_search` / `Grep` 锁定后再 Read 具体文件。
+
+### R7 — 代码标准
+
+- **Python**：PEP8、SOLID、DRY。用 `super()`。不用废弃装饰器（`@api.multi`）。
+- **ORM**：`create()` 用 `@api.model_create_multi`。
+- **翻译**：`_("文本")`，**不要** `_(f"文本 {var}")`，要插值用 `_("%s 文本") % var`。
+- **compute 循环**：一律 `for record in self:`，循环体内不直接用 `self.field`。
+- **多公司**：`self.env['ir.sequence'].with_company(company).next_by_code(...)`。
+- **XML 隐藏**：`invisible="条件"`，不用旧的 `attrs="{'invisible': [...]}"`。
+- **XML ID**：`ref=` 继承前先确认目标 ID 存在。
+
+### R13 — 安全（所有代码无例外）
+
+**SQL —— 永远参数化，不拼接：**
+```python
+# ❌ 绝不
+cr.execute("SELECT id FROM res_partner WHERE name = '%s'" % name)
+# ✅ 永远
+cr.execute("SELECT id FROM res_partner WHERE name = %s", (name,))
+```
+
+**sudo() —— 最小范围，且必须校验归属：**
+```python
+record = self.env['sale.order'].sudo().browse(order_id)
+if record.partner_id != self.env.user.partner_id:
+    raise AccessError(_("Access denied"))
+```
+
+**XSS —— 用户数据一律 `t-out`，`t-raw` 只给系统 HTML：**
+```xml
+<span t-raw="record.description"/>   <!-- ❌ 用户数据绝不 -->
+<span t-out="record.description"/>   <!-- ✅ 自动转义 -->
+```
+
+**Controller —— auth 显式声明：**
+```python
+@http.route('/api/data', type='json')                 # ❌ 没声明 auth
+@http.route('/api/data', type='json', auth='user')    # ✅ 显式
+```
+
+**ACL —— 见 R4，新模型 commit 前必须有 `ir.model.access.csv` 条目。**
