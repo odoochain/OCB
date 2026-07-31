@@ -81,7 +81,7 @@ _ref_vat = {
     'tr': _lt('11111111111 (NIN) or 2222222222 (VKN)'),
     'ua': _lt('12345678 or UA12345678 (EDRPOU), 1234567890 (RNOPP) or 123456789012 (IPN)'),
     'uy': _lt("Example: '219999830019' (format: 12 digits, all numbers, valid check digit)"),
-    'uz': _lt('XXXXXXXXX [9 digits]'),
+    'uz': _lt('123456789 (TIN) or 12345678901234 (PINFL)'),
     've': 'V-12345678-1, V123456781, V-12.345.678-1',
     'xi': 'XI123456782',
     'sa': _lt('310175397400003 [Fifteen digits, first and last digits should be "3"]'),
@@ -172,11 +172,15 @@ class ResPartner(models.Model):
 
     @api.model
     def _get_country_specific_vat_variants(self, normalized_vat, country_prefix):
+        """
+        Return additional formatted VAT values to consider during EDI partner matching.
+        Should stay consistent with `_check_customer_vat_match` to ensure
+        correct partner matching when importing EDI documents.
+        """
         vat_variants = super()._get_country_specific_vat_variants(normalized_vat, country_prefix)
         if country_prefix.upper() == 'CH':
             normalized_vat = normalized_vat.replace('-', '')
-            if len(normalized_vat) >= 12:
-                vat_formatted = self._run_vat_checks(self.env.ref('base.ch'), normalized_vat, validation=False)[0]
+            if (vat_formatted := self._run_vat_checks(self.env.ref('base.ch'), normalized_vat, validation='setnull')[0]):
                 vat_base = re.sub(r"\s*(TVA|IVA|MWST)?$", "", vat_formatted.upper())
                 vat_variants.extend([f'{vat_base} {suffix}' for suffix in ('TVA', 'IVA', 'MWST')])
         return vat_variants
@@ -687,7 +691,11 @@ class ResPartner(models.Model):
         )
 
     def check_vat_uz(self, vat):
-        return len(vat) == 9 and vat.isdigit()
+        if not vat.isdigit():
+            return False
+        if self.is_company:
+            return len(vat) == 9
+        return len(vat) == 14
 
     def check_vat_ve(self, vat):
         # https://tin-check.com/en/venezuela/

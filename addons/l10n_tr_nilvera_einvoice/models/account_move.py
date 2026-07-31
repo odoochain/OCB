@@ -88,7 +88,7 @@ class AccountMove(models.Model):
                 move.message_post(body=_("To preserve accounting integrity and comply with legal requirements, invoices cannot be reused once an error occurs. Please create a new invoice to continue."))
             elif move.l10n_tr_nilvera_send_status != 'not_sent':
                 raise UserError(_("You cannot reset to draft an entry that has been sent to Nilvera."))
-        super().button_draft()
+        return super().button_draft()
 
     def _post(self, soft=True):
         for move in self:
@@ -385,7 +385,7 @@ class AccountMove(models.Model):
                     client,
                     invoice,
                     invoice.l10n_tr_nilvera_uuid,
-                    document_category="Sale",
+                    document_category=invoice._l10n_tr_get_document_category(invoice.l10n_tr_nilvera_customer_status),
                     invoice_channel=invoice.l10n_tr_nilvera_customer_status,
                 )
 
@@ -491,6 +491,6 @@ class AccountMove(models.Model):
                         client,
                         invoice,
                         invoice.l10n_tr_nilvera_uuid,
-                        document_category="Sale",
+                        document_category=invoice._l10n_tr_get_document_category(invoice.l10n_tr_nilvera_customer_status),
                         invoice_channel=invoice.l10n_tr_nilvera_customer_status,
                     )

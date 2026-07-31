@@ -450,14 +450,14 @@ class StockMove(models.Model):
                     continue
                 if move.product_uom.is_zero(quantity):
                     break
-                qty_ml_dec = min(ml.quantity, ml.product_uom_id._compute_quantity(quantity, ml.product_uom_id, round=False))
+                qty_ml_dec = min(ml.quantity, move.product_uom._compute_quantity(quantity, ml.product_uom_id, round=False))
                 if ml.product_uom_id.is_zero(qty_ml_dec):
                     continue
                 if ml.product_uom_id.compare(ml.quantity, qty_ml_dec) == 0 and ml.state not in ['done', 'cancel']:
                     mls_to_unlink.add(ml.id)
                 else:
                     ml.quantity -= qty_ml_dec
-                quantity -= move.product_uom._compute_quantity(qty_ml_dec, move.product_uom, round=False)
+                quantity -= ml.product_uom_id._compute_quantity(qty_ml_dec, move.product_uom, round=False)
             self.env['stock.move.line'].browse(mls_to_unlink).unlink()
 
         def _process_increase(move, quantity):
@@ -2524,7 +2524,7 @@ Please change the quantity done or the rounding precision in your settings.""",
                 res.append(Command.update(ml.id, {'quantity': avail_qty}))
 
         # First reserve on quants
-        if self.product_uom.compare(_move_qty(qty), 0.0) > 0:
+        if self.product_uom.compare(_move_qty(qty), 0.0) > 0 and not self._should_bypass_reservation():
             quants = self.env['stock.quant']._get_reserve_quantity(self.product_id, self.location_id, total_qty)
             for quant, avail_qty in quants:
                 if quant.id in consumed_quant:
