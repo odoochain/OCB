@@ -26,7 +26,7 @@ class PaymentTransaction(models.Model):
             # self.provider_id.so_reference_type is empty
             order_reference = False
 
-        invoice_journal = self.env['account.journal'].search([('type', '=', 'sale'), ('company_id', '=', self.env.company.id)], limit=1)
+        invoice_journal = self.env['account.journal'].search([('type', '=', 'sale'), ('company_id', '=', self.company_id.id)], limit=1)
         if invoice_journal:
             order_reference = invoice_journal._process_reference_for_sale_order(order_reference)
 
@@ -122,7 +122,9 @@ class PaymentTransaction(models.Model):
             if len(tx.sale_order_ids) == 1:
                 quotation = tx.sale_order_ids.filtered(lambda so: so.state in ('draft', 'sent'))
                 if quotation and quotation._is_confirmation_amount_reached():
-                    quotation.with_context(send_email=True).action_confirm()
+                    quotation.with_context(
+                        send_email=True, sale_include_signature=True
+                    ).action_confirm()
                     confirmed_orders |= quotation
         return confirmed_orders
 

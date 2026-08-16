@@ -5966,11 +5966,14 @@ class TestStockMove(TestStockCommon):
         self.assertEqual(list(warning.keys())[0], 'warning', 'Warning message was not returned')
         self.assertEqual(move_line.location_id, self.pack_location, 'Location was not auto-corrected')
 
-        move.lot_ids = lot1
+        move_line.write({
+            'lot_name': False,
+            'lot_id': False,
+        })
         warning = False
-        warning = move._onchange_lot_ids()
+        warning = move.onchange({'lot_ids': [Command.link(lot1.id)]}, ['lot_ids'], {'lot_ids': {'context': {}}})
         self.assertTrue(warning, 'Reuse of existing serial number (record) not detected')
-        self.assertEqual(list(warning.keys())[0], 'warning', 'Warning message was not returned')
+        self.assertIn('Unavailable Serial numbers. Please correct the serial numbers encoded', warning.get('warning', {}).get('message'))
 
     def test_forecast_availability(self):
         """ Make an outgoing picking in dozens for a product stored in units.
@@ -6293,6 +6296,32 @@ class TestStockMove(TestStockCommon):
         self.assertEqual(quant.reserved_quantity, 2)
         self.assertEqual(ml.quantity * self.uom_unit.factor, 2)
 
+    def test_decrease_move_quantity_with_move_line_in_different_uom(self):
+        """Check decreasing a move keeps move lines in sync when their UoM differs from the move's."""
+        self.env['stock.quant']._update_available_quantity(self.productA, self.stock_location, 24)
+        quant = self.env['stock.quant']._gather(self.productA, self.stock_location)
+        move = self.env['stock.move'].create({
+            'product_id': self.productA.id,
+            'product_uom_qty': 2,
+            'product_uom': self.uom_dozen.id,
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.customer_location.id,
+        })
+        move._action_confirm()
+        move._action_assign()
+        self.assertEqual(quant.reserved_quantity, 24)
+
+        ml = move.move_line_ids
+        ml.write({'quantity': 24, 'product_uom_id': self.uom_unit.id})
+        self.assertEqual(ml.quantity, 24)
+
+        move.quantity = 1
+
+        self.assertEqual(len(move.move_line_ids), 1)
+        self.assertEqual(move.move_line_ids.product_uom_id, self.uom_unit)
+        self.assertEqual(move.move_line_ids.quantity, 12)
+        self.assertEqual(quant.reserved_quantity, 12)
+
     def test_move_line_qty_with_quant_in_different_uom(self):
         """
         Check that the reserved_quantity of the quant is correctly calculated
@@ -6419,15 +6448,16 @@ class TestStockMove(TestStockCommon):
         """
         self.env['stock.quant']._update_available_quantity(self.productA, self.stock_location, 5)
         # Create two moves using the all available quantity and reserve them
-        move_1, move_2 = self.env['stock.move'].create([{
-            'product_id': self.productA.id,
-            'product_uom_qty': qty,
-            'product_uom': self.productA.uom_id.id,
-            'location_id': self.stock_location.id,
-            'location_dest_id': self.customer_location.id,
-        } for qty in [2, 3]])
-        (move_1 | move_2)._action_confirm()
-        (move_1 | move_2)._action_assign()
+        with freeze_time(fields.Datetime.now()):
+            move_1, move_2 = self.env['stock.move'].create([{
+                'product_id': self.productA.id,
+                'product_uom_qty': qty,
+                'product_uom': self.productA.uom_id.id,
+                'location_id': self.stock_location.id,
+                'location_dest_id': self.customer_location.id,
+            } for qty in [2, 3]])
+            (move_1 | move_2)._action_confirm()
+            (move_1 | move_2)._action_assign()
 
         self.assertEqual(move_1.date, move_2.date)
         self.assertEqual(move_1.state, 'assigned')
@@ -6949,3 +6979,47 @@ class TestStockMove(TestStockCommon):
         self.assertIn(lot_1, picking.move_ids[0].lot_ids)
         self.assertIn(lot_2, picking.move_ids[0].lot_ids)
         self.assertIn(lot_3, picking.move_ids[0].lot_ids)
+
+    def test_picking_deadline_excludes_cancelled_move(self):
+        """ Picking deadline must recompute on move cancellation and must not include cancelled moves. """
+        today = fields.Datetime.now()
+        picking = self.env['stock.picking'].create({
+            'picking_type_id': self.env.ref('stock.picking_type_in').id,
+            'location_id': self.supplier_location.id,
+            'location_dest_id': self.stock_location.id,
+            'move_ids': [
+                Command.create({
+                    'product_id': self.product_consu.id,
+                    'product_uom_qty': 1,
+                    'date_deadline': today,
+                }),
+                Command.create({
+                    'product_id': self.product_consu.id,
+                    'product_uom_qty': 1,
+                    'date_deadline': today + relativedelta(days=2),
+                }),
+            ],
+        })
+        move1, move2 = picking.move_ids
+        self.assertEqual(picking.date_deadline, move1.date_deadline, 'Picking deadline should be the earliest move deadline')
+        move1._action_cancel()
+        self.assertEqual(picking.date_deadline, move2.date_deadline, 'Picking deadline should update to the remaining move after cancellation')
+
+    def test_open_reference_opens_picking_for_inventory_loss(self):
+        """Inventory loss moves without scrap_id should open the picking, not scrap."""
+        self.picking_type_out.default_location_dest_id = self.env['stock.location'].create({
+            'name': 'Office supplies consumption',
+            'usage': 'inventory',
+        })
+        view = self.env['stock.picking'].create({
+            'picking_type_id': self.picking_type_out.id,
+            'partner_id': self.partner_1.id,
+            'move_ids': [
+                Command.create({
+                    'product_id': self.productA.id,
+                    'product_uom_qty': 1.0,
+                }),
+            ],
+        }).move_ids.action_open_reference()
+        self.assertTrue(view['res_id'])
+        self.assertEqual(view['res_model'], 'stock.picking')

@@ -249,6 +249,7 @@ class IrModuleModule(models.Model):
     @api.depends('icon')
     def _get_icon_image(self):
         self.icon_image = ''
+        self.icon_flag = ''
         for module in self:
             if not module.id:
                 continue
@@ -778,6 +779,7 @@ class IrModuleModule(models.Model):
             'noupdate': True,
         } for module in modules]
         self.env['ir.model.data'].create(module_metadata_list)
+        self.env.registry.clear_cache('stable')
         return modules
 
     # update the list of available packages

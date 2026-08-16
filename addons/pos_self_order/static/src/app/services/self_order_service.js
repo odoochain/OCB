@@ -270,7 +270,10 @@ export class SelfOrder extends Reactive {
         if (!this.kioskMode) {
             return product.isConfigurable();
         }
-        return product.attribute_line_ids.some((a) => a.product_template_value_ids.length > 1);
+        return product.attribute_line_ids.some(
+            (a) =>
+                a.product_template_value_ids.length > 1 || a.attribute_id.display_type === "multi"
+        );
     }
 
     async addToCart(
@@ -315,7 +318,9 @@ export class SelfOrder extends Reactive {
             orderAccessToken: access_token || this.currentOrder.access_token,
             screenMode: screen_mode,
         });
-        this.printKioskChanges(access_token);
+        if (this.kioskMode) {
+            this.printKioskChanges(access_token);
+        }
         this.resetCategorySelection();
     }
 
@@ -535,10 +540,6 @@ export class SelfOrder extends Reactive {
     }
 
     async printKioskChanges(access_token = "") {
-        if (!this.kioskMode) {
-            return;
-        }
-
         const d = new Date();
         let hours = "" + d.getHours();
         hours = hours.length < 2 ? "0" + hours : hours;
@@ -614,19 +615,17 @@ export class SelfOrder extends Reactive {
     }
 
     async initMobileData() {
-        if (this.config.self_ordering_mode !== "qr_code") {
-            if (
-                this.session &&
-                this.access_token &&
-                this.config.self_ordering_mode !== "consultation"
-            ) {
-                await this.getUserDataFromServer();
-                this.ordering = true;
-            }
+        if (
+            this.session &&
+            this.access_token &&
+            this.config.self_ordering_mode !== "consultation"
+        ) {
+            await this.getUserDataFromServer();
+            this.ordering = true;
+        }
 
-            if (!this.ordering) {
-                return;
-            }
+        if (!this.ordering) {
+            return;
         }
     }
 
@@ -975,8 +974,16 @@ export class SelfOrder extends Reactive {
         link.click();
     }
 
+    get availablePresets() {
+        const presets = this.models["pos.preset"].getAll();
+
+        return this.router.getTableIdentifier() != null || this.kioskMode
+            ? presets
+            : presets.filter((preset) => preset.service_at !== "table");
+    }
+
     hasPresets() {
-        return this.config.use_presets && this.models["pos.preset"].length > 1;
+        return this.config.use_presets && this.availablePresets.length > 1;
     }
 
     get orderLineNotSend() {

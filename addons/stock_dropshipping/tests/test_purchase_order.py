@@ -2,7 +2,7 @@
 
 from odoo.fields import Command
 from odoo.addons.stock_account.tests.test_anglo_saxon_valuation_reconciliation_common import ValuationReconciliationTestCommon
-from odoo.tests import Form
+from odoo.tests import freeze_time, Form
 from odoo.tests.common import tagged
 
 
@@ -18,11 +18,13 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
             ('company_id', '=', cls.env.company.id),
         ], limit=1)
 
+    @freeze_time('2025-07-20')
     def test_qty_received_does_sync_after_changing_validated_move_quantity(self):
         """ After validating a picking, if it is unlocked and has its move quantity modified,
         the underlying purchase order's qty_delivered value should reflect the change.
         """
-        self.product_a.standard_price = 5.0
+        with freeze_time('2025-07-19'):
+            self.product_a.standard_price = 5.0
         cost_methods = ['standard', 'fifo', 'average']
         picking_types = [
             self.env['stock.picking.type'].search([
@@ -131,7 +133,7 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
             })],
             'route_ids': [Command.link(self.dropshipping_route.id)],
         })
-        serials = _, serial2 = self.env['stock.lot'].create([{
+        serials = serial1, serial2 = self.env['stock.lot'].create([{
             'name': name,
             'product_id': serial_dropship_product.id,
             'company_id': self.env.company.id,
@@ -180,6 +182,10 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         credit_note.invoice_line_ids[0].quantity = 1
         credit_note.action_post()
 
+        self.assertEqual(
+            [(rec['product_name'], rec['lot_id']) for rec in invoice._get_invoiced_lot_values()],
+            [(serial_dropship_product.name, serial1.id)],
+        )
         self.assertEqual(
             [(rec['product_name'], rec['lot_id']) for rec in credit_note._get_invoiced_lot_values()],
             [(serial_dropship_product.name, serial2.id)],

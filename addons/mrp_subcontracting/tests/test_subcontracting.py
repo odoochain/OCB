@@ -956,6 +956,41 @@ class TestSubcontractingFlows(TestMrpSubcontractingCommon):
         with self.assertRaisesRegex(UserError, error_message):
             subcontract.button_unbuild()
 
+    def test_subcontracting_component_line_deletion(self):
+        '''
+        Ensure lines manually deleted are correctly unlinked and new ones can be added.
+        '''
+        self.bom.consumption = 'flexible'
+        # Subcontractor has the components in stock
+        self.env['stock.quant']._update_available_quantity(self.comp1, self.subcontractor_partner1.property_stock_subcontractor, 1)
+        self.env['stock.quant']._update_available_quantity(self.comp2, self.subcontractor_partner1.property_stock_subcontractor, 1)
+        # Create the picking
+        receipt = self.env['stock.picking'].create({
+            'picking_type_id': self.env.ref('stock.picking_type_in').id,
+            'partner_id': self.subcontractor_partner1.id,
+            'move_ids': [Command.create({
+                'product_id': self.finished.id,
+                'product_uom_qty': 1,
+                'location_id': self.env.ref('stock.stock_location_suppliers').id,
+                'location_dest_id': self.warehouse.lot_stock_id.id,
+            })],
+        })
+        receipt.action_confirm()
+        # Change consumption by removing the second line
+        action = receipt.move_ids.action_show_subcontract_details()
+        mo = self.env['mrp.production'].browse(action['res_id'])
+        line_to_remove = mo.move_line_raw_ids[0]
+        alternate_product = self.env['product.product'].create({'name': 'Alternate product', 'is_storable': True})
+        with Form.from_action(self.env, mo.move_raw_ids[0].action_show_details()) as move_form:
+            move_form.move_line_ids.remove(0)
+            with move_form.move_line_ids.new() as ml:
+                ml.product_id = alternate_product
+                ml.quantity = 1
+
+        receipt.button_validate()
+        self.assertTrue(any(ml.product_id == alternate_product for ml in mo.move_line_raw_ids))
+        self.assertFalse(line_to_remove.exists())
+
     def test_subcontracted_product_return_locations(self):
         """
         Verify that when returning subcontracted and non-subcontracted products:
@@ -1228,6 +1263,34 @@ class TestSubcontractingFlows(TestMrpSubcontractingCommon):
         self.assertEqual(avail_qty_comp1, -todo_nb)
         self.assertEqual(avail_qty_comp2, -todo_nb)
         self.assertEqual(avail_qty_finished, todo_nb)
+
+    def test_subcontracting_quantity_kept_after_scheduler(self):
+        picking_form = Form(self.env['stock.picking'])
+        picking_form.picking_type_id = self.env.ref('stock.picking_type_in')
+        picking_form.partner_id = self.subcontractor_partner1
+        with picking_form.move_ids.new() as move:
+            move.product_id = self.finished
+            move.product_uom_qty = 10
+        picking_receipt = picking_form.save()
+        picking_receipt.action_confirm()
+        action = picking_receipt.action_show_subcontract_details()
+        mo = self.env['mrp.production'].browse(action['res_id'])
+
+        self.assertEqual(mo.product_qty, 10)
+        self.assertEqual(picking_receipt.move_ids.product_uom_qty, 10)
+        self.assertEqual(picking_receipt.move_ids.quantity, 10)
+
+        with Form(mo.with_context(**action['context']), view=action['views'][0][0]) as mo_form:
+            mo_form.product_qty = 1
+        mo = mo_form.save()
+
+        self.assertEqual(mo.product_qty, 1)
+        self.assertEqual(picking_receipt.move_ids.quantity, 1)
+
+        self.env['stock.rule'].run_scheduler()
+
+        self.assertEqual(mo.product_qty, 1)
+        self.assertEqual(picking_receipt.move_ids.quantity, 1)
 
     def test_flow_backorder_production(self):
         """ Test subcontracted MO backorder (i.e. through record production window, NOT through
@@ -1734,3 +1797,34 @@ class TestSubcontractingSerialMassReceipt(TransactionCase):
         ])
         receipt.button_validate()
         self.assertEqual(receipt.move_line_ids.lot_id, mo._get_subcontract_move().lot_ids)
+
+    @freeze_time('2025-08-06')
+    def test_subcontracting_receipt_skip_expired_serials(self):
+        """Test that only non-expired serials are processed when validating a
+        subcontracting receipt."""
+        if 'product_expiry' not in self.env['ir.module.module']._installed():
+            self.skipTest('product expiry is required for this test case skipping the test case')
+        self.finished.write({
+            'use_expiration_date': True,
+            'expiration_time': 10,
+            'removal_time': 8,
+        })
+        receipt = self.generate_subcontracting_receipt_and_mo(2)[0]
+        sn1, sn2 = self.env['stock.lot'].create([
+            {
+                'name': f"SN{serial}",
+                'product_id': self.finished.id,
+            } for serial in range(1, 3)
+        ])
+        receipt.move_line_ids[0].lot_id = sn1.id
+        receipt.move_line_ids[1].write({
+            'quantity': 1,
+            'expiration_date': '2025-08-10',
+            'removal_date': '2025-08-02',
+            'lot_id': sn2.id,
+        })
+        expiry_action = receipt.button_validate()
+        backorder_action = self.env[expiry_action['res_model']].with_context(expiry_action['context']).create({}).process_no_expired()
+        self.env[backorder_action['res_model']].with_context(backorder_action['context']).create({}).process()
+        self.assertTrue(sn1 in receipt._get_subcontract_production().lot_producing_ids)
+        self.assertFalse(sn2 in receipt.backorder_ids._get_subcontract_production().lot_producing_ids)

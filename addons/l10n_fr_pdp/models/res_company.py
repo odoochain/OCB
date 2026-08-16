@@ -3,11 +3,18 @@ import logging
 
 from odoo import api, fields, models
 
+from odoo.exceptions import UserError
+from odoo.tools.sql import SQL
+
+from odoo.addons.iap.tools import iap_tools
 from odoo.addons.l10n_fr_pdp.tools.demo_utils import handle_demo
 
 PDP_identifier_re = re.compile(r'^([0-9]{9})(_[0-9]{14})?(_.+)?$')
 
 _logger = logging.getLogger(__name__)
+
+ENDPOINT = 'https://pdp.odoo.com'
+TEST_ENDPOINT = 'https://pdp.test.odoo.com'
 
 
 class ResCompany(models.Model):
@@ -89,16 +96,21 @@ class ResCompany(models.Model):
 
     def _inverse_pdp_identifier(self):
         for record in self:
-            match = PDP_identifier_re.match(record.pdp_identifier or '')
-            siren = match and match.group(1)
-            if not siren:
+            if not record.pdp_identifier:
                 continue
-            siret = match.group(2)[1:] if match and match.group(2) else False  # Remove `_` at the start
-            record.partner_id.write({
+            match = PDP_identifier_re.match(record.pdp_identifier or '')
+            update = {
                 'peppol_eas': '0225',
                 'peppol_endpoint': record.pdp_identifier,  # Will be verified by `_check_peppol_fields` constraint
-                'company_registry': siret or siren,
-            })
+            }
+            siren = match and match.group(1)
+            if not siren:
+                raise UserError(self.env._("The identifier %s is not valid. The expected format is: SIREN, SIREN_SIRET, SIREN_SIRET_CodeRoutage or SIREN_SuffixeAdressage", record.pdp_identifier))
+            if not record.company_registry:
+                siret = match.group(2)[1:] if match and match.group(2) else False  # Remove `_` at the start
+                update['company_registry'] = siret or siren
+
+            record.partner_id.write(update)
 
     @api.depends('l10n_fr_pdp_annuaire_start_date', 'account_peppol_proxy_state')
     def _compute_l10n_fr_pdp_registered(self):
@@ -107,6 +119,56 @@ class ResCompany(models.Model):
                 company.account_peppol_proxy_state == 'receiver'
                 and company.l10n_fr_pdp_annuaire_start_date
                 and company.l10n_fr_pdp_annuaire_start_date <= fields.Date.context_today(self)
+            )
+
+    def _force_update_l10n_fr_f10_moves(self):
+        companies = self.filtered(
+            lambda company: company.l10n_fr_f10_enable_reporting
+            and company._pdp_get_flow_10_start_date()
+        )
+        if not companies:
+            return
+        account_ids = self.env['account.account'].search([
+            ('account_type', 'in', ['asset_receivable', 'liability_payable']),
+            ('company_ids', 'in', companies.ids),
+        ]).ids
+        date_company_conditions = SQL(
+            '(%s)',
+            SQL(' OR ').join(SQL(
+                '(move.date >= %(date)s AND move.company_id = %(company_id)s)',
+                date=company._pdp_get_flow_10_start_date(),
+                company_id=company.id,
+            ) for company in companies),
+        )
+        res = self.env.execute_query(
+            self._l10n_fr_pdp_get_f10_moves_query(tuple(account_ids), date_company_conditions),
+        )
+        moves = self.env['account.move'].browse(move_id for move_id, in res)
+        moves._compute_l10n_fr_pdp_flow_10_operation_type()
+        moves._compute_l10n_fr_pdp_flow_10_report_type()
+
+    def _l10n_fr_pdp_get_f10_moves_query(self, account_ids, date_company_conditions):
+        return SQL('''
+            -- payments --
+            SELECT move.id
+              FROM account_move move
+              JOIN account_move_line reco_aml ON reco_aml.move_id = move.id AND reco_aml.account_id IN %(account_ids)s
+              JOIN account_partial_reconcile apr ON apr.debit_move_id = reco_aml.id OR apr.credit_move_id = reco_aml.id
+             WHERE move.move_type = 'entry'
+               AND %(date_company_conditions)s
+               AND move.state = 'posted'
+
+             UNION
+
+            -- transactions --
+            SELECT move.id
+              FROM account_move move
+             WHERE move.move_type IN ('out_invoice', 'out_refund', 'out_receipt', 'in_invoice', 'in_refund')  -- not in_receipt !
+               AND %(date_company_conditions)s
+               AND move.state = 'posted'
+                ''',
+                account_ids=account_ids,
+                date_company_conditions=date_company_conditions,
             )
 
     @api.model
@@ -138,6 +200,10 @@ class ResCompany(models.Model):
             'urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100::CrossIndustryInvoice##urn:cen.eu:en16931:2017#compliant#urn:peppol:france:billing:cius:1.0::D22B': "UN/CEFACT EN16931 French CIUS",
             'urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100::CrossIndustryInvoice##urn:cen.eu:en16931:2017#conformant#urn:peppol:france:billing:extended:1.0::D22B': "UN/CEFACT EN16931 French CTC Extended",
         }
+
+    def _peppol_allows_document_reception(self):
+        self.ensure_one()
+        return super()._peppol_allows_document_reception() and self.country_code != 'FR'
 
     @handle_demo
     def _l10n_fr_pdp_update_pilot_phase(self, value):
@@ -185,9 +251,11 @@ class ResCompany(models.Model):
             else:
                 company.l10n_fr_pdp_flow_10_start_date = None
 
-    @api.depends('l10n_fr_pdp_send_to_ppf', 'account_fiscal_country_id', 'account_peppol_edi_user')
+    @api.depends('l10n_fr_pdp_send_to_ppf', 'account_fiscal_country_id', 'account_peppol_edi_user', 'l10n_fr_pdp_pilot_phase')
     def _compute_l10n_fr_f10_enable_reporting(self):
+        changed_companies = self.browse()
         for company in self:
+            previous_state = company.l10n_fr_f10_enable_reporting
             company.l10n_fr_f10_enable_reporting = (
                 company.l10n_fr_pdp_send_to_ppf
                 and company.l10n_fr_pdp_pilot_phase
@@ -195,3 +263,32 @@ class ResCompany(models.Model):
                 and company.account_fiscal_country_id.code == 'FR'
                 and company.currency_id == self.env.ref('base.EUR')
             )
+            if not previous_state and company.l10n_fr_f10_enable_reporting:
+                changed_companies += company
+        changed_companies._force_update_l10n_fr_f10_moves()
+
+    def _pdp_get_iap_url(self):
+        self.ensure_one()
+        return ENDPOINT if self._get_peppol_edi_mode() == 'prod' else TEST_ENDPOINT
+
+    def _refresh_pdp_authentication_status(self, send_bus=True):
+        self.ensure_one()
+        base_url = self._pdp_get_iap_url()
+        response = iap_tools.iap_jsonrpc(f'{base_url}/api/signaturit_id_authentication/1/kyc_status', params={
+            'object_uuid': self.pdp_authentication_uuid,
+        })
+        kyc_status = response.get('kyc_status')
+        if kyc_status == 'success':
+            self.pdp_kyc_status = kyc_status
+            if self.env['account.move']._can_commit():
+                self.env.cr.commit()
+            if not send_bus:  # If called manually from the wizard we do not need the JS to handle it
+                return
+            # We are getting the last registration wizard creator to send him the notification.
+            # If we don't have any wizard, the user will get the new screen when he will continue the flow.
+            pdp_registration = self.env['pdp.registration'].search([('pdp_authentication_uuid', '=', self.pdp_authentication_uuid)], order='id DESC', limit=1)
+            if user := pdp_registration.create_uid:
+                user._bus_send(
+                    'auth_done',
+                    {'pdp_registration_id': pdp_registration.id},
+                )

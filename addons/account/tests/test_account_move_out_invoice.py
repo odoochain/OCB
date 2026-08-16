@@ -150,6 +150,17 @@ class TestAccountMoveOutInvoiceOnchanges(AccountTestInvoicingCommon):
         with self.assertRaisesRegex(UserError, 'lock date'):
             inv.line_ids.tax_tag_ids = tax_tag.ids
 
+    def test_invoice_default_sale_person(self):
+        """ Test public user won't be assigned as invoice salesman
+        """
+        public_user = self.env.ref('base.public_user')
+        invoice = self.env['account.move'].create({'move_type': 'out_invoice'})
+        public_invoice = invoice.with_user(public_user).sudo()
+        public_invoice.partner_id = self.partner_a
+
+        self.assertNotEqual(public_invoice.invoice_user_id, public_user, "Public user shall not be set as salesperson")
+        self.assertEqual(public_invoice.invoice_user_id, public_invoice.create_uid, "the salesperson should fall back to the document creator")
+
     @freeze_time('2020-01-15')
     def test_out_invoice_onchange_invoice_date(self):
         for tax_date, invoice_date, accounting_date in [
@@ -1359,6 +1370,38 @@ class TestAccountMoveOutInvoiceOnchanges(AccountTestInvoicingCommon):
             {'analytic_distribution': False},
             {'analytic_distribution': False},
         ])
+
+    def test_out_invoice_cash_rounding_multi_company(self):
+        # profit_account_id / loss_account_id are company-dependent: when the
+        # invoice belongs to another company than the active one, the rounding
+        # line must use the accounts of the invoice's company.
+        company_data_2 = self.company_data_2
+        self.cash_rounding_a.with_company(company_data_2['company']).write({
+            'profit_account_id': company_data_2['default_account_revenue'].id,
+            'loss_account_id': company_data_2['default_account_expense'].id,
+        })
+
+        self.assertEqual(self.env.company, self.company_data['company'])
+        move = self.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'company_id': company_data_2['company'].id,
+            'partner_id': self.partner_a.id,
+            'invoice_cash_rounding_id': self.cash_rounding_a.id,
+            'invoice_line_ids': [Command.create({
+                'product_id': self.product_a.id,
+                'quantity': 1,
+                'price_unit': 100.42,
+                'tax_ids': [],
+            })],
+        })
+
+        rounding_line = move.line_ids.filtered(lambda line: line.display_type == 'rounding')
+        self.assertTrue(rounding_line, "A cash rounding line should have been added.")
+        self.assertEqual(
+            rounding_line.account_id,
+            company_data_2['default_account_revenue'],
+            "The rounding line must use the profit / loss account depending on the move's company.",
+        )
 
     def test_out_invoice_line_onchange_cash_rounding_1(self):
         # Required for `invoice_cash_rounding_id` to be visible in the view
@@ -4114,10 +4157,18 @@ class TestAccountMoveOutInvoiceOnchanges(AccountTestInvoicingCommon):
 
         (valid_invoice + invalid_invoice_1 + invalid_invoice_2).auto_post = 'at_date'
 
-        with self.enter_registry_test_mode():
+        with (
+            self.enter_registry_test_mode(),
+            patch('odoo.addons.base.models.ir_cron.IrCron._reschedule_asap') as reschedule_asap,
+        ):
             self.env.ref('account.ir_cron_auto_post_draft_entry').method_direct_trigger()
+            # No retries for batches with failed moves
+            reschedule_asap.assert_not_called()
+
         self.assertEqual(valid_invoice.state, 'posted')
         self.assertEqual(invalid_invoice_1.state, 'draft')
+        self.assertEqual(invalid_invoice_1.auto_post, 'no')
+        self.assertEqual(invalid_invoice_2.auto_post, 'no')
 
         self.assertTrue(any(
             message.body == (
@@ -4569,6 +4620,7 @@ class TestAccountMoveOutInvoiceOnchanges(AccountTestInvoicingCommon):
         move = self.env['account.move'].create({
             'move_type': 'out_invoice',
             'partner_id': self.partner_a.id,
+            'invoice_payment_term_id': self.env.ref('account.account_payment_term_advance_60days').id,
             'invoice_line_ids': [
                 Command.create({
                     'name': 'invoice_line',
@@ -5175,3 +5227,100 @@ class TestAccountMoveOutInvoiceOnchanges(AccountTestInvoicingCommon):
             1000.00,
             msg="Price should be tax included"
         )
+
+    @freeze_time('2026-04-01')
+    def test_auto_post_and_reset_to_draft(self):
+        inv1 = self.invoice
+        inv1.date = '2026-01-01'
+        inv1.auto_post = 'quarterly'
+
+        def recurrence():
+            return self.env['account.move'].search(
+                [('auto_post_origin_id', '=', inv1.id)],
+                order='date',
+            )
+
+        def post_next_entry():
+            with self.enter_registry_test_mode():
+                self.env.ref('account.ir_cron_auto_post_draft_entry').method_direct_trigger()
+
+        jan, feb, mar, apr, may = (fields.Date.to_date(f'2026-0{month}-01') for month in range(1, 6))
+
+        # 1) Posting inv1 generates the draft of the next period.
+        inv1.action_post()
+        self.assertRecordValues(recurrence(), [
+            {'date': jan, 'state': 'posted'},
+            {'date': apr, 'state': 'draft'},
+        ])
+
+        # 2) Resetting inv1 to draft deletes the draft it generated.
+        inv1.button_draft()
+        self.assertRecordValues(recurrence(), [
+            {'date': jan, 'state': 'draft'},
+        ])
+
+        # 3) inv1 -> inv2 -> draft
+        inv1.auto_post = 'monthly'
+        post_next_entry()  # inv1
+        post_next_entry()  # inv2
+        self.assertRecordValues(recurrence(), [
+            {'date': jan, 'state': 'posted'},
+            {'date': feb, 'state': 'posted'},
+            {'date': mar, 'state': 'draft'},
+        ])
+
+        # 4) Resetting inv2 to draft deletes the draft it generated.
+        inv2 = recurrence()[1]
+        inv2.button_draft()
+        self.assertRecordValues(recurrence(), [
+            {'date': jan, 'state': 'posted'},
+            {'date': feb, 'state': 'draft'},
+        ])
+
+        # 5) inv1 -> inv2 -> inv3 -> draft
+        post_next_entry()  # inv2
+        post_next_entry()  # inv3
+        self.assertRecordValues(recurrence(), [
+            {'date': jan, 'state': 'posted'},
+            {'date': feb, 'state': 'posted'},
+            {'date': mar, 'state': 'posted'},
+            {'date': apr, 'state': 'draft'},
+        ])
+
+        # 6) Resetting inv3 to draft deletes the draft it generated.
+        inv3 = recurrence()[2]
+        inv3.button_draft()
+        self.assertRecordValues(recurrence(), [
+            {'date': jan, 'state': 'posted'},
+            {'date': feb, 'state': 'posted'},
+            {'date': mar, 'state': 'draft'},
+        ])
+
+        # 7) inv1 -> inv2 -> inv3 -> draft
+        post_next_entry()  # inv3
+        self.assertRecordValues(recurrence(), [
+            {'date': jan, 'state': 'posted'},
+            {'date': feb, 'state': 'posted'},
+            {'date': mar, 'state': 'posted'},
+            {'date': apr, 'state': 'draft'},
+        ])
+
+        # 8) Resetting inv1 to draft changes nothing: the pending draft was generated by inv3, not by inv1.
+        inv1.button_draft()
+        self.assertRecordValues(recurrence(), [
+            {'date': jan, 'state': 'draft'},
+            {'date': feb, 'state': 'posted'},
+            {'date': mar, 'state': 'posted'},
+            {'date': apr, 'state': 'draft'},
+        ])
+
+        # 9) The cron shouldn't recreate already existing recurring moves
+        inv2.button_draft()
+        post_next_entry()
+        self.assertRecordValues(recurrence(), [
+            {'date': jan, 'state': 'posted'},
+            {'date': feb, 'state': 'posted'},
+            {'date': mar, 'state': 'posted'},
+            {'date': apr, 'state': 'posted'},
+            {'date': may, 'state': 'draft'},
+        ])

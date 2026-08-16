@@ -145,7 +145,7 @@ class PaymentTransaction(models.Model):
             return super()._send_void_request()
 
         authorize_API = AuthorizeAPI(self.provider_id)
-        res_content = authorize_API.void(self.provider_reference)
+        res_content = authorize_API.void(self.source_transaction_id.provider_reference)
         _logger.info(
             "void request response for transaction %s:\n%s",
             self.reference, pprint.pformat(res_content)
@@ -196,6 +196,8 @@ class PaymentTransaction(models.Model):
                 self._set_done()
             elif status_type == 'auth_only':
                 self._set_authorized()
+                if self.tokenize:
+                    self._tokenize(payment_data)  # Tokenize before voiding
                 if self.operation == 'validation':
                     self._void()  # In last step because it processes the response.
             elif status_type == 'void':

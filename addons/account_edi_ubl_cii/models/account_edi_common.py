@@ -1,11 +1,13 @@
-from datetime import datetime
 from markupsafe import Markup
+from lxml import etree
 
 from odoo import _, api, models
+from odoo.addons.account.tools import dict_to_xml
 from odoo.addons.base.models.res_bank import sanitize_account_number
 from odoo.exceptions import UserError, ValidationError
-from odoo.tools import float_compare, float_is_zero, float_repr
+from odoo.tools import float_compare, float_is_zero, float_repr, html2plaintext
 from odoo.tools.float_utils import float_round
+from odoo.tools.translate import _lt
 from odoo.tools.misc import clean_context, formatLang, html_escape
 from odoo.tools.xml_utils import find_xml_value
 
@@ -207,6 +209,9 @@ TAX_EXEMPTION_MAPPING = {
     'VATEX-FR-298SEXDECIESA': 'Exempt based on article 298 sexdecies A of the Code Général des Impôts (CGI ; General tax code)',
     'VATEX-FR-CGI295': 'Exempt based on article 295 of the Code Général des Impôts (CGI ; General tax code)',
     'VATEX-FR-AE': 'Exempt based on 2 of article 283 of the Code Général des Impôts (CGI ; General tax code)',
+    'VATEX-FR-F': 'VATEX-FR-F - Second-hand sales',
+    'VATEX-FR-I': 'VATEX-FR-I - Sales of works of art',
+    'VATEX-FR-J': 'VATEX-FR-J - Sales of antiques',
 }
 
 # -------------------------------------------------------------------------
@@ -226,6 +231,11 @@ EUROPEAN_ECONOMIC_AREA_COUNTRY_CODES = {
     # EFTA Countries in the EEA
     'IS', 'LI', 'NO',
 }
+
+COCONTRACTANT_DEFAULT_NOTE = _lt('Reverse charge: In the absence of a written objection within one month of receipt of the invoice, '
+                              'the customer is deemed to acknowledge that they are a taxable person required to file periodic returns. '
+                              'If this condition is not met, the customer will be liable for the payment of the tax, interest, '
+                              'and penalties due in relation to this condition.')
 
 # -------------------------------------------------------------------------
 # SUPPORTED FILE TYPES FOR IMPORT
@@ -287,6 +297,25 @@ class AccountEdiCommon(models.AbstractModel):
     # HELPERS
     # -------------------------------------------------------------------------
 
+    def _vals_to_etree(self, vals):
+        document_node = vals['document_node']
+        return dict_to_xml(document_node, nsmap=document_node['_nsmap'], template=document_node['_template'])
+
+    def _etree_to_string(self, tree):
+        return etree.tostring(tree, xml_declaration=True, encoding='UTF-8')
+
+    def _define_document_type(self, vals, document_type):
+        vals['_document_type'] = {
+            'name': document_type,
+            'model': self,
+        }
+
+    def _get_document_type(self, vals):
+        return vals.get('_document_type', {}).get('name')
+
+    def _is_document(self, vals, *document_types):
+        return self._get_document_type(vals) in document_types
+
     def module_installed(self, module_name):
         return self.env['ir.module.module']._get(module_name).state == 'installed'
 
@@ -322,6 +351,20 @@ class AccountEdiCommon(models.AbstractModel):
     def _can_export_selfbilling(self):
         return False
 
+    def _get_belgian_cocontractant_note(self, customer, supplier):
+        invoice = self.env.context.get('tax_exemption_reason_invoice')
+        if self._is_cocontractant_fiscal_position(invoice, customer, supplier):
+            note = html2plaintext(invoice.fiscal_position_id.note) if invoice.fiscal_position_id.note else ''
+            return note or COCONTRACTANT_DEFAULT_NOTE
+        return ''
+
+    def _is_cocontractant_fiscal_position(self, invoice, customer, supplier):
+        return (invoice and
+                customer.country_id.code == 'BE' and
+                supplier.country_id == customer.country_id and
+                (co_contractant := self.env['account.chart.template'].with_company(invoice.company_id).ref('fiscal_position_template_4', raise_if_not_found=False)) and
+                invoice.fiscal_position_id == co_contractant
+        )
     # -------------------------------------------------------------------------
     # TAXES
     # -------------------------------------------------------------------------
@@ -400,6 +443,12 @@ class AccountEdiCommon(models.AbstractModel):
             Note: In Peppol, taxes should be grouped by tax category code but *not* by
             exemption reason, see https://docs.peppol.eu/poacc/billing/3.0/bis/#_calculation_of_vat
         """
+
+        if reason := tax and not tax.amount and self._get_belgian_cocontractant_note(customer, supplier):
+            return {
+                'tax_exemption_reason_code': 'VATEX-EU-AE',
+                'tax_exemption_reason': reason,
+            }
 
         if tax and (code := tax.ubl_cii_tax_exemption_reason_code):
             return {
@@ -775,29 +824,11 @@ class AccountEdiCommon(models.AbstractModel):
         return lines_values, logs
 
     def _retrieve_invoice_line_vals(self, tree, document_type=False, qty_factor=1):
-        # Start and End date (enterprise fields)
-        xpath_dict = self._get_invoice_line_xpaths(document_type, qty_factor)
-        deferred_values = {}
-        start_date = end_date = None
-        if self.env['account.move.line']._fields.get('deferred_start_date'):
-            start_date_node = tree.find(xpath_dict['deferred_start_date'])
-            end_date_node = tree.find(xpath_dict['deferred_end_date'])
-            if start_date_node is not None and end_date_node is not None:  # there is a constraint forcing none or the two to be set
-                start_date = datetime.strptime(start_date_node.text.strip(), xpath_dict['date_format'])
-                end_date = datetime.strptime(end_date_node.text.strip(), xpath_dict['date_format'])
-            deferred_values = {
-                'deferred_start_date': start_date,
-                'deferred_end_date': end_date,
-            }
-
         line_vals = self._retrieve_line_vals(tree, document_type, qty_factor)
         if not line_vals.get('price_subtotal'):
             return None
 
-        return {
-            **line_vals,
-            **deferred_values,
-        }
+        return line_vals
 
     @api.model
     def _retrieve_rebate_val(self, tree, xpath_dict, quantity):
@@ -832,6 +863,13 @@ class AccountEdiCommon(models.AbstractModel):
             else:
                 discount_amount += amount
         return discount_amount, charges
+
+    def _get_basis_qty(self, tree, xpath_dict):
+        """ Return the base quantity used to derive the unit price from PriceAmount.
+        The standard UBL/CII divides PriceAmount by BaseQuantity to obtain the unit price upon
+        import.
+        """
+        return float(self._find_value(xpath_dict['basis_qty'], tree) or 1) or 1.0
 
     def _retrieve_line_vals(self, tree, document_type=False, qty_factor=1):
         """
@@ -875,7 +913,7 @@ class AccountEdiCommon(models.AbstractModel):
         """
         xpath_dict = self._get_line_xpaths(document_type, qty_factor)
         # basis_qty (optional)
-        basis_qty = float(self._find_value(xpath_dict['basis_qty'], tree) or 1) or 1.0
+        basis_qty = self._get_basis_qty(tree, xpath_dict)
 
         # gross_price_unit (optional)
         gross_price_unit = None

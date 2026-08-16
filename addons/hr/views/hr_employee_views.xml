@@ -93,7 +93,8 @@
                                 context="{'default_create_employee': True}"/>
                         <button name="%(plan_wizard_action)d" string="Launch Plan" type="action"
                             groups="hr.group_hr_user" invisible="not active or not id" context="{'sort_by_responsible': True}"/>
-                        <field name="version_id" widget="versions_timeline" invisible="not id" options="{'clickable': True}" readonly="False"/>
+                        <field name="version_id" widget="versions_timeline" context="{'version_revision': version_revision}" invisible="not id" options="{'clickable': True}" readonly="False"/>
+                        <field name="version_revision" invisible="1"/>
                     </header>
                     <sheet>
                         <div name="button_box" class="oe_button_box">
@@ -677,7 +678,7 @@
                             </p>
                             <div class="px-2 py-2 row justify-content-center g-2">
                                 <div class="col-12 col-md-3">
-                                    <a class="btn btn-primary w-100 text-nowrap text-overflow-ellipsis" type="action" name="%(action_hr_employee_load_demo_data)d" tabindex="-1">Load sample data.</a>
+                                    <a class="btn btn-primary w-auto text-nowrap text-overflow-ellipsis" type="action" name="%(action_hr_employee_load_demo_data)d" tabindex="-1">Load sample data.</a>
                                 </div>
                             </div>
                             <hr class="my-4"/>

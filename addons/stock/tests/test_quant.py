@@ -321,6 +321,61 @@ class TestStockQuant(TestStockCommon):
         self.env['stock.quant']._update_available_quantity(self.productA, self.stock_location, -1.0)
         self.assertEqual(len(self.gather_relevant(self.productA, self.stock_location)), 0)
 
+    def test_to_date_consignment(self):
+        """ Check that computing past quantities with 'to_date' correctly ignores
+        consigned stock moves when checking company-owned stock.
+        """
+        self.env.user.group_ids += self.env.ref('stock.group_tracking_owner')
+
+        today = fields.Datetime.now()
+        yesterday = today - timedelta(days=1)
+
+        # Create Incoming Consignment Move (10 units)
+        picking_in = self.env['stock.picking'].create({
+            'picking_type_id': self.picking_type_in.id,
+            'location_id': self.supplier_location.id,
+            'location_dest_id': self.stock_location.id,
+            'owner_id': self.partner_1.id,
+            'move_ids': [
+                Command.create({
+                    'product_id': self.productA.id,
+                    'product_uom_qty': 10,
+                    'location_id': self.supplier_location.id,
+                    'location_dest_id': self.stock_location.id,
+                }),
+            ],
+        })
+        picking_in.action_confirm()
+        picking_in.button_validate()
+
+        # Create Outgoing Move (4 Units)
+        picking_out = self.env['stock.picking'].create({
+            'picking_type_id': self.picking_type_out.id,
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.customer_location.id,
+            'move_ids': [
+                Command.create({
+                    'product_id': self.productA.id,
+                    'product_uom_qty': 4.0,
+                    'location_id': self.stock_location.id,
+                    'location_dest_id': self.customer_location.id,
+                }),
+            ],
+        })
+
+        picking_out.action_confirm()
+
+        picking_out.button_validate()
+
+        # Mimic _with_valuation_context()
+        product_past = self.productA.with_context(to_date=yesterday, owners=[False, self.env.company.partner_id.id])
+
+        self.assertEqual(
+            product_past.qty_available,
+            0.0,
+            "Company-owned past quantity should be 0.0, it must ignore consigned stock moves."
+        )
+
     def test_increase_reserved_quantity_1(self):
         """ Increase the reserved quantity of quantity x when there's a single quant in a given
         location which has an available quantity of x.
@@ -1455,6 +1510,54 @@ class TestStockQuant(TestStockCommon):
         self.env['stock.quant']._update_available_quantity(self.productA, self.stock_location, 100)
         delivery.action_assign()
         self.assertEqual(delivery.move_ids.quantity, 24)
+
+    def test_reservation_preserved_after_relocation(self):
+        """Test stock relocation preserves the original reservation order
+        between deliveries."""
+        customer_location = self.env.ref('stock.stock_location_customers')
+        self.env['stock.quant']._update_available_quantity(self.productA, self.stock_location, 8.0)
+        first_delivery = self.env['stock.picking'].create({
+            'picking_type_id': self.ref('stock.picking_type_out'),
+            'location_id': self.stock_location.id,
+            'location_dest_id': customer_location.id,
+            'move_ids': [Command.create({
+                'product_id': self.productA.id,
+                'product_uom_qty': 5.0,
+                'location_id': self.stock_location.id,
+                'location_dest_id': customer_location.id,
+            })],
+        })
+        second_delivery = first_delivery.copy()
+        (first_delivery | second_delivery).action_confirm()
+
+        self.assertRecordValues(first_delivery.move_line_ids, [{
+            'quantity': 5.0,
+            'location_id': self.stock_location.id,
+            'product_id': self.productA.id,
+        }])
+        self.assertRecordValues(second_delivery.move_line_ids, [{
+            'quantity': 3.0,
+            'location_id': self.stock_location.id,
+            'product_id': self.productA.id,
+        }])
+        quant = self.env['stock.quant'].search([
+            ('product_id', '=', self.productA.id),
+            ('location_id', '=', self.stock_location.id),
+        ])
+        relocate_wizard = Form.from_action(self.env, quant.action_stock_quant_relocate())
+        relocate_wizard.dest_location_id = self.shelf_1
+        relocate_wizard.save().action_relocate_quants()
+
+        self.assertRecordValues(first_delivery.move_line_ids, [{
+            'quantity': 5.0,
+            'location_id': self.shelf_1.id,
+            'product_id': self.productA.id,
+        }])
+        self.assertRecordValues(second_delivery.move_line_ids, [{
+            'quantity': 3.0,
+            'location_id': self.shelf_1.id,
+            'product_id': self.productA.id,
+        }])
 
 
 class TestStockQuantRemovalStrategy(TestStockCommon):

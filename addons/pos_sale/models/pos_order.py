@@ -44,6 +44,21 @@ class PosOrder(models.Model):
                 invoice_vals['invoice_payment_term_id'] = False
             if sale_orders[0].partner_invoice_id != sale_orders[0].partner_id:
                 invoice_vals['partner_id'] = sale_orders[0].partner_invoice_id.id
+            if not invoice_vals.get('reversed_entry_id'):
+                refs = list(dict.fromkeys(so.client_order_ref or so.name for so in sale_orders if so.client_order_ref or so.name))
+                invoice_vals['ref'] = ', '.join(refs)[:2000]
+
+            origins = []
+            for order in self:
+                order_sos = order.lines.sale_order_origin_id
+                if order_sos:
+                    origins.extend(order_sos.mapped('name'))
+                elif order.pos_reference:
+                    origins.append(order.pos_reference)
+                elif order.name:
+                    origins.append(order.name)
+            if origins:
+                invoice_vals['invoice_origin'] = ', '.join(dict.fromkeys(origins))
         return invoice_vals
 
     def action_pos_order_paid(self):
@@ -172,7 +187,7 @@ class PosOrder(models.Model):
     def _get_invoice_lines_values(self, line_values, pos_line, move_type):
         inv_line_vals = super()._get_invoice_lines_values(line_values, pos_line, move_type)
 
-        if pos_line.sale_order_origin_id:
+        if pos_line.sale_order_origin_id and pos_line.sale_order_line_id:
             origin_line = pos_line.sale_order_line_id
             inv_line_vals["name"] = origin_line.name
             origin_line._set_analytic_distribution(inv_line_vals)
@@ -241,3 +256,10 @@ class PosOrderLine(models.Model):
         for order in orders:
             self.env['stock.move'].browse(order.lines.sale_order_line_id.move_ids._rollup_move_origs()).filtered(lambda ml: ml.state not in ['cancel', 'done'])._action_cancel()
         return super()._launch_stock_rule_from_pos_order_lines()
+
+    def _prepare_refund_data(self, refund_order, PosOrderLineLot):
+        data = super()._prepare_refund_data(refund_order, PosOrderLineLot)
+        data.update({
+            'sale_order_line_id': False,  # Remove the sale order line id to be coherent with frontend refund
+        })
+        return data

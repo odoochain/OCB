@@ -154,7 +154,7 @@
             <div t-else="" style="width: 274px;" data-prevent-closing-overlay="true">
                 <div class="d-flex flex-column p-2">
                     <div class="d-flex">
-                        <span class="o_we_preview_favicon" style="width: 16px; height: 32px">
+                        <span class="o_we_preview_favicon" style="width: 16px; height: 18px">
                             <img t-if="state.previewIcon.type === 'imgSrc'" t-att-src="state.previewIcon.value" class="align-content-center"/>
                             <span t-elif="state.previewIcon.type === 'mimetype'" class="o_image" t-att-data-mimetype="state.previewIcon.value"/>
                             <i t-else="" t-attf-class="fa fa-fw {{state.previewIcon.value}}"></i>
@@ -165,7 +165,7 @@
                                     <t t-esc="state.urlTitle"/>
                                 </a>
                                 <div class="flex-grow-1 d-flex justify-content-end align-items-center gap-1">
-                                    <a href="#" class="mx-1 o_we_replace_title_btn text-dark"
+                                    <a href="#" class="justify-content-center btn-link o_we_replace_title_btn text-dark"
                                         t-if="!state.isImage and state.urlTitle and state.label === '' and !state.showReplaceTitleBanner"
                                         t-on-click="onClickReplaceTitle"
                                         title="Replace URL with its title"

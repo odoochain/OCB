@@ -149,15 +149,24 @@ patch(PosStore.prototype, {
         const srcKey = srcLine.preparationKey;
         const destKey = destLine.preparationKey;
         const srcQty = srcPrep[srcKey]?.quantity;
+        const existingDestQty = destPrep[destKey]?.quantity || 0;
 
         if (srcQty) {
             if (srcQty <= qty) {
-                const newPrep = { ...srcPrep[srcKey], uuid: destLine.uuid };
+                const newPrep = {
+                    ...srcPrep[srcKey],
+                    uuid: destLine.uuid,
+                    quantity: existingDestQty + srcQty,
+                };
                 destPrep[destKey] = newPrep;
                 delete srcPrep[srcKey];
             } else {
                 srcPrep[srcKey].quantity = srcQty - qty;
-                destPrep[destKey] = { ...srcPrep[srcKey], uuid: destLine.uuid, quantity: qty };
+                destPrep[destKey] = {
+                    ...srcPrep[srcKey],
+                    uuid: destLine.uuid,
+                    quantity: existingDestQty + qty,
+                };
             }
         }
     },
@@ -207,6 +216,8 @@ patch(PosStore.prototype, {
     async _mergeOrders(sourceOrder, destOrder) {
         const mergedCourses = this.mergeCourses(sourceOrder, destOrder);
 
+        const sourceLastPrint = sourceOrder.uiState.lastPrints.at(-1);
+
         // Sum the guest counts from both orders
         const totalGuests = sourceOrder.getCustomerCount() + destOrder.getCustomerCount();
         destOrder.setCustomerCount(totalGuests);
@@ -248,6 +259,32 @@ patch(PosStore.prototype, {
                     }
                 });
             }
+        }
+        const destLastPrint = destOrder.uiState.lastPrints.at(-1);
+        const combinedPrint = {
+            new: [...(destLastPrint?.new || []), ...(sourceLastPrint?.new || [])],
+            cancelled: [...(destLastPrint?.cancelled || []), ...(sourceLastPrint?.cancelled || [])],
+            noteUpdate: [
+                ...(destLastPrint?.noteUpdate || []),
+                ...(sourceLastPrint?.noteUpdate || []),
+            ],
+        };
+        if (destLastPrint?.internal_note || sourceLastPrint?.internal_note) {
+            combinedPrint.internal_note =
+                destLastPrint?.internal_note || sourceLastPrint?.internal_note;
+        }
+        if (destLastPrint?.general_customer_note || sourceLastPrint?.general_customer_note) {
+            combinedPrint.general_customer_note =
+                destLastPrint?.general_customer_note || sourceLastPrint?.general_customer_note;
+        }
+        if (
+            combinedPrint.new.length ||
+            combinedPrint.cancelled.length ||
+            combinedPrint.noteUpdate.length ||
+            combinedPrint.internal_note ||
+            combinedPrint.general_customer_note
+        ) {
+            destOrder.uiState.lastPrints.push(combinedPrint);
         }
     },
     async mergeOrders(sourceOrder, destOrder) {
@@ -527,7 +564,9 @@ patch(PosStore.prototype, {
     },
     createOrderIfNeeded(data) {
         if (this.config.module_pos_restaurant && !data["table_id"]) {
-            let order = this.models["pos.order"].find((order) => order.isDirectSale);
+            let order = this.models["pos.order"].find(
+                (order) => order.isDirectSale && !order.isSynced
+            );
             if (!order) {
                 order = this.createNewOrder(data);
             }
@@ -572,7 +611,12 @@ patch(PosStore.prototype, {
     },
     async reprintOrder() {
         const order = this.getOrder();
-        await this.sendOrderInPreparation(order, { explicitReprint: true });
+        order.uiState.isReprinting = true;
+        try {
+            await this.sendOrderInPreparation(order);
+        } finally {
+            order.uiState.isReprinting = false;
+        }
         this.showDefault();
     },
     async _askForPreparation() {
@@ -633,7 +677,14 @@ patch(PosStore.prototype, {
             this.setOrder(currentOrder);
         } else {
             const potentialsOrders = this.models["pos.order"].filter(
-                (o) => !o.table_id && !o.finalized && o.lines.length === 0
+                (o) =>
+                    !o.table_id &&
+                    !o.finalized &&
+                    o.lines.length === 0 &&
+                    !o.isSynced &&
+                    !o.floating_order_name &&
+                    !o.preset_time &&
+                    (!o.preset_id || o.preset_id.id === this.config.default_preset_id?.id)
             );
 
             if (potentialsOrders.length) {
@@ -1072,6 +1123,7 @@ patch(PosStore.prototype, {
     getOrderData(order, reprint) {
         return {
             ...super.getOrderData(order, reprint),
+            floor_name: order.table_id?.floor_id?.name || "",
             customer_count: order.getCustomerCount(),
         };
     },

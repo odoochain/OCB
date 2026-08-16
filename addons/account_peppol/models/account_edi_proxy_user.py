@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import re
 import logging
 from datetime import timedelta
 
@@ -14,6 +15,13 @@ from odoo.addons.account_peppol.tools.peppol_iap_connector import PEPPOL_PROXY_U
 
 _logger = logging.getLogger(__name__)
 BATCH_SIZE = 50
+
+REMOVE_EMBEDDED_DOCUMENT_BINARY_OBJECT_RE = re.compile(
+    rb'(<(?P<tag>(?:[A-Za-z_][A-Za-z0-9_.-]*:)?EmbeddedDocumentBinaryObject)\b[^<>]*>)'
+    rb'(?P<data>.*?)'
+    rb'(</(?P=tag)\s*>)',
+    re.DOTALL,
+)
 
 
 class Account_Edi_Proxy_ClientUser(models.Model):
@@ -42,7 +50,7 @@ class Account_Edi_Proxy_ClientUser(models.Model):
         if not proxy_type:
             self.ensure_one()
             proxy_type = self.proxy_type
-        return f"/api/{proxy_type}/{endpoint}"
+        return f"/api/{proxy_type}/{endpoint.lstrip('/')}"
 
     @api.model
     def _get_peppol_error_message(self, error_vals):
@@ -211,8 +219,14 @@ class Account_Edi_Proxy_ClientUser(models.Model):
 
         file_data = self.env['account.move']._to_files_data(attachment)[0]
 
+        # Fallback to avoid issues with large EmbeddedDocumentBinaryObject
+        if file_data['xml_tree'] is None:
+            file_data['raw'] = REMOVE_EMBEDDED_DOCUMENT_BINARY_OBJECT_RE.sub(b'', file_data['raw'])
+            file_data['xml_tree'] = self.env['account.move']._get_xml_tree(file_data)
+
         # Self-billed invoices are invoices which your customer creates on your behalf and sends you via Peppol.
-        # In this case, the invoice needs to be created as an out_invoice in a sale journal.
+        # In this case, the invoice needs to be created as an out_invoice in a self-billing sale journal.
+        # If no self-billing sale journal was found, the invoice will be created in a regular sale journal.
         # 329/527: Self-billing invoice; 261: Self-billing credit note
         is_self_billed = False
         if file_data['xml_tree'].findtext('.//{*}InvoiceTypeCode') in ['389', '527'] or file_data['xml_tree'].findtext('.//{*}CreditNoteTypeCode') == '261':
@@ -225,15 +239,20 @@ class Account_Edi_Proxy_ClientUser(models.Model):
                 return {}
 
         else:
+            sale_journal_domain = [
+                *self.env['account.journal']._check_company_domain(self.company_id),
+                ('type', '=', 'sale'),
+            ]
             journal = (
                 journal
                 or self.env['account.journal'].search(
                     [
-                        *self.env['account.journal']._check_company_domain(self.company_id),
-                        ('type', '=', 'sale'),
+                        *sale_journal_domain,
+                        ('is_self_billing', '=', True),
                     ],
-                    limit=1
+                    limit=1,
                 )
+                or self.env['account.journal'].search(sale_journal_domain, limit=1)
             )
             move_type = 'out_invoice'
             if not journal:
@@ -255,6 +274,16 @@ class Account_Edi_Proxy_ClientUser(models.Model):
             _logger.exception("Unexpected error occurred during the import of bill with id %s", move.id)
         attachment.write({'res_model': 'account.move', 'res_id': move.id})
         return {'uuid': uuid, 'move': move}
+
+    def _peppol_get_duplicate_message_uuids(self, message_uuids):
+        self.ensure_one()
+        return set(
+            self.env['account.move'].search([
+                ('peppol_message_uuid', 'in', message_uuids),
+                ('company_id', '=', self.company_id.id),
+            ])
+            .mapped('peppol_message_uuid')
+        )
 
     def _peppol_get_new_documents(self, skip_no_journal=False):
         # Context added to not break stable policy: useful to tweak on databases processing large invoices
@@ -291,6 +320,19 @@ class Account_Edi_Proxy_ClientUser(models.Model):
                 message['uuid']
                 for message in messages.get('messages', [])
             ]
+            # remove the duplicates
+            if duplicate_message_uuids := list(edi_user._peppol_get_duplicate_message_uuids(message_uuids)):
+                message_uuids = list(set(message_uuids) - set(duplicate_message_uuids))
+                # acknowledge the duplicates on IAP side.
+                edi_user._call_peppol_proxy(
+                    endpoint=edi_user._get_peppol_proxy_endpoint('1/ack'),
+                    params={'message_uuids': duplicate_message_uuids},
+                )
+                _logger.info(
+                    "Messages with UUID %s could not be imported because they are identified as duplicates",
+                    ', '.join(duplicate_message_uuids)
+                )
+
             if not message_uuids:
                 continue
 
@@ -350,7 +392,8 @@ class Account_Edi_Proxy_ClientUser(models.Model):
 
     def _peppol_post_process_new_messages(self, moves):
         self.ensure_one()
-        self.company_id.peppol_purchase_journal_id._notify_einvoices_received(moves)
+        if peppol_journal := self.company_id.peppol_purchase_journal_id:
+            peppol_journal._notify_einvoices_received(moves)
         for partner in moves.partner_id.filtered(lambda partner: partner.peppol_verification_state in ('not_verified', False)):
             partner.button_account_peppol_check_partner_endpoint()
 
@@ -403,16 +446,23 @@ class Account_Edi_Proxy_ClientUser(models.Model):
                     # "Peppol request not ready" error:
                     # thrown when the IAP is still processing the message
                     continue
-                error_message = get_peppol_error_message(self.env, error_vals)
-                move._message_log(body=error_message)
                 move.peppol_move_state = 'error'
+                move._message_log(body=self._peppol_get_message_status_error_body(move, content['error']))
                 processed_message_uuids.append(uuid)
                 continue
 
             move.peppol_move_state = content['state']
-            move._message_log(body=self.env._('Peppol status update: %s', content['state']))
+            move._message_log(body=self._peppol_get_message_status_update_body(move, content))
             processed_message_uuids.append(uuid)
         return processed_message_uuids
+
+    def _peppol_get_message_status_error_body(self, move, error):
+        self.ensure_one()
+        return get_peppol_error_message(self.env, error)
+
+    def _peppol_get_message_status_update_body(self, move, content):
+        self.ensure_one()
+        return self.env._('Peppol status update: %s', content['state'])
 
     def _peppol_process_participant_status(self, proxy_user):
         self.ensure_one()

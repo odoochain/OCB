@@ -158,16 +158,11 @@ class WebsiteSale(payment_portal.PaymentPortal):
     def _get_shop_domain(self, search, category, attribute_value_dict, search_in_description=True):
         domains = [request.website.sale_product_domain()]
         if search:
+            search_fields = request.env['product.template']._get_website_sale_search_fields(
+                search_in_description
+            )
             for srch in search.split(" "):
-                subdomains = [
-                    Domain('name', 'ilike', srch),
-                    Domain('variants_default_code', 'ilike', srch),
-                ]
-                if search_in_description:
-                    subdomains.extend((
-                        Domain('website_description', 'ilike', srch),
-                        Domain('description_sale', 'ilike', srch),
-                    ))
+                subdomains = [Domain(field, 'ilike', srch) for field in search_fields]
                 extra_subdomain = self._add_search_subdomains_hook(srch)
                 if extra_subdomain:
                     subdomains.append(extra_subdomain)
@@ -376,15 +371,16 @@ class WebsiteSale(payment_portal.PaymentPortal):
             options, post, search, website
         )
 
+        search_term = fuzzy_search_term if fuzzy_search_term else search
+        product_domain = self._get_shop_domain(search_term, category, attribute_value_dict)
+
         filter_by_price_enabled = website.is_view_active('website_sale.filter_products_price')
         if filter_by_price_enabled:
             # TODO Find an alternative way to obtain the domain through the search metadata.
             Product = request.env['product.template'].with_context(bin_size=True)
-            search_term = fuzzy_search_term if fuzzy_search_term else search
-            domain = self._get_shop_domain(search_term, category, attribute_value_dict)
 
             # This is ~4 times more efficient than a search for the cheapest and most expensive products
-            query = Product._search(domain)
+            query = Product._search(product_domain)
             sql = query.select(
                 SQL(
                     "COALESCE(MIN(list_price), 0) * %(conversion_rate)s, COALESCE(MAX(list_price), 0) * %(conversion_rate)s",
@@ -425,8 +421,11 @@ class WebsiteSale(payment_portal.PaymentPortal):
         Category = request.env['product.public.category']
         categs_domain = Domain('parent_id', '=', False) & website_domain
         if search:
+            # using a sub-query is more efficient than using a query in the shape of "ids in (...)"
+            # when there are 100k product ids to match.
+            product_query = request.env['product.template']._search(product_domain)
             search_categories = Category.search(
-                Domain('product_tmpl_ids', 'in', search_product.ids) & website_domain
+                Domain('product_tmpl_ids', 'in', product_query)
             ).parents_and_self
             categs_domain &= Domain('id', 'in', search_categories.ids)
         else:
@@ -476,10 +475,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
         ProductAttribute = request.env['product.attribute']
         if products:
             # get all products without limit
-            search_term = fuzzy_search_term if fuzzy_search_term else search
-            product_query = request.env['product.template']._search(
-                self._get_shop_domain(search_term, category, attribute_value_dict)
-            )
+            product_query = request.env['product.template']._search(product_domain)
             attributes_grouped = request.env['product.template.attribute.line']._read_group(
                 domain=[
                     ('product_tmpl_id', 'in', product_query),

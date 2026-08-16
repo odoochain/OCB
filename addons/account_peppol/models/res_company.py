@@ -10,6 +10,7 @@ from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.tools.urls import urljoin
 from odoo.addons.account.models.company import PEPPOL_LIST
+from odoo.addons.account_edi_ubl_cii.models.account_edi_common import EAS_MAPPING
 
 try:
     import phonenumbers
@@ -194,6 +195,13 @@ class ResCompany(models.Model):
 
         return True if (endpoint_rule := peppol_dict.get(self.peppol_eas)) is None else endpoint_rule(self.peppol_endpoint)
 
+    def _peppol_is_french_company(self):
+        self.ensure_one()
+        return (
+            self.account_fiscal_country_id.code in {'FR', 'GP', 'MQ', 'RE'}
+            or self.peppol_eas in EAS_MAPPING['FR']
+        )
+
     # -------------------------------------------------------------------------
     # CONSTRAINTS
     # -------------------------------------------------------------------------
@@ -217,6 +225,10 @@ class ResCompany(models.Model):
         for company in self:
             if company.peppol_purchase_journal_id and company.peppol_purchase_journal_id.type != 'purchase':
                 raise ValidationError(_("A purchase journal must be used to receive Peppol documents."))
+
+    def _peppol_allows_document_reception(self):
+        self.ensure_one()
+        return True
 
     # -------------------------------------------------------------------------
     # COMPUTE METHODS

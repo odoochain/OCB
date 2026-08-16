@@ -202,6 +202,10 @@ class AccountTax(models.Model):
         help="The country for which this tax is applicable.",
     )
     country_code = fields.Char(related='country_id.code', readonly=True)
+    company_country_code = fields.Char(
+        related='company_id.account_fiscal_country_id.code',
+        string="Fiscal Country Code of the Company",
+    )
     is_used = fields.Boolean(string="Tax used", compute='_compute_is_used')
     repartition_lines_str = fields.Char(string="Repartition Lines", tracking=True, compute='_compute_repartition_lines_str')
     invoice_legal_notes = fields.Html(string="Legal Notes", translate=True, help="Legal mentions that have to be printed on the invoices.")
@@ -2906,8 +2910,9 @@ class AccountTax(models.Model):
             strategy = cash_rounding.strategy
             cash_rounding_pd = cash_rounding.rounding
             cash_rounding_method = cash_rounding.rounding_method
-            total_amount_currency = tax_totals_summary['base_amount_currency'] + tax_totals_summary['tax_amount_currency']
-            total_amount = tax_totals_summary['base_amount'] + tax_totals_summary['tax_amount']
+            # Round first so cash rounding doesn't inflate a sub-unit float residue.
+            total_amount_currency = currency.round(tax_totals_summary['base_amount_currency'] + tax_totals_summary['tax_amount_currency'])
+            total_amount = company.currency_id.round(tax_totals_summary['base_amount'] + tax_totals_summary['tax_amount'])
             expected_total_amount_currency = float_round(
                 total_amount_currency,
                 precision_rounding=cash_rounding_pd,
@@ -3533,6 +3538,8 @@ class AccountTax(models.Model):
         # - line2 of -100 having an analytic distribution of 50%
         # After the aggregation, the result will be an analytic distribution of
         # ((1000 * 1) + (-100 * 0.5)) / (1000 - 100) = 1.055555556
+        # In the special case the aggregated line total is 0, set analytic distribution to 100% by default
+        # (could be anything since 100% of 0 or 50% of 0 is the same)
         for grouping_key, base_line in base_line_map.items():
             total_factor = 0.0
             analytic_distribution_to_aggregate = defaultdict(float)
@@ -3543,7 +3550,7 @@ class AccountTax(models.Model):
                     analytic_distribution_to_aggregate[account_id] += distribution * amount / 100.0
             analytic_distribution = {}
             for account_id, amount in analytic_distribution_to_aggregate.items():
-                analytic_distribution[account_id] = amount * 100 / total_factor
+                analytic_distribution[account_id] = (amount * 100 / total_factor) if total_factor else 100.0
             base_line['analytic_distribution'] = analytic_distribution
 
         return list(base_line_map.values())
@@ -5116,6 +5123,18 @@ class AccountTax(models.Model):
     def unlink_except_tax_used(self):
         if any(self.mapped('is_used')):
             raise ValidationError(self.env._("You cannot delete taxes that are currently in use. Consider archiving them instead."))
+
+    @api.model
+    def _import_retrieve_tax_from_account_default_tax(self, tax_values):
+        account = tax_values.get('account')
+        if not account or not account.tax_ids:
+            return
+
+        return {
+            'criteria': [{
+                'domain': [('id', 'in', account.tax_ids.ids)],
+            }],
+        }
 
     @api.model
     def _import_retrieve_tax_from_invoice_predictive(self, tax_values):

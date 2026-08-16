@@ -4,7 +4,7 @@ from num2words import num2words
 
 from odoo import api, models
 from odoo.exceptions import UserError
-from odoo.tools import html2plaintext
+from odoo.tools import float_round, html2plaintext
 
 
 class AccountEdiXmlUblTr(models.AbstractModel):
@@ -100,7 +100,7 @@ class AccountEdiXmlUblTr(models.AbstractModel):
     def _l10n_tr_get_amount_integer_partn_text_note(self, amount, currency):
         sign = math.copysign(1.0, amount)
         amount_integer_part, amount_decimal_part = divmod(abs(amount), 1)
-        amount_decimal_part = int(amount_decimal_part * 100)
+        amount_decimal_part = round(amount_decimal_part * 100)
 
         text_i = num2words(amount_integer_part * sign, lang="tr") or 'Sifir'
         text_d = num2words(amount_decimal_part * sign, lang="tr") or 'Sifir'
@@ -116,8 +116,15 @@ class AccountEdiXmlUblTr(models.AbstractModel):
             document_node['cac:Delivery'] = None
 
     def _l10n_tr_get_currency_conversion_rate(self, invoice):
-        """Return the exchange rate from invoice currency to company currency, rounded to 6 decimals."""
-        return round(1 / invoice.invoice_currency_rate, 6)
+        """Return the exchange rate: 1 [invoice currency] = X TRY, rounded to 6 decimals."""
+        company_currency_to_try_rate = self.env['res.currency']._get_conversion_rate(
+            invoice.company_id.currency_id,
+            self.env.ref('base.TRY'),
+            invoice.company_id,
+            invoice.invoice_date
+            )
+
+        return float_round(company_currency_to_try_rate / invoice.invoice_currency_rate, 6)
 
     def _add_invoice_payment_means_nodes(self, document_node, vals):
         # EXTENDS account.edi.xml.ubl_21
@@ -128,10 +135,11 @@ class AccountEdiXmlUblTr(models.AbstractModel):
 
     def _add_invoice_exchange_rate_nodes(self, document_node, vals):
         invoice = vals['invoice']
-        if vals['currency_id'] != vals['company_currency_id']:
+
+        if vals['currency_name'] != 'TRY':
             document_node['cac:PricingExchangeRate'] = {
                 'cbc:SourceCurrencyCode': {'_text': vals['currency_name']},
-                'cbc:TargetCurrencyCode': {'_text': vals['company_currency_id'].name},
+                'cbc:TargetCurrencyCode': {'_text': 'TRY'},
                 'cbc:CalculationRate': {'_text': self._l10n_tr_get_currency_conversion_rate(invoice)},
                 'cbc:Date': {'_text': invoice.invoice_date},
             }

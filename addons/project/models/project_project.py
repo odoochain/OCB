@@ -53,7 +53,10 @@ class ProjectProject(models.Model):
     def _compute_open_task_count(self):
         self.__compute_task_count(
             count_field='open_task_count',
-            additional_domain=[('state', 'in', self.env['project.task'].OPEN_STATES)],
+            additional_domain=Domain.AND([
+                [('state', 'in', self.env['project.task'].OPEN_STATES)],
+                ['|', ('parent_id.is_template', '=', False), ('parent_id', '=', False)],
+            ]),
         )
 
     def _compute_closed_task_count(self):
@@ -117,7 +120,7 @@ class ProjectProject(models.Model):
             ('followers', 'Invited internal users'),
             ('invited_users', 'Invited internal and portal users'),
             ('employees', 'All internal users'),
-            ('portal', ' All internal users and invited portal users'),
+            ('portal', 'All internal users and invited portal users'),
         ],
         string='Visibility', required=True,
         default='portal',
@@ -695,7 +698,7 @@ class ProjectProject(models.Model):
             analytic_account_to_update = self.env['account.analytic.account'].browse([
                 analytic_account.id for [analytic_account] in projects_read_group
             ])
-            analytic_account_to_update.write({'name': self.name})
+            analytic_account_to_update.write({'name': vals['name']})
         return res
 
     def unlink(self):
@@ -1227,9 +1230,9 @@ class ProjectProject(models.Model):
             elif project.privacy_visibility in ['invited_users', 'portal']:
                 portal_users = project.message_partner_ids.user_ids.filtered('share')
                 project.message_unsubscribe(partner_ids=portal_users.partner_id.ids)
-                project.tasks._unsubscribe_portal_users()
+                project.with_context(active_test=False).tasks._unsubscribe_portal_users()
                 # revoke access_token since the project and its tasks are no longer accessible for portal/public users
-                project.tasks.access_token = ''
+                project.with_context(active_test=False).tasks.access_token = ''
                 project.access_token = ''
 
     # ---------------------------------------------------

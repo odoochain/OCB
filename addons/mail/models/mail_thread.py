@@ -1240,20 +1240,20 @@ class MailThread(models.AbstractModel):
             user_id = self._mail_find_user_for_gateway(email_from, alias=dest_aliases).id or self.env.uid
             route = self._routing_check_route(
                 message, message_dict,
-                (reply_model, reply_thread_id, custom_values, user_id, dest_aliases),
+                (reply_model, reply_thread_id, None, user_id, dest_aliases),
                 raise_exception=False)
             if route:
                 _logger.info(
                     'Routing mail from %s to %s with Message-Id %s: direct reply to msg: model: %s, thread_id: %s, custom_values: %s, uid: %s',
-                    email_from, message_dict['to'], message_id, reply_model, reply_thread_id, custom_values, self.env.uid)
+                    email_from, message_dict['to'], message_id, reply_model, reply_thread_id, None, self.env.uid)
                 return [route]
             if route is False:
                 return []
 
         # 2. Handle new incoming email by checking aliases and applying their settings
         # prefetch catchall aliases as they are used several times
-        catchall_aliases = self.env['mail.alias.domain'].search([]).mapped('catchall_email')
-        self = self.with_context(mail_catchall_aliases=catchall_aliases)
+        all_aliases = self.env['mail.alias.domain'].search([])
+        self = self.with_context(mail_catchall_aliases=all_aliases.mapped('catchall_email'))
         if rcpt_tos_list:
             # no route found for a matching reference (or reply), so parent is invalid
             message_dict.pop('parent_id', None)
@@ -1262,14 +1262,23 @@ class MailThread(models.AbstractModel):
             if self._detect_write_to_catchall(message_dict):
                 _logger.info('Routing mail from %s to %s with Message-Id %s: direct write to catchall, bounce',
                              email_from, message_dict['to'], message_id)
+
+                # TODO master: merge the logic with _detect_write_to_catchall.
+                recipient_company = self.env.company
+                email_to_list = [email_normalize(e) or e for e in email_split(message_dict['to'])]
+                for alias in all_aliases:
+                    if alias.catchall_email in email_to_list and alias.company_ids and recipient_company not in alias.company_ids:
+                        recipient_company = alias.company_ids[:1]
+
                 body = self.env['ir.qweb']._render('mail.mail_bounce_catchall', {
                     'message': message,
+                    'res_company': recipient_company,
                 })
-                self._routing_create_bounce_email(
+                self.with_company(recipient_company)._routing_create_bounce_email(
                     email_from, body, message,
                     # add a reference with a tag, to be able to ignore response to this email
                     references=f'{message_id} {generate_tracking_message_id("loop-detection-bounce-email")}',
-                    reply_to=self.env.company.email)
+                    reply_to=recipient_company.email)
                 return []
 
             dest_aliases = self.env['mail.alias'].search([
@@ -1347,7 +1356,11 @@ class MailThread(models.AbstractModel):
 
             # disabled subscriptions during message_new/update to avoid having the system user running the
             # email gateway become a follower of all inbound messages
-            ModelCtx = Model.with_user(related_user).sudo()
+            ModelCtx = Model
+            if alias:
+                if self.env.is_system():
+                    ModelCtx = Model.with_user(related_user)
+                ModelCtx = ModelCtx.sudo()
             if thread_id and hasattr(ModelCtx, 'message_update'):
                 thread = ModelCtx.browse(thread_id)
                 thread.message_update(message_dict)
@@ -4406,12 +4419,18 @@ class MailThread(models.AbstractModel):
             return ooo_messages
 
         # limit number of real author / recipient exchanges to 1 every 4 days
-        sent_su = self.env['mail.message'].sudo().search([
+        base_domain = Domain([
             ('author_id', 'in', ooo_users.partner_id.ids),
             ('message_type', '=', 'out_of_office'),
-            '|', ('partner_ids', 'in', recipient.ids), ('outgoing_email_to', '=', email_to),
             ('date', '>=', '-4d'),
         ])
+
+        partner_domain = Domain('partner_ids', 'in', recipient.ids) if recipient else Domain.FALSE
+        email_domain = Domain('outgoing_email_to', '=', email_to) if email_to else Domain.FALSE
+        recipient_domain = partner_domain | email_domain
+
+        final_domain = base_domain & recipient_domain
+        sent_su = self.env['mail.message'].sudo().search(final_domain)
         already_mailed = sent_su.author_id
 
         # finally send OOO messages
@@ -4972,6 +4991,8 @@ class MailThread(models.AbstractModel):
             message.attachment_ids._delete_and_notify()
         if partner_ids is not None:
             msg_values.update({"partner_ids": [int(pid) for pid in partner_ids] or False})
+        if "subject" in kwargs:
+            msg_values["subject"] = kwargs["subject"]
         if msg_values:
             message.write(msg_values)
         if message._filter_empty():
@@ -4997,6 +5018,8 @@ class MailThread(models.AbstractModel):
             *message._get_store_linked_messages_fields(),
             *self._get_store_message_update_extra_fields(),
         ]
+        if "subject" in kwargs:
+            res.append("subject")
         if body is not None:
             # sudo: mail.message.translation - discarding translations of message after editing it
             self.env["mail.message.translation"].sudo().search([("message_id", "=", message.id)]).unlink()
@@ -5093,7 +5116,7 @@ class MailThread(models.AbstractModel):
         sudo()._message_update_content(), which means these parameters should be either inoffensive
         or safely handled by these methods. Parameters requiring special processing need to be
         manually handled in _prepare_message_data."""
-        return {"email_add_signature", "message_type", "subtype_xmlid"}
+        return {"email_add_signature", "message_type", "subject", "subtype_xmlid"}
 
     @api.model
     def _get_allowed_access_params(self):

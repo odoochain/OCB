@@ -302,9 +302,7 @@ class HrAttendanceOvertimeRule(models.Model):
         employee = attendances.employee_id
         if self.expected_hours_from_contract:
             if employee.version_id.is_flexible:
-                leaves_duration = sum_intervals(schedule['leave'] & Intervals([(start, stop, self.env['resource.calendar'])]))
-                duration = (employee.resource_calendar_id.hours_per_week if self.quantity_period == 'week' else employee.resource_calendar_id.hours_per_day) - leaves_duration
-                expected_duration = max(duration, 0)
+                expected_duration = self._get_expected_hours_from_contract(start.date(), employee.version_id, period=self.quantity_period)
             else:
                 period_schedule = (schedule['work'] - schedule['leave']) & Intervals([(start, stop, self.env['resource.calendar'])])
                 expected_duration = sum_intervals(period_schedule)
@@ -475,9 +473,13 @@ class HrAttendanceOvertimeRule(models.Model):
             for employee in employees:
                 intersetion_interval_for_attendance = attendances_intervals[employee] & intervals[employee]
                 overtime_interval_list = defaultdict(list)
+                total_hours_by_attendance = defaultdict(float)
                 for (start, stop, attendance) in intersetion_interval_for_attendance:
                     overtime_interval_list[attendance].append((start, stop, rules))
+                    total_hours_by_attendance[attendance] += _time_delta_hours(stop - start)
                 for attendance, attendance_intervals_list in overtime_interval_list.items():
+                    if float_compare(total_hours_by_attendance[attendance], rules.employer_tolerance, precision_digits=5) != 1:
+                        continue
                     overtime_by_employee_by_attendance[employee][attendance].extend(attendance_intervals_list)
 
         def _build_day_rule_intervals(employees, rule, intervals):
@@ -704,7 +706,7 @@ class HrAttendanceOvertimeRule(models.Model):
                     vals.append({
                         'time_start': attendance.check_in,
                         'time_stop': attendance.check_out,
-                        'duration': round(duration, 3),
+                        'duration': round(duration, 4),
                         'employee_id': employee.id,
                         'date': day,
                         'rule_ids': rules.ids,
@@ -747,7 +749,7 @@ class HrAttendanceOvertimeRule(models.Model):
         }
 
     def _compute_information_display(self):
-        timing_types = dict(self._fields['timing_type'].selection)
+        timing_types = dict(self._fields['timing_type']._description_selection(self.env))
         for rule in self:
             if rule.base_off == 'quantity':
                 if rule.expected_hours_from_contract:

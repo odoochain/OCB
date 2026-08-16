@@ -14,6 +14,16 @@ _logger = logging.getLogger(__name__)
 class AccountEdiProxyClientUser(models.Model):
     _inherit = 'account_edi_proxy_client.user'
 
+    def _peppol_get_duplicate_message_uuids(self, message_uuids):
+        self.ensure_one()
+        duplicate_message_uuids = set(
+            self.env['account.peppol.response'].search([
+                ('peppol_message_uuid', 'in', message_uuids),
+                ('company_id', '=', self.company_id.id),
+            ]).mapped('peppol_message_uuid')
+        )
+        return duplicate_message_uuids | super()._peppol_get_duplicate_message_uuids(message_uuids)
+
     def _peppol_send_response(self, reference_moves, status, clarifications=None):
         self.ensure_one()
         clarifications = clarifications or []
@@ -207,16 +217,33 @@ class AccountEdiProxyClientUser(models.Model):
         # IAP knows about the Peppol user: we just send every services we want to support.
         receivers = self.search([
             ('proxy_type', '=', 'peppol'),
-            ('company_id.account_peppol_proxy_state', '=', 'receiver')
+            ('company_id.account_peppol_proxy_state', '=', 'receiver'),
         ])
-        supported_identifiers = list(self.env['res.company']._peppol_supported_document_types())
+        supported_identifiers = set(self.env['res.company']._peppol_supported_document_types())
+        supported_identifiers_wo_responses = {
+            identifier
+            for identifier in self.env['res.company']._peppol_supported_document_types()
+            if identifier not in self.env['res.company']._peppol_modules_document_types()['account_peppol_response']
+        }
         failed = False
         for receiver in receivers:
+            document_identifiers = supported_identifiers if receiver.company_id.peppol_purchase_journal_id else supported_identifiers_wo_responses
             try:
-                receiver._call_peppol_proxy(
-                    '/api/peppol/2/add_services',
-                    params={'document_identifiers': supported_identifiers},
+                iap_stored_services = receiver._call_peppol_proxy(
+                    receiver._get_peppol_proxy_endpoint('2/get_services'),
                 )
+                if set(iap_stored_services['services']) == document_identifiers:
+                    continue
+                if doc_ids_to_remove := [doc_id for doc_id in iap_stored_services['services'] if doc_id not in document_identifiers]:
+                    receiver._call_peppol_proxy(
+                        receiver._get_peppol_proxy_endpoint('2/remove_services'),
+                        params={'document_identifiers': doc_ids_to_remove},
+                    )
+                if doc_ids_to_add := [doc_id for doc_id in document_identifiers if doc_id not in iap_stored_services['services']]:
+                    receiver._call_peppol_proxy(
+                        receiver._get_peppol_proxy_endpoint('2/add_services'),
+                        params={'document_identifiers': doc_ids_to_add},
+                    )
             # Broad exception case, so as not to block execution of the rest of the _post_init hook.
             except (AccountEdiProxyError, UserError) as exception:
                 _logger.error(
