@@ -24,6 +24,7 @@ import pexpect
 ROOTDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 TSTAMP = time.strftime("%Y%m%d", time.gmtime())
 TSEC = time.strftime("%H%M%S", time.gmtime())
+TFULL = time.strftime("%a, %d %b %Y %H:%M:%S %z", time.gmtime())
 # Get some variables from release.py
 version = ...
 version_info = ...
@@ -313,8 +314,11 @@ class DockerDeb(Docker):
 
     def build(self):
         logging.info('Start building debian package')
-        # Append timestamp to version for the .dsc to refer the right .tar.gz
-        cmds = ["sed -i '1s/^.*$/odoo (%s.%s) stable; urgency=low/' debian/changelog" % (VERSION, TSTAMP)]
+        # Generate new debian/changelog
+        # - Append timestamp to version for the .dsc to refer the right .tar.gz
+        # - Write the date into the email line so SOURCE_DATE_EPOCH is set correctly from it
+        changelog = fr"odoo ({VERSION}.{TSTAMP}) stable; urgency=low\n\n  * {VERSION}\n\n -- Odoo Bot <info@odoo.com>  {TFULL}\n"
+        cmds = ["sed -i '1i %s' debian/changelog" % changelog]
         cmds.append('dpkg-buildpackage -rfakeroot -uc -us -tc')
         # As the packages are built in the parent of the buildir, we move them back to build_dir
         cmds.append('mv ../odoo_* ./')
@@ -404,6 +408,7 @@ class DockerWine(Docker):
         self.package_name = "windows"
         self.nsi_filepath = r"c:\odoobuild\server\setup\win32\setup.nsi"
         self.nt_service_name = nt_service_name
+        self.bundle_po_files = True
 
     def build(self):
         logging.info('Start building %s package', self.package_name)
@@ -420,12 +425,15 @@ class DockerWine(Docker):
         )
 
         cmds = [
-            bundle_po_files_cmd,
             rf'wine {container_python} -m pip install --upgrade pip',
             rf'cat /data/src/requirements*.txt  | while read PACKAGE; do wine {container_python} -m pip install "${{PACKAGE%%#*}}" ; done',
-            rf'wine "c:\nsis\makensis.exe" {nsis_args} "c:\odoobuild\server\setup\win32\setup.nsi"',
+            rf'wine "c:\nsis\makensis.exe" {nsis_args} "{self.nsi_filepath}"',
             rf'wine {container_python} -m pip list',
         ]
+
+        if self.bundle_po_files:
+            cmds = [bundle_po_files_cmd, *cmds]
+
         self.run(' && '.join(cmds), self.args.build_dir, 'odoo-win-build-%s' % TSTAMP)
         logging.info('Finished building %s package', self.package_name)
 
@@ -438,6 +446,7 @@ class DockerIot(DockerWine):
         self.package_name = "IoT"
         self.nsi_filepath = r"c:\odoobuild\server\setup\win32\setup-iot.nsi"
         self.nt_service_name = "odoo-iot"
+        self.bundle_po_files = False
 
     def build_image(self):
         shutil.copy(os.path.join(self.args.build_dir, 'odoo/addons/iot_box_image/configuration/requirements.txt'), self.docker_dir / 'requirements-iot.txt')
