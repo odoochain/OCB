@@ -17,7 +17,7 @@ Price and Cost Price.
         "views/sale_order_template_views.xml",
         "report/sale_report_views.xml",
     ],
-    "auto_install": True,
+    "auto_install": False,
     "assets": {
         "web.assets_backend": [
             "sale_margin/static/src/js/labeled_field_short_labels.js",
