@@ -42,7 +42,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          # Shallow: this job only reads the working tree and two explicitly
+          # fetched refs. A full-history checkout of this repository takes
+          # longer than every other job combined.
+          fetch-depth: 1
 
       - uses: actions/setup-python@v5
         with:
@@ -50,9 +53,9 @@ jobs:
 
       - name: Fetch OCB baseline and PR base
         run: |
-          git fetch --no-tags origin 20.0 || echo "::warning::origin/20.0 unavailable; packaging byte-comparison will be skipped"
+          git fetch --no-tags --depth=1 origin 20.0 || echo "::warning::origin/20.0 unavailable; packaging byte-comparison will be skipped"
           if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
-            git fetch --no-tags origin "${{ github.event.pull_request.base.sha }}" || true
+            git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.sha }}" || true
           fi
 
       - name: Verify autonomous layer
@@ -87,27 +90,27 @@ jobs:
           python -m pip install "setuptools>=64" build wheel
 
       - name: Build sdist
-        run: python -m build --sdist --no-isolation --outdir dist-sdist
+        run: python -m build --sdist --no-isolation --outdir "$RUNNER_TEMP/odoo-sdist"
 
       - name: Build wheel from the source tree
-        run: python -m build --wheel --no-isolation --outdir dist-wheel
+        run: python -m build --wheel --no-isolation --outdir "$RUNNER_TEMP/odoo-wheel"
 
       - name: Build wheel from the generated sdist
         # Exercises backend-path resolution. This is the one branch the
         # source-tree wheel build never touches, and it only works if
         # setup/pep517_odoo.py actually landed in the sdist.
         run: |
-          mkdir -p sdist-extract
-          tar -xzf dist-sdist/odoo-*.tar.gz -C sdist-extract
-          cd sdist-extract/odoo-*/
-          python -m build --wheel --no-isolation --outdir "$GITHUB_WORKSPACE/dist-wheel-from-sdist"
+          mkdir -p "$RUNNER_TEMP/sdist-extract"
+          tar -xzf "$RUNNER_TEMP"/odoo-sdist/odoo-*.tar.gz -C "$RUNNER_TEMP/sdist-extract"
+          cd "$RUNNER_TEMP"/sdist-extract/odoo-*/
+          python -m build --wheel --no-isolation --outdir "$RUNNER_TEMP/odoo-wheel-from-sdist"
 
       - name: Assert on archives
         run: |
           python tools/check_packaging.py archives \
-            --sdist dist-sdist \
-            --wheel dist-wheel \
-            --wheel dist-wheel-from-sdist
+            --sdist "$RUNNER_TEMP/odoo-sdist" \
+            --wheel "$RUNNER_TEMP/odoo-wheel" \
+            --wheel "$RUNNER_TEMP/odoo-wheel-from-sdist"
 
       - name: Editable install must use compat mode
         run: |
