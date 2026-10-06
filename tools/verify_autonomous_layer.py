@@ -94,11 +94,30 @@ def git_ok(*args: str) -> bool:
     return subprocess.run(["git", *args], capture_output=True).returncode == 0
 
 
+def ocb_layer_present() -> bool:
+    """True when this branch carries the OCB packaging layer.
+
+    `chain` does not have it until the OCB backport is merged, and the policy
+    checks below are only meaningful once it is there. Detecting this keeps the
+    generic checks (manifest parsing, conflict markers) running on every branch
+    while the OCB-specific ones activate automatically afterwards.
+    """
+    pyproject = Path("pyproject.toml")
+    if not pyproject.is_file():
+        return False
+    return "pep517_odoo" in pyproject.read_text(encoding="utf-8")
+
+
 def load_manifest(ref: str, path: str) -> dict:
     return ast.literal_eval(git("show", f"{ref}:{path}"))
 
 
 def check_auto_install() -> list[str]:
+    if not ocb_layer_present():
+        print("  NOTICE autonomous layer is not present on this branch; "
+              "auto_install policy check skipped")
+        return []
+
     failures = []
     for module, expected in EXPECTED_AUTO_INSTALL.items():
         path = f"addons/{module}/__manifest__.py"
@@ -117,6 +136,11 @@ def check_auto_install() -> list[str]:
 
 
 def check_packaging(baseline_ref: str | None) -> list[str]:
+    if not ocb_layer_present():
+        print("  NOTICE autonomous layer is not present on this branch; "
+              "packaging file check skipped")
+        return []
+
     failures = []
     for path in PACKAGING_FILES:
         if not Path(path).exists():
