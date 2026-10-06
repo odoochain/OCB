@@ -333,12 +333,18 @@ class TestProjectSharing(TestProjectSharingCommon):
         # However, cache is updated, but nothing is written.
         with self.assertRaisesRegex(AccessError, "top-secret records"):
             Task.with_context(default_child_ids=[Command.update(self.task_no_collabo.id, {'name': 'Foo'})]).create({'name': 'foo'})
-        with Task.env.cr.savepoint() as sp:
+        with (
+            self.assertRaisesRegex(AccessError, "not allowed to delete 'Task'"),
+            Task.env.cr.savepoint() as sp,
+        ):
             task = Task.with_context(default_child_ids=[Command.delete(self.task_no_collabo.id)]).create({'name': 'foo'})
             task.env.invalidate_all()
             self.assertTrue(self.task_no_collabo.exists(), "Task should still be there, no delete is sent")
             sp.rollback()
-        with self.env.cr.savepoint() as sp:
+        with (
+            self.assertRaises(AccessError),
+            Task.env.cr.savepoint() as sp,
+        ):
             self.task_no_collabo.parent_id = self.task_no_collabo.create({'name': 'parent collabo'})
             task = Task.with_context(default_child_ids=[Command.unlink(self.task_no_collabo.id)]).create({'name': 'foo'})
             task.env.invalidate_all()
@@ -364,12 +370,18 @@ class TestProjectSharing(TestProjectSharingCommon):
         # Same thing but using context defaults
         with self.assertRaisesRegex(AccessError, "not allowed to create 'Project Tags'"):
             Task.with_context(default_tag_ids=[Command.create({'name': 'Bar'})]).create({'name': 'foo'})
-        with Task.env.cr.savepoint() as sp:
+        with (
+            self.assertRaisesRegex(AccessError, "not allowed to modify 'Project Tags'"),
+            Task.env.cr.savepoint() as sp,
+        ):
             task = Task.with_context(default_tag_ids=[Command.update(self.task_tag.id, {'name': 'Bar'})]).create({'name': 'foo'})
             task.env.invalidate_all()
             self.assertNotEqual(self.task_tag.name, 'Bar')
             sp.rollback()
-        with Task.env.cr.savepoint() as sp:
+        with (
+            self.assertRaisesRegex(AccessError, "not allowed to delete 'Project Tags'"),
+            Task.env.cr.savepoint() as sp
+        ):
             Task.with_context(default_tag_ids=[Command.delete(self.task_tag.id)]).create({'name': 'foo'})
             task.env.invalidate_all()
             self.assertTrue(self.task_tag.exists())
@@ -774,3 +786,38 @@ class TestProjectSharing(TestProjectSharingCommon):
 
         with self.assertRaises(AccessError, msg="Should not accept the portal user to set project_id directly through create vals."):
             Task.with_context(project_sharing_create=True).create({'name': 'foo', 'project_id': self.project_portal.id})
+
+    def test_portal_user_with_edit_limited_access_can_create_task(self):
+        """
+        Test that a portal user with 'edit_limited' access can create a task in a shared project.
+        """
+        self.project_portal.write({
+            'collaborator_ids': [
+                Command.create({'partner_id': self.user_portal.partner_id.id, 'limited_access': True}),
+            ],
+        })
+        portal_task = self.env['project.task'].with_user(self.user_portal).with_context(
+            default_project_id=self.project_portal.id,
+        ).create({
+            'name': 'Portal Task',
+            'child_ids': [
+                Command.create({'name': 'Limited Edit Subtask'}),
+            ],
+        })
+        subtask = portal_task.child_ids
+
+        self.assertTrue(
+            subtask, "Portal user with edit_limited access should be able to create a subtask."
+        )
+        self.assertEqual(
+            portal_task.project_id, self.project_portal,
+            "Parent task should belong to the shared project."
+        )
+        self.assertEqual(
+            subtask.project_id, self.project_portal,
+            "Subtask should belong to the shared project."
+        )
+        self.assertEqual(
+            subtask.parent_id, portal_task,
+            "Subtask should be linked to the correct parent task."
+        )

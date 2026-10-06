@@ -426,18 +426,6 @@ export class PosData {
 
         this.models.loadConnectedData(data, this.modelToLoad);
         this.models.loadConnectedData({ "pos.order": order, "pos.order.line": orderlines }, []);
-        this.sanitizeData();
-    }
-
-    async sanitizeData() {
-        const order_to_delete = this.models["pos.order"].filter((order) =>
-            order.lines.some((line) => line.is_reward_line && !line.coupon_id && !line.reward_id)
-        );
-        for (const order of order_to_delete) {
-            for (let i = order.lines.length - 1; i >= 0; i--) {
-                order.lines[i].delete();
-            }
-        }
     }
 
     async loadFieldsAndRelations() {
@@ -853,6 +841,9 @@ export class PosData {
     }
 
     async loadServerOrders(domain) {
+        const finalizedStates = new Map(
+            this.models["pos.order"].filter((o) => o.finalized).map((o) => [o.uuid, o.state])
+        );
         const result = await this.callRelated(
             "pos.order",
             "read_pos_orders",
@@ -865,6 +856,10 @@ export class PosData {
         const session = this.models["pos.session"].get(odoo.pos_session_id);
         const orders = result["pos.order"] || [];
         for (const order of orders) {
+            // A read started before the payment was committed must not reopen the order
+            if (finalizedStates.has(order.uuid) && !order.finalized) {
+                order.state = finalizedStates.get(order.uuid);
+            }
             // Clear commands
             order.serializeForORM();
             order.config_id = config;

@@ -734,3 +734,36 @@ registry.category("web_tour.tours").add("test_settle_so_archived_attribute", {
             Order.hasLine({ productName: "Archived Attr Product" }),
         ].flat(),
 });
+
+registry.category("web_tour.tours").add("test_variant_popup_qty_free", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            ProductScreen.clickDisplayedProduct("Color Product"),
+            {
+                content: "Click on Inventory",
+                trigger: 'button.accordion-header:contains("Inventory")',
+                run: "click",
+            },
+            {
+                content: "Check the variant's qty",
+                trigger:
+                    'div:not(:has(div)):contains("available,"):has(span.fw-bolder:contains("0"):not(:contains("50")))',
+            },
+            Dialog.confirm("Add"),
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("test_settled_line_price_is_not_crossed_out", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            PosSale.settleNthOrder(1),
+            {
+                content: "The price of the settled line is not crossed out",
+                trigger: Utils.negate(".oldPrice", ".order-container .orderline"),
+            },
+        ].flat(),
+});

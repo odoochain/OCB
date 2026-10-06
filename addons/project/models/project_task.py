@@ -500,7 +500,8 @@ class ProjectTask(models.Model):
             for project_follower in project_followers:
                 project_subtypes = project_follower.subtype_ids
                 task_subtypes = (project_subtypes.mapped('parent_id') | project_subtypes.filtered(lambda sub: sub.internal or sub.default)).ids if project_subtypes else None
-                partner_ids.remove(project_follower.partner_id.id)
+                if project_follower.partner_id.id in partner_ids:
+                    partner_ids.remove(project_follower.partner_id.id)
                 super().message_subscribe(project_follower.partner_id.ids, task_subtypes)
         return super().message_subscribe(partner_ids, subtype_ids)
 
@@ -899,8 +900,9 @@ class ProjectTask(models.Model):
 
     def _create_task_mapping(self, copied_tasks):
         """
-        Thanks to the way create and command.create is handled, when a task with 2 children is copied, we have the guarantee that the children of the
-        copied task will have the same index in the child_ids recordset. We can use this behavior to create a mapping containing all the original tasks and their copy.
+        Thanks to the way create and command.create is handled, the children of a copied task are created in the order in which the original
+        child_ids were iterated, so sorting them by id gives back the index correspondence with the original children. We can use this behavior
+        to create a mapping containing all the original tasks and their copy.
         :return:
             task_mapping: a dict containing the mapping of the original task ids and their copied task (k: original_task.id, v: new_task)
             task_dependencies: a dict containing the ids of the dependencies of the original task when they have one.
@@ -913,7 +915,7 @@ class ProjectTask(models.Model):
                 task_dependencies[original_task.id] = [original_task.depend_on_ids.ids, original_task.dependent_ids.ids]
             if original_task.child_ids:
                 # If the task has children, we have to call the method create_task_mapping to get their ids and dependencies mapping too.
-                children_mapping, children_dependencies = original_task.child_ids._create_task_mapping(copied_task.child_ids)
+                children_mapping, children_dependencies = original_task.child_ids._create_task_mapping(copied_task.child_ids.sorted('id'))
                 task_mapping.update(children_mapping)
                 task_dependencies.update(children_dependencies)
         return task_mapping, task_dependencies
@@ -1127,13 +1129,15 @@ class ProjectTask(models.Model):
             # remove user_ids if we have no access to it
             new_context.pop('default_user_ids', False)
         self_ctx = self_with_restrict_context = self.with_context(new_context)
-        is_portal_user = self.env.user._is_portal()
+        is_portal_user = self.env.user._is_portal() and not self.env.su
         if default_project_id:
             # when subtask is created in form view of task in project sharing
             self_ctx = self_ctx.with_context(default_project_id=default_project_id, project_sharing_create=is_portal_user)
 
         self_ctx.browse().check_access('create')
         default_stage = dict()
+        if is_portal_user:
+            child_ids_list = []
         for vals, additional_vals in zip(vals_list, additional_vals_list):
             project_id = vals.get('project_id') or default_project_id
 
@@ -1148,7 +1152,8 @@ class ProjectTask(models.Model):
             if not vals.get('name') and vals.get('display_name'):
                 vals['name'] = vals['display_name']
 
-            if is_portal_user and not self.env.su:
+            if is_portal_user:
+                child_ids_list.append(vals.pop('child_ids', None))
                 self_with_restrict_context._ensure_fields_write(vals, defaults=True)
 
             if project_id and not "company_id" in vals:
@@ -1223,6 +1228,10 @@ class ProjectTask(models.Model):
                     continue
                 task._send_email_notify_to_cc(partners_with_internal_user)
                 task.message_subscribe(partners_with_internal_user.ids)
+        if is_portal_user and child_ids_list:
+            for task, child_ids in zip(tasks, child_ids_list):
+                if child_ids:
+                    task.write({'child_ids': child_ids})
         return tasks
 
     def write(self, vals):
@@ -1403,7 +1412,9 @@ class ProjectTask(models.Model):
         last_task_id_per_recurrence_id = self.recurrence_id._get_last_task_id_per_recurrence_id()
         for task in self:
             if task.id == last_task_id_per_recurrence_id.get(task.recurrence_id.id):
+                remaining_tasks = task.recurrence_id.task_ids - self
                 task.recurrence_id.unlink()
+                remaining_tasks.recurring_task = False
         return super().unlink()
 
     def update_date_end(self, stage_id):
@@ -1891,6 +1902,7 @@ class ProjectTask(models.Model):
             return {}
         action = self.with_context({
             'search_view_ref': 'project.project_sharing_project_task_view_search',
+            'default_project_id': self.project_id.id,
         }).action_open_parent_task()
         action['views'] = [(self.env.ref('project.project_sharing_project_task_view_form').id, 'form')]
         action['search_view_id'] = self.env.ref("project.project_sharing_project_task_view_search").id
@@ -2205,8 +2217,19 @@ class ProjectTask(models.Model):
             # appear in read_group, but this has no functional utility
             groupby = ['personal_stage_type_ids' if fname == 'personal_stage_type_id' else fname for fname in groupby]
             if order:
-                order = order.replace('personal_stage_type_id', 'personal_stage_type_ids')
+                order = re.sub(r'\bpersonal_stage_type_id\b', 'personal_stage_type_ids', order)
         return super()._read_group(domain, groupby, aggregates, having, offset, limit, order)
+
+    @api.model
+    def _read_grouping_sets(self, domain, grouping_sets, aggregates=(), order=None):
+        if any('personal_stage_type_id' in groupby for groupby in grouping_sets):
+            grouping_sets = [
+                ['personal_stage_type_ids' if fname == 'personal_stage_type_id' else fname for fname in groupby]
+                for groupby in grouping_sets
+            ]
+            if order:
+                order = re.sub(r'\bpersonal_stage_type_id\b', 'personal_stage_type_ids', order)
+        return super()._read_grouping_sets(domain, grouping_sets, aggregates, order)
 
     # ---------------------------------------------------
     # Project Sharing
@@ -2234,10 +2257,9 @@ class ProjectTask(models.Model):
     @api.model
     def _get_thread_with_access(self, thread_id, *, project_sharing_id=None, token=None, **kwargs):
         if project_sharing_id:
-            if token := ProjectSharingChatter._check_project_access_and_get_token(
+            token = ProjectSharingChatter._check_project_access_and_get_token(
                 self, project_sharing_id, self._name, thread_id, token
-            ):
-                token = token
+            )
         return super()._get_thread_with_access(thread_id, project_sharing_id=project_sharing_id, token=token, **kwargs)
 
     def get_mention_suggestions(self, search, limit=8):

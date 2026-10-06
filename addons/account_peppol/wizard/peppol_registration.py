@@ -9,8 +9,10 @@ except ImportError:
 from odoo import _, api, fields, models, tools
 from odoo.exceptions import UserError, ValidationError, RedirectWarning
 from odoo.tools.urls import urljoin
+from odoo.tools import single_email_re
 
 from odoo.addons.account_peppol.tools.demo_utils import handle_demo
+from odoo.addons.account_edi_ubl_cii.models.account_edi_common import DEPRECATED_PEPPOL_EAS
 from odoo.addons.account_peppol.tools.peppol_iap_connector import PeppolIAPConnector
 
 _logger = logging.getLogger(__name__)
@@ -254,7 +256,11 @@ class PeppolRegistration(models.TransientModel):
     # BUSINESS ACTIONS
     # -------------------------------------------------------------------------
     def _get_peppol_eas_selection(self):
-        return self.env['res.company']._fields['peppol_eas']._description_selection(self.env)
+        return [
+            (eas, label)
+            for eas, label in self.env['res.company']._fields['peppol_eas']._description_selection(self.env)
+            if eas not in DEPRECATED_PEPPOL_EAS or eas == self.env.company.peppol_eas
+        ]
 
     def _branch_with_same_address(self):
         self.ensure_one()
@@ -270,6 +276,8 @@ class PeppolRegistration(models.TransientModel):
             raise ValidationError(_("Please select a country for your company."))
         if not self.contact_email or not self.phone_number:
             raise ValidationError(_("Contact email and phone number are required."))
+        if not single_email_re.match(self.contact_email):
+            raise ValidationError(_("Please make sure the Contact email is a valid email address."))
         if not self.peppol_eas or not self.peppol_endpoint:
             raise ValidationError(_("Peppol Address should be provided."))
         if self._branch_with_same_address():

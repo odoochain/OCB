@@ -16,6 +16,8 @@ import {
 } from "@html_editor/utils/base_container";
 import { DIRECTIONS } from "../utils/position";
 import { isHtmlContentSupported } from "./selection_plugin";
+import { getRowIndex } from "@html_editor/utils/table";
+import { EMAIL_REGEX } from "@html_editor/main/link/utils";
 
 /**
  * @typedef { import("./selection_plugin").EditorSelection } EditorSelection
@@ -94,11 +96,14 @@ export const CLIPBOARD_WHITELISTS = {
         /^btn/,
         /^fa/,
     ],
-    attributes: ["class", "href", "src", "target"],
+    attributes: ["class", "href", "src", "target", "colspan", "rowspan"],
     styledTags: ["SPAN", "B", "STRONG", "I", "S", "U", "FONT", "TD"],
 };
 
-const ONLY_LINK_REGEX = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/i;
+const ONLY_LINK_REGEX = new RegExp(
+    `^(https?:\\/\\/)?([\\w-]+\\.)+[\\w-]+(\\/[\\w-./?%&=]*)?$|${EMAIL_REGEX.source}`,
+    "i"
+);
 
 /**
  * @typedef {Object} ClipboardShared
@@ -494,6 +499,11 @@ export class ClipboardPlugin extends Plugin {
             }
         } else if (node.nodeType !== Node.TEXT_NODE) {
             if (["TD", "TH"].includes(node.nodeName)) {
+                // Convert table headers to cells when they are not
+                // in the first row.
+                if (node.nodeName === "TH" && getRowIndex(node) !== 0) {
+                    node = this.dependencies.dom.setTagName(node, "td");
+                }
                 // Insert base container into empty TD.
                 if (isEmptyBlock(node)) {
                     const baseContainer = this.dependencies.baseContainer.createBaseContainer();
@@ -640,35 +650,24 @@ export class ClipboardPlugin extends Plugin {
         const odooEditorHtml = ev.dataTransfer.getData("application/vnd.odoo.odoo-editor");
         const fileTransferItems = !odooEditorHtml && getImageFiles(dataTransfer);
         const htmlTransferItem = [...dataTransfer.items].find((item) => item.type === "text/html");
-        if (fileTransferItems.length || htmlTransferItem || odooEditorHtml) {
-            const deleteAndSetSelection = (offsetNode, offset) => {
-                if (offsetNode.nodeType === Node.ELEMENT_NODE && offset > 1) {
-                    // Store number of children before deleting selection
-                    // Deleting the selection may remove one or more child nodes,
-                    // which shifts the indices of remaining children. To keep the
-                    // caret at the intended position, we subtract the number of
-                    // removed children from the original offset.
-                    const initialLength = offsetNode.childNodes.length;
-                    this.dependencies.delete.deleteSelection();
-                    const removedCount = initialLength - offsetNode.childNodes.length;
-                    offset -= removedCount;
-                } else {
-                    // For TEXT_NODEs, offset remains valid; just delete selection
-                    this.dependencies.delete.deleteSelection();
-                }
-
-                this.dependencies.selection.setSelection({
-                    anchorNode: offsetNode,
-                    anchorOffset: offset,
-                });
-            };
-
+        if (fileTransferItems.length || htmlTransferItem) {
+            let dropRange;
             if (this.document.caretPositionFromPoint) {
-                const range = this.document.caretPositionFromPoint(ev.clientX, ev.clientY);
-                deleteAndSetSelection(range.offsetNode, range.offset);
+                const caretPosition = this.document.caretPositionFromPoint(ev.clientX, ev.clientY);
+                if (caretPosition) {
+                    dropRange = this.document.createRange();
+                    dropRange.setStart(caretPosition.offsetNode, caretPosition.offset);
+                }
             } else if (this.document.caretRangeFromPoint) {
-                const range = this.document.caretRangeFromPoint(ev.clientX, ev.clientY);
-                deleteAndSetSelection(range.startContainer, range.startOffset);
+                dropRange = this.document.caretRangeFromPoint(ev.clientX, ev.clientY);
+            }
+
+            if (dropRange) {
+                this.dependencies.delete.deleteSelection();
+                this.dependencies.selection.setSelection({
+                    anchorNode: dropRange.startContainer,
+                    anchorOffset: dropRange.startOffset,
+                });
             }
         }
         if (

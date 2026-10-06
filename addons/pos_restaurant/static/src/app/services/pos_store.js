@@ -113,7 +113,7 @@ patch(PosStore.prototype, {
         }
         const result = await super.sendOrderInPreparation(order, opts);
 
-        if (this.config.module_pos_restaurant && categoryCount.length) {
+        if (result && this.config.module_pos_restaurant && categoryCount.length) {
             const categorySummary = formatList(
                 categoryCount.map((cat) => `${cat.count} ${cat.name}`)
             );
@@ -605,18 +605,12 @@ patch(PosStore.prototype, {
     async submitOrder() {
         const order = this.getOrder();
         await this.ensureGuestCustomerCount(order);
+        this.sendOrderInPreparationUpdateLastChange(order);
         this.showDefault();
-        await this.sendOrderInPreparationUpdateLastChange(order);
-        this.addPendingOrder([order.id]);
     },
     async reprintOrder() {
         const order = this.getOrder();
-        order.uiState.isReprinting = true;
-        try {
-            await this.sendOrderInPreparation(order);
-        } finally {
-            order.uiState.isReprinting = false;
-        }
+        await this.sendOrderInPreparation(order, { explicitReprint: true });
         this.showDefault();
     },
     async _askForPreparation() {
@@ -1035,7 +1029,6 @@ patch(PosStore.prototype, {
                 noteUpdateTitle: _t("Course %s fired", "" + course.index),
                 printNoteUpdateData: false,
             };
-            this.getOrder().uiState.lastPrints.push(changes);
             await this.printChanges(this.getOrder(), [changes], false);
         } catch (e) {
             logPosMessage("Store", "printCourseTicket", "Unable to print course", CONSOLE_COLOR, [

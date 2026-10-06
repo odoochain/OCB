@@ -38,7 +38,7 @@ class HrEmployee(models.Model):
     """
     _name = 'hr.employee'
     _description = "Employee"
-    _order = 'name'
+    _order = 'name, id'
     _inherit = ['mail.thread.main.attachment', 'mail.activity.mixin', 'resource.mixin', 'avatar.mixin']
     _mail_post_access = 'read'
     _primary_email = 'work_email'
@@ -513,6 +513,13 @@ class HrEmployee(models.Model):
             else:
                 version = employee.current_version_id
             employee.version_id = version
+            contract_type_field = self._fields.get('contract_type_id')
+            structure_type_field = self._fields.get('structure_type_id')
+            # Ensure the fields are fully initialized as computed and stored to prevent crashes during database setup.
+            if contract_type_field and contract_type_field.compute and contract_type_field.store:
+                self.env.add_to_compute(contract_type_field, employee)
+            if structure_type_field and structure_type_field.compute and structure_type_field.store:
+                self.env.add_to_compute(structure_type_field, employee)
 
     @api.depends("version_id.work_location_id.name")
     def _compute_work_location_name(self):
@@ -562,9 +569,9 @@ class HrEmployee(models.Model):
         If no valid version is found, we return the very first version of the employee.
         """
         self.ensure_one()
-        versions = self.version_ids.filtered(lambda v: v.active)
+        versions = self.version_ids.filtered(lambda v: v.active) or self.with_context(active_test=False).version_ids
         if not versions:
-            versions = self.with_context(active_test=False).version_ids
+            return self.env['hr.version']
         filtered_versions = versions.filtered_domain([('date_version', '<=', date)])
         return max(filtered_versions, key=lambda v: v.date_version) if filtered_versions else versions[0]
 
@@ -836,7 +843,10 @@ class HrEmployee(models.Model):
                 employees_without_work_contact += employee
             else:
                 if len(employee.work_contact_id.employee_ids) <= 1:
-                    employee.work_contact_id.sudo().write({
+                    partner = employee.work_contact_id
+                    if not employee.user_id:
+                        partner = partner.sudo()
+                    partner.write({
                         'email': employee.work_email,
                         'phone': employee.work_phone,
                     })
@@ -1168,10 +1178,15 @@ class HrEmployee(models.Model):
         # copy them to the cache of self; non-public data will be missing from
         # cache, and interpreted as an access error
         for fname in field_names:
-            values = self.env.cache.get_values(public, public._fields[fname])
+            public_field = public._fields[fname]
+            # only copy the values that are in cache: get_values() skips the
+            # missing ones, which would misalign values with self's ids
+            missing_ids = set(self.env.cache.get_missing_ids(public, public_field))
+            cached = public.browse(id_ for id_ in public._ids if id_ not in missing_ids) if missing_ids else public
+            values = self.env.cache.get_values(cached, public_field)
             if self._fields[fname].translate:
                 values = [(value.copy() if value else None) for value in values]
-            self.env.cache.update_raw(self, self._fields[fname], values)
+            self.env.cache.update_raw(self.browse(cached._ids), self._fields[fname], values)
 
     @api.model
     def notify_expiring_contract_work_permit(self):
@@ -1241,11 +1256,24 @@ We can redirect you to the public employee list."""
         if self.browse().has_access('read') or bypass_access:
             return super()._search(domain, offset, limit, order, bypass_access=bypass_access, **kwargs)
         domain = Domain(domain)
+
         # HACK Some fields are inherited from the `current_version_id` and may have been already
         # optimized, showing current_version_id in the domain, but public employee does not have
         # that field and may have fields directly on the model, just change the condition to `id` in
         # that case.
-        domain = domain.map_conditions(lambda cond: Domain('id', cond.operator, cond.value) if cond.field_expr == 'current_version_id' else cond)
+        def adapt_condition(cond):
+            if cond.field_expr != 'current_version_id':
+                return cond
+            if cond.operator in ('any', 'not any'):
+                raise AccessError(self.env._('You do not have access to this document.'))
+            if cond.operator in ('any!', 'not any!'):
+                if isinstance(cond.value, Query):
+                    query = cond.value.subselect(SQL.identifier(cond.value.table, 'employee_id'))
+                else:
+                    query = self.env['hr.version'].sudo()._search(Domain('id', 'any!', cond.value), active_test=False)
+                return Domain('id', cond.operator, query)
+            return Domain('id', cond.operator, cond.value)
+        domain = domain.map_conditions(adapt_condition)
         try:
             ids = self.env['hr.employee.public']._search(domain, offset, limit, order, **kwargs)
         except ValueError as e:
@@ -1299,8 +1327,10 @@ We can redirect you to the public employee list."""
     def _verify_barcode(self):
         for employee in self:
             if employee.barcode:
-                if not (re.match(r'^[A-Za-z0-9]+$', employee.barcode) and len(employee.barcode) <= 18):
-                    raise ValidationError(_("The Badge ID must be alphanumeric without any accents and no longer than 18 characters."))
+                # [!-~] matches every printable ASCII character except the space,
+                # which is excluded because leading or trailing spaces are invisible
+                if not re.fullmatch(r'[!-~]{1,18}', employee.barcode):
+                    raise ValidationError(_("The Badge ID must contain only printable ASCII characters, without spaces, and be no longer than 18 characters."))
 
     @api.onchange('user_id')
     def _onchange_user(self):
@@ -1337,7 +1367,7 @@ We can redirect you to the public employee list."""
 
     def _prepare_resource_values(self, vals, tz):
         resource_vals = super()._prepare_resource_values(vals, tz)
-        vals.pop('name')  # Already considered by super call but no popped
+        vals.pop('name', False)  # Already considered by super call but no popped
         # We need to pop it to avoid useless resource update (& write) call
         # on every newly created resource (with the correct name already)
         user_id = vals.pop('user_id', None)
@@ -1785,7 +1815,7 @@ We can redirect you to the public employee list."""
                 tz=employee_tz,
                 resources=self.resource_id,
                 compute_leaves=True,
-                domain=[('company_id', 'in', [False, self.company_id.id])])[self.resource_id.id]
+                domain=[('company_id', 'in', [False, self.company_id.id]), ('time_type', '=', 'leave')])[self.resource_id.id]
             return calendar_intervals
         duration_data = Intervals()
         version_prev = datetime.combine(valid_versions[0].date_start, time.min, employee_tz)

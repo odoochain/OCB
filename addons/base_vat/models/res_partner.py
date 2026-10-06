@@ -154,10 +154,19 @@ class ResPartner(models.Model):
                 try:
                     return self._run_vat_checks(self.env['res.country'].search([('code', '=', country_code)], limit=1), vat_prefix + vat_number, partner_name, validation)
                 except ValidationError:
-                    msg = self._build_vat_error_message(code_to_check, vat, partner_label)
+                    msg = self._build_vat_error_message(code_to_check, vat_to_return, partner_label)
                     raise ValidationError(msg + "\n\n" + _('If you are trying to input a European number, this is the expected format: ') + _ref_vat[country_code.lower()])
+
+            company_country = self.env.company.country_id
+            if company_country and company_country != country:
+                if self._get_vat_validation_method(company_country.code):
+                    try:
+                        return self._run_vat_checks(company_country, vat, partner_name, validation)
+                    except ValidationError:
+                        pass
+
             if validation == 'error':
-                msg = self._build_vat_error_message(code_to_check, vat, partner_label)
+                msg = self._build_vat_error_message(code_to_check, vat_to_return, partner_label)
                 raise ValidationError(msg)
             else:
                 return '', code_to_check
@@ -198,6 +207,14 @@ class ResPartner(models.Model):
                 and self.env.company.vat_check_vies
             )
 
+    @api.model
+    def _get_vat_validation_method(self, country_code):
+        country_code = EU_EXTRA_VAT_CODES_INV.get(country_code.upper(), country_code).lower()
+        check_func_name = 'check_vat_' + country_code
+        stdnum_vat_module = stdnum.util.get_cc_module(country_code, 'vat')
+
+        return getattr(self, check_func_name, None) or getattr(stdnum_vat_module, 'is_valid', None)
+
     @api.depends('vat')
     def _compute_vies_valid(self):
         """ Check the VAT number with VIES, if enabled."""
@@ -205,7 +222,7 @@ class ResPartner(models.Model):
             self.vies_valid = False
             return
 
-        for partner in self:
+        for partner in self.sorted(lambda p: bool(p.parent_id)):
             if not partner.vat:
                 partner.vies_valid = False
                 continue
@@ -429,10 +446,12 @@ class ResPartner(models.Model):
 
     def check_vat_gr(self, vat):
         """ Allows some custom test VAT number to be valid to allow testing Greece EDI. """
+        gr_vat = stdnum.util.get_cc_module('gr', 'vat')
+        vat = gr_vat.compact(vat)
         greece_test_vats = ('047747270', '047747210', '047747220', '117747270', '127747270')
         if vat in greece_test_vats:
             return True
-        return stdnum.util.get_cc_module('gr', 'vat').is_valid(vat)
+        return gr_vat.is_valid(vat)
 
     # Our EDI provider Infile has designated this range of testing VATs for our customers.
     __check_vat_gt_testing_infile = re.compile(r'98[0-9]{10}K')
@@ -972,7 +991,8 @@ class ResPartner(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         res = super().create(vals_list)
-        res.env.remove_to_compute(self._fields['vies_valid'], res)
+        if self.env.context.get('import_file'):
+            self.env.remove_to_compute(self._fields['vies_valid'], self)
         return res
 
     def write(self, vals):

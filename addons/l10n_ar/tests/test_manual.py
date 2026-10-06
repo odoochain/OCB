@@ -455,3 +455,49 @@ class TestArManual(common.TestArCommon):
         })
         debit_note_wizard.create_debit()
         self.assertTrue(invoice.reversal_move_ids.debit_note_ids)
+
+    def test_foreign_partner_without_expo_journal(self):
+        """ Test that if there is no active export journal, creating an invoice for a foreign partner doesn't
+        block the user but set a regular (non-expo) sales journal and default the document type to Invoice B."""
+
+        expo_journals = self.env['account.journal'].search([
+            ('company_id', '=', self.company_ri.id),
+            ('type', '=', 'sale'),
+            ('l10n_ar_afip_pos_system', 'in', ['FEERCEL', 'FEEWS', 'FEERCELP']),
+        ])
+        draft_moves_on_expo_journals = self.env['account.move'].search([
+            ('journal_id', 'in', expo_journals.ids),
+            ('state', '=', 'draft'),
+        ])
+        draft_moves_on_expo_journals.unlink()
+        expo_journals.write({'active': False})
+
+        with Form(self.env['account.move'].with_context(default_move_type='out_invoice')) as invoice_form:
+            invoice_form.partner_id = self.res_partner_barcelona_food
+            with invoice_form.invoice_line_ids.new() as line_form:
+                line_form.product_id = self.product_iva_21
+        invoice = invoice_form.save()
+
+        self.assertEqual(
+            invoice.journal_id, self.journal,
+            'Journal should stay on a regular (non-expo) sales journal since there is no export journal available',
+        )
+        self.assertEqual(
+            invoice.l10n_latam_document_type_id, self.document_type['invoice_b'],
+            'Document type should default to Invoice B when no export journal is available',
+        )
+
+    def test_get_vat_aliquot_cancelled_out_by_down_payment(self):
+        """ An aliquot whose base and tax cancel out (final invoice deducting a 100% down
+        payment) must not be reported: both amounts sent to ARCA would be 0.00 """
+        invoice = self._create_invoice_ar(
+            invoice_line_ids=[
+                self._prepare_invoice_line(product_id=self.product_iva_21, price_unit=1565963.28, tax_ids=self.tax_21),
+                self._prepare_invoice_line(product_id=self.product_iva_21, price_unit=2540664.0, tax_ids=self.tax_21),
+                # down payment deduction: cancels the lines above, but summing the rounded
+                # amounts leaves a floating point residual (~4.66e-10) that is not exactly zero
+                self._prepare_invoice_line(product_id=self.product_iva_21, price_unit=4106627.28, quantity=-1, tax_ids=self.tax_21),
+            ],
+        )
+        self.assertEqual(invoice.amount_total, 0.0)
+        self.assertEqual(invoice._get_vat(), [])

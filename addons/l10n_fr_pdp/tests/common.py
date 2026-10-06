@@ -82,7 +82,8 @@ class TestL10nFrPdpCommon(TestUblCiiCommon, TestAccountMoveSendCommon):
             'peppol_eas': '0225',
             'peppol_endpoint': '968515759_96851575905823',
         })
-        cls.partner_b.write({
+        cls.belgian_partner = cls.partner_b
+        cls.belgian_partner.write({
             'name': 'SUPER BELGIAN PARTNER',
             'street': 'Rue du Paradis, 10',
             'zip': '6870',
@@ -122,12 +123,13 @@ class TestL10nFrPdpCommon(TestUblCiiCommon, TestAccountMoveSendCommon):
         return response
 
     @classmethod
-    def _get_annuaire_lookup_response(cls, peppol_identifier, expected_peppol_identifier):
+    def _get_annuaire_lookup_response(cls, peppol_identifier, expected_peppol_identifier, **extra_result_kwargs):
         response = requests.Response()
         response.status_code = 200
         response.json = lambda: {
             "result": {
                 "in_annuaire": peppol_identifier == expected_peppol_identifier,
+                **extra_result_kwargs,
             }
         }
         return response

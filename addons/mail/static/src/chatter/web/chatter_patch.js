@@ -437,8 +437,11 @@ patch(Chatter.prototype, {
     },
 
     async reloadParentView() {
-        await this.props.saveRecord?.();
-        if (this.props.record) {
+        if (status(this) === "destroyed") {
+            return;
+        }
+        const saved = await this.props.saveRecord?.();
+        if (this.props.record && saved) {
             await this.props.record.load();
         }
     },

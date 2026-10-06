@@ -2,7 +2,14 @@ import { ImStatus } from "@mail/core/common/im_status";
 import { onExternalClick } from "@mail/utils/common/hooks";
 import { markEventHandled, isEventHandled } from "@web/core/utils/misc";
 
-import { Component, useEffect, useExternalListener, useRef, useState } from "@odoo/owl";
+import {
+    Component,
+    useChildSubEnv,
+    useEffect,
+    useExternalListener,
+    useRef,
+    useState,
+} from "@odoo/owl";
 
 import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
 import { usePosition } from "@web/core/position/position_hook";
@@ -33,6 +40,7 @@ export class NavigableList extends Component {
     static props = {
         anchorRef: { optional: true },
         class: { type: String, optional: true },
+        onClose: { type: Function, optional: true },
         onSelect: { type: Function },
         options: { type: Array },
         optionTemplate: { type: String, optional: true },
@@ -48,6 +56,7 @@ export class NavigableList extends Component {
 
     setup() {
         super.setup();
+        useChildSubEnv({ inNavigableList: true });
         this.rootRef = useRef("root");
         this.state = useState({
             activeIndex: null,
@@ -108,11 +117,18 @@ export class NavigableList extends Component {
         if (this.props.closeOnSelect) {
             this.state.open = false;
             this.state.activeIndex = null;
+            this.props.onClose?.();
         }
     }
 
+    /**
+     * @param {Event} ev
+     * @param {number} index
+     * @param {Object} [params]
+     * @param {Object} [params.option] defaults to `props.options[index]`
+     */
     selectOption(ev, index, params = {}) {
-        const option = this.props.options[index];
+        const { option = this.props.options[index], ...onSelectParams } = params;
         if (!option) {
             return;
         }
@@ -121,7 +137,7 @@ export class NavigableList extends Component {
             return;
         }
         this.props.onSelect(ev, option, {
-            ...params,
+            ...onSelectParams,
         });
         this.close();
     }

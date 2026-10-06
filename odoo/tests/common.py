@@ -1079,12 +1079,26 @@ class TransactionCase(BaseCase):
 
         cls.env = api.Environment(cls.cr, api.SUPERUSER_ID, {})
 
-        # speedup CryptContext. Many user an password are done during tests, avoid spending time hasing password with many rounds
+        # speedup CryptContext. Many password-type logins are done during tests, avoid spending time hashing password with many rounds
         def _crypt_context(self):  # noqa: ARG001
-            return CryptContext(
+            cryptCtx = CryptContext(
                 ['pbkdf2_sha512', 'plaintext'],
                 pbkdf2_sha512__rounds=1,
             )
+            # The modified hash configuration causes rotation of the in-database password hash values.
+            # Rotating password hashes mid-test causes session_id rotation leading into indeterministic 'user not logged in' errors.
+            # Never returning a replacement hash prevents this problem.
+            original_verify_and_update = cryptCtx.verify_and_update
+
+            def mock_verify_and_update(*args, **kwargs):
+                valid, replacement_hash = original_verify_and_update(*args, **kwargs)
+                if replacement_hash:
+                    _logger.info("Surpressing hash update in CryptContext override")
+                return valid, None
+
+            cryptCtx.verify_and_update = mock_verify_and_update
+            return cryptCtx
+
         cls._crypt_context_patcher = patch('odoo.addons.base.models.res_users.ResUsersPatchedInTest._crypt_context', _crypt_context)
         cls.startClassPatcher(cls._crypt_context_patcher)
 
@@ -1158,8 +1172,9 @@ class TransactionCase(BaseCase):
             old_run_wkhtmltopdf = ir_actions_report._run_wkhtmltopdf
 
             def _patched_run_wkhtmltopdf(args):
-                with patch.object(self, 'http_request_key', 'wkhtmltopdf'), release_test_lock():
-                    args = ['--cookie', TEST_CURSOR_COOKIE_NAME, 'wkhtmltopdf', *args]
+                http_request_key = self.http_request_key
+                with release_test_lock():
+                    args = ['--cookie', TEST_CURSOR_COOKIE_NAME, http_request_key, *args]
                     return old_run_wkhtmltopdf(args)
 
             stack.enter_context(
@@ -1936,6 +1951,18 @@ which leads to stray network requests and inconsistencies."""
             self._logger.info('Waiting for frame %r to stop loading', frame_id)
             e.wait(10)
 
+    def _park_mouse_outside_viewport(self):
+        # On the runbot, a mouse cursor resting inside the viewport at test start makes Blink
+        # fire a TRUSTED hover event into hoot-dom/AutoComplete/sortable on the next focus/
+        # scroll/layout change (confirmed by injecting a matching cursor locally; the runbot's
+        # actual starting cursor position was not itself observed).
+        try:
+            self._websocket_request('Input.dispatchMouseEvent', params={
+                'type': 'mouseMoved', 'x': -100, 'y': -100,
+            })
+        except Exception:  # noqa: BLE001
+            self._logger.warning('Could not park the mouse outside the viewport', exc_info=True)
+
     def _from_remoteobject(self, arg):
         """ attempts to make a CDT RemoteObject comprehensible
         """
@@ -2241,8 +2268,9 @@ class HttpCase(TransactionCase):
         old_run_wkhtmltopdf = ir_actions_report._run_wkhtmltopdf
 
         def _patched_run_wkhtmltopdf(args):
-            with patch.object(self, 'http_request_key', 'wkhtmltopdf'), release_test_lock():
-                args = ['--cookie', TEST_CURSOR_COOKIE_NAME, 'wkhtmltopdf', *args]
+            http_request_key = self.http_request_key
+            with release_test_lock():
+                args = ['--cookie', TEST_CURSOR_COOKIE_NAME, http_request_key, *args]
                 return old_run_wkhtmltopdf(args)
 
         self.startPatcher(
@@ -2539,6 +2567,7 @@ class HttpCase(TransactionCase):
             # Needed because tests like test01.js (qunit tests) are passing a ready
             # code = ""
             self.assertTrue(browser._wait_ready(ready), 'The ready "%s" code was always falsy' % ready)
+            browser._park_mouse_outside_viewport()
 
             error = False
             try:

@@ -23,6 +23,7 @@ import {
     descendants,
     firstLeaf,
     lastLeaf,
+    selectElements,
 } from "@html_editor/utils/dom_traversal";
 import { parseHTML } from "@html_editor/utils/html";
 import { DIRECTIONS, leftPos, rightPos, nodeSize } from "@html_editor/utils/position";
@@ -151,7 +152,10 @@ export class TablePlugin extends Plugin {
                 return true;
             }
         },
-        normalize_handlers: this.distributeTableColorsToAllCells.bind(this),
+        normalize_handlers: [
+            this.distributeTableColorsToAllCells.bind(this),
+            this.populateTableSpans.bind(this),
+        ],
         overlay_selection_target_rect_providers: this.getTableSelectionRangeRect.bind(this),
         selected_background_color_providers: withSequence(
             5,
@@ -186,15 +190,20 @@ export class TablePlugin extends Plugin {
         this.onMousemove = this.onMousemove.bind(this);
 
         this.normalizeTableStructure(this.editable);
-        // Move table width and margin to tbody to prevent scrollbars on the editable.
+        // A previous version set the width and margin on tbody, move them back.
         this.editable.querySelectorAll("table").forEach((table) => {
+            // A previous version removed both properties from the table when it moved
+            // them, so a table that still has one of them was never migrated.
+            if (table.style.width || table.style.marginLeft) {
+                return;
+            }
             const tBody = table.tBodies[0];
-            for (const property of ["width", "marginLeft"]) {
-                if (table.style[property]) {
-                    tBody.style[property] = table.style[property];
+            for (const property of ["width", "margin-left"]) {
+                if (tBody.style[property]) {
+                    table.style[property] = tBody.style[property];
+                    removeStyle(tBody, property);
                 }
             }
-            removeStyle(table, "width", "margin-left");
         });
     }
 
@@ -233,7 +242,9 @@ export class TablePlugin extends Plugin {
         [...root.querySelectorAll("table")]
             .filter((table) => table.style["color"] || table.style["backgroundColor"])
             .forEach((table) => {
-                const tds = table.querySelectorAll("td");
+                const tds = [...table.querySelectorAll("td")].filter(
+                    (td) => closestElement(td, "table") === table
+                );
                 for (const td of tds) {
                     td.style["color"] = td.style["color"] || table.style["color"];
                     td.style["backgroundColor"] =
@@ -272,28 +283,28 @@ export class TablePlugin extends Plugin {
      */
     addColumn(position, reference) {
         const columnIndex = getColumnIndex(reference);
-        const tBody = closestElement(reference, "tbody");
-        const tBodyWidth = tBody.style.width && parseFloat(tBody.style.width);
-        const referenceColumn = tBody.querySelectorAll(
+        const table = closestElement(reference, "table");
+        const tableWidth = table.style.width && parseFloat(table.style.width);
+        const referenceColumn = table.querySelectorAll(
             `tr :is(td, th):nth-of-type(${columnIndex + 1})`
         );
         const referenceCellWidth = reference.style.width
             ? parseFloat(reference.style.width)
             : reference.clientWidth;
         // Temporarily set widths so proportions are respected.
-        const firstRow = tBody.querySelector("tr");
+        const firstRow = table.querySelector("tr");
         const firstRowCells = [...firstRow.children].filter(
             (child) => child.nodeName === "TD" || child.nodeName === "TH"
         );
         let totalWidth = 0;
-        if (tBodyWidth) {
+        if (tableWidth) {
             for (const cell of firstRowCells) {
                 const width = parseFloat(cell.style.width);
                 cell.style.width = width + "px";
                 // Spread the widths to preserve proportions.
                 // -1 for the width of the border of the new column.
                 const newWidth = Math.max(
-                    Math.round((width * tBodyWidth) / (tBodyWidth + referenceCellWidth - 1)),
+                    Math.round((width * tableWidth) / (tableWidth + referenceCellWidth - 1)),
                     13
                 );
                 cell.style.width = newWidth + "px";
@@ -311,21 +322,21 @@ export class TablePlugin extends Plugin {
             if (rowIndex === 0 && cell.classList.contains("o_table_header")) {
                 newCell.classList.add("o_table_header");
             }
-            if (rowIndex === 0 && tBodyWidth) {
+            if (rowIndex === 0 && tableWidth) {
                 newCell.style.width = cell.style.width;
                 totalWidth += parseFloat(cell.style.width);
             }
         });
-        if (tBodyWidth) {
-            if (totalWidth !== tBodyWidth - 1) {
+        if (tableWidth) {
+            if (totalWidth !== tableWidth - 1) {
                 // -1 for the width of the border of the new column.
                 firstRowCells[firstRowCells.length - 1].style.width =
                     parseFloat(firstRowCells[firstRowCells.length - 1].style.width) +
-                    (tBodyWidth - totalWidth - 1) +
+                    (tableWidth - totalWidth - 1) +
                     "px";
             }
             // Fix the table and row's width so it doesn't change.
-            tBody.style.width = tBodyWidth + "px";
+            table.style.width = tableWidth + "px";
         }
     }
     /**
@@ -516,12 +527,12 @@ export class TablePlugin extends Plugin {
     /**
      * @param {HTMLTableElement} table
      */
-    normalizeColumnWidth(tBody) {
-        const rows = [...tBody.rows];
+    normalizeColumnWidth(table) {
+        const rows = [...table.rows];
         const firstRowCells = [...rows[0].cells];
-        const tBodyWidth = parseFloat(tBody.style.width);
-        if (tBodyWidth) {
-            const expectedCellWidth = tBodyWidth / firstRowCells.length;
+        const tableWidth = parseFloat(table.style.width);
+        if (tableWidth) {
+            const expectedCellWidth = tableWidth / firstRowCells.length;
             firstRowCells.forEach((cell, i) => {
                 const cellWidth = parseFloat(cell.style.width);
                 if (cellWidth && Math.abs(cellWidth - expectedCellWidth) <= 1) {
@@ -540,12 +551,12 @@ export class TablePlugin extends Plugin {
             return;
         }
 
-        const tBody = closestElement(cell, "tbody");
-        const tBodyWidth = parseFloat(tBody.style.width);
+        const table = closestElement(cell, "table");
+        const tableWidth = parseFloat(table.style.width);
         const currentRow = cell.parentElement;
         const currentRowCells = [...currentRow.cells];
         const rowCellCount = currentRowCells.length;
-        const expectedCellWidth = tBodyWidth / rowCellCount;
+        const expectedCellWidth = tableWidth / rowCellCount;
         const widthDifference = currentCellWidth - expectedCellWidth;
         const currentColumnIndex = getColumnIndex(cell);
 
@@ -606,15 +617,15 @@ export class TablePlugin extends Plugin {
                 adjCellWidth + (widthDifference > 0 ? adjustmentWidth : -adjustmentWidth)
             }px`;
         });
-        this.normalizeColumnWidth(tBody);
+        this.normalizeColumnWidth(table);
     }
 
     /**
      * @param {HTMLTableElement} table
      */
-    resetTableSize(tBody) {
-        tBody.removeAttribute("style");
-        const cells = [...tBody.querySelectorAll("tr, td, th")];
+    resetTableSize(table) {
+        table.removeAttribute("style");
+        const cells = [...table.querySelectorAll("tr, td, th")];
         cells.forEach((cell) => {
             const cStyle = cell.style;
             if (cell.tagName === "TR") {
@@ -1501,5 +1512,61 @@ export class TablePlugin extends Plugin {
         }
         this.deselectTable(clonedContents);
         return clonedContents;
+    }
+
+    populateTableSpans(root) {
+        for (const table of selectElements(root, "table")) {
+            const matrix = [];
+            let width = 0;
+
+            // Build the logical matrix.
+            for (let r = 0; r < table.rows.length; r++) {
+                const row = table.rows[r];
+                matrix[r] ||= [];
+
+                let c = 0;
+                for (const cell of row.cells) {
+                    while (matrix[r][c] !== undefined) {
+                        c++;
+                    }
+
+                    const rowspan = cell.rowSpan;
+                    const colspan = cell.colSpan;
+                    for (let dr = 0; dr < rowspan; dr++) {
+                        matrix[r + dr] ||= [];
+
+                        for (let dc = 0; dc < colspan; dc++) {
+                            matrix[r + dr][c + dc] = dr === 0 && dc === 0 ? cell : null;
+                        }
+                    }
+
+                    cell.removeAttribute("rowspan");
+                    cell.removeAttribute("colspan");
+
+                    c += colspan;
+                    width = Math.max(width, c);
+                }
+            }
+
+            // Populate each row in place.
+            for (let r = 0; r < table.rows.length; r++) {
+                const row = table.rows[r];
+                matrix[r] ||= [];
+                let domIndex = 0;
+
+                for (let c = 0; c < width; c++) {
+                    const entry = matrix[r][c];
+                    if (!entry) {
+                        const cell = this.document.createElement("td");
+                        const baseContainer = this.dependencies.baseContainer.createBaseContainer();
+                        baseContainer.append(this.document.createElement("br"));
+                        cell.append(baseContainer);
+                        row.insertBefore(cell, row.children[domIndex] ?? null);
+                    }
+                    domIndex++;
+                }
+            }
+        }
+        return root;
     }
 }

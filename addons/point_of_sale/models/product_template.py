@@ -101,6 +101,10 @@ class ProductTemplate(models.Model):
 
         products = product_tmpls.product_variant_ids
 
+        # The client matches no category rule if the product's category is unknown to it.
+        categories = self.env['product.category'].search([('id', 'parent_of', product_tmpls.categ_id.ids)])
+        category_read = self.env['product.category']._load_pos_data_read(categories, config)
+
         # product.pricelist_item & product.pricelist loading
         pricelists = config.current_session_id.get_pos_ui_product_pricelist_item_by_product(
             product_tmpls.ids,
@@ -121,8 +125,10 @@ class ProductTemplate(models.Model):
 
         # product.template.attribute.exclusion loading
         product_tmpl_excl = self.env['product.template.attribute.exclusion']
+        # An exclusion is only usable in the POS if its value is loaded too
         product_tmpl_exclusion = product_tmpl_attr_value.exclude_for + product_tmpl_excl.search([
             ('product_tmpl_id', 'in', product_tmpls.ids),
+            ('product_template_attribute_value_id', 'in', product_tmpl_attr_value.ids),
         ])
         product_tmpl_exclusion_read = product_tmpl_excl._load_pos_data_read(product_tmpl_exclusion, config)
 
@@ -153,6 +159,7 @@ class ProductTemplate(models.Model):
         tax_read = account_tax._load_pos_data_read(account_tax.search(tax_domain), config)
 
         return {
+            'product.category': category_read,
             **pricelists,
             'account.tax': tax_read,
             'product.attribute': product_attr_read,

@@ -9,6 +9,7 @@ from urllib import parse
 
 from odoo import api, fields, models
 from odoo.addons.account.models.company import PEPPOL_LIST
+from odoo.addons.account_edi_ubl_cii.models.account_edi_common import EAS_MAPPING
 from odoo.addons.account_peppol.tools.demo_utils import handle_demo
 
 
@@ -65,13 +66,14 @@ class ResPartner(models.Model):
             else:
                 partner.available_peppol_edi_formats = list(dict(self._fields['invoice_edi_format'].selection))
 
+    @api.depends('peppol_eas')
     def _compute_available_peppol_eas(self):
         # EXTENDS 'account_edi_ubl_cii'
         super()._compute_available_peppol_eas()
-        eas_codes = set(self[:1].available_peppol_eas)
-        if self.env.company._get_peppol_edi_mode() != 'demo' and 'odemo' in eas_codes:
-            eas_codes.remove('odemo')
-            self.available_peppol_eas = list(eas_codes)
+        is_demo = self.env.company._get_peppol_edi_mode() == 'demo'
+        for partner in self:
+            if not is_demo and partner.available_peppol_eas and 'odemo' in partner.available_peppol_eas:
+                partner.available_peppol_eas = [eas for eas in partner.available_peppol_eas if eas != 'odemo']
 
     # -------------------------------------------------------------------------
     # HELPERS
@@ -312,3 +314,10 @@ class ResPartner(models.Model):
         if not peppol_eas or not peppol_endpoint:
             return None, ""
         return 'peppol', f"{peppol_eas}:{peppol_endpoint}"
+
+    def _peppol_is_french_partner(self):
+        self.ensure_one()
+        return (
+                self.country_code in {'FR', 'GP', 'MQ', 'RE'}
+                or self.peppol_eas in EAS_MAPPING.get('FR', [])
+        )

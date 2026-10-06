@@ -27,7 +27,6 @@ import {
 } from "@point_of_sale/app/utils/make_awaitable_dialog";
 import { PartnerList } from "../screens/partner_list/partner_list";
 import { ScaleScreen } from "../screens/scale_screen/scale_screen";
-import { computeComboItems } from "../models/utils/compute_combo_items";
 import { changesToOrder, getOrderChanges } from "../models/utils/order_change";
 import { QRPopup } from "@point_of_sale/app/components/popups/qr_code_popup/qr_code_popup";
 import { FormViewDialog } from "@web/views/view_dialogs/form_view_dialog";
@@ -277,9 +276,26 @@ export class PosStore extends WithLazyGetterTrap {
     }
 
     async reloadData(fullReload = false) {
+        try {
+            await this.syncAllOrders();
+        } catch (error) {
+            logPosMessage("Store", "reloadData", "Failed to sync orders", CONSOLE_COLOR, [error]);
+        }
+        // Reloading wipes the local orders, a paid order must never be lost that way
+        if (this.models["pos.order"].some((o) => o.isUnsyncedPaid && o.state !== "cancel")) {
+            this.dialog.add(AlertDialog, {
+                title: _t("Reload Data"),
+                body: _t(
+                    "Some paid orders have not been synced to the server yet. Closing or reloading now may cause data loss."
+                ),
+            });
+            return;
+        }
         const orders = this.models["pos.order"].getAll();
         this.device.saveUnusedNumber(orders);
         await this.data.resetIndexedDB();
+        sessionStorage.clear();
+        localStorage.clear();
         const url = new URL(window.location.href);
 
         if (fullReload) {
@@ -540,7 +556,11 @@ export class PosStore extends WithLazyGetterTrap {
 
         for (const exclusion of excl ||
             this.models["product.template.attribute.exclusion"].getAll()) {
-            const ptavId = exclusion.product_template_attribute_value_id.id;
+            // An exclusion can outlive its value in the local cache
+            const ptavId = exclusion.product_template_attribute_value_id?.id;
+            if (!ptavId) {
+                continue;
+            }
             for (const { id: valueId } of exclusion.value_ids) {
                 addExclusion(ptavId, valueId);
                 addExclusion(valueId, ptavId);
@@ -656,6 +676,7 @@ export class PosStore extends WithLazyGetterTrap {
                 this.removeOrder(order, false);
                 this.removePendingOrder(order);
             }
+            await Promise.all(ordersToDelete.map((order) => this.recycleOrderNumber(order)));
         }
 
         return true;
@@ -818,13 +839,16 @@ export class PosStore extends WithLazyGetterTrap {
                 hideAlwaysVariants: opts.hideAlwaysVariants,
                 forceVariantValue,
                 line: opts.line,
+                comboItem: opts.comboItem,
             });
         }
         return {
             attribute_value_ids: attributeLinesValues.map((values) => values[0].id),
             attribute_custom_values: [],
+            // Only no_variant extras have to be carried by the line: the extras of
+            // variant-creating attributes are already part of the variant lst_price.
             price_extra: attributeLinesValues
-                .filter((attr) => attr[0].attribute_id.create_variant !== "always")
+                .filter((attr) => attr[0].attribute_id.create_variant === "no_variant")
                 .reduce((acc, values) => acc + values[0].price_extra, 0),
             quantity: 1,
         };
@@ -896,7 +920,7 @@ export class PosStore extends WithLazyGetterTrap {
             ...opts,
         };
 
-        if ("price_unit" in vals) {
+        if ("price_unit" in vals || opts.merge === false) {
             merge = false;
         }
 
@@ -980,7 +1004,9 @@ export class PosStore extends WithLazyGetterTrap {
         // It will return the weight of the product as quantity
         // ---
         // This actions cannot be handled inside pos_order.js or pos_order_line.js
-        if (values.product_tmpl_id.to_weight && this.config.iface_electronic_scale && configure) {
+        // A scanned product barcode still has to be weighed, unlike a weight barcode.
+        const shouldWeigh = configure || (code && code.type !== "weight");
+        if (values.product_tmpl_id.to_weight && this.config.iface_electronic_scale && shouldWeigh) {
             if (values.product_tmpl_id.isScaleAvailable) {
                 const decimalAccuracy = this.models["decimal.precision"].find(
                     (dp) => dp.name === "Product Unit"
@@ -1044,7 +1070,7 @@ export class PosStore extends WithLazyGetterTrap {
                 related_lines
             );
             related_lines
-                .filter((line) => line.price_type !== "manual")
+                .filter((line) => line.price_type === "original")
                 .forEach((line) => line.setUnitPrice(price));
         }
 
@@ -1127,14 +1153,10 @@ export class PosStore extends WithLazyGetterTrap {
 
             // Product template of combo should not have more than 1 variant.
             const [childLineConf, comboExtraLines] = payload;
-            const comboPrices = computeComboItems(
-                values.product_tmpl_id.product_variant_ids[0],
+            const comboPrices = values.product_tmpl_id.getComboPrice(
                 childLineConf,
-                order.pricelist_id,
-                this.data.models["decimal.precision"].getAll(),
-                this.data.models["product.template.attribute.value"].getAllBy("id"),
                 comboExtraLines,
-                this.currency
+                order.pricelist_id
             );
 
             values.combo_line_ids = comboPrices.map((comboItem) => [
@@ -1285,7 +1307,7 @@ export class PosStore extends WithLazyGetterTrap {
             if (values.product_id.product_template_variant_value_ids.length > 0) {
                 // Verify price extra of variant products
                 const priceExtra = values.product_id.product_template_variant_value_ids
-                    .filter((attr) => attr.attribute_id.create_variant !== "always" && !opts.code)
+                    .filter((attr) => attr.attribute_id.create_variant === "no_variant")
                     .reduce((acc, attr) => acc + attr.price_extra, 0);
 
                 values.price_extra += priceExtra;
@@ -1355,8 +1377,18 @@ export class PosStore extends WithLazyGetterTrap {
             return;
         }
 
-        this.device.saveUnusedNumber([order]);
-        return this.data.localDeleteCascade(order);
+        const removed = this.data.localDeleteCascade(order);
+        this.recycleOrderNumber(order);
+        return removed;
+    }
+    /**
+     * Recycle the receipt number only once the order is gone from IndexedDB,
+     * otherwise a reload restores it next to a new order using the same number.
+     */
+    recycleOrderNumber(order) {
+        return this.data
+            .deleteRecordsInIndexedDB("pos.order", [order.uuid])
+            .then(() => this.device.saveUnusedNumber([order]));
     }
 
     /**
@@ -1734,12 +1766,23 @@ export class PosStore extends WithLazyGetterTrap {
             { context: { fiscal_position_id: order.fiscal_position_id?.id ?? false } }
         );
 
-        const productTaxDetails = productTemplate.getTaxDetails({
-            overridedValues: {
-                pricelist: order.pricelist_id,
-                fiscalPosition: order.fiscal_position_id,
-            },
-        });
+        let productTaxDetails = null;
+        if (productTemplate.type === "combo") {
+            productTaxDetails = productTemplate.getComboTaxDetails({
+                overridedValues: {
+                    pricelist: order.pricelist_id,
+                    fiscalPosition: order.fiscal_position_id,
+                },
+            });
+        } else {
+            productTaxDetails = productTemplate.getTaxDetails({
+                overridedValues: {
+                    pricelist: order.pricelist_id,
+                    fiscalPosition: order.fiscal_position_id,
+                },
+            });
+        }
+
         const priceWithoutTax = productTaxDetails.total_excluded;
         const margin = priceWithoutTax - productTemplate.standard_price;
         const orderPriceWithoutTax = order.priceExcl;
@@ -1783,6 +1826,7 @@ export class PosStore extends WithLazyGetterTrap {
             orderTaxTotalCurrency,
             orderPriceWithTaxCurrency,
             productInfo,
+            productTaxDetails,
         };
     }
     async getClosePosInfo() {
@@ -2004,27 +2048,46 @@ export class PosStore extends WithLazyGetterTrap {
     // Now the printer should work in PoS without restaurant
     async sendOrderInPreparation(order, opts = {}) {
         let isPrinted = false;
+        let hasChanges = false;
         try {
             this.syncingOrders.add(order.uuid);
             if (this.config.printerCategories.size && !opts.byPassPrint) {
                 try {
-                    const orderChange = changesToOrder(
+                    let reprint = false;
+                    let orderChange = changesToOrder(
                         order,
                         this.config.printerCategories,
                         opts.cancelled
                     );
 
-                    const hasChanges =
+                    hasChanges =
                         orderChange.new.length ||
                         orderChange.cancelled.length ||
                         orderChange.noteUpdate.length ||
                         orderChange.internal_note ||
                         orderChange.general_customer_note;
-                    if (!order.uiState.isReprinting) {
-                        order.uiState.lastPrints.push(orderChange);
+
+                    let shouldPrint = true;
+                    if (!hasChanges) {
+                        if (opts.explicitReprint && order.uiState.lastPrints) {
+                            orderChange = [order.uiState.lastPrints.at(-1)];
+                            reprint = true;
+                        } else {
+                            shouldPrint = false;
+                        }
+                    } else {
+                        orderChange = [orderChange];
                     }
-                    if (hasChanges) {
-                        isPrinted = await this.printChanges(order, [orderChange]);
+
+                    if (reprint && opts.orderDone) {
+                        shouldPrint = false;
+                    }
+
+                    if (shouldPrint) {
+                        isPrinted = await this.printChanges(order, orderChange, reprint);
+                        if (isPrinted) {
+                            order.updateLastOrderChange();
+                        }
                     }
                 } catch (e) {
                     logPosMessage(
@@ -2036,15 +2099,24 @@ export class PosStore extends WithLazyGetterTrap {
                     );
                 }
             }
-            order.updateLastOrderChange();
+            this.updateLastOrderChangeIfNoDevice(order, opts);
         } finally {
             this.syncingOrders.delete(order.uuid);
         }
         // Ensure that other devices are aware of the changes
         // Otherwise several devices can print the same changes
         // We need to check if a preparation display is configured to avoid unnecessary sync
-        if (isPrinted && !this.models["pos.prep.display"]?.length) {
+        if (!this.models["pos.prep.display"]?.length) {
             await this.syncAllOrders({ orders: [order] });
+        }
+        return isPrinted;
+    }
+    hasDevice(opts = {}) {
+        return this.config.printerCategories.size || opts.byPassPrint;
+    }
+    updateLastOrderChangeIfNoDevice(order, opts = {}) {
+        if (!this.hasDevice(opts)) {
+            order.updateLastOrderChange();
         }
     }
     async sendOrderInPreparationUpdateLastChange(o, opts) {
@@ -2085,7 +2157,7 @@ export class PosStore extends WithLazyGetterTrap {
 
     getOrderData(order, reprint) {
         return {
-            reprint: order.uiState.isReprinting,
+            reprint: reprint,
             pos_reference: order.preparationName,
             config_name: order.config_id?.name || order.config.name,
             time: DateTime.now().toFormat("HH:mm"),
@@ -2201,6 +2273,10 @@ export class PosStore extends WithLazyGetterTrap {
                     }
                 }
             }
+        }
+
+        if (!reprint && isPrinted && orderChange.length) {
+            order.uiState.lastPrints.push(orderChange[0]);
         }
 
         // printing errors

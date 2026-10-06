@@ -392,6 +392,7 @@ export class ListPlugin extends Plugin {
                 list.setAttribute("dir", element.getAttribute("dir"));
             }
         }
+        this.adjustListPadding(list);
         cursors.restore();
         return list;
     }
@@ -925,12 +926,13 @@ export class ListPlugin extends Plugin {
 
     handleSplitBlock(params) {
         const closestLI = closestElement(params.targetNode, "LI");
-        const isBlockUnsplittable =
+        // Do not split the LI if the cursor is inside an unsplittable element.
+        const isTargetInUnsplittable =
             closestLI &&
-            Array.from(closestLI.childNodes).some(
-                (node) => isBlock(node) && this.dependencies.split.isUnsplittable(node)
+            ancestors(params.targetNode, closestLI).find((node) =>
+                this.dependencies.split.isUnsplittable(node)
             );
-        if (!closestLI || isBlockUnsplittable) {
+        if (!closestLI || isTargetInUnsplittable) {
             return;
         }
         if (isEmptyBlock(closestLI)) {
@@ -1022,6 +1024,36 @@ export class ListPlugin extends Plugin {
      * @param {import("@html_editor/core/selection_plugin").EditorSelection} selection
      */
     processContentForClipboard(clonedContents, selection) {
+        const closestLi = closestElement(selection.commonAncestorContainer, "LI");
+        if (
+            closestLi &&
+            closestLi.childNodes.length > 1 &&
+            this.dependencies.selection.areNodeContentsFullySelected(
+                selection.commonAncestorContainer
+            )
+        ) {
+            const outermostSingleChildAncestor = closestElement(
+                selection.commonAncestorContainer,
+                (el) => el === closestLi || el.parentElement?.childNodes.length !== 1
+            );
+            if (
+                outermostSingleChildAncestor === closestLi ||
+                outermostSingleChildAncestor.parentElement === closestLi
+            ) {
+                let [li, list] = [closestLi.cloneNode(), closestLi.parentElement.cloneNode()];
+                if (outermostSingleChildAncestor.parentElement === closestLi) {
+                    [li, list] = [
+                        outermostSingleChildAncestor.parentElement.cloneNode(),
+                        outermostSingleChildAncestor.parentElement.parentElement.cloneNode(),
+                    ];
+                    li.append(outermostSingleChildAncestor.cloneNode(true));
+                } else {
+                    li.append(...childNodes(clonedContents));
+                }
+                list.append(li);
+                return (clonedContents = list);
+            }
+        }
         if (clonedContents.firstChild.nodeName === "LI") {
             const list = selection.commonAncestorContainer.cloneNode();
             list.replaceChildren(...childNodes(clonedContents));
@@ -1128,7 +1160,7 @@ export class ListPlugin extends Plugin {
         const listItems = new Set(
             targetedNodes.map((n) => closestElement(n, "li")).filter(Boolean)
         );
-        if (!listItems.size || mode !== "color" || isColorGradient(color)) {
+        if (!listItems.size || (mode !== "color" && color) || isColorGradient(color)) {
             return;
         }
         const cursors = this.dependencies.selection.preserveSelection();
@@ -1151,6 +1183,9 @@ export class ListPlugin extends Plugin {
 
                     if (node.style.color) {
                         removeStyle(node, "color");
+                    }
+                    if (node.style.backgroundColor) {
+                        removeStyle(node, "background-color");
                     }
                 }
 

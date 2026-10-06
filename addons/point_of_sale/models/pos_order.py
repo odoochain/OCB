@@ -1546,7 +1546,11 @@ class PosOrder(models.Model):
         """Search for 'paid' orders that satisfy the given domain, limit and offset."""
         pos_config = self.env['pos.config'].browse(config_id)
         paid_order_domain = Domain(domain) & Domain([
+            '|',
             ('state', 'not in', ['cancel', 'draft']),
+            '&',
+            ('state', '!=', 'draft'),
+            ('is_refund', '=', True),
             ('config_id', 'in', [config_id] + pos_config.trusted_config_ids.ids),
             ('config_id.currency_id', '=', pos_config.currency_id.id)
         ])
@@ -1635,7 +1639,14 @@ class PosOrderLine(models.Model):
     is_total_cost_computed = fields.Boolean(help="Allows to know if the total cost has already been computed or not")
     discount = fields.Float(string='Discount (%)', digits=0, default=0.0)
     order_id = fields.Many2one('pos.order', string='Order Ref', ondelete='cascade', required=True, index=True)
-    tax_ids = fields.Many2many('account.tax', string='Taxes', readonly=True)
+    tax_ids = fields.Many2many(
+        comodel_name='account.tax',
+        relation='account_tax_pos_order_line_rel',
+        column1='pos_order_line_id',
+        column2='account_tax_id',
+        string='Taxes',
+        readonly=True,
+    )
     tax_ids_after_fiscal_position = fields.Many2many('account.tax', compute='_get_tax_ids_after_fiscal_position', string='Taxes to Apply')
     pack_lot_ids = fields.One2many('pos.pack.operation.lot', 'pos_order_line_id', string='Lot/serial Number')
     product_uom_id = fields.Many2one('uom.uom', string='Product Unit', related='product_id.uom_id')
@@ -1810,6 +1821,14 @@ class PosOrderLine(models.Model):
 
     @api.onchange('qty', 'discount', 'price_unit', 'tax_ids')
     def _onchange_qty(self):
+        if self.refunded_orderline_id:
+            line_id = self.ids[0]  # do not just use `id` in case of NewId
+            already_refunded_qty = sum(self.refunded_orderline_id.refund_orderline_ids
+                                       .filtered(lambda l: l.id != line_id and l.order_id.state != 'cancel')
+                                       .mapped('qty'))
+            total_refunded_qty = abs(already_refunded_qty) + abs(self.qty)
+            if abs(self.refunded_orderline_id.qty) - total_refunded_qty < 0:
+                raise ValidationError(_("You cannot refund more than the outstanding quantity for this product."))
         if self.product_id:
             price = self.price_unit * (1 - (self.discount or 0.0) / 100.0)
             self.price_subtotal = self.price_subtotal_incl = price * self.qty
@@ -1918,7 +1937,7 @@ class PosOrderLine(models.Model):
             moves = line._get_stock_moves_to_consider(stock_moves, product) if stock_moves else None
             if moves and line._is_product_storable_fifo_avco():
                 product_cost = line._get_product_cost_with_moves(moves)
-                if cost_currency.is_zero(product_cost) and line.order_id.shipping_date:
+                if cost_currency.is_zero(product_cost) and not sum(m._get_valued_qty() for m in moves):
                     if line.refunded_orderline_id:
                         product_cost = line.refunded_orderline_id.total_cost / line.refunded_orderline_id.qty
                     else:
@@ -1979,6 +1998,12 @@ class PosOrderLine(models.Model):
 
         if line.product_id.description_sale:
             product_name += '\n' + line.product_id.with_context(lang=lang).description_sale
+
+        quantity = line.qty * (-1 if is_refund_order else 1)
+        extra_tax_data = line.extra_tax_data
+        if extra_tax_data and quantity * extra_tax_data.get('quantity', quantity) < 0:
+            extra_tax_data = self.env['account.tax']._reverse_quantity_base_line_extra_tax_data(extra_tax_data)
+
         return {
             **self.env['account.tax']._prepare_base_line_for_taxes_computation(
                 line,
@@ -1988,11 +2013,12 @@ class PosOrderLine(models.Model):
                 product_id=line.product_id,
                 tax_ids=line.tax_ids_after_fiscal_position,
                 price_unit=line.price_unit,
-                quantity=line.qty * (-1 if is_refund_order else 1),
+                quantity=quantity,
                 discount=line.discount,
                 account_id=account,
                 is_refund=is_refund_line,
                 sign=1 if is_refund_order else -1,
+                extra_tax_data=extra_tax_data,
             ),
             'uom_id': line.product_uom_id,
             'name': product_name,

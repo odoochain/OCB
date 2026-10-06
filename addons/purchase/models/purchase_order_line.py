@@ -31,7 +31,14 @@ class PurchaseOrderLine(models.Model):
         compute='_compute_price_unit_and_date_planned_and_name',
         digits='Discount',
         store=True, readonly=False)
-    tax_ids = fields.Many2many('account.tax', string='Taxes', context={'active_test': False, 'hide_original_tax_ids': True})
+    tax_ids = fields.Many2many(
+        comodel_name='account.tax',
+        relation='account_tax_purchase_order_line_rel',
+        column1='purchase_order_line_id',
+        column2='account_tax_id',
+        string='Taxes',
+        context={'active_test': False, 'hide_original_tax_ids': True},
+    )
     allowed_uom_ids = fields.Many2many('uom.uom', compute='_compute_allowed_uom_ids')
     product_uom_id = fields.Many2one('uom.uom', string='Unit', domain="[('id', 'in', allowed_uom_ids)]", ondelete='restrict')
     product_id = fields.Many2one('product.product', string='Product', domain=[('purchase_ok', '=', True)], change_default=True, index='btree_not_null', ondelete='restrict')
@@ -277,12 +284,20 @@ class PurchaseOrderLine(models.Model):
             else:
                 line.selected_seller_id = False
 
-    @api.depends('price_unit', 'qty_invoiced_at_date', 'qty_received_at_date')
+    @api.depends('price_unit', 'qty_invoiced_at_date', 'qty_received_at_date', 'product_qty')
     @api.depends_context('accrual_entry_date')
     def _compute_amount_to_invoice_at_date(self):
         for line in self:
-            qty_to_invoice = line.product_uom_id._compute_quantity(line.qty_received_at_date - line.qty_invoiced_at_date, line.product_id.uom_id)
+            quantity_to_invoice = line._get_qty_to_invoice_at_date()
+            qty_to_invoice = line.product_uom_id._compute_quantity(quantity_to_invoice, line.product_id.uom_id)
             line.amount_to_invoice_at_date = qty_to_invoice * line._get_gross_price_unit()
+
+    def _get_qty_to_invoice_at_date(self):
+        """Return the quantity to invoice at the accrual date, respecting the product's purchase method."""
+        self.ensure_one()
+        if self.product_id.purchase_method == 'purchase':
+            return self.product_qty - self.qty_invoiced_at_date
+        return self.qty_received_at_date - self.qty_invoiced_at_date
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -291,7 +306,10 @@ class PurchaseOrderLine(models.Model):
                 values.update(product_id=False, price_unit=0, product_uom_qty=0, product_uom_id=False, date_planned=False)
             else:
                 values.update(self._prepare_add_missing_fields(values))
-            if values.get('price_unit') and not values.get('technical_price_unit'):
+            # keeping technical_price_unit apart flags an imported price as
+            # manually set, so a later recompute does not replace it
+            if values.get('price_unit') and not values.get('technical_price_unit') \
+                    and not self.env.context.get('import_file'):
                 values['technical_price_unit'] = values['price_unit']
 
         lines = super().create(vals_list)

@@ -99,6 +99,9 @@ patch(PosOrder.prototype, {
     },
     restoreState(vals) {
         super.restoreState(...arguments);
+        // The state may have been stored before pos_loyalty was installed
+        this.uiState.codeActivatedProgramRules ||= [];
+        this.uiState.couponPointChanges ||= {};
         this.uiState.disabledRewards = new Set(vals?.disabledRewards || []);
         for (const [key, pe] of Object.entries(this.uiState.couponPointChanges)) {
             if (!this.models["loyalty.program"].get(pe.program_id)) {
@@ -221,6 +224,28 @@ patch(PosOrder.prototype, {
             rewardLine.delete();
         }
         this._code_activated_coupon_ids = [["clear"]];
+    },
+    /**
+     * `_code_activated_coupon_ids` is a local field: it is lost when the order is
+     * rebuilt from the server or from IndexedDB, while the reward lines it justified
+     * are persisted with their `coupon_id`. Re-link those coupons so that
+     * `_updateRewardLines` does not consider their rewards unclaimed and delete them.
+     */
+    _restoreCodeActivatedCoupons() {
+        for (const line of this._get_reward_lines()) {
+            const coupon = line.coupon_id;
+            if (
+                !coupon ||
+                coupon.id <= 0 ||
+                !coupon.program_id ||
+                coupon.program_id.is_nominative ||
+                this.uiState.couponPointChanges[coupon.id] ||
+                this._code_activated_coupon_ids.some((c) => c.id === coupon.id)
+            ) {
+                continue;
+            }
+            this._code_activated_coupon_ids = [["link", coupon]];
+        }
     },
     /**
      * Refreshes the currently applied rewards, if they are not applicable anymore they are removed.
@@ -832,19 +857,25 @@ patch(PosOrder.prototype, {
                     continue;
                 }
                 let unclaimedQty;
+                let rewardProduct;
                 if (reward.reward_type === "product") {
                     if (!reward.multi_product) {
-                        const product = reward.reward_product_id;
-                        if (!product) {
-                            continue;
-                        }
-                        unclaimedQty = this._computeUnclaimedFreeProductQty(
-                            reward,
-                            couponProgram.coupon_id,
-                            product,
-                            points
+                        rewardProduct = reward.reward_product_id;
+                    } else if (auto) {
+                        // A multi product reward is claimed on the line being worked on.
+                        rewardProduct = reward.reward_product_ids.find(
+                            (product) => product.id === this.getSelectedOrderline()?.product_id.id
                         );
                     }
+                    if (!rewardProduct) {
+                        continue;
+                    }
+                    unclaimedQty = this._computeUnclaimedFreeProductQty(
+                        reward,
+                        couponProgram.coupon_id,
+                        rewardProduct,
+                        points
+                    );
                     if (!unclaimedQty || unclaimedQty <= 0) {
                         continue;
                     }
@@ -853,6 +884,7 @@ patch(PosOrder.prototype, {
                     coupon_id: couponProgram.coupon_id,
                     reward: reward,
                     potentialQty: unclaimedQty,
+                    product: rewardProduct,
                 });
             }
         }
@@ -1184,6 +1216,8 @@ patch(PosOrder.prototype, {
             return _t("Unknown discount type");
         }
         let { discountable, discountablePerTax } = getDiscountable(reward);
+        // Other discounts may already cover part of the discountable lines
+        const totalFactor = discountable > 0 ? Math.min(1, this.priceIncl / discountable) : 1;
         discountable = Math.min(this.priceIncl, discountable);
         if (floatIsZero(discountable)) {
             return [];
@@ -1254,7 +1288,7 @@ patch(PosOrder.prototype, {
 
             lst.push({
                 product_id: discountProduct,
-                price_unit: -(Math.min(this.priceIncl, entry[1]) * discountFactor),
+                price_unit: -(entry[1] * totalFactor * discountFactor),
                 qty: 1,
                 reward_id: reward,
                 is_reward_line: true,

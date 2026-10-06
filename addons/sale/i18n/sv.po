@@ -33,7 +33,7 @@ msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-10 17:37+0000\n"
-"PO-Revision-Date: 2026-08-10 13:18+0000\n"
+"PO-Revision-Date: 2026-08-28 08:55+0000\n"
 "Last-Translator: Hanna Kharraziha <hakha@odoo.com>\n"
 "Language-Team: Swedish <https://translate.odoo.com/projects/odoo-19/sale/sv/>"
 "\n"
@@ -42,7 +42,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: sale
 #. odoo-javascript
@@ -577,20 +577,20 @@ msgstr ""
 "        <t t-set=\"tx_sudo\" t-value=\"object.get_portal_last_transaction()"
 "\"/>\n"
 "        Din beställning med ordernummer <span style=\"font-weight:bold;\" t-"
-"out=\"object.name or ''\">S00049</span> med totalt belopp <span style=\"font-"
+"out=\"object.name or ''\">S00049</span> med totalbeloppet <span style=\"font-"
 "weight:bold;\" t-out=\"format_amount(object.amount_total, "
 "object.currency_id) or ''\">$10,00</span>\n"
 "        <t t-if=\"object.state == 'sale' or (tx_sudo and tx_sudo.state in "
 "('done', 'authorized'))\">\n"
 "            har bekräftats.<br/>\n"
-"            Tack för att du valt att handla med oss!\n"
+"            Tack för att du valt att handla hos oss!\n"
 "        </t>\n"
 "        <t t-elif=\"tx_sudo and tx_sudo.state == 'pending'\">\n"
 "            behandlas för närvarande. Beställningen bekräftas så fort "
-"betalningen är bekräftad.\n"
+"betalningen har gått igenom.\n"
 "            <t t-if=\"object.reference\">\n"
-"                Referensnummer för din betalning är följande: <span "
-"style=\"font-weight:bold;\" t-out=\"object.reference or ''\"/>.\n"
+"                Betalningens referensnummer: <span style=\"font-"
+"weight:bold;\" t-out=\"object.reference or ''\"/>.\n"
 "            </t>\n"
 "        </t>\n"
 "        <br/>\n"
@@ -599,10 +599,10 @@ msgstr ""
 "        <t t-if=\"documents\">\n"
 "            <br/>\n"
 "            <t t-if=\"len(documents)&gt;1\">\n"
-"                Här är några ytterligare dokument som kan vara av intresse:\n"
+"                Här är några ytterligare relevanta dokument:\n"
 "            </t>\n"
 "            <t t-else=\"\">\n"
-"                Här är ett ytterligare dokument som kan vara av intresse:\n"
+"                Här är ett ytterligare relevant dokument:\n"
 "            </t>\n"
 "            <ul style=\"margin-bottom: 0;\">\n"
 "                <t t-foreach=\"documents\" t-as=\"document\">\n"
@@ -615,7 +615,7 @@ msgstr ""
 "            </ul>\n"
 "        </t>\n"
 "        <br/>\n"
-"        Vänligen kontakta oss om du har några frågor.\n"
+"        Vänligen kontakta oss vid eventuella frågor eller funderingar.\n"
 "        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-mail-"
 "quote-container=\"1\">\n"
 "            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
@@ -632,7 +632,7 @@ msgstr ""
 "weight:bold;\">Produkter</span></td>\n"
 "                <td/>\n"
 "                <td width=\"15%\" align=\"center\"><span style=\"font-"
-"weight:bold;\">Mängd</span></td>\n"
+"weight:bold;\">Antal</span></td>\n"
 "                <td width=\"20%\" align=\"right\">\n"
 "                    <span style=\"font-weight:bold;\">\n"
 "                        <t t-if=\"hasattr(object, 'website_id') and "
@@ -799,8 +799,7 @@ msgstr ""
 "            <tr>\n"
 "                <td style=\"width: 60%\"/>\n"
 "                <td style=\"width: 30%; border-top: 1px solid #dee2e6;\" "
-"align=\"right\"><span style=\"font-weight:bold;\">Totalt belopp:</span></td>"
-"\n"
+"align=\"right\"><span style=\"font-weight:bold;\">Totalbelopp:</span></td>\n"
 "                <td style=\"width: 10%; border-top: 1px solid #dee2e6;\" "
 "align=\"right\" t-out=\"format_amount(object.amount_total, "
 "object.currency_id) or ''\">$10,00</td>\n"
@@ -1408,7 +1407,7 @@ msgstr "Aktiviteter för"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__activity_exception_decoration
 msgid "Activity Exception Decoration"
-msgstr "Undantagsaktiviteter dekoration"
+msgstr "Stilmarkeringar för undantagsaktiviteter"
 
 #. module: sale
 #: model:ir.ui.menu,name:sale.sale_menu_config_activity_plan
@@ -2067,7 +2066,7 @@ msgstr "Inställningar"
 #. module: sale
 #: model:ir.ui.menu,name:sale.menu_sale_config
 msgid "Configuration"
-msgstr "Konfiguration"
+msgstr "Inställningar"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.res_config_settings_view_form
@@ -3030,13 +3029,15 @@ msgstr "Ikon för att indikera en undantagsaktivitet."
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__message_needaction
 msgid "If checked, new messages require your attention."
-msgstr "Om ikryssad, så finns det nya meddelanden som kräver din uppmärksamhet."
+msgstr ""
+"Om rutan är markerad, så finns det nya meddelanden som kräver din "
+"uppmärksamhet."
 
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__message_has_error
 #: model:ir.model.fields,help:sale.field_sale_order__message_has_sms_error
 msgid "If checked, some messages have a delivery error."
-msgstr "Om ikryssad, så finns det meddelanden med leveransfel."
+msgstr "Om rutan är markerad, så har vissa meddelanden leveransfel."
 
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__journal_id
@@ -3620,7 +3621,7 @@ msgstr "Nästa aktivitetshändelse i kalendern"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__activity_date_deadline
 msgid "Next Activity Deadline"
-msgstr "Nästa tidsgräns för en aktivitet"
+msgstr "Tidsgräns för nästa aktivitet"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__activity_summary

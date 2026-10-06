@@ -83,7 +83,6 @@ export class PosOrder extends PosOrderAccounting {
                 inputTipAmount: "",
             },
             requiredPartnerDetails: {},
-            isReprinting: false,
         };
     }
 
@@ -603,7 +602,8 @@ export class PosOrder extends PosOrderAccounting {
     }
 
     getPartnerName() {
-        return this.partner_id ? this.partner_id.name : "";
+        // An address contact may have no name of its own.
+        return this.partner_id?.name || this.partner_id?.parent_name || "";
     }
 
     getCardHolderName() {
