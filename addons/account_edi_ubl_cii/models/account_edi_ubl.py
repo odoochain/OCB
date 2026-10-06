@@ -1,24 +1,31 @@
 import logging
 import re
-
 from collections import defaultdict
+
+from lxml import etree
 
 from odoo import Command, _, api, fields, models
 from odoo.fields import Domain
 from odoo.tools import formatLang, frozendict, html2plaintext, html_escape, unique
 from odoo.tools.partner_identifiers import get_tin_metadata_of_country
 
-from odoo.addons.base.models.res_partner_bank import sanitize_account_number
+from odoo.addons.account.tools import dict_to_xml
 from odoo.addons.account_edi_ubl_cii.models.account_edi_common import (
-    FloatFmt,
     GST_COUNTRY_CODES,
+    FloatFmt,
 )
-from odoo.addons.account_edi_ubl_cii.tools.ubl_20_optional_fields import PEPPOL_INVOICE_OPTIONAL_FIELDS, PEPPOL_INVOICE_OPTIONAL_LINE_FIELDS, PEPPOL_CREDIT_NOTE_OPTIONAL_FIELDS, PEPPOL_CREDIT_NOTE_OPTIONAL_LINE_FIELDS
-from odoo.addons.account_edi_ubl_cii.tools import Invoice, CreditNote, DebitNote
+from odoo.addons.account_edi_ubl_cii.tools import CreditNote, DebitNote, Invoice
 from odoo.addons.account_edi_ubl_cii.tools.partner_identifiers import (
     ISO_6523_ICD_CODELIST,
     normalize_vat_for_ubl,
 )
+from odoo.addons.account_edi_ubl_cii.tools.ubl_20_optional_fields import (
+    PEPPOL_CREDIT_NOTE_OPTIONAL_FIELDS,
+    PEPPOL_CREDIT_NOTE_OPTIONAL_LINE_FIELDS,
+    PEPPOL_INVOICE_OPTIONAL_FIELDS,
+    PEPPOL_INVOICE_OPTIONAL_LINE_FIELDS,
+)
+from odoo.addons.base.models.res_partner_bank import sanitize_account_number
 
 _logger = logging.getLogger(__name__)
 
@@ -631,7 +638,7 @@ class AccountEdiUBL(models.AbstractModel):
             'cbc:ChargeIndicator': {'_text': 'true' if is_charge else 'false'},
             'cbc:MultiplierFactorNumeric': {'_text': abs(percent)},
             'cbc:AllowanceChargeReasonCode': {'_text': 'ADK' if is_charge else '95'},
-            'cbc:AllowanceChargeReason': {'_text': _("Discount")},
+            'cbc:AllowanceChargeReason': {'_text': _("Charge") if is_charge else _("Discount")},
             'cbc:Amount': {
                 '_text': FloatFmt(abs(amount), max_dp=currency.decimal_places),
                 'currencyID': currency.name,
@@ -718,6 +725,17 @@ class AccountEdiUBL(models.AbstractModel):
             'currencyID': currency.name,
         }
 
+    def _ubl_add_line_period_nodes(self, vals):
+        nodes = vals['line_node']['cac:InvoicePeriod'] = []
+
+        if self._is_document(vals, 'invoice', 'credit_note', 'self_invoice', 'self_credit_note'):
+            base_line = vals['line_vals']['base_line']
+            if base_line.get('deferred_start_date') or base_line.get('deferred_end_date'):
+                nodes.append({
+                    'cbc:StartDate': {'_text': base_line['deferred_start_date']},
+                    'cbc:EndDate': {'_text': base_line['deferred_end_date']},
+                })
+
     def _ubl_add_line_pricing_reference_node(self, vals):
         vals['line_node']['cac:PricingReference'] = {}
 
@@ -800,6 +818,9 @@ class AccountEdiUBL(models.AbstractModel):
                 'cbc:ID': {'_text': tax_scheme_id},
             },
         })
+
+    def _need_party_tax_scheme_nodes(self, vals):
+        return True
 
     def _ubl_add_party_tax_scheme_nodes(self, vals):
         vals['party_node']['cac:PartyTaxScheme'] = []
@@ -1043,6 +1064,7 @@ class AccountEdiUBL(models.AbstractModel):
         self._ubl_add_line_invoiced_quantity_node(vals)
         self._ubl_add_line_allowance_charge_nodes(vals)
         self._ubl_add_line_extension_amount_node(vals)
+        self._ubl_add_line_period_nodes(vals)
         self._ubl_add_line_pricing_reference_node(vals)
         self._ubl_add_line_tax_totals_nodes(vals)
         self._ubl_add_line_item_node(vals)
@@ -1060,6 +1082,7 @@ class AccountEdiUBL(models.AbstractModel):
         self._ubl_add_line_credited_quantity_node(vals)
         self._ubl_add_line_allowance_charge_nodes(vals)
         self._ubl_add_line_extension_amount_node(vals)
+        self._ubl_add_line_period_nodes(vals)
         self._ubl_add_line_pricing_reference_node(vals)
         self._ubl_add_line_tax_totals_nodes(vals)
         self._ubl_add_line_item_node(vals)
@@ -1077,6 +1100,7 @@ class AccountEdiUBL(models.AbstractModel):
         self._ubl_add_line_debited_quantity_node(vals)
         self._ubl_add_line_allowance_charge_nodes(vals)
         self._ubl_add_line_extension_amount_node(vals)
+        self._ubl_add_line_period_nodes(vals)
         self._ubl_add_line_pricing_reference_node(vals)
         self._ubl_add_line_tax_totals_nodes(vals)
         self._ubl_add_line_item_node(vals)
@@ -1824,9 +1848,6 @@ class AccountEdiUBL(models.AbstractModel):
         self._ubl_add_legal_monetary_total_prepaid_payable_amount_node(sub_vals)
 
     def _fill_document_values_invoice(self, vals):
-        document_node = vals['document_node']
-        document_node['_template'] = Invoice
-        document_node['_nsmap'][None] = "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
         self._ubl_add_version_id_node(vals)
         self._ubl_add_customization_id_node(vals)
         self._ubl_add_profile_id_node(vals)
@@ -1851,9 +1872,6 @@ class AccountEdiUBL(models.AbstractModel):
         self._ubl_add_legal_monetary_total_node(vals)
 
     def _fill_document_values_credit_note(self, vals):
-        document_node = vals['document_node']
-        document_node['_template'] = CreditNote
-        document_node['_nsmap'][None] = "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2"
         self._ubl_add_version_id_node(vals)
         self._ubl_add_customization_id_node(vals)
         self._ubl_add_profile_id_node(vals)
@@ -1877,9 +1895,6 @@ class AccountEdiUBL(models.AbstractModel):
         self._ubl_add_legal_monetary_total_node(vals)
 
     def _fill_document_values_debit_note(self, vals):
-        document_node = vals['document_node']
-        document_node['_template'] = DebitNote
-        document_node['_nsmap'][None] = "urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2"
         self._ubl_add_version_id_node(vals)
         self._ubl_add_customization_id_node(vals)
         self._ubl_add_profile_id_node(vals)
@@ -1901,11 +1916,31 @@ class AccountEdiUBL(models.AbstractModel):
         self._ubl_add_tax_totals_nodes(vals)
         self._ubl_add_requested_monetary_total_node(vals)
 
+    def _fill_template_values(self, vals):
+        if self._is_document(vals, 'invoice', 'self_invoice'):
+            vals['document_node']['_template'] = Invoice
+        elif self._is_document(vals, 'credit_note', 'self_credit_note'):
+            vals['document_node']['_template'] = CreditNote
+        elif self._is_document(vals, 'debit_note'):
+            vals['document_node']['_template'] = DebitNote
+
+    def _fill_nsmap_values(self, vals):
+        nsmap = vals['document_node']['_nsmap']
+
+        if self._is_document(vals, 'invoice', 'self_invoice'):
+            nsmap[None] = "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+        elif self._is_document(vals, 'credit_note', 'self_credit_note'):
+            nsmap[None] = "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2"
+        elif self._is_document(vals, 'debit_note'):
+            nsmap[None] = "urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2"
+
+        nsmap['cac'] = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+        nsmap['cbc'] = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+        nsmap['ext'] = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+
     def _fill_document_values(self, vals):
-        document_node = vals['document_node']
-        document_node['_nsmap']['cac'] = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
-        document_node['_nsmap']['cbc'] = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
-        document_node['_nsmap']['ext'] = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+        self._fill_template_values(vals)
+        self._fill_nsmap_values(vals)
 
         if self._is_document(vals, 'invoice', 'self_invoice'):
             self._fill_document_values_invoice(vals)
@@ -1968,8 +2003,27 @@ class AccountEdiUBL(models.AbstractModel):
         return vals
 
     def _export_invoice(self, invoice):
+        """ Generates an UBL 2.1 xml for a given invoice, using the new dict_to_xml helpers. """
+
+        # 1. Validate the structure of the taxes
+        self._validate_taxes(invoice.invoice_line_ids.tax_ids)
+
+        # 2. Instantiate the XML builder
         vals = self._init_invoice_export_values(invoice)
-        return self._export_document(vals)
+        self._export_document(vals)
+
+        # 3. Run constraints
+        errors = [constraint for constraint in vals['constraints'].values() if constraint]
+
+        # 4. Render the XML
+        xml_content = dict_to_xml(
+            vals['document_node'],
+            nsmap=vals['document_node']['_nsmap'],
+            template=vals['document_node']['_template']
+        )
+
+        # 5. Format the XML
+        return etree.tostring(xml_content, xml_declaration=True, encoding='UTF-8'), set(errors)
 
     # -------------------------------------------------------------------------
     # IMPORT: INVOICE
@@ -2187,6 +2241,8 @@ class AccountEdiUBL(models.AbstractModel):
             percentage = subtotal_elem.findtext('.//{*}TaxCategory/{*}Percent')
             if percentage is None:
                 percentage = subtotal_elem.findtext('.//{*}Percent')
+            if collected_values['company'].vat_disabled and percentage is None and category_code == 'O':
+                percentage = 0
             if percentage is None:
                 continue
 
@@ -2590,9 +2646,26 @@ class AccountEdiUBL(models.AbstractModel):
     def _import_ubl_invoice_line_add_account_values(self, collected_values):
         collected_values['account_values'] = {}
 
+    def _import_ubl_invoice_line_add_deferred_dates(self, collected_values):
+        if not self.module_installed('account_accountant'):
+            return
+
+        line_tree = collected_values['line_tree']
+        start_date_str = line_tree.findtext('./{*}InvoicePeriod/{*}StartDate')
+        end_date_str = line_tree.findtext('./{*}InvoicePeriod/{*}EndDate')
+        if start_date_str and end_date_str:
+            to_write = collected_values['to_write']
+            if "deferred_start_date" in self.env["account.move.line"]._fields:
+                # only checking the existence of the first of the enterprise fields
+                to_write['deferred_start_date'] = fields.Date.from_string(start_date_str)
+                to_write['deferred_end_date'] = fields.Date.from_string(end_date_str)
+
     def _import_ubl_invoice_line_prepare_classified_tax_category_tax_values(self, collected_values, tax_category_tree):
         percentage = tax_category_tree.findtext('./{*}Percent')
         category_code = tax_category_tree.findtext('./{*}ID')
+
+        if collected_values['company'].vat_disabled and category_code == 'O' and percentage is None:
+            percentage = 0
 
         if percentage is None or category_code is None:
             return
@@ -2692,9 +2765,10 @@ class AccountEdiUBL(models.AbstractModel):
                 # Extract information about allowance / charges.
                 self._import_ubl_invoice_line_add_allowance_charges_values(line_collected_values)
 
-                # name / quantity / price_unit / discount
+                # name / quantity / price_unit / discount/ deferred_start_date / deferred_end_date
                 self._import_ubl_invoice_line_add_name(line_collected_values)
                 self._import_ubl_invoice_line_add_price_unit_quantity_discount(line_collected_values)
+                self._import_ubl_invoice_line_add_deferred_dates(line_collected_values)
 
                 # vehicle
 
@@ -2721,6 +2795,9 @@ class AccountEdiUBL(models.AbstractModel):
 
     def _import_ubl_invoice_retrieve_accounts(self, collected_values):
         self._import_invoice_retrieve_accounts(collected_values)
+
+    def _import_ubl_invoice_retrieve_analytic_distribution(self, collected_values):
+        self._import_invoice_retrieve_analytic_distribution(collected_values)
 
     def _import_ubl_invoice_retrieve_vehicles(self, collected_values):
         company = collected_values['company']
@@ -2925,6 +3002,7 @@ class AccountEdiUBL(models.AbstractModel):
         self._import_ubl_invoice_retrieve_products(collected_values)
         self._import_ubl_invoice_retrieve_product_uoms(collected_values)
         self._import_ubl_invoice_retrieve_accounts(collected_values)
+        self._import_ubl_invoice_retrieve_analytic_distribution(collected_values)
         self._import_ubl_invoice_retrieve_taxes(collected_values)
         self._import_ubl_invoice_retrieve_vehicles(collected_values)
         self._import_ubl_invoice_add_base_lines(collected_values)
