@@ -171,8 +171,14 @@ def check_all_manifests() -> list[str]:
 
 
 def check_conflict_markers() -> list[str]:
+    # Scoped to source and data files on purpose. Documentation legitimately
+    # quotes conflict markers to show what a resolution looked like, and this
+    # repository's own doc/dev notes do exactly that.
     result = subprocess.run(
-        ["git", "grep", "-I", "-l", "-E", CONFLICT_MARKERS, "HEAD", "--", "."],
+        [
+            "git", "grep", "-I", "-l", "-E", CONFLICT_MARKERS, "HEAD", "--",
+            "*.py", "*.js", "*.xml", "*.scss", "*.css", "*.csv", "*.json", "*.sql",
+        ],
         capture_output=True,
         text=True,
     )
