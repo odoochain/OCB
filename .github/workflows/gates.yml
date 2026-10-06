@@ -1,0 +1,247 @@
+# Gate jobs for the OCB-derived branches.
+#
+# Background: this fork tracks odoo/odoo master on `chain` and keeps `20.0` as a
+# reference baseline. Both carry a 35-file autonomous layer (5 packaging/identity
+# files plus 30 `auto_install` manifests). Upstream touches 30 of those files
+# regularly, and `sale_margin` has already conflicted in two separate PRs for the
+# same reason. The dangerous case is silent: resolve a conflict by taking the
+# upstream side and the `auto_install` policy flips back to `True` with no error.
+#
+# Jobs:
+#   A  static      - autonomous layer intact, manifests parse, no conflict markers
+#   B  build       - sdist, wheel, wheel-from-sdist, editable compat mode, clean tree
+#   C  base-install- install `base` against PostgreSQL 16
+#   D  module-tests - targeted tests for modules touched by sync/feature branches
+#
+# Cost note: the repository carries the full Odoo history, so checkout and any
+# upstream fetch are the slowest parts. Jobs A and D need history for diffing;
+# B and C use a shallow checkout.
+#
+# `20.0` needs this workflow file too if PRs targeting it should be gated.
+# This change lands on `chain`, so copy it to `20.0` when that is wanted.
+
+name: gates
+
+on:
+  pull_request:
+    branches: [chain, "20.0"]
+  push:
+    branches: [chain]
+  workflow_dispatch:
+
+concurrency:
+  group: gates-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------- A
+  static:
+    name: A - static gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch OCB baseline and PR base
+        run: |
+          git fetch --no-tags origin 20.0 || echo "::warning::origin/20.0 unavailable; packaging byte-comparison will be skipped"
+          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            git fetch --no-tags origin "${{ github.event.pull_request.base.sha }}" || true
+          fi
+
+      - name: Verify autonomous layer
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$BASE_SHA" ] && git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            python tools/verify_autonomous_layer.py \
+              --baseline-ref origin/20.0 \
+              --release-ref "$BASE_SHA"
+          else
+            python tools/verify_autonomous_layer.py --baseline-ref origin/20.0
+          fi
+
+  # ---------------------------------------------------------------- B
+  build:
+    name: B - build gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "setuptools>=64" build wheel
+
+      - name: Build sdist
+        run: python -m build --sdist --no-isolation --outdir dist-sdist
+
+      - name: Build wheel from the source tree
+        run: python -m build --wheel --no-isolation --outdir dist-wheel
+
+      - name: Build wheel from the generated sdist
+        # Exercises backend-path resolution. This is the one branch the
+        # source-tree wheel build never touches, and it only works if
+        # setup/pep517_odoo.py actually landed in the sdist.
+        run: |
+          mkdir -p sdist-extract
+          tar -xzf dist-sdist/odoo-*.tar.gz -C sdist-extract
+          cd sdist-extract/odoo-*/
+          python -m build --wheel --no-isolation --outdir "$GITHUB_WORKSPACE/dist-wheel-from-sdist"
+
+      - name: Assert on archives
+        run: |
+          python tools/check_packaging.py archives \
+            --sdist dist-sdist \
+            --wheel dist-wheel \
+            --wheel dist-wheel-from-sdist
+
+      - name: Editable install must use compat mode
+        run: |
+          python -m pip install -e . --no-build-isolation --no-deps
+          python tools/check_packaging.py editable
+
+      - name: Build must not dirty the working tree
+        # The backend symlinks ~655 addon directories into odoo/addons/ and
+        # unlinks them in a finally block. If that cleanup is interrupted the
+        # tree is left with hundreds of untracked entries and nobody notices.
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain)"
+
+  # ---------------------------------------------------------------- C
+  base-install:
+    name: C - install base on PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: odoo
+      PGPASSWORD: odoo
+      PYTHON_VERSION: "3.12"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Install base
+        run: python odoo-bin -d gates_base -i base --stop-after-init --without-demo=all
+
+  # ---------------------------------------------------------------- D
+  module-tests:
+    name: D - targeted module tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: [base-install]
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.head_ref, 'sync/') ||
+      startsWith(github.head_ref, 'feat/')
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: odoo
+      PGPASSWORD: odoo
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Derive modules touched by this change
+        id: mods
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "$BASE_SHA" ]; then
+            echo "modules=" >> "$GITHUB_OUTPUT"
+            echo "::notice::no base sha available; module tests skipped"
+            exit 0
+          fi
+          git fetch --no-tags origin "$BASE_SHA" --depth=1 || true
+          MODULES=$(git diff --name-only "$BASE_SHA"...HEAD -- 'addons/*' \
+            | cut -d/ -f2 | sort -u | paste -sd, -)
+          COUNT=$(echo "$MODULES" | awk -F, '{print NF}')
+          if [ "$COUNT" -gt "${{ vars.GATES_MAX_TEST_MODULES || 10 }}" ]; then
+            echo "modules=" >> "$GITHUB_OUTPUT"
+            echo "::notice::$COUNT modules touched, above the cap; skipping module tests"
+            exit 0
+          fi
+          echo "modules=$MODULES" >> "$GITHUB_OUTPUT"
+          echo "derived modules: $MODULES"
+
+      - name: Install and test derived modules
+        if: steps.mods.outputs.modules != ''
+        run: |
+          python odoo-bin -d gates_mods -i "${{ steps.mods.outputs.modules }}" \
+            --test-enable --stop-after-init --without-demo=all
