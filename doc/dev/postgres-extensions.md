@@ -19,9 +19,11 @@
 | 工具链 | MSYS2/MinGW64（`d:\programs\Scoop\apps\msys2\current`） |
 | 数据目录 | `D:/mydata/pgdata` |
 | 端口 | **5433**（避开 Scoop PG 的 5432） |
-| 已装扩展 | AGE 1.8.0、pgvector **0.8.6**、plpython3u（control 在，运行时缺失，见 §3） |
+| 已装扩展 | AGE 1.8.0、pgvector **0.8.6**、plpython3u、Jev 0.2.1（四者实测共存，见 §4.1） |
 
 判定方法：`SELECT version()` 中 `compiled by gcc-...` 为正确；`compiled by msvc-...` 说明误用了 Scoop PG。
+
+> 2026-10-07 补充：初稿曾判断 Jev 与本机 PG 18 存在硬冲突，且 `plpython3u` 因缺 Python 运行时不可用。两项**均已实测推翻**——补装 MinGW Python 后，Jev 在 PG 18.4 上可正常创建扩展。详见 §3。
 
 ---
 
@@ -66,40 +68,41 @@ SELECT extname, extversion FROM pg_extension WHERE extname = 'age';
 
 Jev 是纯 SQL + PL/Python 扩展，**不需要编译 C**，但依赖 `plpython3u`。
 
-### 3.1 版本冲突（硬）
+### 3.1 版本约束 — 实测为「验证范围」，非硬限制
 
 | 组件 | 版本要求 | 本机实测 | 结论 |
 |---|---|---|---|
 | AGE | PG 18.4（编译依赖） | PG 18.4 | 可用 |
-| Jev | README 明确 **PG 14–17**；`META.json` 声明 `PostgreSQL >= 14.0.0` | PG **18** | **超出官方支持上限** |
-| Odoo 20.1 | `MIN_PG_VERSION = 16`，无上限声明 | PG 18.4 | 满足下限，但 18 未被官方测试矩阵覆盖 |
+| Jev | README 写 **PG 14–17**；`META.json` 声明 `PostgreSQL >= 14.0.0` | PG **18** | **实测可安装，见下** |
+| Odoo 20.1 | `MIN_PG_VERSION = 16`，无上限声明 | PG 18.4 | 满足下限；18 不在官方测试矩阵 |
 
-`META.json` 只声明下限 14.0，没有上限；README 的 "14–17" 与 Dockerfile 的 `PG_MAJOR=16` 是实际验证过的范围。**PG 18 上 Jev 未经验证**。
+`META.json` 只声明下限 14.0，**没有上限**；README 的 "14–17" 与 Dockerfile 的 `PG_MAJOR=16` 是实际验证过的范围，不是硬性拦截。
 
-### 3.2 plpython3u 运行时缺失（硬）
+**2026-10-07 实测：`CREATE EXTENSION jev CASCADE` 在 PG 18.4 上成功**，`jev_version()` 返回 `0.2.1`，10 个函数全部注册，GUC 可设置。文档初稿判断「版本冲突（硬）」是**错的**，已更正。
 
-实测：
+仍需注意：PG 18 不在 Jev 官方验证范围内，**功能正确性未获官方保证**。若用于生产，应先用本地兼容服务跑一轮回归（`make installcheck` 可验证，且回归测试不调用真实 API）。
+
+### 3.2 plpython3u 运行时缺失 — **已修复（2026-10-07 实测）**
+
+诊断时的问题：
 
 ```
 $ ldd $(pg_config --pkglibdir)/plpython3.dll
     libpython3.14.dll => not found
-$ ls /mingw64/bin/libpython*                    -> 无
-$ pacman -Q | grep mingw-w64-x86_64-python      -> 未安装
 ```
 
-`plpython3u.control` 与 `plpython3--1.0.sql` 已就位，但 **MinGW 的 Python 运行时未安装**，因此 `CREATE EXTENSION plpython3u` 会因缺 `libpython3.14.dll` 失败。Jev 依赖它，故连带不可用。
+`plpython3u.control` 与 `plpython3--1.0.sql` 已就位，缺的是 MinGW Python 运行时。Jev 依赖它，故连带不可用。
 
-### 3.3 修复 Jev 的最小路径
-
-Jev 只用 Python 标准库（`json`、`threading`、`ssl`、`http.client`、`concurrent.futures`、`urllib.parse`），**无需任何 pip 包**，只需补 Python 运行时：
+**已修复**。Jev 只用 Python 标准库（`json`、`threading`、`ssl`、`http.client`、`concurrent.futures`、`urllib.parse`），无需任何 pip 包，只需补运行时：
 
 ```bash
 # MSYS2 bash 中；需 ABI 匹配的 MinGW Python，不是 MSYS2 usr 的 python，也不是 Scoop 的
-pacman -S mingw-w64-x86_64-python          # 实测仓库可获取，3.14.5-1
-ldd $(pg_config --pkglibdir)/plpython3.dll # 确认 libpython3.14.dll 已解析
+pacman -S mingw-w64-x86_64-python          # 实测装到 3.14.5-1
 ```
 
-然后：
+修复后实测：`libpython3.14.dll => /mingw64/bin/libpython3.14.dll`，`ldd` 中 `not found` 归零。
+
+### 3.3 安装与验证 — **已实测通过**
 
 ```bash
 cd /d/dev/pg-jev
@@ -110,7 +113,21 @@ make install PG_CONFIG=/mingw64/bin/pg_config
 CREATE EXTENSION jev CASCADE;   -- CASCADE 自动创建 plpython3u；需超级用户
 ```
 
+2026-10-07 在 **PostgreSQL 18.4** 上的实测结果：
+
+| 检查项 | 结果 |
+|---|---|
+| `CREATE EXTENSION plpython3u` | 成功 |
+| PL/Python 实际调用 | 返回 `3.14.5 (main, May 12 2026) [MINGW GCC 16.1.0 64 bit]` |
+| Jev 所需全部标准库导入 | 成功 |
+| `CREATE EXTENSION jev CASCADE` | **成功**（PG 18 上可用） |
+| `jev_version()` | `0.2.1` |
+| Jev 函数注册数 | 10 个（`jev`、`jev_prob`、`jev_score`、`jev_choice`、`jev_confidence`、`jev_eval`、`jev_score_norm`、`jev_stats`、`jev_cache_clear`、`jev_version`） |
+| GUC 可设置 | `SET jev.api_url` / `SET jev.threshold` 均生效 |
+
 `plpython3u` 是 untrusted 语言：只有超级用户能创建扩展，且函数以服务器 OS 权限运行。
+
+**尚未验证**：实际调用 `jev()` 需要联网访问 TypeSafe API 且需 API key，本次未配置，故**端到端语义判断未实测**。本地可用 stuntd 之类的兼容服务（`SET jev.api_url = 'http://127.0.0.1:8787/v1/systemone'`）避免外发数据与计费。
 
 ### 3.4 API key 与合规
 
@@ -127,23 +144,66 @@ ALTER ROLE odoo SET jev.api_key = 'your-key';
 
 ## 4. 三者共存方案
 
-### 4.1 推荐：单实例（PG 18.4 + AGE + pgvector），Jev 待验证
+### 4.1 推荐：单实例（PG 18.4 + AGE + pgvector + Jev）— 已实测共存
+
+2026-10-07 在同一个数据库内实测，四个扩展**全部加载成功**且各自可用：
+
+```
+ extname   | extversion
+-----------+------------
+ age       | 1.8.0
+ jev       | 0.2.1
+ plpython3u| 1.0
+ vector    | 0.8.6
+```
 
 | 组件 | 状态 |
 |---|---|
-| AGE 1.8.0 | 已装可用 |
-| pgvector 0.8.6 | 已装可用 |
-| Jev | 需先补 MinGW Python，且 PG 18 未验证 |
+| AGE 1.8.0 | 可用（建图、Cypher 增删改查、删图均实测通过） |
+| pgvector 0.8.6 | 可用（`vector(3)` 与距离运算符实测通过） |
+| Jev 0.2.1 | 扩展与函数可用；端到端 `jev()` 调用待 API key |
 
-前置条件：
+安装顺序（均指向同一个 `pg_config`）：
 
-1. 安装 `mingw-w64-x86_64-python`，确认 `libpython3.14.dll` 可解析
-2. `make install` Jev 到同一个 `pg_config`（`/mingw64/bin/pg_config`）
-3. 先在**测试库**验证，不要直接上生产库
+1. `pacman -S mingw-w64-x86_64-python`（补 `plpython3u` 运行时）
+2. AGE 按 §2 编译安装
+3. `cd /d/dev/pg-jev && make install PG_CONFIG=/mingw64/bin/pg_config`
+4. 在**测试库**上先验证，不要直接上生产库
 
-### 4.2 备选：双实例隔离
+### 4.2 关键坑：`search_path` 必须包含 `ag_catalog`
 
-若 PG 18 上 Jev 不可用，或不想让 untrusted 的 `plpython3u` 与图数据库共处一个实例：
+这是本次实测踩到的、且与 Jev 无关的问题。不设 `search_path` 时：
+
+```
+ERROR:  operator class "graphid_ops" does not exist for access method "btree"
+STATEMENT:  SELECT ag_catalog.create_graph('...');
+```
+
+**根因**：`graphid_ops` 确实存在，但位于 `ag_catalog` schema：
+
+```
+  nspname   |     opcname      | amname
+------------+------------------+--------
+ ag_catalog | graphid_ops      | btree
+ ag_catalog | graphid_ops_hash | hash
+```
+
+而会话 `search_path` 默认只有 `"$user", public`，不含 `ag_catalog`，AGE 内部建表时找不到自己的操作符类。
+
+**修法**（AGE 的固有用法要求）：
+
+```sql
+SET search_path = ag_catalog, "$user", public;
+SELECT ag_catalog.create_graph('my_graph');
+```
+
+修正后实测：建图成功、`cypher()` 写入与查询成功、`drop_graph()` 成功。
+
+**排查要点**：这个报错容易被误读为「AGE 装坏了」或「PG 18 不兼容」。实际只是 `search_path` 设置问题。若从应用连接（如 Odoo），需在连接参数或会话初始化时设置 `search_path`，而不是只在 `psql` 里设。
+
+### 4.3 备选：双实例隔离
+
+若不想让 untrusted 的 `plpython3u` 与图数据库共处一个实例：
 
 | 实例 | 端口 | 内容 | 用途 |
 |---|---|---|---|
@@ -152,11 +212,11 @@ ALTER ROLE odoo SET jev.api_key = 'your-key';
 
 代价：跨实例无法直接 JOIN，需在应用层搬运数据。
 
-### 4.3 不推荐
+### 4.4 不推荐
 
 - 把 MinGW 编译的 `age.dll` 装到 Scoop 的 MSVC PostgreSQL —— ABI 不匹配，必然失败
 - 用 Git for Windows 的 bash 启动服务 —— 其 `/mingw64/bin` 下无 PostgreSQL，PATH 回退会误用 Scoop PG；始终用 `start_msys_pg.bat`
-- 未验证就把 Jev 装进 Odoo 生产库 —— untrusted PL/Python 风险叠加 PG 18 未验证
+- 未跑回归就把 Jev 装进 Odoo 生产库 —— `plpython3u` 是 untrusted 语言，且 PG 18 不在 Jev 官方验证范围
 ---
 
 ## 5. 与 Odoo 的衔接
@@ -185,22 +245,52 @@ postgresql://odoo:odoo@localhost:5433/postgres
 
 ---
 
-## 6. 待办
+## 6. 故障排查补充：实例崩溃与恢复
 
-- [ ] 安装 `mingw-w64-x86_64-python`，确认 `libpython3.14.dll` 可解析
-- [ ] 在测试库验证 `CREATE EXTENSION plpython3u`
-- [ ] 在测试库验证 `CREATE EXTENSION jev CASCADE` 于 PG 18.4 是否可用
-- [ ] 若 PG 18 不可用，决定采用 §4.2 双实例还是等待 Jev 支持 18
+2026-10-07 实测期间遇到一次实例崩溃，日志：
+
+```
+LOG:  autovacuum worker (PID 6128) was terminated by exception 0xC0000142
+LOG:  terminating any other active server processes
+LOG:  all server processes terminated; reinitializing
+```
+
+`0xC0000142` 是 Windows 的 `STATUS_DLL_INIT_FAILED`（DLL 初始化失败）。发生在**刚安装 MinGW Python 之后、加载 `plpython3u` 的会话期间**，高度怀疑与 autovacuum 子进程加载 Python 运行时有关。
+
+**处置**（实测有效）：
+
+```bash
+pg_ctl -D D:/mydata/pgdata stop -m fast
+pg_ctl -D D:/mydata/pgdata -o "-p 5433" -l D:/mydata/pgdata/logfile start
+```
+
+实例自动完成 WAL 恢复并重新接受连接，数据未丢失。
+
+**遗留风险（未定位根因）**：本次崩溃只出现一次，重启后未复现，**没有确认它就是 `plpython3u` 引起的**。若后续频繁出现，需排查 autovacuum 与 PL/Python 的交互，或考虑 §4.3 的双实例隔离。
+
+另一个小坑：崩溃后 `pg_ctl` 可能因日志文件被占用报 `could not open log file ... Permission denied`，此时先 `stop -m fast` 再启动即可。
+
+---
+
+## 7. 待办
+
+- [x] 安装 `mingw-w64-x86_64-python`，确认 `libpython3.14.dll` 可解析（2026-10-07 完成）
+- [x] 在测试库验证 `CREATE EXTENSION plpython3u`（通过）
+- [x] 在测试库验证 `CREATE EXTENSION jev CASCADE` 于 PG 18.4（**通过**，推翻初稿的版本冲突判断）
+- [ ] 配置 API key 或本地兼容服务，端到端验证 `jev()` 实际调用
+- [ ] 用 `make installcheck` 跑 Jev 回归（不调用真实 API），确认 PG 18 上功能正确
+- [ ] 观察实例是否再次崩溃，确认 `0xC0000142` 是否与 `plpython3u` 相关
+- [ ] 应用侧接入 AGE 时，确保会话 `search_path` 含 `ag_catalog`（见 §4.2）
 - [ ] 更新旧部署指南：pgvector 实际为 **0.8.6**，文档写的 0.8.2 已过时
 - [ ] 更新旧部署指南中的源码路径：AGE 现位于 `d:\odoochain\age-source`，非 `d:\dev\lawgraph\age-source`
 - [ ] 评估 PG 18.4 + Odoo 20.1 这一未验证组合的回归范围
 
 ---
 
-## 7. 参考
+## 8. 参考
 
 - `d:\odoochain\age-source\BUILD_WINDOWS.md` — AGE 1.8.0 Windows/MinGW 完整编译指南
-- `d:\odoochain\age-source\PostgreSQL-AGE-pgvector安装部署指南.md` — 服务管理、用户创建、故障排查（**部分内容已过时**，见 §6）
+- `d:\odoochain\age-source\PostgreSQL-AGE-pgvector安装部署指南.md` — 服务管理、用户创建、故障排查（**部分内容已过时**，见 §7）
 - `d:\dev\pg-jev\README.md` — Jev 安装、函数、GUC 与注意事项
 
-*本文档所有"实测"结论均来自 2026-10-07 在本机执行的命令输出。*
+*本文档所有"实测"结论均来自 2026-10-07 在本机执行的命令输出。初稿对 Jev 的「PG 18 版本冲突（硬）」判断已被实测推翻并更正。*
