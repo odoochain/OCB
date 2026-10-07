@@ -19,7 +19,9 @@
 | 工具链 | MSYS2/MinGW64（`d:\programs\Scoop\apps\msys2\current`） |
 | 数据目录 | `D:/mydata/pgdata` |
 | 端口 | **5433**（避开 Scoop PG 的 5432） |
-| 已装扩展 | AGE 1.8.0、pgvector **0.8.6**、plpython3u、Jev 0.2.1（四者实测共存，见 §4.1） |
+| 已装扩展 | AGE **1.8.0**、pgvector **0.8.7**、plpython3u 1.0、Jev **0.2.1**（四者实测共存，见 §4.1） |
+
+> 版本以 `$(pg_config --sharedir)/extension/<name>.control` 的 `default_version` 为准，不要以具体数据库里 `pg_extension` 的记录为准——**已建库不会自动升级扩展版本**。实测 `postgres` 库里 AGE 仍是 1.7.0，而共享目录已是 1.8.0。
 
 判定方法：`SELECT version()` 中 `compiled by gcc-...` 为正确；`compiled by msvc-...` 说明误用了 Scoop PG。
 
@@ -127,7 +129,34 @@ CREATE EXTENSION jev CASCADE;   -- CASCADE 自动创建 plpython3u；需超级�
 
 `plpython3u` 是 untrusted 语言：只有超级用户能创建扩展，且函数以服务器 OS 权限运行。
 
-**尚未验证**：实际调用 `jev()` 需要联网访问 TypeSafe API 且需 API key，本次未配置，故**端到端语义判断未实测**。本地可用 stuntd 之类的兼容服务（`SET jev.api_url = 'http://127.0.0.1:8787/v1/systemone'`）避免外发数据与计费。
+### 3.4 回归测试 — 已通过（2026-10-07）
+
+用仓库自带的 mock API（不调用真实 API、无需 key）跑完 `pg_regress`：
+
+```bash
+# 需先装 GNU diff，否则 pg_regress 报 "diff command not found"
+pacman -S diffutils
+
+python test/mock_api.py &                      # 监听 127.0.0.1:8765
+PGPORT=5433 make installcheck PG_CONFIG=/mingw64/bin/pg_config
+```
+
+```
+ok 1 - 01_basic       265 ms
+ok 2 - 02_errors      237 ms
+ok 3 - 03_streaming   830 ms
+ok 4 - 04_local       252 ms
+# All 4 tests passed.
+```
+
+**4/4 通过**，即 Jev 在 PG 18.4 上功能正确，不只是「能装上」。
+
+两个前提（都踩过）：
+
+- 必须有 GNU `diff`，MSYS2 默认不带，需 `pacman -S diffutils`
+- 实例在 5433 而非默认 5432，必须显式 `PGPORT=5433`，否则 `pg_regress` 连错端口
+
+**端到端 `jev()` 调用仍未实测**（需真实 API key 与联网）。本地可用 stuntd 之类的兼容服务（`SET jev.api_url = 'http://127.0.0.1:8787/v1/systemone'`）避免外发数据与计费。
 
 ### 3.4 API key 与合规
 
@@ -154,14 +183,14 @@ ALTER ROLE odoo SET jev.api_key = 'your-key';
  age       | 1.8.0
  jev       | 0.2.1
  plpython3u| 1.0
- vector    | 0.8.6
+ vector    | 0.8.7
 ```
 
 | 组件 | 状态 |
 |---|---|
 | AGE 1.8.0 | 可用（建图、Cypher 增删改查、删图均实测通过） |
-| pgvector 0.8.6 | 可用（`vector(3)` 与距离运算符实测通过） |
-| Jev 0.2.1 | 扩展与函数可用；端到端 `jev()` 调用待 API key |
+| pgvector 0.8.7 | 可用（`vector(3)` 与距离运算符实测通过） |
+| Jev 0.2.1 | **回归 4/4 通过**；端到端 `jev()` 调用待 API key |
 
 安装顺序（均指向同一个 `pg_config`）：
 
@@ -266,7 +295,13 @@ pg_ctl -D D:/mydata/pgdata -o "-p 5433" -l D:/mydata/pgdata/logfile start
 
 实例自动完成 WAL 恢复并重新接受连接，数据未丢失。
 
-**遗留风险（未定位根因）**：本次崩溃只出现一次，重启后未复现，**没有确认它就是 `plpython3u` 引起的**。若后续频繁出现，需排查 autovacuum 与 PL/Python 的交互，或考虑 §4.3 的双实例隔离。
+**风险等级已上调（2026-10-07 后续）**：该崩溃**已复现第二次**（07:57，在跑 `make installcheck` 期间）。两次均与 `plpython3u` 相关的时间窗吻合，但**仍未确认因果**——也可能是 MINWG 环境下 autovacuum 加载 DLL 的独立问题。
+
+复现后实例仍可通过同样的 `stop -m fast` + `start` 恢复，数据未丢失。但**在定位前，不要让依赖 `plpython3u` 的扩展（Jev）与业务关键库共用实例**。建议：
+
+- 优先采用 §4.3 的双实例隔离，把 Jev 放到独立实例
+- 或在定位根因前，仅在需要时临时 `CREATE EXTENSION plpython3u`，用完 `DROP`
+- 排查方向：`shared_preload_libraries` 未预加载 Python 时，后台进程（autovacuum）首次加载 `plpython3.dll` 的 DLL 初始化路径
 
 另一个小坑：崩溃后 `pg_ctl` 可能因日志文件被占用报 `could not open log file ... Permission denied`，此时先 `stop -m fast` 再启动即可。
 
@@ -277,11 +312,12 @@ pg_ctl -D D:/mydata/pgdata -o "-p 5433" -l D:/mydata/pgdata/logfile start
 - [x] 安装 `mingw-w64-x86_64-python`，确认 `libpython3.14.dll` 可解析（2026-10-07 完成）
 - [x] 在测试库验证 `CREATE EXTENSION plpython3u`（通过）
 - [x] 在测试库验证 `CREATE EXTENSION jev CASCADE` 于 PG 18.4（**通过**，推翻初稿的版本冲突判断）
+- [x] 用 `make installcheck` 跑 Jev 回归（**4/4 通过**）
 - [ ] 配置 API key 或本地兼容服务，端到端验证 `jev()` 实际调用
-- [ ] 用 `make installcheck` 跑 Jev 回归（不调用真实 API），确认 PG 18 上功能正确
-- [ ] 观察实例是否再次崩溃，确认 `0xC0000142` 是否与 `plpython3u` 相关
+- [ ] **定位 `0xC0000142` 崩溃根因**（已复现 2 次，定位前勿让 Jev 与关键库共用实例）
 - [ ] 应用侧接入 AGE 时，确保会话 `search_path` 含 `ag_catalog`（见 §4.2）
-- [ ] 更新旧部署指南：pgvector 实际为 **0.8.6**，文档写的 0.8.2 已过时
+- [ ] 升级 `postgres` 库中的旧扩展：AGE 仍在 1.7.0（共享目录已 1.8.0），需 `ALTER EXTENSION age UPDATE`
+- [ ] 更新旧部署指南：pgvector 实际为 **0.8.7**，文档写的 0.8.2 已过时
 - [ ] 更新旧部署指南中的源码路径：AGE 现位于 `d:\odoochain\age-source`，非 `d:\dev\lawgraph\age-source`
 - [ ] 评估 PG 18.4 + Odoo 20.1 这一未验证组合的回归范围
 
