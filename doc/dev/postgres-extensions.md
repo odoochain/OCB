@@ -284,26 +284,94 @@ LOG:  terminating any other active server processes
 LOG:  all server processes terminated; reinitializing
 ```
 
-`0xC0000142` 是 Windows 的 `STATUS_DLL_INIT_FAILED`（DLL 初始化失败）。发生在**刚安装 MinGW Python 之后、加载 `plpython3u` 的会话期间**，高度怀疑与 autovacuum 子进程加载 Python 运行时有关。
+`0xC0000142` 是 Windows 的 `STATUS_DLL_INIT_FAILED`（DLL 初始化失败）。它不能单独指出故障 DLL，也不能证明 autovacuum 加载了 Python。仅安装扩展文件或在某数据库创建 `plpython3u`，不会自动使每个后台进程调用 PL/Python。
 
-**处置**（实测有效）：
+### 6.1 完整日志复查：不止两次，且不限于 autovacuum
 
-```bash
-pg_ctl -D D:/mydata/pgdata stop -m fast
-pg_ctl -D D:/mydata/pgdata -o "-p 5433" -l D:/mydata/pgdata/logfile start
-```
+2026-10-07 复查 `D:/mydata/pgdata/logfile`，至少发现以下五次异常（本机 CST）：
 
-实例自动完成 WAL 恢复并重新接受连接，数据未丢失。
+| 时间 | 后端类型 |
+|---|---|
+| 06:37:28 | autovacuum worker |
+| 06:43:24 | client backend |
+| 07:25:16 | autovacuum worker |
+| 07:57:09 | autovacuum worker |
+| 09:51:16 | autovacuum worker |
 
-**风险等级已上调（2026-10-07 后续）**：该崩溃**已复现第二次**（07:57，在跑 `make installcheck` 期间）。两次均与 `plpython3u` 相关的时间窗吻合，但**仍未确认因果**——也可能是 MINWG 环境下 autovacuum 加载 DLL 的独立问题。
+本轮在约 09:55 只读探测原 5433 实例时，主进程 PID 44000 仍在，但连接被服务端关闭。这是实验开始前已存在的不可用状态。本轮未改动、重启或升级该实例及其扩展。
 
-复现后实例仍可通过同样的 `stop -m fast` + `start` 恢复，数据未丢失。但**在定位前，不要让依赖 `plpython3u` 的扩展（Jev）与业务关键库共用实例**。建议：
+历史上停止后启动曾恢复连接并执行 WAL 恢复，但**没有做业务数据完整性核对，不能声称已证明无数据丢失**。恢复操作应在业务维护窗口、确认数据目录与进程归属后执行；不能重复 `start` 或强杀所有同名进程。日志 sharing violation、DLL 依赖和进程环境需要分别排查。
 
-- 优先采用 §4.3 的双实例隔离，把 Jev 放到独立实例
-- 或在定位根因前，仅在需要时临时 `CREATE EXTENSION plpython3u`，用完 `DROP`
-- 排查方向：`shared_preload_libraries` 未预加载 Python 时，后台进程（autovacuum）首次加载 `plpython3.dll` 的 DLL 初始化路径
+### 6.1.1 该实例已卡在崩溃恢复阶段（2026-10-07 10:29 实测）
 
-另一个小坑：崩溃后 `pg_ctl` 可能因日志文件被占用报 `could not open log file ... Permission denied`，此时先 `stop -m fast` 再启动即可。
+| 观测项 | 结果 |
+|---|---|
+| 日志最后一行 | `09:51:16 ... all server processes terminated; reinitializing`，**之后无任何记录** |
+| 10:29 时 PID 44000 | 仍存活，仍 `LISTENING` 于 `127.0.0.1:5433` |
+| `postmaster.pid` | 存在，内容指向 `D:/mydata/pgdata`、端口 5433 |
+| 新建连接 | 立即 `server closed the connection unexpectedly` |
+
+即该实例自 09:51 起已**卡住约 38 分钟**：postmaster 存活且持有监听套接字，但无法产出可用后端，也不再写日志。这与 `0xC0000142` 的语义一致——子进程在 DLL 初始化阶段即失败，尚未进入能记录日志的阶段。
+
+### 6.1.2 已排除的三个假设
+
+| 假设 | 排除依据 |
+|---|---|
+| 主进程与子进程二进制不一致（`msys2\2026-06-11\…` 对 `msys2\current\…`） | `current` 是指向 `2026-06-11` 的 Junction，物理同一安装，路径差异仅为显示形式 |
+| 两个 postmaster 争用同一数据目录 | PID 44000 用 `D:/mydata/pgdata:5433`；PID 25456 用 `D:/dev/_jevtest/pgdata:5599`。互不相关，后者非本轮创建 |
+| 系统级进程创建已失效 | 10:29 手工执行 `postgres --version`、`psql --version` 均 `exit=0`，新进程可正常启动并完成 DLL 初始化 |
+
+**同时修正一处早期推断**：注册表 `SharedSection=1024,20480,768` 的第三个值 768 KB 属**非交互式**桌面堆。实测两个 postmaster 均位于**交互会话 1**（`SessionId=1`，所有者 `mirroam`，系统中无 postgres 服务），因此适用的是第二个值 20480 KB，不是 768 KB。桌面堆耗尽仍是 `0xC0000142` 的常见成因之一，但以上数据不足以证实，不应作为结论。
+
+Windows 应用日志在故障时段**没有** postgres 相关记录。这与 `0xC0000142` 的性质相符：失败发生在进程初始化阶段，通常不生成 WER 报告，因此「事件日志无记录」不能用来排除任何假设。
+
+### 6.1.3 卡死主进程的模块清单：未加载 PL/Python
+
+趁 PID 44000 现场尚存（重启后不可再得），采集其已加载模块，保存于 `D:/odoochain/pg44000-modules-20261007.txt`：
+
+| 观测项 | 结果 |
+|---|---|
+| 模块总数 | 47 |
+| 匹配 `python` / `plpython` 的模块 | **0** |
+| 匹配 `age` / `vector` 的模块 | **0** |
+| 非系统模块 | 仅 `postgres.exe` 与 MinGW 运行时（`libwinpthread-1`、`libintl-8`、`libiconv-2`、`libcrypto-3-x64`、`liblz4`、`libicuin78`、`libicuuc78`、`libssl-3-x64`、`libxml2-16`、`zlib1`、`libzstd`、`libgcc_s_seh-1`、`libstdc++-6` 等） |
+
+**这显著削弱了把崩溃归因于 PL/Python 的假设。** postmaster 自身从未加载 `libpython3.14.dll` 或 `plpython3.dll`，与 §6.2 中 `postgres.exe` 不直接导入 Python 的静态依赖结论一致。
+
+仍需保留的可能性：`0xC0000142` 发生在**子进程**初始化阶段，子进程的模块集与 postmaster 不同。但 09:51 失败的是 autovacuum worker，而 autovacuum **不执行用户自定义 PL/Python 函数**，因此它没有加载 Python 的常规理由。结合 06:43 那次失败的是普通 client backend，**当前证据更支持「与扩展无关的进程初始化故障」，而非 PL/Python 引起**。
+
+### 6.2 `shared_preload_libraries=plpython3` 隔离对照（2026-10-07）
+
+使用相同 MinGW PostgreSQL 18.4 安装，另建 UTF8 / C locale 的临时集群，监听 `127.0.0.1:55433`，测试角色 `gate_probe`，回归库 `jev_preload_probe`。不复制业务数据、不向共享安装目录安装文件；原 5433 实例不参与测试。两轮只改变预加载启动参数，均开启 autovacuum，`autovacuum_naptime=5s`。
+
+| 项目 | 不预加载 | 预加载 `plpython3` |
+|---|---|---|
+| 观察窗口（本机 CST） | 09:59:51–10:08:13 | 10:09:19–10:13:39 |
+| Jev 原始 `make installcheck` | 4/4 通过 | 4/4 通过 |
+| 新连接实际调用 `jev_stats()` / `jev_version()` | 40/40 通过，4 路并发 | 40/40 通过，4 路并发 |
+| 普通测试表自动清理 | `autovacuum_count=1`，死元组 0 | 计数增为 2，死元组 0 |
+| `0xC0000142` / 重初始化日志 | 未出现 | 未出现 |
+
+回归使用仓库自带的本地 mock API（127.0.0.1:8765），未配置真实 API key。连接测试中的 `jev_stats()` 会实际执行 PL/Python；`jev_version()` 单独成功不能替代这个验证。自动清理表位于仅有 `plpgsql` 的隔离 `postgres` 库；Jev 位于单独的回归库。
+
+**结论：两组都通过，未建立预加载与故障之间的因果关系。不能宣称预加载已修复，也不能排除长时间运行、资源耗尽、启动环境或原集群特有条件。** 两组观察时间短且不等长，不作性能或长期稳定性比较。测试实例已正常停止，预加载只通过其启动参数设置，未写入业务配置。
+
+PostgreSQL 官方说明：Windows 上每个新服务端进程仍重新加载预加载库；这不是“加载一次后所有进程共用”的修复机制。参见 [PostgreSQL 18：shared_preload_libraries](https://www.postgresql.org/docs/18/runtime-config-client.html#GUC-SHARED-PRELOAD-LIBRARIES)。静态依赖检查也显示 `postgres.exe` 不直接导入 `libpython3.14.dll`，而 `plpython3.dll` 导入它；这不排除动态加载，但不能据此指认故障模块。
+
+### 6.3 下一步取证与边界
+
+已排除项见 §6.1.2，不必重复验证。剩余方向按优先级：
+
+1. **卡死实例的在线取证**（仅此实例还保留现场）。在决定重启前，可对 PID 44000 采集进程转储与加载模块列表，对比隔离实例的模块集差异。一旦重启，现场即丢失。
+2. **区分「崩溃触发」与「恢复卡死」两个问题**。09:51 的崩溃是触发，38 分钟不恢复是另一个故障——postmaster 存活却不产出后端、不写日志。后者可能与崩溃原因无关，需分别定位。
+3. **长时间与高并发对照**。本轮两组各仅数分钟，远短于业务实例从 06:11 运行到 09:51 的时长。崩溃均发生在长时间运行后，需延长观察窗口并提高连接频度才有可比性。
+4. **桌面堆与会话配额**：已确认适用交互式配额 20480 KB（§6.1.2）。若要进一步验证，应在故障时段采集会话内桌面堆使用量，而非仅读注册表。
+
+边界与禁止项：
+
+- 恢复该 5433 实例涉及业务数据，**需用户确认维护窗口后再执行**；本轮未重启、未改配置、未升级扩展。
+- 不要把「临时 CREATE/DROP PL/Python」当作防崩溃方案，也不要用关闭 autovacuum 或直接给业务实例加预加载来掩盖问题。
+- 配置 WER 转储或附加调试器会改动系统设置，需单独确认后再做；本轮未改注册表、未附加调试器。
 
 ---
 
@@ -313,8 +381,9 @@ pg_ctl -D D:/mydata/pgdata -o "-p 5433" -l D:/mydata/pgdata/logfile start
 - [x] 在测试库验证 `CREATE EXTENSION plpython3u`（通过）
 - [x] 在测试库验证 `CREATE EXTENSION jev CASCADE` 于 PG 18.4（**通过**，推翻初稿的版本冲突判断）
 - [x] 用 `make installcheck` 跑 Jev 回归（**4/4 通过**）
-- [ ] 配置 API key 或本地兼容服务，端到端验证 `jev()` 实际调用
-- [ ] **定位 `0xC0000142` 崩溃根因**（已复现 2 次，定位前勿让 Jev 与关键库共用实例）
+- [x] 独立端口 55433 完成预加载/不预加载对照（各 4/4 回归、40 次新会话、实际 autovacuum；均未复现崩溃，不能判定修复）
+- [ ] 验证真实 Jev 服务的模型输出、权限与数据外发策略（本地 mock 的 SQL→HTTP→响应流程已通过，不代表真实模型质量）
+- [ ] **定位 `0xC0000142` 崩溃根因**（原实例日志至少五次；继续隔离实验并采集故障模块/转储证据）
 - [ ] 应用侧接入 AGE 时，确保会话 `search_path` 含 `ag_catalog`（见 §4.2）
 - [ ] 升级 `postgres` 库中的旧扩展：AGE 仍在 1.7.0（共享目录已 1.8.0），需 `ALTER EXTENSION age UPDATE`
 - [ ] 更新旧部署指南：pgvector 实际为 **0.8.7**，文档写的 0.8.2 已过时
