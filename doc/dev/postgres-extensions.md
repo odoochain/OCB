@@ -480,6 +480,41 @@ Stop-Service pgsql-5433
 
 注意：服务默认以 `LOCAL SERVICE` 运行，需确认其对 `D:/mydata/pgdata` 有读写权限，或用 `-U` / `-P` 指定账号。
 
+### 6.5 转储分析方法（可复用）
+
+```powershell
+winget install --id Microsoft.WinDbg --exact
+# cdb.exe 位于 C:/Program Files/WindowsApps/Microsoft.WinDbg_*/amd64/
+
+& "<上述路径>/cdb.exe" -z <dump.dmp> `
+    -y 'srv*D:\odoochain\windbg-symbols*https://msdl.microsoft.com/download/symbols' `
+    -logo analysis.txt `
+    -c '.reload /f ntdll.dll; !analyze -hang -v; ~* kb; lm; q'
+```
+
+两个会浪费时间的坑：
+
+1. **符号路径必须用反斜杠**。写成 `srv*D:/odoochain/...` 会报 `is not a valid store`，随后 `!analyze` 只能输出 `WRONG_SYMBOLS` 噪声，看不到真实栈。
+2. **手工 procdump 快照要用 `!analyze -hang`**，不是默认的异常分析。快照本身不含异常记录，默认模式会把断点指令当成"异常"，给出误导性的 `BUGCHECK_CODE`。
+
+### 6.6 证据归档与清理
+
+保留（共约 119 MB）：
+
+| 文件 | 内容 |
+|---|---|
+| `D:/odoochain/pg-crash-evidence-20261007-1451.zip` | PID 44000 转储 + 模块清单 + 线程快照 + 预加载对照日志 |
+| `D:/odoochain/pg-crash-evidence-20261007-1553.zip` | PID 43516 转储 + 模块清单 |
+| `D:/odoochain/pg-crash-evidence-20261007-1757.zip` | PID 37496 转储 + 模块清单 |
+
+已清理：两个临时测试集群（`.pg-probe-now`、`.pg-crash-ctl-20261007`）、三份原始 `.dmp`（已在 ZIP 内）及临时日志，释放约 760 MB。
+
+### 6.7 一个尚未解释的反例
+
+同一台机器、同一 MinGW 安装上，**他人的 5599 实例（`D:/dev/_jevtest/pgdata`）运行正常**——实测其 `io_worker`、`checkpointer`、`bgwriter`、`wal_writer`、`autovacuum launcher`、`bgworker` 子进程齐全。
+
+说明 ALPC/CSRSS 阻塞**不是全系统性的、也不是持续的**，而是间歇性或与特定进程相关。这对排查有利：可对比两个实例的启动方式、所属 shell、环境变量与父进程链，差异点可能就是诱因。
+
 边界与禁止项：
 
 - 恢复该 5433 实例涉及业务数据，**需用户确认维护窗口后再执行**；本轮未重启、未改配置、未升级扩展。
