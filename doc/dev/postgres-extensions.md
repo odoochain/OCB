@@ -539,6 +539,38 @@ winget install --id Microsoft.WinDbg --exact
 
 这进一步缩小了范围：诱因应是随时间累积的资源或状态（如句柄泄漏、ALPC 端口耗尽、桌面堆碎片），而非单次高并发。注意本机 `WDDriveService` 句柄数持续增长（10421 → 10724），符合这一特征，但**仍未证实其与 postmaster 阻塞存在因果关系**。
 
+### 6.9 文件干扰的直接证据：35 次 sharing violation
+
+日志中 `sharing violation` 共出现 **35 次**，且 PostgreSQL 自己给出了归因提示：
+
+```
+LOG:  could not open file "./logfile": sharing violation
+DETAIL:  Continuing to retry for 30 seconds.
+HINT:  You might have antivirus, backup, or similar software interfering with the database system.
+```
+
+最近几次分布在 2026-10-07 15:22、15:53、17:26 与 10-08 11:06，**与崩溃时间线高度重叠**。
+
+这是**独立于转储分析的第二条证据**，同样指向杀毒/备份类软件干扰文件与进程操作，与 §6.2.2 的 ALPC/CSRSS 阻塞方向一致。两者可由同一诱因解释：此类软件既挂钩文件 I/O，也常挂钩 `CreateProcess`。
+
+注：本机 `Get-MpPreference` / `Get-MpComputerStatus` 报 `Provider load failure`，无法通过 PowerShell 读取 Defender 配置与排除项，需在「Windows 安全中心」界面手工确认。
+
+### 6.10 服务方式对照：注册成功，启动受数据目录占用阻塞
+
+2026-10-08 以管理员注册服务成功：
+
+```
+Name      : pgsql-5433
+StartName : LocalSystem
+PathName  : pg_ctl.exe runservice -N "pgsql-5433" -D "D:\mydata\pgdata" -w -o "-p 5433"
+```
+
+首次 `Start-Service` 失败，`ExitCode 0`（非权限拒绝）。原因是**手工启动的实例（PID 21224）仍在运行并占用数据目录**——同一数据目录不能被两个 postmaster 同时持有。
+
+处置：先 `pg_ctl stop` 停掉手工实例释放目录，再启动服务。该步骤已完成，`postmaster.pid` 已清除。
+
+**服务方式的对照结论仍待观察**：需在服务模式下运行数小时，确认 `0xC0000142` 是否仍复现。由于服务运行在会话 0，若不再复现，则说明诱因与交互会话的资源环境相关。
+
 边界与禁止项：
 
 - 恢复该 5433 实例涉及业务数据，**需用户确认维护窗口后再执行**；本轮未重启、未改配置、未升级扩展。
