@@ -615,6 +615,33 @@ CSV 共 18 列，含 `BackendOk`、`ConnectMs`、`PmHandles`、`PmChildren`、`P
 2. **恢复 `WDDriveService`**（`Start-Service WDDriveService`），保持服务模式再观察 → 若此时复现，即锁定 WD 为诱因
 3. 若第 2 步仍不复现 → 说明诱因与交互会话相关，而非 WD
 
+### 6.13 当前观察进行中（2026-10-08 12:52 起）
+
+监控已在后台运行：
+
+| 项 | 值 |
+|---|---|
+| watcher PID | 15328（`pwsh`，后台） |
+| 采样间隔 | 60 秒 |
+| CSV | `D:/odoochain/pg-monitor/pg5433-watch-20261008-125240.csv` |
+| 控制台日志 | `D:/odoochain/pg-monitor/watch-console-20261008-1252.log` |
+| 观察配置 | 服务模式（会话 0） + `WDDriveService` 停用 |
+| 起始基线 | postmaster 41560，9 子进程，524 句柄 |
+
+查看进度：
+
+```powershell
+Get-Content D:/odoochain/pg-monitor/watch-console-20261008-1252.log -Tail 20
+```
+
+停止监控：
+
+```powershell
+Stop-Process -Id 15328        # 后台运行时拿不到 Ctrl+C，故不会打印汇总
+```
+
+注意：后台方式启动时 `finally` 块的汇总**不会显示在日志里**（没有交互终端接收 Ctrl+C）。首次失败的 `PmUptimeMin` 仍会写入 CSV 并出现在控制台日志的 `*** FIRST FAILURE ***` 段落，据此判断即可。
+
 边界与禁止项：
 
 - 恢复该 5433 实例涉及业务数据，**需用户确认维护窗口后再执行**；本轮未重启、未改配置、未升级扩展。
