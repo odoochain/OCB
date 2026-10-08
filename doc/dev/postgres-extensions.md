@@ -389,18 +389,96 @@ PostgreSQL 官方说明：Windows 上每个新服务端进程仍重新加载预�
 
 三次独立采集（PID 44000 / 43516 / 37496）的模块数均为 **47**，且 `python` / `plpython` / `age` / `vector` 匹配数均为 **0**；非系统模块只有 `postgres.exe` 与 MinGW 运行时。三个样本一致，**彻底排除扩展加载为诱因**。
 
+### 6.2.2 根因已定位：postmaster 卡死在 CSRSS 的 ALPC 调用（2026-10-07 转储分析）
+
+用 WinDbg（`winget install Microsoft.WinDbg`）离线分析三份转储，加载微软公共符号后，三份结论一致：
+
+| 转储 | `FAILURE_BUCKET_ID` |
+|---|---|
+| PID 44000 | `APPLICATION_HANG_BusyHang_cfffffff_postgres.exe` |
+| PID 43516 | `APPLICATION_HANG_cfffffff_postgres.exe` |
+| PID 37496 | `APPLICATION_HANG_BlockedOn_AlpcPort_cfffffff_postgres.exe` |
+
+关键指标：`WER.BlockedOn: AlpcPort`，`DERIVED_WAIT_CHAIN: ALPC`。
+
+主线程调用栈（PID 44000，已加载正确符号）：
+
+```
+ntdll!NtAlpcSendWaitReceivePort+0x14      ← 卡在此处，无限等待
+ntdll!CsrClientCallServer+0xfc            ← 向 CSRSS 注册新进程
+KERNELBASE!CreateProcessInternalW+0x53c7
+KERNELBASE!CreateProcessInternalA+0x45d
+KERNELBASE!CreateProcessA+0x69
+kernel32!CreateProcessAStub+0x53
+postgres!...+0x4bb                        ← 栈上可见参数 0x00000000c0000142
+postgres!PostmasterMain+0xdca
+postgres!main+0x1c2
+```
+
+**机制解释（与此前所有观察吻合）**：
+
+1. PostgreSQL 在 Windows 上没有 `fork()`，每个新后端都通过 `CreateProcessA` 创建。
+2. `CreateProcess` 内部必须通过 **ALPC** 与 **CSRSS**（客户端/服务器运行时子系统）通信以注册新进程。
+3. 该 ALPC 调用阻塞后，postmaster 主线程**无限等待**——这正是「进程存活、仍在监听、却不产出任何后端、也不再写日志」的原因：主线程根本没有机会继续执行。
+4. 子进程因此在初始化阶段失败，报 `0xC0000142`（`STATUS_DLL_INIT_FAILED`）。该错误码是**结果**，不是原因。
+
+这同时解释了为何**独立进程创建正常**（`postgres --version`、`initdb` 均 exit=0）：那些由 shell 发起，走的是另一条路径，不经过已阻塞的 postmaster 主线程。
+
+**与扩展彻底无关。** 栈上没有任何扩展模块，三份转储的模块数均为 47 且 python/plpython/age/vector 匹配为 0。
+
+### 6.2.3 环境侧观测（系统性诱因，尚未确证）
+
+| 项 | 实测值 |
+|---|---|
+| 会话 0 / 会话 1 进程数 | 103 / **268** |
+| 系统总句柄数 | 约 13.4 万 |
+| CSRSS（会话 1）句柄 | 1317，27 线程 |
+| 句柄最高的进程 | **`WDDriveService` 10421**，其次 `explorer` 7469 |
+| 桌面堆 `SharedSection` | `1024,20480,768`；交互会话适用 **20480 KB** |
+
+会话 1 的 268 个进程属偏高水平，`WDDriveService`（Western Digital 服务）的 1 万多句柄尤为异常。ALPC/CSRSS 阻塞的常见诱因包括会话资源耗尽、桌面堆压力，以及**安全软件或驱动服务对进程创建路径的拦截**。以上数据与这些方向一致，但**尚未证实其中任何一项是本次的直接原因**。
+
 ### 6.3 下一步取证与边界
 
-§6.2.1 已证明崩溃与扩展、数据目录无关，**不要再往 AGE / pgvector / Jev / PL/Python 方向排查**。已排除项见 §6.1.2。
+§6.2.1 已证明与扩展、数据目录无关；§6.2.2 已定位为 **`CreateProcess` 内的 ALPC/CSRSS 阻塞**。**不要再往 AGE / pgvector / Jev / PL/Python 方向排查。**
 
 剩余方向按优先级：
 
-1. **用三次已采集的转储定位故障 DLL**。证据归档：`pg-crash-evidence-20261007-1451.zip`（PID 44000）、`-1553.zip`（PID 43516）、`-1757.zip`（PID 37496），`pg-preload-evidence-20261007-1014.zip`（对照日志）。建议用 WinDbg/CDB 对每个转储执行 `!analyze -v` 与 `lm`，比较模块列表与失败线程的调用栈。这是当前最可能给出结论的路径。
-2. **查环境级诱因**。重点是与进程创建/初始初始化相关的系统侧因素：桌面堆与会话配额（交互式 20480 KB，见 §6.1.2）、句柄与内存压力、安全软件注入、PATH 中被优先解析的同名 DLL、MSYS2/MinGW 运行时与系统 DLL 冲突。
-3. **确认是否为特定 MinGW 安装的问题**。可对比：同一二进制在另一台机器、另一 Windows 会话、或以服务方式（非交互会话）运行是否同样失败；以及改用 MSVC 版 PostgreSQL 是否规避。
-4. **区分「崩溃触发」与「恢复卡死」**。postmaster 存活却不产出后端、不写日志，可能与崩溃原因不同，需分别定位。
+1. **排查拦截进程创建的第三方组件**。ALPC/CSRSS 阻塞最常见的人为诱因是安全软件、备份代理或磁盘服务挂钩 `CreateProcess`。首要怀疑对象是 `WDDriveService`（句柄 10421，见 §6.2.3）；其次是任何实时防护类服务。验证方式：在维护窗口临时停用可疑服务，观察是否仍复现。
+2. **缓解措施（可立即降低影响面）**：
+   - 给 PostgreSQL 的安装目录与数据目录加杀毒/备份软件排除项
+   - 减少会话 1 的进程数（当前 268）
+   - 把 PostgreSQL 改为**服务方式**运行（会话 0），脱离交互会话的桌面堆与资源竞争。需管理员权限，见 §6.4
+3. **若要进一步确证**，可对 CSRSS（会话 1，PID 1004）采集转储，检查其 ALPC 端口队列是否积压；或用内核调试观察阻塞方。这属较重手段，建议先做第 1、2 项。
+4. **放弃的方向**：不必再对比 MinGW 与 MSVC 版 PostgreSQL——阻塞发生在 Windows 的进程创建路径上，与编译器 ABI 无关。
 
-该问题已超出「扩展栈」范围，**建议单独立项**，不要在 AGE/Jev 兼容性的语境下继续投入。
+边界与禁止项：
+
+- 停用安全/磁盘服务会降低系统防护，**须由用户在维护窗口决定并执行**，本轮未做。
+- 恢复 5433 实例涉及业务数据；本轮的停止/启动均为取证所需，已记录时间线。
+- 不要把「临时 CREATE/DROP PL/Python」当作防崩溃方案——根因与它无关。
+
+### 6.4 待执行：服务方式对照（需管理员权限）
+
+当前账号**非管理员**（实测 `IsInRole(Administrator)` 为 `False`），无法注册服务。该对照能判断「脱离交互会话」是否规避问题，是目前性价比最高的验证。
+
+需在**管理员** PowerShell 中执行：
+
+```powershell
+# 注册为服务（在会话 0 运行）
+& "D:/programs/Scoop/apps/msys2/2026-06-11/mingw64/bin/pg_ctl.exe" register `
+    -N pgsql-5433 -D "D:/mydata/pgdata" -o "-p 5433"
+Start-Service pgsql-5433
+
+# 观察数小时后检查是否复现
+Select-String -Path D:/mydata/pgdata/logfile -Pattern "0xC0000142"
+
+# 回滚
+Stop-Service pgsql-5433
+& "D:/programs/Scoop/apps/msys2/2026-06-11/mingw64/bin/pg_ctl.exe" unregister -N pgsql-5433
+```
+
+注意：服务默认以 `LOCAL SERVICE` 运行，需确认其对 `D:/mydata/pgdata` 有读写权限，或用 `-U` / `-P` 指定账号。
 
 边界与禁止项：
 
