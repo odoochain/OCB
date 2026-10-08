@@ -262,3 +262,11 @@ CI 建好后必须加保护，否则"门禁"只是建议：
 3. 你确认后编写 CI 工作流（A/B/C/D）→ 长期自动化
 4. 加 `chain` 分支保护 → 门禁从建议变强制
 5. PR #68 按精简门禁处理，**不必等 Job E**
+
+---
+
+## 8. 覆盖范围限制：扩展不在 CI 内
+
+Job C 使用 GitHub 托管的 `postgres:16` 服务容器，**不含 AGE、pgvector 或 Jev**。因此 CI 只能证明 Odoo 可在裸 PostgreSQL 上安装，任何依赖这些扩展的功能都必须在本机 MSYS2/MinGW 实例（5433）上人工验证，见 `postgres-extensions.md`。
+
+另需注意版本差：本机实例为 **PostgreSQL 18.4**，CI 为 16。Odoo 20.1 声明 `MIN_PG_VERSION = 16` 且无上限，故 18.4 可启动，但不在 Odoo 官方测试矩阵内。**当 CI 通过却无法复现本机故障时，优先怀疑这个版本差。**
