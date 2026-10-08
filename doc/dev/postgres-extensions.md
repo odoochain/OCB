@@ -571,6 +571,50 @@ PathName  : pg_ctl.exe runservice -N "pgsql-5433" -D "D:\mydata\pgdata" -w -o "-
 
 **服务方式的对照结论仍待观察**：需在服务模式下运行数小时，确认 `0xC0000142` 是否仍复现。由于服务运行在会话 0，若不再复现，则说明诱因与交互会话的资源环境相关。
 
+### 6.11 监控脚本：`tools/watch-pg5433.ps1`
+
+只读采样器，不启停服务、不改配置，可长期挂着跑。
+
+```powershell
+# 每分钟采样，Ctrl+C 结束（中断也会输出汇总）
+pwsh -File tools/watch-pg5433.ps1
+
+# 30 秒间隔，一旦失败就停，只取 time-to-failure
+pwsh -File tools/watch-pg5433.ps1 -IntervalSeconds 30 -StopOnFirstFailure
+
+# 限定观察 8 小时
+pwsh -File tools/watch-pg5433.ps1 -DurationHours 8
+```
+
+**为什么不能只做端口探测**：故障时 postmaster 仍存活、仍 `LISTENING`，端口检查会错报"正常"。脚本每次都真实建连，这才是实际失效的那一环。
+
+两个关键设计：
+
+- **用 `postmaster.pid` 识别进程**，而非匹配命令行——服务以 `LocalSystem` 运行时，非提权会话读不到其命令行（实测为空）。
+- **把子进程数（`PmChildren`）作为健康信号**。健康的 postmaster 保有 9 个后台工作进程；卡死时子进程归零且无法再 fork。这比连接成功率更早反映状态。
+
+服务器返回 `FATAL`（如角色不存在）**计为成功**——它证明后端已被创建，而这正是被测对象。
+
+CSV 共 18 列，含 `BackendOk`、`ConnectMs`、`PmHandles`、`PmChildren`、`PmUptimeMin`、`NewCrashLines`、`NewSharingVios`、`FreePhysMb`、`Session1Procs`，以及 `WDDriveService` / `MsMpEng` / `csrss` 的句柄数。日志只统计**脚本启动后**新增的行，重启不会把历史重放成新事件。
+
+**最该关注的数字是首次失败时的 `PmUptimeMin`** ——用它横向比较不同配置（WD 停用 / 启用、服务模式 / 交互模式）。
+
+### 6.12 变量控制：一次只改一个
+
+当前状态（2026-10-08 12:21）：
+
+| 项 | 状态 |
+|---|---|
+| `pgsql-5433` 服务 | Running（会话 0，`LocalSystem`） |
+| `WDDriveService` | **Stopped** |
+| postmaster | PID 41560，9 个子进程，健康 |
+
+**注意：现在同时改了两个变量**（服务模式 + WD 停用）。若这一轮不复现，无法判断是哪个起作用。建议顺序：
+
+1. 当前配置观察数小时 → 若不复现，继续第 2 步
+2. **恢复 `WDDriveService`**（`Start-Service WDDriveService`），保持服务模式再观察 → 若此时复现，即锁定 WD 为诱因
+3. 若第 2 步仍不复现 → 说明诱因与交互会话相关，而非 WD
+
 边界与禁止项：
 
 - 恢复该 5433 实例涉及业务数据，**需用户确认维护窗口后再执行**；本轮未重启、未改配置、未升级扩展。
