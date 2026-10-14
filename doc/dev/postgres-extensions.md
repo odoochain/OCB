@@ -642,6 +642,61 @@ Stop-Process -Id 15328        # 后台运行时拿不到 Ctrl+C，故不会打�
 
 注意：后台方式启动时 `finally` 块的汇总**不会显示在日志里**（没有交互终端接收 Ctrl+C）。首次失败的 `PmUptimeMin` 仍会写入 CSV 并出现在控制台日志的 `*** FIRST FAILURE ***` 段落，据此判断即可。
 
+---
+
+## 7. 结论（2026-10-14 定稿）
+
+### 7.1 故障已解决
+
+| 指标 | 结果 |
+|---|---|
+| 最后一次 `0xC0000142` | **2026-10-07 17:56** |
+| 服务模式运行时长 | 重启后连续运行 **3 天以上**，无异常 |
+| 监控采样 | 719 次，**零失败** |
+| 当前状态 | `pgsql-5433` Running，可正常连接 |
+
+### 7.2 根因与有效修复
+
+**根因**：postmaster 在 `CreateProcess` 内阻塞于对 **CSRSS 的 ALPC 调用**（三份转储一致：`WER.BlockedOn: AlpcPort`）。PostgreSQL 在 Windows 无 `fork()`，后端全靠 `CreateProcess` 创建，阻塞后主线程永不返回——故进程存活、仍监听，却不产出后端、不写日志。`0xC0000142` 是**结果**而非原因。
+
+**决定性变量是运行会话，不是 WD 服务**：
+
+| 配置 | 结果 |
+|---|---|
+| 交互会话（`cmd /C`）+ `WDDriveService` Running | **约 30 分钟~17 小时后崩溃** |
+| 服务模式（会话 0）+ WD 停用 | 正常 |
+| **服务模式（会话 0）+ WD Running** | **正常，连续 3 天+** ← 当前 |
+
+`WDDriveService` 已恢复运行而实例依旧稳定，**否证 WD 假设**。此前它句柄偏高（10421 → 10724）只是伴随现象。
+
+**有效修复：以 Windows 服务运行（会话 0）**，脱离交互会话的桌面堆与资源竞争。这与 ALPC/CSRSS 阻塞的分析一致。
+
+**不必再做的排查**：Defender 排除项、WD 停用、MinGW 与 MSVC 版对比。
+
+### 7.3 附带修复：服务模式下的日志
+
+服务最初注册时未带日志输出，且 `logging_collector = off`，**服务端 stderr 被完全丢弃**——旧 `logfile` 停在 2026-10-08 11:50，之后 3 天无日志。而日志正是定位 `0xC0000142` 的关键证据，缺失则无法诊断复发。
+
+**踩过的坑：`pg_ctl register -l` 无效。** register 只接受 `-N -P -U -S`，`-l` 属 `start` 模式且被**静默忽略**。曾据一次 `could not open service manager` 报错误判 `-l` 可用——该错误源于权限不足，发生在选项处理之前，不能证明选项有效。`tools/repair-pg5433-service.ps1` 已标记 superseded 并保留，避免重走此路。
+
+**有效做法**：在 `postgresql.conf` 启用日志收集器（已生效，含轮转）：
+
+```
+logging_collector = on
+log_directory = 'log'
+log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+log_rotation_age = 1d
+log_rotation_size = 100MB
+```
+
+原配置已备份为 `postgresql.conf.bak-20261014`。日志落在 `D:\mydata\pgdata\log\`。
+
+### 7.4 运维要点
+
+- **保持服务模式**运行，勿再用 `cmd /C` 手工启动。同一数据目录不能有两个 postmaster。
+- 监控脚本 `tools/watch-pg5433.ps1` 可用于长期观察；当前问题已解决，不必常驻。
+- 若日后复发，优先看 `D:\mydata\pgdata\log\` 下最新日志中的 `0xC0000142` 与 `sharing violation`。
+
 边界与禁止项：
 
 - 恢复该 5433 实例涉及业务数据，**需用户确认维护窗口后再执行**；本轮未重启、未改配置、未升级扩展。
