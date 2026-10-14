@@ -1,38 +1,34 @@
 <#
 .SYNOPSIS
-    Re-register the PostgreSQL 5433 service so its stdout/stderr is captured.
+    SUPERSEDED - kept for the record, do not run it expecting a log file.
 
 .DESCRIPTION
-    The current service was registered without -l, and logging_collector is off,
-    so everything the server writes to stderr is discarded. That is why the log
-    stops at 2026-10-08 11:50: after moving to a service, three days of server
-    logging were lost. Without a log there is no way to diagnose a recurrence of
-    the 0xC0000142 stall, since the log is what identified it in the first place.
+    Original intent: re-register the service with -l so server stderr lands in a
+    file. That does not work. pg_ctl register accepts only -N, -P, -U and -S; -l
+    belongs to the start mode and register silently ignores it. Run elevated this
+    script reported exactly that: "WARNING: -l does not appear in the service
+    command line" and "log file NOT created".
 
-    This script:
-      1. stops the service
-      2. unregisters it
-      3. re-registers it with -l pointing at a log file
-      4. starts it
-      5. verifies the server answers and that the log file is being written
+    The working fix is enabling logging_collector in postgresql.conf, which also
+    provides rotation through log_rotation_age / log_rotation_size. See
+    apply-logging.ps1, then restart the service.
 
-    Requires an elevated PowerShell: the Windows service manager refuses
-    register/unregister otherwise ("could not open service manager").
+    Context for why the log matters: with the service registered without -l and
+    logging_collector off, server stderr was discarded entirely, so the log stops
+    at 2026-10-08 11:50 and three days of server logging were lost. The log is
+    what identified the 0xC0000142 stall, so without it a recurrence cannot be
+    diagnosed.
 
 .PARAMETER LogFile
-    Destination log file. Default D:\mydata\pgdata\pgservice.log.
-    Deliberately NOT the existing "logfile", which is the old hand-started
-    instance's log and is what produced 35 sharing-violation entries from
-    competing writers.
+    Destination log file. Default D:\mydata\pgdata\pgservice.log. Not honoured by
+    register.
 
 .EXAMPLE
-    # from an elevated PowerShell
+    # elevated PowerShell - reference only
     .\repair-pg5433-service.ps1
 
 .NOTES
-    -l appends and PostgreSQL does not rotate it, so this file grows without
-    bound. Either truncate it periodically, or later enable logging_collector
-    (which supports log_rotation_age / log_rotation_size) for proper rotation.
+    Does not achieve its stated goal. Use apply-logging.ps1 instead.
     See doc/dev/postgres-extensions.md section 6.
 #>
 
